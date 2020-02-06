@@ -9,6 +9,13 @@ import lombok.Data;
  */
 @Data
 public class Unit {
+    /**
+     * id值
+     */
     String id;
+
+    /**
+     * 类型
+     */
     String type;
 }
