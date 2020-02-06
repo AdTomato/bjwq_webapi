@@ -7,9 +7,12 @@ import com.authine.cloudpivot.engine.api.model.bizmodel.BizSchemaModel;
 import com.authine.cloudpivot.engine.api.model.bizquery.BizQueryHeaderModel;
 import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
+import com.authine.cloudpivot.web.api.entity.ColumnComment;
+import com.authine.cloudpivot.web.api.mapper.TableMapper;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -21,22 +24,12 @@ import java.util.List;
 @RequestMapping("/controller/test")
 public class TestController extends BaseController {
 
+    @Resource
+    TableMapper tableMapper;
+
     @RequestMapping("/getProperty")
     public void getProperty() {
-        AppManagementFacade appManagementFacade = this.getAppManagementFacade();
-
-        List<BizQueryHeaderModel> bizQueryHeaders = appManagementFacade.getBizQueryHeaders(Constants.SH_ADD_EMPLOYEE_SCHEMA);
-
-        List<BizFormHeaderModel> bizForms = appManagementFacade.getBizForms(Constants.SH_ADD_EMPLOYEE_SCHEMA);
-
-        BizSchemaModel bizSchemaBySchemaCode = appManagementFacade.getBizSchemaBySchemaCode(Constants.SH_ADD_EMPLOYEE_SCHEMA);
-
-        BizSchemaModel bizSchemaBySchemaCode1 = appManagementFacade.getBizSchemaBySchemaCode(Constants.SH_ADD_EMPLOYEE_SCHEMA, true);
-
-        List<BizSchemaModel> allPublishBizSchema = appManagementFacade.getAllPublishBizSchema();
-
-        List<BizPropertyModel> bizPropertyListByCode = appManagementFacade.getBizPropertyListByCode(Constants.SH_ADD_EMPLOYEE_SCHEMA);
-
+//        List<ColumnComment> shAddEmployeeTableColumnComment = tableMapper.getShAddEmployeeTableColumnComment();
     }
 
 }

@@ -1,9 +1,15 @@
 package com.authine.cloudpivot.web.api.utils;
 
+import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
+import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
 import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
+import com.authine.cloudpivot.web.api.constants.Constants;
+import com.authine.cloudpivot.web.api.entity.ColumnComment;
+import com.authine.cloudpivot.web.api.service.TableService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.text.ParseException;
 import java.util.*;
@@ -13,7 +19,10 @@ import java.util.*;
  * @Date: 2020-02-05 11:08
  * @Description: 上海(增员)读取excel
  */
-public abstract class ShReadExcelFile {
+public abstract class ReadExcelFile {
+
+    @Autowired
+    TableService tableService;
 
     /**
      * @param sheet               : 需要读取的sheet
@@ -107,14 +116,19 @@ public abstract class ShReadExcelFile {
      * @Date: 2020/2/4 13:05
      * @Description: 数据库编码和列数进行映射
      */
-    public Map<Integer, String> getDefineMapRelationship(Row row) {
+    public Map<Integer, String> getDefineMapRelationship(Row row, Map<String, String> columnComment) {
         Map<Integer, String> result = new HashMap<>();
 
         int cellNum = row.getLastCellNum();
         for (int i = 0; i < cellNum; i++) {
-            result.put(i, getCode(row.getCell(i).getStringCellValue().replace(" ", "")));
+            String cellName = row.getCell(i).getStringCellValue().replace(" ", "");
+            String cellCode = getCode(cellName, columnComment);
+            if (null != cellCode) {
+                result.put(i, cellCode);
+            } else {
+                throw new RuntimeException("列名“" + cellName + "”不存在");
+            }
         }
-
         return result;
     }
 
@@ -136,8 +150,36 @@ public abstract class ShReadExcelFile {
         return result;
     }
 
+
+
     protected abstract Object conversion(String key, Object value) throws ParseException;
 
-    protected abstract String getCode(String celleName);
+    private String getCode(String celleName, Map<String, String> columnComment) {
+        if (columnComment.containsKey(celleName)) {
+            return columnComment.get(celleName);
+        } else {
+            return null;
+        }
+    }
+
+    public Map<String, String> getTableColumnComment(String tableName) {
+
+        Map<String, String> result = new HashMap<>();
+
+        List<ColumnComment> tableColumnComment = tableService.getTableColumnComment(tableName);
+        for (ColumnComment columnComment : tableColumnComment) {
+            if (!StringUtils.isEmpty(columnComment.getColumnComment())) {
+                result.put(columnComment.getColumnComment(), columnComment.getColumnName());
+            }
+        }
+        return result;
+    }
+
+    public void startWorkflow(String userId, String departmentId, String workflowCode, List<BizObjectModel> models, BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade) {
+        List<String> ids = bizObjectFacade.addBizObjects(userId, models, "id");
+        for (String id : ids) {
+            workflowInstanceFacade.startWorkflowInstance(departmentId, userId, workflowCode, id, false);
+        }
+    }
 
 }

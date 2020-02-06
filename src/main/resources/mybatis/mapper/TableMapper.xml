@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.TableMapper">
+    <select id="getTableColumnComment" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ColumnComment">
+        SELECT column_name, column_comment FROM information_schema.columns WHERE table_name = #{tableName}
+    </select>
+</mapper>

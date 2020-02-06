@@ -43,6 +43,11 @@ public class Constants {
     public static final String SH_ADD_EMPLOYEE_SCHEMA = "sh_add_employee";
 
     /**
+     * 上海增员的表格名称
+     */
+    public static final String SH_ADD_EMPLOYEE_TABLE_NAME = "i4fvb_sh_add_employee";
+
+    /**
      * 上海增员表单流程
      */
     public static final String SH_ADD_EMPLOYEE_SCHEMA_WF = "sh_add_employee_wf";
@@ -50,12 +55,32 @@ public class Constants {
     /**
      * 上海减员表单Schema
      */
-    public static final String  SH_DELETE_EMPLOYEE_SCHEMA = "sh_delete_employee";
+    public static final String SH_DELETE_EMPLOYEE_SCHEMA = "sh_delete_employee";
+
+    /**
+     * 上海减员表格名称
+     */
+    public static final String SH_DELETE_EMPLOYEE_TABLE_NAME = "i4fvb_sh_delete_employee";
 
     /**
      * 上海减员表单流程
      */
     public static final String SH_DELETE_EMPLOYEE_SCHEMA_WF = "sh_delete_employee_wf";
+
+    /**
+     * 全国派单表单Schema
+     */
+    public static final String NATIONWIDE_DISPATCH_SCHEMA = "nationwide_dispatch";
+
+    /**
+     * 全国派单表格名称
+     */
+    public static final String NATIONWIDE_DISPATCH_TABLE_NAME = "i4fvb_nationwide_dispatch";
+
+    /**
+     * 全国派单表单流程
+     */
+    public static final String NATIONWIDE_DISPATCH_SCHEMA_WF = "nationwide_dispatch_wf";
 
     /**
      * 草稿状态

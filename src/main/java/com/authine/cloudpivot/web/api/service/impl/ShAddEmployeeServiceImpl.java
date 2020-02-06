@@ -8,7 +8,8 @@ import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.helper.FileOperateHelper;
 import com.authine.cloudpivot.web.api.service.ShAddEmployeeService;
 import com.authine.cloudpivot.web.api.utils.ExcelUtils;
-import com.authine.cloudpivot.web.api.utils.ShReadAddExcelFile;
+import com.authine.cloudpivot.web.api.utils.ReadAddExcelFile;
+import com.authine.cloudpivot.web.api.utils.ReadExcelFile;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ import java.util.Set;
 public class ShAddEmployeeServiceImpl implements ShAddEmployeeService {
 
     @Resource
-    ShReadAddExcelFile shReadAddExcelFile;
+    ReadAddExcelFile shReadAddExcelFile;
 
     /**
      * @param userId             : 导入人id
@@ -57,7 +58,8 @@ public class ShAddEmployeeServiceImpl implements ShAddEmployeeService {
             if (rowNum == 0) {
                 throw new RuntimeException("文件为空");
             }
-            Map<Integer, String> cellMapRelationship = shReadAddExcelFile.getDefineMapRelationship(sheet.getRow(0));
+            Map<String, String> tableColumnComment = shReadAddExcelFile.getTableColumnComment(Constants.SH_ADD_EMPLOYEE_TABLE_NAME);
+            Map<Integer, String> cellMapRelationship = shReadAddExcelFile.getDefineMapRelationship(sheet.getRow(0), tableColumnComment);
             List<BizObjectModel> models;
             Set<String> required = new HashSet<>();  // 必填项
             // 分批读取excel表格
@@ -69,7 +71,7 @@ public class ShAddEmployeeServiceImpl implements ShAddEmployeeService {
                 }
                 // 开启流程
                 if (null != models && 0 != models.size())
-                    shReadAddExcelFile.startShAddWorkflow(userId, departmentId, models, bizObjectFacade, workflowInstanceFacade);
+                    shReadAddExcelFile.startWorkflow(userId, departmentId, Constants.SH_ADD_EMPLOYEE_SCHEMA_WF, models, bizObjectFacade, workflowInstanceFacade);
             }
         } catch (IOException e) {
             e.printStackTrace();
