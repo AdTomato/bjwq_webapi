@@ -129,6 +129,7 @@ public class ResourceConfig extends ResourceServerConfigurerAdapter {
                     .antMatchers("/controller/product/updateProduct").permitAll()
                     // 上海增员
                     .antMatchers("/controller/shAddEmployee/**").permitAll()
+                    .antMatchers("/controller/clientController/**").permitAll()
                     // 测试类
                     .antMatchers("/controller/test/**").permitAll()
                     //test

@@ -1,5 +1,6 @@
 package com.authine.cloudpivot.web.api;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -16,6 +17,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 )
 @EnableSwagger2
 @EnableRedisHttpSession
+@MapperScan(value = "com.authine.cloudpivot.web.api.mapper")
 @EnableScheduling
 public class WebApiBootStartupApplication extends SpringBootServletInitializer {
 

@@ -1,6 +1,7 @@
 package com.authine.cloudpivot.web.api.entity;
 
 import lombok.Data;
+import org.springframework.stereotype.Component;
 
 /**
  * @Author: wangyong
@@ -8,6 +9,7 @@ import lombok.Data;
  * @Description: User和Department实体类
  */
 @Data
+@Component
 public class Unit {
     /**
      * id值

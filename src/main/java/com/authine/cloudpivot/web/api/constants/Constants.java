@@ -62,5 +62,15 @@ public class Constants {
      */
     public static final String DRAFT_STATUS = "DRAFT";
 
+    /**
+     * 用户type
+     */
+    public static final Integer USER_TYPE = 3;
+
+    /**
+     * 部门type
+     */
+    public static final Integer DEPARTMENT_TYPE = 1;
+
 
 }
