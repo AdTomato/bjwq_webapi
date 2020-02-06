@@ -3,7 +3,6 @@ package com.authine.cloudpivot.web.api.utils;
 import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
 import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
 import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
-import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.entity.ColumnComment;
 import com.authine.cloudpivot.web.api.service.TableService;
 import org.apache.commons.lang3.StringUtils;
@@ -150,11 +149,16 @@ public abstract class ReadExcelFile {
         return result;
     }
 
-
-
-    protected abstract Object conversion(String key, Object value) throws ParseException;
-
+    /**
+     * @param celleName     : 列名
+     * @param columnComment : 列名和编码对应关系
+     * @return : java.lang.String
+     * @Author: wangyong
+     * @Date: 2020/2/6 15:10
+     * @Description: 获取当前列名对应的编码
+     */
     private String getCode(String celleName, Map<String, String> columnComment) {
+
         if (columnComment.containsKey(celleName)) {
             return columnComment.get(celleName);
         } else {
@@ -162,8 +166,14 @@ public abstract class ReadExcelFile {
         }
     }
 
+    /**
+     * @param tableName : 表格名称
+     * @return : java.util.Map<java.lang.String,java.lang.String>
+     * @Author: wangyong
+     * @Date: 2020/2/6 15:11
+     * @Description: 获取当前表的列名和列编码对应关系
+     */
     public Map<String, String> getTableColumnComment(String tableName) {
-
         Map<String, String> result = new HashMap<>();
 
         List<ColumnComment> tableColumnComment = tableService.getTableColumnComment(tableName);
@@ -175,6 +185,18 @@ public abstract class ReadExcelFile {
         return result;
     }
 
+    /**
+     * @param userId                 : 当前操作人id
+     * @param departmentId           : 当前操作人的部门id
+     * @param workflowCode           : 需要开启的流程
+     * @param models                 : 数据
+     * @param bizObjectFacade        : 用于创建数据的工具类
+     * @param workflowInstanceFacade : 用于创建流程实例的工具类
+     * @return : void
+     * @Author: wangyong
+     * @Date: 2020/2/6 15:12
+     * @Description: 开启流程
+     */
     public void startWorkflow(String userId, String departmentId, String workflowCode, List<BizObjectModel> models, BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade) {
         List<String> ids = bizObjectFacade.addBizObjects(userId, models, "id");
         for (String id : ids) {
@@ -182,4 +204,13 @@ public abstract class ReadExcelFile {
         }
     }
 
+    /**
+     * 需要转换的列
+     *
+     * @param key   : 列编码
+     * @param value : 值
+     * @return 转换过后的值
+     * @throws ParseException
+     */
+    protected abstract Object conversion(String key, Object value) throws ParseException;
 }

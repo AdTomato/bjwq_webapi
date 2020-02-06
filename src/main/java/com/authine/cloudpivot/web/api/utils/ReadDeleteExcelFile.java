@@ -1,20 +1,10 @@
 package com.authine.cloudpivot.web.api.utils;
 
-import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
-import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
-import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
-import com.authine.cloudpivot.web.api.constants.Constants;
-import com.authine.cloudpivot.web.api.entity.ColumnComment;
-import com.authine.cloudpivot.web.api.mapper.TableMapper;
-import com.authine.cloudpivot.web.api.service.TableService;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.annotations.Result;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.List;
 
 /**
  * @Author: wangyong
