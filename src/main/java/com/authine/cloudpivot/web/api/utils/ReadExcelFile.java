@@ -82,7 +82,7 @@ public abstract class ReadExcelFile {
      * @Date: 2020/2/5 13:27
      * @Description: 读取excel一行数据
      */
-    public Map<String, Object> getRowData(Row row, Map<Integer, String> cellMapRelationship, Set<String> required) throws ParseException {
+    private Map<String, Object> getRowData(Row row, Map<Integer, String> cellMapRelationship, Set<String> required) throws ParseException {
         Map<String, Object> result = new HashMap<>();
         int cellNum = row.getLastCellNum();
         int nullNum = 0;
@@ -109,6 +109,24 @@ public abstract class ReadExcelFile {
     }
 
     /**
+     * @param map : model内部数据
+     * @return : com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel
+     * @Author: wangyong
+     * @Date: 2020/2/4 14:12
+     * @Description: 创建BizObjectModel
+     */
+    private BizObjectModel getModel(String schemaCode, String sequenceStatus, Map<String, Object> map) throws ParseException {
+
+        BizObjectModel result = new BizObjectModel();
+        result.setSchemaCode(schemaCode);
+        // 设置草稿状态
+        result.setSequenceStatus(sequenceStatus);
+        result.put(map);
+
+        return result;
+    }
+
+    /**
      * @param row : 第一行内容
      * @return : java.util.Map<java.lang.Integer,java.lang.String>
      * @Author: wangyong
@@ -128,24 +146,6 @@ public abstract class ReadExcelFile {
                 throw new RuntimeException("列名“" + cellName + "”不存在");
             }
         }
-        return result;
-    }
-
-    /**
-     * @param map : model内部数据
-     * @return : com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel
-     * @Author: wangyong
-     * @Date: 2020/2/4 14:12
-     * @Description: 创建BizObjectModel
-     */
-    public BizObjectModel getModel(String schemaCode, String sequenceStatus, Map<String, Object> map) throws ParseException {
-
-        BizObjectModel result = new BizObjectModel();
-        result.setSchemaCode(schemaCode);
-        // 设置草稿状态
-        result.setSequenceStatus(sequenceStatus);
-        result.put(map);
-
         return result;
     }
 

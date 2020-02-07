@@ -6,15 +6,11 @@ import com.alibaba.fastjson.JSONObject;
 import com.authine.cloudpivot.web.api.entity.Unit;
 import com.authine.cloudpivot.web.api.mapper.ClientMapper;
 import com.authine.cloudpivot.web.api.service.ClientService;
-import org.omg.CORBA.OBJ_ADAPTER;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.web.PageableArgumentResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
