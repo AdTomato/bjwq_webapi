@@ -8,6 +8,7 @@ import com.authine.cloudpivot.web.api.view.ResponseResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -23,7 +24,7 @@ public class EmployeeFilesController extends BaseController {
     EmployeeFilesService employeeFilesService;
 
     @GetMapping("/getEmployeeFiles")
-    public ResponseResult<Object> getEmployeeFilesByIdNoOrClientName(String idNo, String clientName) {
+    public ResponseResult<Object> getEmployeeFilesByIdNoOrClientName(@RequestParam(required = true) String idNo, @RequestParam(required = false) String clientName) {
         EmployeeFiles employeeFiles = employeeFilesService.getEmployeeFilesByIdNoOrClientName(idNo, clientName);
         return this.getErrResponseResult(employeeFiles, ErrCode.OK.getErrCode(), ErrCode.OK.getErrMsg());
     }
