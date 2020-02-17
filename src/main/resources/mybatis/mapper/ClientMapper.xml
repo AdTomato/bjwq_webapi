@@ -4,14 +4,34 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.authine.cloudpivot.web.api.mapper.ClientMapper">
-    <!-- 根据客户名称获取一级客户中的业务员 -->
-    <select id="getFirstLevelClientSalesman" parameterType="java.lang.String" resultType="java.lang.String">
-        SELECT salesman FROM id34a_first_level_client WHERE company_name = #{clientName} ORDER BY createdTime DESC
+    <!-- 获取一级客户中的业务员 -->
+    <select id="getFirstLevelClientSalesman" resultType="java.lang.String">
+        SELECT salesman FROM id34a_first_level_client_salesman WHERE parentId = #{parentId} AND area = #{area} AND staff_nature = #{staffNature}
     </select>
 
-    <!-- 根据客户名称获取二级客户中的业务员 -->
-    <select id="getSecondLevelClientSalesman" parameterType="java.lang.String" resultType="java.lang.String">
-        select salesman FROM id34a_second_level_client WHERE company_name = #{clientName} ORDER BY createdTime DESC
+    <!-- 获取二级客户中的业务员 -->
+    <select id="getSecondLevelClientSalesman" resultType="java.lang.String">
+        SELECT salesman FROM id34a_second_level_client_salesman WHERE parentId = #{parentId} AND area = #{area} AND staff_nature = #{staffNature}
+    </select>
+
+    <!-- 获取一级客户的服务费 -->
+    <select id="getFirstLevelClientFee" resultType="java.lang.Integer">
+        SELECT service_fee FROM id34a_first_level_client_fee WHERE parentId = #{parentId} AND area = #{area}
+    </select>
+
+    <!-- 获取二级客户的服务费 -->
+    <select id="getSecondLevelClientFee" resultType="java.lang.Integer">
+        SELECT service_fee FROM id34a_second_level_client_fee WHERE parentId = #{parentId} AND area = #{area}
+    </select>
+
+    <!-- 根据委托单位和公司名称获取一级客户id -->
+    <select id="getFirstLevelClientId" resultType="java.lang.String">
+        SELECT id FROM id34a_first_level_client WHERE entrusted_unit = #{entrustedUnit} AND company_name = #{clientName}
+    </select>
+
+    <!-- 根据委托单位和公司名称获取二级客户id -->
+    <select id="getSecondLevelClientId" resultType="java.lang.String">
+        SELECT id From id34a_second_level_client WHERE entrusted_unit = #{entrustedUnit} AND company_name = #{clientName}
     </select>
 
 </mapper>

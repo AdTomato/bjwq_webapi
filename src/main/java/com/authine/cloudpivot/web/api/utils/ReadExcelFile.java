@@ -94,6 +94,7 @@ public abstract class ReadExcelFile {
                 if (required.contains(cellMapRelationship.get(j))) {
                     // 该列是必填项，且必填项为空
                     flag = false;
+                    break;
                 }
             }
             result.put(cellMapRelationship.get(j), conversion(cellMapRelationship.get(j), cellValue));

@@ -35,17 +35,9 @@ public class ClientFileController extends BaseController {
      * @Description: 根据客户名称获取业务员
      */
     @GetMapping("/getClientSalesman")
-    public ResponseResult<Map<String, Object>> getClientSalesman(String clientName) {
-        Unit unit = clientService.getClientSalesman(clientName);
-        if (null != unit) {
-            UserModel salesman = this.getOrganizationFacade().getUser(unit.getId());
-            Map<String, Object> result = new HashMap<>();
-            result.put("type", salesman.getUnitType());
-            result.put("name", salesman.getName());
-            result.put("imgUrl", salesman.getImgUrl());
-            result.put("id", salesman.getId());
-            return this.getOkResponseResult(result, "获取成功");
-        }
+    public ResponseResult<Map<String, Object>> getClientSalesman(String clientName, String entrustedUnit, String area, String staffNature) {
+//        String firstLevelClientId = clientService.getFirstLevelClientId("测试", "测试");
+        Map clientSalesmanAndFree = clientService.getClientSalesmanAndFee(clientName, entrustedUnit, area, staffNature);
         return this.getOkResponseResult(null, "没有获取该客户的业务员");
     }
 
