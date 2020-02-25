@@ -1,5 +1,7 @@
 package com.authine.cloudpivot.web.api.constants;
 
+import org.omg.CORBA.PUBLIC_MEMBER;
+
 /**
  * @author liulei
  * @ClassName com.authine.cloudpivot.web.api.constants.Constants
@@ -83,9 +85,24 @@ public class Constants {
     public static final String NATIONWIDE_DISPATCH_SCHEMA_WF = "nationwide_dispatch_wf";
 
     /**
+     * 批量预派表单名称
+     */
+    public static final String BATCH_PRE_DISPATCH_SCHEMA = "batch_pre_dispatch";
+
+    /**
+     * 批量撤离表单名称
+     */
+    public static final String BATCH_EVACUATION_SCHEMA = "batch_evacuation";
+
+    /**
      * 草稿状态
      */
     public static final String DRAFT_STATUS = "DRAFT";
+
+    /**
+     * 生效状态
+     */
+    public static final String COMPLETED_STATUS = "COMPLETED";
 
     /**
      * 用户type
@@ -96,6 +113,8 @@ public class Constants {
      * 部门type
      */
     public static final Integer DEPARTMENT_TYPE = 1;
+
+    public static final Integer MAX_INSERT_NUM = 1000;
 
 
 }

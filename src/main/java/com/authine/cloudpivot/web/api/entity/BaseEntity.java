@@ -2,6 +2,8 @@ package com.authine.cloudpivot.web.api.entity;
 
 import lombok.Data;
 
+import java.util.Date;
+
 /**
  * @Author: wangyong
  * @Date: 2020-02-17 09:18
@@ -43,7 +45,7 @@ public class BaseEntity {
     /**
      * 创建时间
      */
-    public String createdTime;
+    public Date createdTime;
 
     /**
      * 修改人
@@ -53,7 +55,7 @@ public class BaseEntity {
     /**
      * 修改时间
      */
-    public String modifiedTime;
+    public Date modifiedTime;
 
     /**
      * 流程实例id

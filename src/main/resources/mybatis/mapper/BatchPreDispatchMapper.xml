@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.BatchPreDispatchMapper">
+    <insert id="insertBatchPreDispatchDatas" parameterType="java.util.List">
+        INSERT INTO i4fvb_batch_pre_dispatch
+        (id, name, creater, createdDeptId, owner,
+        ownerDeptId, createdTime, modifier, modifiedTime,
+        workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode,
+        employee_name, unique_num, identityNo, mobile, email, social_insurance_amount,
+        provident_fund_ratio, supple_provident_fund_ratio, provident_fund_amount, entry_date,
+        order_start_date, order_expected_end_date, contract_start_time, contract_end_time,
+        whether_foreign_tax_return, whether_service_fee, delegated_area, staffing_type, staffing,
+        position, do_bank_card, whether_beijing_graduate, remark, employee_internal_num)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner},
+            #{item.ownerDeptId}, #{item.createdTime}, #{item.modifier}, #{item.modifiedTime},
+            #{item.workflowInstanceId}, #{item.sequenceNo}, #{item.sequenceStatus}, #{item.ownerDeptQueryCode},
+            #{item.employeeName}, #{item.uniqueNum}, #{item.identityNo}, #{item.mobile}, #{item.email}, #{item.socialInsuranceAmount},
+            #{item.providentFundRatio}, #{item.suppleProvidentFundRatio}, #{item.providentFundAmount}, #{item.entryDate},
+            #{item.orderStartDate}, #{item.orderExpectedEndDate}, #{item.contractStartTime}, #{item.contractEndTime},
+            #{item.whetherForeignTaxReturn}, #{item.whetherServiceFee}, #{item.delegatedArea}, #{item.staffingType}, #{item.staffing},
+            #{item.position}, #{item.doBankCard}, #{item.whetherBeijingGraduate}, #{item.remark}, #{item.employeeInternalNum})
+        </foreach>
+    </insert>
+</mapper>
