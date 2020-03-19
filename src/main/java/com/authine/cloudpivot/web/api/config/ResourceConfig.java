@@ -136,11 +136,8 @@ public class ResourceConfig extends ResourceServerConfigurerAdapter {
                     .antMatchers("/controller/nationalDelivery/**").permitAll()
                     // 商保
                     .antMatchers("/controller/businessInsurance/**").permitAll()
-                    // 客户管理
                     .antMatchers("/controller/clientController/**").permitAll()
-                    // 系统管理
                     .antMatchers("/controller/systemManage/**").permitAll()
-                    // 员工档案
                     .antMatchers("/controller/employeeFiles/**").permitAll()
                     // 数据修改
                     .antMatchers("/controller/dataModify/**").permitAll()

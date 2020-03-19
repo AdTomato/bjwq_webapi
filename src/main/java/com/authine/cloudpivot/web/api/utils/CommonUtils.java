@@ -5,6 +5,8 @@ import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
 import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -103,5 +105,46 @@ public class CommonUtils {
                     rejectToActivityCode, submitToReject);
             log.info(workItemErrorIds.get(i) + "驳回：" + flag);
         }
+    }
+
+    /**
+     * 方法说明：资金数据处理
+     * @param value 处理前的值
+     * @param rounding 舍入规则（四舍五入，单边见角进元取整，单边见角舍元取整）
+     * @param precision 四舍五入时保留的精度（0,1,2 位小数）
+     * @return java.lang.Double
+     * @author liulei
+     * @Date 2020/3/18 10:04
+     */
+    public static Double processingData(Double value, String rounding, String precision) {
+        if(value == null) {
+            return null;
+        }
+        Double returnValue = 0.0;
+        if ("四舍五入".equals(rounding)) {
+            NumberFormat nf = NumberFormat.getNumberInstance();
+            // 如果不需要四舍五入，可以使用RoundingMode.DOWN
+            nf.setRoundingMode(RoundingMode.UP);
+            if ("0".equals(precision)) {
+                // 四舍五入取整
+                returnValue = (double)Math.round(value);
+            } else if ("1".equals(precision)) {
+                // 保留两位小数
+                nf.setMaximumFractionDigits(1);
+                String companyStr = nf.format(value);
+                returnValue = Double.parseDouble(companyStr);
+            } else if ("2".equals(precision)) {
+                nf.setMaximumFractionDigits(2);
+                String companyStr = nf.format(value);
+                returnValue = Double.parseDouble(companyStr);
+            }
+        } else if ("单边见角进元取整".equals(rounding)) {
+            // 向上取整
+            returnValue = Math.ceil(value);
+        } else if ("单边见角舍元取整".equals(rounding)) {
+            returnValue = Math.floor(value);
+        }
+
+        return returnValue;
     }
 }

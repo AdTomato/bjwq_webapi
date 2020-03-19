@@ -85,7 +85,7 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
     @Override
     public Map <String, String> getEntryNoticeBy(int monthDifference, String city) throws Exception {
         StringBuffer sql = new StringBuffer();
-        sql.append(" select list.record_of_employment, list.social_security, list.provident_fund, leader.leader ");
+        sql.append(" select list.record_of_employment, list.social_security, list.provident_fund, leader.social_security_leader ");
         sql.append(" from id34a_provincial_entry_list list");
         sql.append(" left join id34a_operate_leader leader on list.city = leader.city ");
         sql.append(" where list.city = '" + city + "'" );
@@ -103,7 +103,7 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
                     "social_security").toString());
             entryNotice.put("provident_fund", list.get(0).get("provident_fund") == null ? "" : list.get(0).get(
                     "provident_fund").toString());
-            entryNotice.put("operate_signatory", list.get(0).get("leader") == null ? "" : list.get(0).get("leader").toString());
+            entryNotice.put("operate_signatory", list.get(0).get("social_security_leader") == null ? "" : list.get(0).get("social_security_leader").toString());
         }
         return entryNotice;
     }
@@ -121,7 +121,7 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
             sqlBuffer.append(" product_name, social_security_group, base_num, sum, company_money,");
             sqlBuffer.append(" employee_money, company_ratio, employee_ratio, company_surcharge_value,");
             sqlBuffer.append(" employee_surcharge_value, precollected, pay_cycle, start_charge_time,");
-            sqlBuffer.append(" end_charge_time, id, parentId");
+            sqlBuffer.append(" end_charge_time, name_hide, id, parentId");
             sqlBuffer.append(" )");
             sqlBuffer.append(" VALUES ");
             for (int i = 0; i < detail.size(); i++) {
@@ -133,6 +133,8 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
                         "precollected") : "";
                 String payCycle = StringUtils.isNotBlank(detail.get(i).get("pay_cycle")) ? detail.get(i).get(
                         "pay_cycle") : "";
+                String nameHide = StringUtils.isNotBlank(detail.get(i).get("name_hide")) ? detail.get(i).get(
+                        "name_hide") : "";
 
                 sqlBuffer.append(" (");
                 sqlBuffer.append(" '" + productName + "',");
@@ -190,6 +192,7 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
                 } else {
                     sqlBuffer.append(" NULL,");
                 }
+                sqlBuffer.append(" '" + nameHide + "',");
                 sqlBuffer.append("MD5(UUID()),");
                 sqlBuffer.append("'" + parentId + "'");
                 sqlBuffer.append(" ),");
@@ -303,6 +306,10 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
         }
         sql.append("   pay.company_ratio,");
         sql.append("   pay.employee_ratio,");
+        sql.append("   pay.company_rounding_policy,");
+        sql.append("   pay.employee_rounding_policy,");
+        sql.append("   pay.company_precision,");
+        sql.append("   pay.employee_precision,");
         sql.append("   pay.company_surcharge_value,");
         sql.append("   pay.employee_surcharge_value,");
         sql.append("   pay.pay_cycle,");
@@ -343,14 +350,14 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
         sql.append(" product_name, social_security_group, base_num, sum, company_money,");
         sql.append(" employee_money, company_ratio, employee_ratio, company_surcharge_value,");
         sql.append(" employee_surcharge_value, precollected, pay_cycle, start_charge_time,");
-        sql.append(" end_charge_time, id, parentId");
+        sql.append(" end_charge_time,name_hide, id, parentId");
         sql.append(" )");
         sql.append(" select * ");
         sql.append(" from (");
         sql.append(" select detail.product_name, detail.social_security_group, detail.base_num, detail.sum,");
         sql.append(" detail.company_money, detail.employee_money, detail.company_ratio, detail.employee_ratio,");
         sql.append(" detail.company_surcharge_value,detail.employee_surcharge_value, detail.precollected,");
-        sql.append(" detail.pay_cycle, detail.start_charge_time, detail.end_charge_time, MD5(UUID()), '" + newId + "' parentId ");
+        sql.append(" detail.pay_cycle, detail.start_charge_time, detail.end_charge_time, detail.name_hide, MD5(UUID()), '" + newId + "' ");
         sql.append(" from i4fvb_social_security_fund_detail detail where 1=1");
         if ("social_security".equals(type)) {
             sql.append(" and detail.social_security_group like '%公积金%' ");
@@ -364,7 +371,7 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
         sql.append(" select product_name, social_security_group, base_num, sum, company_money,");
         sql.append(" employee_money, company_ratio, employee_ratio, company_surcharge_value,");
         sql.append(" employee_surcharge_value, precollected, pay_cycle, start_charge_time,");
-        sql.append(" end_charge_time, MD5(UUID()), '" + newId + "'");
+        sql.append(" end_charge_time, name_hide, MD5(UUID()), '" + newId + "'");
         if ("social_security".equals(type)) {
             sql.append(" from i4fvb_social_security_detail ");
         } else if ("provident_fund".equals(type)) {
@@ -603,7 +610,7 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
                 "mobile", "email", "family_register_nature", "employee_nature", "entry_time", "contract_start_time",
                 "contract_end_time", "contract_salary", "social_security_city", "social_security_start_time",
                 "social_security_base", "provident_fund_city", "provident_fund_start_time", "provident_fund_base",
-                "provident_fund_ratio", "remark"};
+                "company_provident_fund_bl", "employee_provident_fund_bl", "remark"};
         String onnectionCondition = "targetTable.id = sourceTable.add_employee_id";
 
         // 获取sql:根据源表修改目标表数据
@@ -621,7 +628,7 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
                 "social_security_pay_direct", "service_fee", "with_file", "package_involves_procedures", "entry_time",
                 "benefit_start_time", "mobile", "provident_fund_start_time", "whether_consistent",
                 "social_security_section", "social_security_base", "provident_fund_base",
-                "supplement_provident_fund_p", "supplement_provident_fund_b", "charge_start_date",
+                "p_supplement_provident_fund", "u_supplement_provident_fund", "supplement_provident_fund_b", "charge_start_date",
                 "dispatch_period_start_date", "dispatch_deadline", "start_date_trial", "end_time_trial", "wage_trial"
                 , "start_date_positive", "end_date_positive", "wage_positive", "phone", "employee_customer_side_num",
                 "contact_address", "postal_code", "Hukou_location", "mail", "bank_name", "bank_account",

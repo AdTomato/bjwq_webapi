@@ -135,4 +135,22 @@
         WHERE id = #{id}
     </update>
 
+    <update id="updateOrderFormStatusToPrePoint">
+        UPDATE i4fvb_employee_order_form a
+        <choose>
+            <when test="field == 'social_security_status'">
+                INNER JOIN i4fvb_social_security_declare b ON a.id = b.employee_order_form_id
+                SET social_security_status = '预点'
+            </when>
+            <otherwise>
+                INNER JOIN i4fvb_provident_fund_declare b ON a.id = b.employee_order_form_id
+                SET provident_fund_status = '预点'
+            </otherwise>
+        </choose>
+        WHERE b.id IN
+        <foreach item="item" collection="ids" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
 </mapper>

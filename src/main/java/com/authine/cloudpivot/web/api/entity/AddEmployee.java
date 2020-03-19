@@ -74,41 +74,11 @@ public class AddEmployee extends BaseEntity {
     /** 公积金基数*/
     Double providentFundBase;
 
-    /** 公积金比例*/
-    Double providentFundRatio;
+    /** 单位公积金比例*/
+    Double companyProvidentFundBl;
+    /** 个人公积金比例*/
+    Double employeeProvidentFundBl;
 
     /** 备注*/
     String remark;
-
-    public AddEmployee(String clientName, String erp, String employeeName, String identityNoType, String identityNo,
-                       String mobile, String email, String familyRegisterNature, String employeeNature,
-                       Date entryTime, Date contractStartTime, Date contractEndTime, Double contractSalary,
-                       String socialSecurityCity, Date socialSecurityStartTime, Double socialSecurityBase,
-                       String providentFundCity, Date providentFundStartTime, Double providentFundBase,
-                       Double providentFundRatio, String remark, String id, String creater, Date createdTime) {
-        this.clientName = clientName;
-        this.erp = erp;
-        this.employeeName = employeeName;
-        this.identityNoType = identityNoType;
-        this.identityNo = identityNo;
-        this.mobile = mobile;
-        this.email = email;
-        this.familyRegisterNature = familyRegisterNature;
-        this.employeeNature = employeeNature;
-        this.entryTime = entryTime;
-        this.contractStartTime = contractStartTime;
-        this.contractEndTime = contractEndTime;
-        this.contractSalary = contractSalary;
-        this.socialSecurityCity = socialSecurityCity;
-        this.socialSecurityStartTime = socialSecurityStartTime;
-        this.socialSecurityBase = socialSecurityBase;
-        this.providentFundCity = providentFundCity;
-        this.providentFundStartTime = providentFundStartTime;
-        this.providentFundBase = providentFundBase;
-        this.providentFundRatio = providentFundRatio;
-        this.remark = remark;
-        setId(id);
-        setCreater(creater);
-        setCreatedTime(createdTime);
-    }
 }

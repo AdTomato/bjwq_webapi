@@ -91,13 +91,24 @@ public interface EmployeeMaintainService {
     AppointmentSheet getWelfareHandlerByClientNameAndCity(String clientName, String city) throws Exception;
 
     /**
-     * 方法说明：根据地区获取运行负责人
+     * 方法说明：根据地区和福利办理方获取运行负责人
      * @param city 地区
      * @return java.lang.String
      * @author liulei
      * @Date 2020/2/26 10:00
      */
+    @Deprecated
     String getOperateLeaderByCity(String city) throws Exception;
+
+    /**
+     * 方法说明：根据地区和福利办理方获取社保，公积金经办人
+     * @param city
+     * @param welfareHandler
+     * @return com.authine.cloudpivot.web.api.entity.OperateLeader
+     * @author liulei
+     * @Date 2020/3/18 16:30
+     */
+    OperateLeader getOperateLeaderByCityAndWelfareHandler(String city, String welfareHandler) throws Exception;
 
     /**
      * 方法说明：获取员工订单数据
@@ -335,4 +346,14 @@ public interface EmployeeMaintainService {
      */
     void batchReject(BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade, String userId,
                      String ids, String code) throws Exception;
+
+    /**
+     * 方法说明：修改员工钉钉状态为预点
+     * @param ids 表单id
+     * @param field 修改字段名称
+     * @return void
+     * @author liulei
+     * @Date 2020/3/17 14:17
+     */
+    void updateOrderFormStatusToPrePoint(String ids, String field) throws Exception;
 }

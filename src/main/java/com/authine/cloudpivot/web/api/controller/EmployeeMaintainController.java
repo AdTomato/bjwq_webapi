@@ -6,6 +6,7 @@ import com.authine.cloudpivot.web.api.controller.base.BaseController;
 import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.service.*;
 import com.authine.cloudpivot.web.api.service.impl.UpdateEmployeesServiceImpl;
+import com.authine.cloudpivot.web.api.utils.CommonUtils;
 import com.authine.cloudpivot.web.api.utils.ExcelUtils;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
 import lombok.extern.slf4j.Slf4j;
@@ -149,20 +150,31 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFilesService.getEmployeeFilesByIdNoOrClientName(delEmployee.getIdentityNo(),
                             delEmployee.getClientName());
             // 运行负责人
+            OperateLeader operateLeader = null;
             String socialSecurityOperateLeader = null;
             String providentFundOperateLeader = null;
             if (StringUtils.isNotBlank(employeeFiles.getSocialSecurityCity())) {
-                socialSecurityOperateLeader =
-                        employeeMaintainService.getOperateLeaderByCity(employeeFiles.getSocialSecurityCity());
-            }
-            if (StringUtils.isNotBlank(employeeFiles.getProvidentFundCity())) {
-                if (employeeFiles.getProvidentFundCity().equals(employeeFiles.getSocialSecurityCity())) {
-                    providentFundOperateLeader = socialSecurityOperateLeader;
-                } else {
-                    providentFundOperateLeader =
-                            employeeMaintainService.getOperateLeaderByCity(employeeFiles.getProvidentFundCity());
+                operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                        employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                if (operateLeader != null) {
+                    socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
                 }
             }
+            if (StringUtils.isNotBlank(employeeFiles.getProvidentFundCity())) {
+                String welfareHandler = employeeFiles.getSocialSecurityArea() == null ? "" :
+                        employeeFiles.getSocialSecurityArea();
+                if (employeeFiles.getProvidentFundCity().equals(employeeFiles.getSocialSecurityCity())
+                        && welfareHandler.equals(employeeFiles.getProvidentFundArea())) {
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                } else {
+                    operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                            employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                    if (operateLeader != null) {
+                        providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                    }
+                }
+            }
+
             // 根据员工档案的id获取社保公积金信息
             Map <String, String> socialSecurityFund =
                     employeeMaintainService.getSocialSecurityFundDetail(employeeFiles.getId());
@@ -292,18 +304,28 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFilesService.getEmployeeFilesByIdNoOrClientName(shDeleteEmployee.getIdentityNo(),
                             shDeleteEmployee.getClientName());
             // 运行负责人
+            OperateLeader operateLeader = null;
             String socialSecurityOperateLeader = null;
             String providentFundOperateLeader = null;
             if (StringUtils.isNotBlank(employeeFiles.getSocialSecurityCity())) {
-                socialSecurityOperateLeader =
-                        employeeMaintainService.getOperateLeaderByCity(employeeFiles.getSocialSecurityCity());
+                operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                        employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                if (operateLeader != null) {
+                    socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
+                }
             }
             if (StringUtils.isNotBlank(employeeFiles.getProvidentFundCity())) {
-                if (employeeFiles.getProvidentFundCity().equals(employeeFiles.getSocialSecurityCity())) {
-                    providentFundOperateLeader = socialSecurityOperateLeader;
+                String welfareHandler = employeeFiles.getSocialSecurityArea() == null ? "" :
+                        employeeFiles.getSocialSecurityArea();
+                if (employeeFiles.getProvidentFundCity().equals(employeeFiles.getSocialSecurityCity())
+                        && welfareHandler.equals(employeeFiles.getProvidentFundArea())) {
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
                 } else {
-                    providentFundOperateLeader =
-                            employeeMaintainService.getOperateLeaderByCity(employeeFiles.getProvidentFundCity());
+                    operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                            employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                    if (operateLeader != null) {
+                        providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                    }
                 }
             }
             // 根据员工档案的单据号获取社保公积金信息
@@ -439,18 +461,29 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFilesService.getEmployeeFilesByIdNoOrClientName(nationwideDispatch.getIdentityNo(),
                             nationwideDispatch.getBusinessCustomerName());
             // 运行负责人
+            OperateLeader operateLeader = null;
             String socialSecurityOperateLeader = null;
             String providentFundOperateLeader = null;
             if (StringUtils.isNotBlank(employeeFiles.getSocialSecurityCity())) {
-                socialSecurityOperateLeader =
-                        employeeMaintainService.getOperateLeaderByCity(employeeFiles.getSocialSecurityCity());
+                operateLeader =
+                        employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                                employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                if (operateLeader != null) {
+                    socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
+                }
             }
             if (StringUtils.isNotBlank(employeeFiles.getProvidentFundCity())) {
-                if (employeeFiles.getProvidentFundCity().equals(employeeFiles.getSocialSecurityCity())) {
-                    providentFundOperateLeader = socialSecurityOperateLeader;
+                String welfareHandler = employeeFiles.getSocialSecurityArea() == null ? "" :
+                        employeeFiles.getSocialSecurityArea();
+                if (employeeFiles.getProvidentFundCity().equals(employeeFiles.getSocialSecurityCity())
+                        && welfareHandler.equals(employeeFiles.getProvidentFundArea())) {
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
                 } else {
-                    providentFundOperateLeader =
-                            employeeMaintainService.getOperateLeaderByCity(employeeFiles.getProvidentFundCity());
+                    operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                                    employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                    if (operateLeader != null) {
+                        providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                    }
                 }
             }
             // 根据员工档案的单据号获取社保公积金信息
@@ -569,28 +602,52 @@ public class EmployeeMaintainController extends BaseController {
                 log.error("没有获取到增员数据！");
                 return this.getErrResponseResult("error", 404l, "没有获取到增员数据！");
             }
+
+            // 判断是否是六安，是基数四舍五入取整
+            if (addEmployee.getSocialSecurityCity().indexOf("六安") >= 0) {
+                Double base = CommonUtils.processingData(addEmployee.getSocialSecurityBase(), "四舍五入", "0");
+                addEmployee.setSocialSecurityBase(base);
+            }
+            if (addEmployee.getProvidentFundCity().indexOf("六安") >= 0) {
+                Double base = CommonUtils.processingData(addEmployee.getProvidentFundBase(), "四舍五入", "0");
+                addEmployee.setProvidentFundBase(base);
+            }
+
             // 申请人
             String applicant = null;
             if (StringUtils.isNotBlank(addEmployee.getCreater())) {
                 applicant = "[{\"id\":\"" + addEmployee.getCreater() + "\",\"type\":3}]";
             }
+
+            /** 员工档案*/
+            EmployeeFiles employeeFiles = getEmployeeFilesByAddEmployee(addEmployee);
+
             // 运行负责人
+            OperateLeader operateLeader = null;
             String socialSecurityOperateLeader = null;
             String providentFundOperateLeader = null;
             if (StringUtils.isNotBlank(addEmployee.getSocialSecurityCity())) {
-                socialSecurityOperateLeader =
-                        employeeMaintainService.getOperateLeaderByCity(addEmployee.getSocialSecurityCity());
+                operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                        employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                if (operateLeader == null && addEmployee.getSocialSecurityStartTime() != null) {
+                    return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
+                }
+                socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
             }
-            if (StringUtils.isNotBlank(addEmployee.getProvidentFundCity())) {
-                if (addEmployee.getProvidentFundCity().equals(addEmployee.getSocialSecurityCity())) {
-                    providentFundOperateLeader = socialSecurityOperateLeader;
+            if (StringUtils.isNotBlank(employeeFiles.getProvidentFundCity())) {
+                String welfareHandler = employeeFiles.getSocialSecurityArea() == null ? "" : employeeFiles.getSocialSecurityArea();
+                if (employeeFiles.getProvidentFundCity().equals(employeeFiles.getSocialSecurityCity())
+                        && welfareHandler.equals(employeeFiles.getProvidentFundArea())) {
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
                 } else {
-                    providentFundOperateLeader =
-                            employeeMaintainService.getOperateLeaderByCity(addEmployee.getProvidentFundCity());
+                    operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                            employeeFiles.getProvidentFundCity(), employeeFiles.getProvidentFundArea());
+                    if (operateLeader == null && addEmployee.getProvidentFundStartTime() != null) {
+                        return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
+                    }
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
                 }
             }
-            /** 员工档案*/
-            EmployeeFiles employeeFiles = getEmployeeFilesByAddEmployee(addEmployee);
 
             // 根据公司名称，委托单位，地区，员工性质获取业务员和服务费
             Map <String, Object> salesmanAndServiceFee =
@@ -647,7 +704,7 @@ public class EmployeeMaintainController extends BaseController {
                     addEmployee.getSocialSecurityCity(), addEmployee.getSocialSecurityStartTime(),
                     addEmployee.getSocialSecurityBase(), addEmployee.getProvidentFundCity(),
                     addEmployee.getProvidentFundStartTime(), addEmployee.getProvidentFundBase(),
-                    addEmployee.getProvidentFundRatio(), addEmployee.getProvidentFundRatio(), personal);
+                    addEmployee.getCompanyProvidentFundBl(), addEmployee.getEmployeeProvidentFundBl(), personal);
 
             employeeOrderForm.setServiceFee(StringUtils.isBlank(serviceFee) ? 0.0 : Double.parseDouble(serviceFee));
             employeeOrderForm.setTotal(employeeOrderForm.getSum() + employeeOrderForm.getServiceFee());
@@ -675,14 +732,29 @@ public class EmployeeMaintainController extends BaseController {
                     addEmployee.getProvidentFundBase(), providentFundOperateLeader,
                     employeeOrderForm.getProvidentFundDetail());
 
-            Double baseDouble = addEmployee.getProvidentFundBase() == null ? 0.0 : addEmployee.getProvidentFundBase();
-            Double ratioDouble = addEmployee.getProvidentFundRatio() == null ? 0.0 : addEmployee.getProvidentFundRatio();
-            /** 企业缴存额*/
-            Double corporatePayment = baseDouble * ratioDouble;
-            /** 个人缴存额*/
-            Double personalDeposit = baseDouble * ratioDouble;
             /** 缴存总额*/
-            Double totalDeposit = corporatePayment + personalDeposit;
+            Double totalDeposit = null;
+            /** 企业缴存额*/
+            Double corporatePayment = null;
+            /** 个人缴存额*/
+            Double personalDeposit = null;
+            String housingFunds = employeeOrderForm.getHousingAccumulationFunds();
+            if (StringUtils.isNotBlank(housingFunds)) {
+                // housingFunds 保存类型: 缴存总额(corporatePayment+个人缴存额)
+                housingFunds = housingFunds.substring(0, housingFunds.length() - 1);
+                housingFunds = housingFunds.replaceAll("\\(", "#").replaceAll("\\+", "#");
+                String fundsArr[] = housingFunds.split("#");
+                if (StringUtils.isNotBlank(fundsArr[0])) {
+                    totalDeposit = Double.parseDouble(fundsArr[0]);
+                }
+                if (StringUtils.isNotBlank(fundsArr[1])) {
+                    corporatePayment = Double.parseDouble(fundsArr[1]);
+                }
+                if (StringUtils.isNotBlank(fundsArr[2])) {
+                    personalDeposit = Double.parseDouble(fundsArr[2]);
+                }
+            }
+
             providentFundDeclare.setCorporatePayment(corporatePayment);
             providentFundDeclare.setPersonalDeposit(personalDeposit);
             providentFundDeclare.setTotalDeposit(totalDeposit);
@@ -716,7 +788,7 @@ public class EmployeeMaintainController extends BaseController {
             List<BatchPreDispatch> batchPreDispatches = new ArrayList <>();
             if (Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
                 String providentFundRatio =
-                        "" + addEmployee.getProvidentFundRatio() + "+" + addEmployee.getProvidentFundRatio();
+                        "" + addEmployee.getCompanyProvidentFundBl() + "+" + addEmployee.getEmployeeProvidentFundBl();
                 BatchPreDispatch batchPreDispatch = new BatchPreDispatch(employeeFiles.getEmployeeName(),
                         employeeFiles.getIdNo(), employeeFiles.getMobile(), addEmployee.getSocialSecurityBase(),
                         providentFundRatio, null, addEmployee.getProvidentFundBase(), employeeFiles.getEntryTime(),
@@ -754,19 +826,49 @@ public class EmployeeMaintainController extends BaseController {
                 log.error("没有获取到增员数据！");
                 return this.getErrResponseResult("error", 404l, "没有获取到增员数据！");
             }
+            // 判断是否是六安，是基数四舍五入取整
+            if (shAddEmployee.getCityName().indexOf("六安") >= 0) {
+                Double sbase = CommonUtils.processingData(shAddEmployee.getSocialSecurityBase(), "四舍五入", "0");
+                shAddEmployee.setSocialSecurityBase(sbase);
+                Double gbase = CommonUtils.processingData(shAddEmployee.getProvidentFundBase(), "四舍五入", "0");
+                shAddEmployee.setProvidentFundBase(gbase);
+            }
+
             // 申请人
             String applicant = null;
             if (StringUtils.isNotBlank(shAddEmployee.getCreater())) {
                 applicant = "[{\"id\":\"" + shAddEmployee.getCreater() + "\",\"type\":3}]";
             }
-            // 运行负责人
-            String operateLeader = null;
-            if (StringUtils.isNotBlank(shAddEmployee.getCityName())) {
-                operateLeader = employeeMaintainService.getOperateLeaderByCity(shAddEmployee.getCityName());
-            }
 
             /** 员工档案*/
             EmployeeFiles employeeFiles = getEmployeeFilesByAddEmployee(shAddEmployee);
+
+            // 运行负责人
+            OperateLeader operateLeader = null;
+            String socialSecurityOperateLeader = null;
+            String providentFundOperateLeader = null;
+            if (StringUtils.isNotBlank(shAddEmployee.getCityName())) {
+                operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                        employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                if (operateLeader == null && shAddEmployee.getBenefitStartTime() != null) {
+                    return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
+                }
+                socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
+
+                String welfareHandler = employeeFiles.getSocialSecurityArea() == null ? "" :
+                        employeeFiles.getSocialSecurityArea();
+                if (welfareHandler.equals(employeeFiles.getProvidentFundArea())) {
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                } else {
+                    operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                            employeeFiles.getProvidentFundCity(), employeeFiles.getProvidentFundArea());
+                    if (operateLeader == null && shAddEmployee.getProvidentFundStartTime() != null) {
+                        return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
+                    }
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                }
+            }
+
             // 查询客服和服务费
             Map <String, Object> salesmanAndServiceFee =
                     clientService.getClientSalesmanAndFee(employeeFiles.getClientName(),
@@ -824,7 +926,7 @@ public class EmployeeMaintainController extends BaseController {
                     shAddEmployee.getClientName(), shAddEmployee.getBenefitStartTime(),
                     shAddEmployee.getSocialSecurityBase(), shAddEmployee.getClientName(),
                     shAddEmployee.getProvidentFundStartTime(), shAddEmployee.getProvidentFundBase(),
-                    shAddEmployee.getPSupplementProvidentFund(), shAddEmployee.getPSupplementProvidentFund(), personal);
+                    shAddEmployee.getPSupplementProvidentFund(), shAddEmployee.getUSupplementProvidentFund(), personal);
             employeeOrderForm.setServiceFee(StringUtils.isBlank(serviceFee) ? 0.0 : Double.parseDouble(serviceFee));
             employeeOrderForm.setTotal(employeeOrderForm.getSum() + employeeOrderForm.getServiceFee());
 
@@ -839,7 +941,7 @@ public class EmployeeMaintainController extends BaseController {
                     salesman, customerServices, employeeFiles.getSocialSecurityArea(), applicant,
                     shAddEmployee.getCreatedTime(), shAddEmployee.getBenefitStartTime(),
                     shAddEmployee.getSocialSecurityBase(), shAddEmployee.getSocialSecurityBase(),
-                    shAddEmployee.getMobile(), weatherPartWorkInjury, operateLeader,
+                    shAddEmployee.getMobile(), weatherPartWorkInjury, socialSecurityOperateLeader,
                     employeeOrderForm.getSocialSecurityDetail());
 
             /** 公积金申报实体*/
@@ -848,16 +950,30 @@ public class EmployeeMaintainController extends BaseController {
                     shAddEmployee.getIdentityNo(), employeeFiles.getEntrustedUnit(), shAddEmployee.getClientName(),
                     salesman, customerServices, employeeFiles.getProvidentFundArea(), applicant,
                     shAddEmployee.getCreatedTime(), shAddEmployee.getProvidentFundStartTime(),
-                    shAddEmployee.getProvidentFundBase(), operateLeader, employeeOrderForm.getProvidentFundDetail());
+                    shAddEmployee.getProvidentFundBase(), providentFundOperateLeader, employeeOrderForm.getProvidentFundDetail());
 
-            Double baseDouble = shAddEmployee.getProvidentFundBase() == null ? 0.0 : shAddEmployee.getProvidentFundBase();
-            Double ratioDouble = shAddEmployee.getPSupplementProvidentFund() == null ? 0.0 : shAddEmployee.getPSupplementProvidentFund();
-            /** 企业缴存额*/
-            Double corporatePayment = baseDouble * ratioDouble;
-            /** 个人缴存额*/
-            Double personalDeposit = baseDouble * ratioDouble;
             /** 缴存总额*/
-            Double totalDeposit = corporatePayment + personalDeposit;
+            Double totalDeposit = null;
+            /** 企业缴存额*/
+            Double corporatePayment = null;
+            /** 个人缴存额*/
+            Double personalDeposit = null;
+            String housingFunds = employeeOrderForm.getHousingAccumulationFunds();
+            if (StringUtils.isNotBlank(housingFunds)) {
+                // housingFunds 保存类型: 缴存总额(corporatePayment+个人缴存额)
+                housingFunds = housingFunds.substring(0, housingFunds.length() - 1);
+                housingFunds = housingFunds.replaceAll("\\(", "#").replaceAll("\\+", "#");
+                String fundsArr[] = housingFunds.split("#");
+                if (StringUtils.isNotBlank(fundsArr[0])) {
+                    totalDeposit = Double.parseDouble(fundsArr[0]);
+                }
+                if (StringUtils.isNotBlank(fundsArr[1])) {
+                    corporatePayment = Double.parseDouble(fundsArr[1]);
+                }
+                if (StringUtils.isNotBlank(fundsArr[2])) {
+                    personalDeposit = Double.parseDouble(fundsArr[2]);
+                }
+            }
             providentFundDeclare.setCorporatePayment(corporatePayment);
             providentFundDeclare.setPersonalDeposit(personalDeposit);
             providentFundDeclare.setTotalDeposit(totalDeposit);
@@ -891,7 +1007,7 @@ public class EmployeeMaintainController extends BaseController {
             List<BatchPreDispatch> batchPreDispatches = new ArrayList <>();
             if (Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
                 String providentFundRatio =
-                        "" + shAddEmployee.getPSupplementProvidentFund() + "+" + shAddEmployee.getPSupplementProvidentFund();
+                        "" + shAddEmployee.getPSupplementProvidentFund() + "+" + shAddEmployee.getUSupplementProvidentFund();
                 BatchPreDispatch batchPreDispatch = new BatchPreDispatch(employeeFiles.getEmployeeName(),
                         employeeFiles.getIdNo(), employeeFiles.getMobile(), shAddEmployee.getSocialSecurityBase(),
                         providentFundRatio, providentFundRatio, shAddEmployee.getProvidentFundBase(), employeeFiles.getEntryTime(),
@@ -929,19 +1045,47 @@ public class EmployeeMaintainController extends BaseController {
                 log.error("没有获取到增员数据！");
                 return this.getErrResponseResult("error", 404l, "没有获取到增员数据！");
             }
+            // 判断是否是六安，是基数四舍五入取整
+            if (nationwideDispatch.getInvolved().indexOf("六安") >= 0) {
+                Double sbase = CommonUtils.processingData(nationwideDispatch.getSocialInsuranceAmount(), "四舍五入", "0");
+                nationwideDispatch.setSocialInsuranceAmount(sbase);
+                Double gbase = CommonUtils.processingData(nationwideDispatch.getProvidentFundAmount(), "四舍五入", "0");
+                nationwideDispatch.setProvidentFundAmount(gbase);
+            }
             // 申请人
             String applicant = null;
             if (StringUtils.isNotBlank(nationwideDispatch.getCreater())) {
                 applicant = "[{\"id\":\"" + nationwideDispatch.getCreater() + "\",\"type\":3}]";
             }
-            // 运行负责人
-            String operateLeader = null;
-            if (StringUtils.isNotBlank(nationwideDispatch.getInvolved())) {
-                operateLeader = employeeMaintainService.getOperateLeaderByCity(nationwideDispatch.getInvolved());
-            }
 
             /** 员工档案*/
             EmployeeFiles employeeFiles = getEmployeeFilesByAddEmployee(nationwideDispatch);
+            // 运行负责人
+            OperateLeader operateLeader = null;
+            String socialSecurityOperateLeader = "";
+            String providentFundOperateLeader = "";
+            if (StringUtils.isNotBlank(nationwideDispatch.getInvolved())) {
+                operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                        employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                if (operateLeader == null && nationwideDispatch.getSServiceFeeStartDate() != null) {
+                    return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
+                }
+                socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
+
+                String welfareHandler = employeeFiles.getSocialSecurityArea() == null ? "" :
+                        employeeFiles.getSocialSecurityArea();
+                if (welfareHandler.equals(employeeFiles.getProvidentFundArea())) {
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                } else {
+                    operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                            employeeFiles.getProvidentFundCity(), employeeFiles.getProvidentFundArea());
+                    if (operateLeader == null && nationwideDispatch.getGServiceFeeStartDate() != null) {
+                        return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
+                    }
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                }
+            }
+
             // 查询客服和服务费
             Map <String, Object> salesmanAndServiceFee =
                     clientService.getClientSalesmanAndFee(employeeFiles.getClientName(),
@@ -1023,7 +1167,7 @@ public class EmployeeMaintainController extends BaseController {
                             nationwideDispatch.getSServiceFeeStartDate(),
                             nationwideDispatch.getSocialInsuranceAmount(),
                             nationwideDispatch.getSocialInsuranceAmount(), nationwideDispatch.getContactNumber(),
-                            weatherPartWorkInjury, operateLeader, employeeOrderForm.getSocialSecurityDetail());
+                            weatherPartWorkInjury, socialSecurityOperateLeader, employeeOrderForm.getSocialSecurityDetail());
 
             /** 公积金申报实体*/
             ProvidentFundDeclare providentFundDeclare = new ProvidentFundDeclare(nationwideDispatch.getEmployeeName(),
@@ -1032,16 +1176,30 @@ public class EmployeeMaintainController extends BaseController {
                     nationwideDispatch.getBusinessCustomerName(), salesman, customerServices,
                     employeeFiles.getProvidentFundArea(), applicant, nationwideDispatch.getCreatedTime(),
                     nationwideDispatch.getGServiceFeeStartDate(), nationwideDispatch.getProvidentFundAmount(),
-                    operateLeader, employeeOrderForm.getProvidentFundDetail());
+                    providentFundOperateLeader, employeeOrderForm.getProvidentFundDetail());
 
-            Double baseDouble = nationwideDispatch.getProvidentFundAmount() == null ? 0.0 :
-                    nationwideDispatch.getProvidentFundAmount();
-            /** 企业缴存额*/
-            Double corporatePayment = baseDouble * companyRatio;
-            /** 个人缴存额*/
-            Double personalDeposit = baseDouble * employeeRatio;
             /** 缴存总额*/
-            Double totalDeposit = corporatePayment + personalDeposit;
+            Double totalDeposit = null;
+            /** 企业缴存额*/
+            Double corporatePayment = null;
+            /** 个人缴存额*/
+            Double personalDeposit = null;
+            String housingFunds = employeeOrderForm.getHousingAccumulationFunds();
+            if (StringUtils.isNotBlank(housingFunds)) {
+                // housingFunds 保存类型: 缴存总额(corporatePayment+个人缴存额)
+                housingFunds = housingFunds.substring(0, housingFunds.length() - 1);
+                housingFunds = housingFunds.replaceAll("\\(", "#").replaceAll("\\+", "#");
+                String fundsArr[] = housingFunds.split("#");
+                if (StringUtils.isNotBlank(fundsArr[0])) {
+                    totalDeposit = Double.parseDouble(fundsArr[0]);
+                }
+                if (StringUtils.isNotBlank(fundsArr[1])) {
+                    corporatePayment = Double.parseDouble(fundsArr[1]);
+                }
+                if (StringUtils.isNotBlank(fundsArr[2])) {
+                    personalDeposit = Double.parseDouble(fundsArr[2]);
+                }
+            }
             providentFundDeclare.setCorporatePayment(corporatePayment);
             providentFundDeclare.setPersonalDeposit(personalDeposit);
             providentFundDeclare.setTotalDeposit(totalDeposit);
@@ -1132,7 +1290,7 @@ public class EmployeeMaintainController extends BaseController {
     /**
      * 方法说明：增员_客户创建员工档案
      * @param addEmployee
-     * @return com.authine.cloudpivot.web.api.entity.EmployeeFilesDto
+     * @return com.authine.cloudpivot.web.api.entity.EmployeeFiles
      * @author liulei
      * @Date 2020/2/26 13:36
      */
@@ -1163,7 +1321,7 @@ public class EmployeeMaintainController extends BaseController {
         }
         if (StringUtils.isNotBlank(addEmployee.getProvidentFundCity())) {
             if (addEmployee.getProvidentFundCity().equals(addEmployee.getSocialSecurityCity())) {
-                providentFundWelfareHandler = socialSecurityWelfareHandler;
+                providentFundWelfareHandler = appointmentSheet.getGWelfareHandler();
             } else {
                 appointmentSheet =
                         employeeMaintainService.getWelfareHandlerByClientNameAndCity(addEmployee.getClientName(),
@@ -1190,7 +1348,7 @@ public class EmployeeMaintainController extends BaseController {
     /**
      * 方法说明：增员_上海创建员工档案
      * @param shAddEmployee
-     * @return com.authine.cloudpivot.web.api.entity.EmployeeFilesDto
+     * @return com.authine.cloudpivot.web.api.entity.EmployeeFiles
      * @author liulei
      * @Date 2020/2/26 13:36
      */
@@ -1229,7 +1387,7 @@ public class EmployeeMaintainController extends BaseController {
     /**
      * 方法说明：增员_全国创建员工档案
      * @param nationwideDispatch
-     * @return com.authine.cloudpivot.web.api.entity.EmployeeFilesDto
+     * @return com.authine.cloudpivot.web.api.entity.EmployeeFiles
      * @author liulei
      * @Date 2020/2/26 13:36
      */
@@ -1514,6 +1672,15 @@ public class EmployeeMaintainController extends BaseController {
             if (addEmployee == null) {
                 return this.getErrResponseResult("error", 404l, "没有获取到修改表单数据！");
             }
+            // 判断是否是六安，是基数四舍五入取整
+            if (addEmployee.getSocialSecurityCity().indexOf("六安") >= 0) {
+                Double base = CommonUtils.processingData(addEmployee.getSocialSecurityBase(), "四舍五入", "0");
+                addEmployee.setSocialSecurityBase(base);
+            }
+            if (addEmployee.getProvidentFundCity().indexOf("六安") >= 0) {
+                Double base = CommonUtils.processingData(addEmployee.getProvidentFundBase(), "四舍五入", "0");
+                addEmployee.setProvidentFundBase(base);
+            }
             // 获取原增员表单
             AddEmployee oldAddEmployee = addEmployeeService.getAddEmployeeById(addEmployee.getAddEmployeeId());
             if (oldAddEmployee == null) {
@@ -1551,31 +1718,39 @@ public class EmployeeMaintainController extends BaseController {
             addEmployee.setCreatedTime(oldAddEmployee.getCreatedTime());
             // 申报人
             String applicant = oldEmployeeFiles.getReportRecruits();
-            // 运行负责人
-            String socialSecurityOperateLeader = null;
-            String providentFundOperateLeader = null;
-            if (StringUtils.isNotBlank(addEmployee.getSocialSecurityCity())) {
-                if (addEmployee.getSocialSecurityCity().equals(oldAddEmployee.getSocialSecurityCity())) {
-                    socialSecurityOperateLeader = oldSocialSecurityDeclare.getOperateLeader();
-                } else {
-                    socialSecurityOperateLeader =
-                            employeeMaintainService.getOperateLeaderByCity(addEmployee.getSocialSecurityCity());
-                }
-            }
-            if (StringUtils.isNotBlank(addEmployee.getProvidentFundCity())) {
-                if (addEmployee.getProvidentFundCity().equals(addEmployee.getSocialSecurityCity())) {
-                    providentFundOperateLeader = socialSecurityOperateLeader;
-                } else {
-                    providentFundOperateLeader =
-                            employeeMaintainService.getOperateLeaderByCity(addEmployee.getProvidentFundCity());
-                }
-            }
 
             /** 员工档案*/
             EmployeeFiles employeeFiles = getEmployeeFilesByAddEmployee(addEmployee);
             employeeFiles.setName(employeeFiles.getEmployeeName());
             employeeFiles.setReportRecruits(applicant);
             employeeFiles.setEntryNotice(employeeFiles.getEntryNotice());
+
+            // 运行负责人
+            OperateLeader operateLeader = null;
+            String socialSecurityOperateLeader = null;
+            String providentFundOperateLeader = null;
+            if (StringUtils.isNotBlank(addEmployee.getSocialSecurityCity())) {
+                operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                        employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                if (operateLeader == null && addEmployee.getSocialSecurityStartTime() != null) {
+                    return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
+                }
+                socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
+            }
+            if (StringUtils.isNotBlank(employeeFiles.getProvidentFundCity())) {
+                String welfareHandler = employeeFiles.getSocialSecurityArea() == null ? "" : employeeFiles.getSocialSecurityArea();
+                if (employeeFiles.getProvidentFundCity().equals(employeeFiles.getSocialSecurityCity())
+                        && welfareHandler.equals(employeeFiles.getProvidentFundArea())) {
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                } else {
+                    operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                            employeeFiles.getProvidentFundCity(), employeeFiles.getProvidentFundArea());
+                    if (operateLeader == null && addEmployee.getProvidentFundStartTime() != null) {
+                        return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
+                    }
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                }
+            }
 
             // 根据公司名称，委托单位，地区，员工性质获取业务员和服务费
             Map <String, Object> salesmanAndServiceFee =
@@ -1612,7 +1787,7 @@ public class EmployeeMaintainController extends BaseController {
                     addEmployee.getSocialSecurityCity(), addEmployee.getSocialSecurityStartTime(),
                     addEmployee.getSocialSecurityBase(), addEmployee.getProvidentFundCity(),
                     addEmployee.getProvidentFundStartTime(), addEmployee.getProvidentFundBase(),
-                    addEmployee.getProvidentFundRatio(), addEmployee.getProvidentFundRatio(), personal);
+                    addEmployee.getCompanyProvidentFundBl(), addEmployee.getEmployeeProvidentFundBl(), personal);
             employeeOrderForm.setId(oldEmployeeOrderForm.getId());
 
             employeeOrderForm.setServiceFee(StringUtils.isBlank(serviceFee) ? 0.0 : Double.parseDouble(serviceFee));
@@ -1649,14 +1824,28 @@ public class EmployeeMaintainController extends BaseController {
             providentFundDeclare.setEmployeeOrderFormId(oldProvidentFundDeclare.getEmployeeOrderFormId());
             providentFundDeclare.setIsChange("是");
 
-            Double baseDouble = addEmployee.getProvidentFundBase() == null ? 0.0 : addEmployee.getProvidentFundBase();
-            Double ratioDouble = addEmployee.getProvidentFundRatio() == null ? 0.0 : addEmployee.getProvidentFundRatio();
-            /** 企业缴存额*/
-            Double corporatePayment = baseDouble * ratioDouble;
-            /** 个人缴存额*/
-            Double personalDeposit = baseDouble * ratioDouble;
             /** 缴存总额*/
-            Double totalDeposit = corporatePayment + personalDeposit;
+            Double totalDeposit = null;
+            /** 企业缴存额*/
+            Double corporatePayment = null;
+            /** 个人缴存额*/
+            Double personalDeposit = null;
+            String housingFunds = employeeOrderForm.getHousingAccumulationFunds();
+            if (StringUtils.isNotBlank(housingFunds)) {
+                // housingFunds 保存类型: 缴存总额(corporatePayment+个人缴存额)
+                housingFunds = housingFunds.substring(0, housingFunds.length() - 1);
+                housingFunds = housingFunds.replaceAll("\\(", "#").replaceAll("\\+", "#");
+                String fundsArr[] = housingFunds.split("#");
+                if (StringUtils.isNotBlank(fundsArr[0])) {
+                    totalDeposit = Double.parseDouble(fundsArr[0]);
+                }
+                if (StringUtils.isNotBlank(fundsArr[1])) {
+                    corporatePayment = Double.parseDouble(fundsArr[1]);
+                }
+                if (StringUtils.isNotBlank(fundsArr[2])) {
+                    personalDeposit = Double.parseDouble(fundsArr[2]);
+                }
+            }
             providentFundDeclare.setCorporatePayment(corporatePayment);
             providentFundDeclare.setPersonalDeposit(personalDeposit);
             providentFundDeclare.setTotalDeposit(totalDeposit);
@@ -1685,6 +1874,13 @@ public class EmployeeMaintainController extends BaseController {
             ShAddEmployee shAddEmployee = updateEmployeeService.getShAddEmployeeUpdateById(id);
             if (shAddEmployee == null) {
                 return this.getErrResponseResult("error", 404l, "没有获取到修改表单数据！");
+            }
+            // 判断是否是六安，是基数四舍五入取整
+            if (shAddEmployee.getCityName().indexOf("六安") >= 0) {
+                Double sbase = CommonUtils.processingData(shAddEmployee.getSocialSecurityBase(), "四舍五入", "0");
+                shAddEmployee.setSocialSecurityBase(sbase);
+                Double gbase = CommonUtils.processingData(shAddEmployee.getProvidentFundBase(), "四舍五入", "0");
+                shAddEmployee.setProvidentFundBase(gbase);
             }
             // 获取原增员表单
             ShAddEmployee oldShAddEmployee =
@@ -1725,22 +1921,38 @@ public class EmployeeMaintainController extends BaseController {
             // 申报人
             String applicant = oldEmployeeFiles.getReportRecruits();
 
-            // 运行负责人
-            String operateLeader = null;
-            if (StringUtils.isNotBlank(shAddEmployee.getCityName())) {
-                if (shAddEmployee.getCityName().equals(oldShAddEmployee.getCityName())) {
-                    operateLeader = oldSocialSecurityDeclare.getOperateLeader();
-                } else {
-                    operateLeader =
-                            employeeMaintainService.getOperateLeaderByCity(shAddEmployee.getCityName());
-                }
-            }
-
             /** 员工档案*/
             EmployeeFiles employeeFiles = getEmployeeFilesByAddEmployee(shAddEmployee);
             employeeFiles.setName(employeeFiles.getEmployeeName());
             employeeFiles.setReportRecruits(applicant);
             employeeFiles.setEntryNotice(employeeFiles.getEntryNotice());
+
+            // 运行负责人
+            OperateLeader operateLeader = null;
+            String socialSecurityOperateLeader = null;
+            String providentFundOperateLeader = null;
+            if (StringUtils.isNotBlank(shAddEmployee.getCityName())) {
+                operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                        employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                if (operateLeader == null && shAddEmployee.getBenefitStartTime() != null) {
+                    return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
+                }
+                socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
+
+                String welfareHandler = employeeFiles.getSocialSecurityArea() == null ? "" :
+                        employeeFiles.getSocialSecurityArea();
+                if (welfareHandler.equals(employeeFiles.getProvidentFundArea())) {
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                } else {
+                    operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                            employeeFiles.getProvidentFundCity(), employeeFiles.getProvidentFundArea());
+                    if (operateLeader == null && shAddEmployee.getProvidentFundStartTime() != null) {
+                        return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
+                    }
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                }
+            }
+
             // 查询客服和服务费
             Map <String, Object> salesmanAndServiceFee =
                     clientService.getClientSalesmanAndFee(employeeFiles.getClientName(),
@@ -1777,7 +1989,7 @@ public class EmployeeMaintainController extends BaseController {
                     shAddEmployee.getClientName(), shAddEmployee.getBenefitStartTime(),
                     shAddEmployee.getSocialSecurityBase(), shAddEmployee.getClientName(),
                     shAddEmployee.getProvidentFundStartTime(), shAddEmployee.getProvidentFundBase(),
-                    shAddEmployee.getPSupplementProvidentFund(), shAddEmployee.getPSupplementProvidentFund(), personal);
+                    shAddEmployee.getPSupplementProvidentFund(), shAddEmployee.getUSupplementProvidentFund(), personal);
             employeeOrderForm.setId(oldEmployeeOrderForm.getId());
             employeeOrderForm.setServiceFee(StringUtils.isBlank(serviceFee) ? 0.0 : Double.parseDouble(serviceFee));
             employeeOrderForm.setTotal(employeeOrderForm.getSum() + employeeOrderForm.getServiceFee());
@@ -1793,7 +2005,7 @@ public class EmployeeMaintainController extends BaseController {
                     salesman, customerServices, employeeFiles.getSocialSecurityArea(), applicant,
                     shAddEmployee.getCreatedTime(), shAddEmployee.getBenefitStartTime(),
                     shAddEmployee.getSocialSecurityBase(), shAddEmployee.getSocialSecurityBase(),
-                    shAddEmployee.getMobile(), weatherPartWorkInjury, operateLeader,
+                    shAddEmployee.getMobile(), weatherPartWorkInjury, socialSecurityOperateLeader,
                     employeeOrderForm.getSocialSecurityDetail());
             socialSecurityDeclare.setId(oldSocialSecurityDeclare.getId());
             socialSecurityDeclare.setName(employeeFiles.getEmployeeName());
@@ -1806,20 +2018,34 @@ public class EmployeeMaintainController extends BaseController {
                     shAddEmployee.getIdentityNo(), employeeFiles.getEntrustedUnit(), shAddEmployee.getClientName(),
                     salesman, customerServices, employeeFiles.getProvidentFundArea(), applicant,
                     shAddEmployee.getCreatedTime(), shAddEmployee.getProvidentFundStartTime(),
-                    shAddEmployee.getProvidentFundBase(), operateLeader, employeeOrderForm.getProvidentFundDetail());
+                    shAddEmployee.getProvidentFundBase(), providentFundOperateLeader, employeeOrderForm.getProvidentFundDetail());
             providentFundDeclare.setId(oldProvidentFundDeclare.getId());
             providentFundDeclare.setName(employeeFiles.getEmployeeName());
             providentFundDeclare.setEmployeeOrderFormId(oldProvidentFundDeclare.getEmployeeOrderFormId());
             providentFundDeclare.setIsChange("是");
 
-            Double baseDouble = shAddEmployee.getProvidentFundBase() == null ? 0.0 : shAddEmployee.getProvidentFundBase();
-            Double ratioDouble = shAddEmployee.getPSupplementProvidentFund() == null ? 0.0 : shAddEmployee.getPSupplementProvidentFund();
-            /** 企业缴存额*/
-            Double corporatePayment = baseDouble * ratioDouble;
-            /** 个人缴存额*/
-            Double personalDeposit = baseDouble * ratioDouble;
             /** 缴存总额*/
-            Double totalDeposit = corporatePayment + personalDeposit;
+            Double totalDeposit = null;
+            /** 企业缴存额*/
+            Double corporatePayment = null;
+            /** 个人缴存额*/
+            Double personalDeposit = null;
+            String housingFunds = employeeOrderForm.getHousingAccumulationFunds();
+            if (StringUtils.isNotBlank(housingFunds)) {
+                // housingFunds 保存类型: 缴存总额(corporatePayment+个人缴存额)
+                housingFunds = housingFunds.substring(0, housingFunds.length() - 1);
+                housingFunds = housingFunds.replaceAll("\\(", "#").replaceAll("\\+", "#");
+                String fundsArr[] = housingFunds.split("#");
+                if (StringUtils.isNotBlank(fundsArr[0])) {
+                    totalDeposit = Double.parseDouble(fundsArr[0]);
+                }
+                if (StringUtils.isNotBlank(fundsArr[1])) {
+                    corporatePayment = Double.parseDouble(fundsArr[1]);
+                }
+                if (StringUtils.isNotBlank(fundsArr[2])) {
+                    personalDeposit = Double.parseDouble(fundsArr[2]);
+                }
+            }
             providentFundDeclare.setCorporatePayment(corporatePayment);
             providentFundDeclare.setPersonalDeposit(personalDeposit);
             providentFundDeclare.setTotalDeposit(totalDeposit);
@@ -1848,6 +2074,13 @@ public class EmployeeMaintainController extends BaseController {
             NationwideDispatch nationwideDispatch = updateEmployeeService.getQgAddEmployeeUpdateById(id);
             if (nationwideDispatch == null) {
                 return this.getErrResponseResult("error", 404l, "没有获取到修改表单数据！");
+            }
+            // 判断是否是六安，是基数四舍五入取整
+            if (nationwideDispatch.getInvolved().indexOf("六安") >= 0) {
+                Double sbase = CommonUtils.processingData(nationwideDispatch.getSocialInsuranceAmount(), "四舍五入", "0");
+                nationwideDispatch.setSocialInsuranceAmount(sbase);
+                Double gbase = CommonUtils.processingData(nationwideDispatch.getProvidentFundAmount(), "四舍五入", "0");
+                nationwideDispatch.setProvidentFundAmount(gbase);
             }
             // 获取原增员表单
             NationwideDispatch oldNationwideDispatch =
@@ -1887,22 +2120,38 @@ public class EmployeeMaintainController extends BaseController {
             // 申报人
             String applicant = oldEmployeeFiles.getReportRecruits();
 
-            // 运行负责人
-            String operateLeader = null;
-            if (StringUtils.isNotBlank(nationwideDispatch.getInvolved())) {
-                if (nationwideDispatch.getInvolved().equals(oldNationwideDispatch.getInvolved())) {
-                    operateLeader = oldSocialSecurityDeclare.getOperateLeader();
-                } else {
-                    operateLeader =
-                            employeeMaintainService.getOperateLeaderByCity(nationwideDispatch.getInvolved());
-                }
-            }
-
             /** 员工档案*/
             EmployeeFiles employeeFiles = getEmployeeFilesByAddEmployee(nationwideDispatch);
             employeeFiles.setName(employeeFiles.getEmployeeName());
             employeeFiles.setReportRecruits(applicant);
             employeeFiles.setEntryNotice(employeeFiles.getEntryNotice());
+
+            // 运行负责人
+            OperateLeader operateLeader = null;
+            String socialSecurityOperateLeader = "";
+            String providentFundOperateLeader = "";
+            if (StringUtils.isNotBlank(nationwideDispatch.getInvolved())) {
+                operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                        employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                if (operateLeader == null && nationwideDispatch.getSServiceFeeStartDate() != null) {
+                    return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
+                }
+                socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
+
+                String welfareHandler = employeeFiles.getSocialSecurityArea() == null ? "" :
+                        employeeFiles.getSocialSecurityArea();
+                if (welfareHandler.equals(employeeFiles.getProvidentFundArea())) {
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                } else {
+                    operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                            employeeFiles.getProvidentFundCity(), employeeFiles.getProvidentFundArea());
+                    if (operateLeader == null && nationwideDispatch.getGServiceFeeStartDate() != null) {
+                        return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
+                    }
+                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                }
+            }
+
             // 查询客服和服务费
             Map <String, Object> salesmanAndServiceFee =
                     clientService.getClientSalesmanAndFee(employeeFiles.getClientName(),
@@ -1962,7 +2211,7 @@ public class EmployeeMaintainController extends BaseController {
                             nationwideDispatch.getSServiceFeeStartDate(),
                             nationwideDispatch.getSocialInsuranceAmount(),
                             nationwideDispatch.getSocialInsuranceAmount(), nationwideDispatch.getContactNumber(),
-                            weatherPartWorkInjury, operateLeader, employeeOrderForm.getSocialSecurityDetail());
+                            weatherPartWorkInjury, socialSecurityOperateLeader, employeeOrderForm.getSocialSecurityDetail());
             socialSecurityDeclare.setId(oldSocialSecurityDeclare.getId());
             socialSecurityDeclare.setName(employeeFiles.getEmployeeName());
             socialSecurityDeclare.setEmployeeOrderFormId(oldSocialSecurityDeclare.getEmployeeOrderFormId());
@@ -1975,20 +2224,35 @@ public class EmployeeMaintainController extends BaseController {
                     nationwideDispatch.getBusinessCustomerName(), salesman, customerServices,
                     employeeFiles.getProvidentFundArea(), applicant, nationwideDispatch.getCreatedTime(),
                     nationwideDispatch.getGServiceFeeStartDate(), nationwideDispatch.getProvidentFundAmount(),
-                    operateLeader, employeeOrderForm.getProvidentFundDetail());
+                    providentFundOperateLeader, employeeOrderForm.getProvidentFundDetail());
             providentFundDeclare.setId(oldProvidentFundDeclare.getId());
             providentFundDeclare.setName(employeeFiles.getEmployeeName());
             providentFundDeclare.setEmployeeOrderFormId(oldProvidentFundDeclare.getEmployeeOrderFormId());
             providentFundDeclare.setIsChange("是");
 
-            Double baseDouble = nationwideDispatch.getProvidentFundAmount() == null ? 0.0 :
-                    nationwideDispatch.getProvidentFundAmount();
-            /** 企业缴存额*/
-            Double corporatePayment = baseDouble * companyRatio;
-            /** 个人缴存额*/
-            Double personalDeposit = baseDouble * employeeRatio;
             /** 缴存总额*/
-            Double totalDeposit = corporatePayment + personalDeposit;
+            Double totalDeposit = null;
+            /** 企业缴存额*/
+            Double corporatePayment = null;
+            /** 个人缴存额*/
+            Double personalDeposit = null;
+            String housingFunds = employeeOrderForm.getHousingAccumulationFunds();
+            if (StringUtils.isNotBlank(housingFunds)) {
+                // housingFunds 保存类型: 缴存总额(corporatePayment+个人缴存额)
+                housingFunds = housingFunds.substring(0, housingFunds.length() - 1);
+                housingFunds = housingFunds.replaceAll("\\(", "#").replaceAll("\\+", "#");
+                String fundsArr[] = housingFunds.split("#");
+                if (StringUtils.isNotBlank(fundsArr[0])) {
+                    totalDeposit = Double.parseDouble(fundsArr[0]);
+                }
+                if (StringUtils.isNotBlank(fundsArr[1])) {
+                    corporatePayment = Double.parseDouble(fundsArr[1]);
+                }
+                if (StringUtils.isNotBlank(fundsArr[2])) {
+                    personalDeposit = Double.parseDouble(fundsArr[2]);
+                }
+            }
+
             providentFundDeclare.setCorporatePayment(corporatePayment);
             providentFundDeclare.setPersonalDeposit(personalDeposit);
             providentFundDeclare.setTotalDeposit(totalDeposit);
@@ -1998,6 +2262,32 @@ public class EmployeeMaintainController extends BaseController {
             return this.getOkResponseResult("success", "操作成功");
         } catch (Exception e) {
             log.info(e.getMessage());
+            return this.getErrResponseResult("error", 404l, e.getMessage());
+        }
+    }
+
+    /**
+     * 方法说明：修改员工钉钉状态为预点
+     * @param ids 表单id
+     * @param field 修改字段名称
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @author liulei
+     * @Date 2020/3/17 14:08
+     */
+    @GetMapping("/updateOrderFormStatusToPrePoint")
+    @ResponseBody
+    public ResponseResult<String> updateOrderFormStatusToPrePoint(String ids, String field) {
+        if (StringUtils.isBlank(ids)) {
+            return this.getErrResponseResult("error", 404l, "没有获取到ids！");
+        }
+        if (StringUtils.isBlank(field)) {
+            return this.getErrResponseResult("error", 404l, "没有获取到修改字段值！");
+        }
+        try {
+            employeeMaintainService.updateOrderFormStatusToPrePoint(ids, field);
+            return this.getOkResponseResult("success", "操作成功！");
+        } catch (Exception e) {
+            log.error(e.getMessage());
             return this.getErrResponseResult("error", 404l, e.getMessage());
         }
     }

@@ -360,7 +360,8 @@ public class DataModifyController extends BaseController {
         checkString(addEmployee.getProvidentFundCity(), addEmployeeUpdate.getProvidentFundCity(), "公积金福利地", id, data);
         checkDate(addEmployee.getProvidentFundStartTime(), addEmployeeUpdate.getProvidentFundStartTime(), "公积金起做时间", id, data);
         checkDouble(addEmployee.getProvidentFundBase(), addEmployeeUpdate.getProvidentFundBase(), "公积金基数", id, data);
-        checkDouble(addEmployee.getProvidentFundRatio(), addEmployeeUpdate.getProvidentFundRatio(), "公积金比例", id, data);
+        checkDouble(addEmployee.getCompanyProvidentFundBl(), addEmployeeUpdate.getCompanyProvidentFundBl(), "单位公积金比例", id, data);
+        checkDouble(addEmployee.getEmployeeProvidentFundBl(), addEmployeeUpdate.getEmployeeProvidentFundBl(), "个人公积金比例s", id, data);
         if (data.size() != 0) {
             employeeFilesService.addEmployeeUpdateDetail(data);
         }

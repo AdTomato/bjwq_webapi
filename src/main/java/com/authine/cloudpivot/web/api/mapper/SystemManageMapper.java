@@ -1,8 +1,11 @@
 package com.authine.cloudpivot.web.api.mapper;
 
 import com.authine.cloudpivot.web.api.entity.AppointmentSheet;
+import com.authine.cloudpivot.web.api.entity.OperateLeader;
 import com.authine.cloudpivot.web.api.entity.OrgUser;
 import com.authine.cloudpivot.web.api.entity.SmsHistory;
+
+import java.util.List;
 
 /**
  * @Author: wangyong
@@ -26,7 +29,7 @@ public interface SystemManageMapper {
      * @author liulei
      * @Date 2020/3/11 13:34
      */
-    AppointmentSheet getWelfareHandlerByClientNameAndCity(String clientName, String city);
+    List <AppointmentSheet> getWelfareHandlerByClientNameAndCity(String clientName, String city);
 
     /**
      * @param mobile: 手机号码
@@ -45,4 +48,14 @@ public interface SystemManageMapper {
      * @Description: 手机历史验证码
      */
     SmsHistory getSmsHistoryById(String id);
+
+    /**
+     * 方法说明：根据地区和福利办理方获取社保，公积金经办人
+     * @param city
+     * @param welfareHandler
+     * @return com.authine.cloudpivot.web.api.entity.OperateLeader
+     * @author liulei
+     * @Date 2020/3/18 16:35
+     */
+    List<OperateLeader> getOperateLeaderByCityAndWelfareHandler(String city, String welfareHandler);
 }

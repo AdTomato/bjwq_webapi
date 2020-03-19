@@ -23,4 +23,7 @@
         SELECT * FROM id34a_sms_history WHERE id = #{id}
     </select>
 
+    <select id="getOperateLeaderByCityAndWelfareHandler" resultType="com.authine.cloudpivot.web.api.entity.OperateLeader">
+        select * from id34a_operate_leader where city = #{city} and welfare_handler = #{welfareHandler}
+    </select>
 </mapper>

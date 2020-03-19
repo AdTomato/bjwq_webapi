@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.SocialSecurityCardMapper">
+    <insert id="batchInsertSocialSecurityCard" parameterType="java.util.List">
+        INSERT INTO ivdlf_social_security_card
+        (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId,
+         sequenceNo, sequenceStatus, ownerDeptQueryCode, city, submission_list, is_vip, is_emerg, upload_info, is_get,
+         receive, salesman, operator, employee_name, company_name, identityNo, employee_status, mobile, process_select,
+         process_detail, sin_card, have_submission_list, is_class, track_long, track_hide, issue_select, issue_detail,
+         track_detail, address)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id},#{item.name},#{item.creater},#{item.createdDeptId},#{item.owner},#{item.ownerDeptId},
+             #{item.createdTime},#{item.modifier},#{item.modifiedTime}, #{item.workflowInstanceId},#{item.sequenceNo},
+             #{item.sequenceStatus},#{item.ownerDeptQueryCode},#{item.city},#{item.submissionList},#{item.isVip},
+             #{item.isEmerg},#{item.uploadInfo}, #{item.isGet},#{item.receive},#{item.salesman},#{item.operator},
+             #{item.employeeName},#{item.companyName},#{item.identityNo},#{item.employeeStatus},#{item.mobile},
+             #{item.processSelect},#{item.processDetail},#{item.sinCard},#{item.haveSubmissionList},#{item.isClass},
+             #{item.trackLong},#{item.trackHide},#{item.issueSelect},#{item.issueDetail},#{item.trackDetail},
+             #{item.address})
+        </foreach>
+    </insert>
+
+    <update id="updateSocialSecurityCardWhenInsert" parameterType="java.util.List">
+        UPDATE ivdlf_social_security_card card
+        LEFT JOIN h_org_user org ON org.name = card.salesman
+        LEFT JOIN id34a_operate_area area ON area.city = card.city
+        LEFT JOIN i4fvb_employee_files files ON files.id_no = card.identityNo AND files.client_name = card.company_name
+        SET card.salesman = CONCAT('[{"id":"', org.id, '","type":3'),
+        card.city = area.id,
+        card.operator = area.operator,
+        card.is_vip = (case when files.employee_labels is null or files.employee_labels = '' then null when
+        files.employee_labels like '%vip%' then '是' else '否' end),
+        card.mobile = files.mobile
+        WHERE card.id IN
+        <foreach item="item" collection="list" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND org.departmentId in
+        ('402881c16eed73b5016eeea565c50063','402881c16eed73b5016eeea574930086','402881c16eed73b5016eeea5676c0066',
+         '402881c16eed73b5016eeea5978500e4','402881c16eed73b5016eeea5a07800fb','402881c16eed73b5016eeea5a730010a')
+    </update>
+
+    <insert id="insertTempData" parameterType="java.util.List">
+        INSERT INTO import_social_security_card_temp
+        (id, source_id, sequenceNo, process_select, process_detail, sin_card, issue_select, issue_detail)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id},#{item.sourceId},#{item.sequenceNo},#{item.processSelect},#{item.processDetail},#{item.sinCard},
+            #{item.issueSelect},#{item.issueDetail}
+        </foreach>
+    </insert>
+
+    <update id="updateProcessByTempTable" parameterType="java.lang.String">
+        UPDATE ivdlf_process process
+        JOIN ivdlf_social_security_card card ON card.id = process.parentId
+        JOIN import_social_security_card_temp temp ON temp.sequenceNo = card.sequenceNo AND process.process_status = temp.process_select
+        SET process.process_feedback = CONCAT(IFNULL(process.process_feedback,''), date_format(SYSDATE(), '%Y-%m-%d %H:%i' ), ':', IF(temp.process_detail,'',temp.process_detail), ':', IF(temp.sin_card,'',temp.sin_card), ';/n' )
+        WHERE temp.source_id = #{sourceId}
+    </update>
+
+    <update id="updateProcessFeedbackByTempTable" parameterType="java.lang.String">
+        UPDATE ivdlf_social_security_card card
+        JOIN import_social_security_card_temp temp ON temp.sequenceNo = card.sequenceNo
+        SET card.process_select = temp.process_select,
+            card.process_detail = temp.process_detail,
+            card.sin_card = temp.sin_card
+        WHERE temp.source_id = #{sourceId}
+    </update>
+
+    <update id="updateIssueByTempTable" parameterType="java.lang.String">
+        UPDATE ivdlf_issue issue
+        JOIN ivdlf_social_security_card card ON card.id = issue.parentId
+        JOIN import_social_security_card_temp temp ON temp.sequenceNo = card.sequenceNo AND issue.issue_status = issue.issue_select
+        SET issue.issue_feedback = CONCAT(IFNULL(issue.issue_feedback,''), date_format(SYSDATE(), '%Y-%m-%d %H:%i' ), ':', IFNULL(temp.issue_detail,''), ';/n' )
+        WHERE temp.source_id = #{sourceId}
+    </update>
+
+    <update id="updateIssueFeedbackByTempTable" parameterType="java.lang.String">
+        UPDATE ivdlf_social_security_card card
+        JOIN import_social_security_card_temp temp ON temp.sequenceNo = card.sequenceNo
+        SET card.issue_select = temp.issue_select,
+            card.issue_detail = temp.issue_detail,
+            card.sin_card = temp.sin_card
+        WHERE temp.source_id = #{sourceId}
+    </update>
+
+    <select id="getWorkItemIdsWhenProcessSuccess" resultType="java.lang.String">
+        SELECT workitem.id
+        FROM ivdlf_social_security_card card
+                 JOIN import_social_security_card_temp temp ON temp.sequenceNo = card.sequenceNo
+                 JOIN biz_workflow_instance instance ON instance.bizObjectId = card.id
+                 JOIN biz_workitem workitem ON workitem.instanceId = instance.id
+        WHERE temp.process_select = '办理成功'
+          AND temp.source_id = #{sourceId}
+          AND workitem.participant = #{userId}
+    </select>
+
+    <select id="getWorkItemIdsWhenProcessError" resultType="java.lang.String">
+        SELECT workitem.id
+        FROM ivdlf_social_security_card card
+                 JOIN import_social_security_card_temp temp ON temp.sequenceNo = card.sequenceNo
+                 JOIN biz_workflow_instance instance ON instance.bizObjectId = card.id
+                 JOIN biz_workitem workitem ON workitem.instanceId = instance.id
+        WHERE temp.process_select = '办理失败'
+          AND temp.source_id = #{sourceId}
+          AND workitem.participant = #{userId}
+    </select>
+
+    <select id="getWorkItemIdsWhenIssueSuccess" resultType="java.lang.String">
+        SELECT workitem.id
+        FROM ivdlf_social_security_card card
+                 JOIN import_social_security_card_temp temp ON temp.sequenceNo = card.sequenceNo
+                 JOIN biz_workflow_instance instance ON instance.bizObjectId = card.id
+                 JOIN biz_workitem workitem ON workitem.instanceId = instance.id
+        WHERE temp.issue_select = '发卡成功'
+          AND temp.source_id = #{sourceId}
+          AND workitem.participant = #{userId}
+    </select>
+</mapper>

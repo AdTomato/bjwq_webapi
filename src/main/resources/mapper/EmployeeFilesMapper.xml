@@ -44,7 +44,7 @@
             #{item.provident_fund_pay_direct}, #{item.social_security_pay_direct}, #{item.service_fee}, #{item.with_file},
             #{item.package_involves_procedures}, #{item.entry_time}, #{item.benefit_start_time}, #{item.mobile},
             #{item.provident_fund_start_time}, #{item.whether_consistent}, #{item.social_security_section},
-            #{item.social_security_base}, #{item.provident_fund_base}, #{item.supplement_provident_fund_p},
+            #{item.social_security_base}, #{item.provident_fund_base}, #{item.p_supplement_provident_fund}, #{item.u_supplement_provident_fund}, #{item.supplement_provident_fund_p},
             #{item.supplement_provident_fund_b}, #{item.charge_start_date}, #{item.dispatch_period_start_date},
             #{item.dispatch_deadline}, #{item.start_date_trial}, #{item.end_time_trial}, #{item.wage_trial}, #{item.start_date_positive},
             #{item.end_date_positive}, #{item.wage_positive}, #{item.phone}, #{item.employee_customer_side_num}, #{item.contact_address},

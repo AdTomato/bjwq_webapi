@@ -45,10 +45,8 @@ public class ClientUserController extends BaseController {
      */
     @PostMapping("/addClientUser")
     public ResponseResult <String> addClientUser(@RequestBody Client client) {
-        /** 客户名称 */
-        String clientName = client.getClientName();
-        /** 客户账号用户名称 */
-        String employeeName = client.getEmployeeName();
+        /** 客户账号用户名称,即客户名称 */
+        String employeeName = client.getClientName();
         /** 客户账号手机号 */
         String moblie = client.getMoblie();
         /** 对应用户表的id */

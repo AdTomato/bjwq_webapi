@@ -18,6 +18,8 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -47,7 +49,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     public void addEmployee(BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade,
                             String fileName, String userId, String departmentId) throws Exception {
         // 读取文件信息
-        List <String[]> fileList = ExcelUtils.readFile(fileName, 1, 0, 20);
+        List <String[]> fileList = ExcelUtils.readFile(fileName, 1, 0, 21);
 
         if (fileList != null && fileList.size() > 0) {
             models = new ArrayList <>();
@@ -178,12 +180,19 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
 
     @Override
     public AppointmentSheet getWelfareHandlerByClientNameAndCity(String clientName, String city) throws Exception {
-        return systemManageMapper.getWelfareHandlerByClientNameAndCity(clientName, city);
+        List<AppointmentSheet> list = systemManageMapper.getWelfareHandlerByClientNameAndCity(clientName, city);
+        return (list != null && list.size() > 0) ? list.get(0) : null;
     }
 
     @Override
     public String getOperateLeaderByCity(String city) throws Exception {
         return employeesMaintainDao.getOperateLeaderByCity(city);
+    }
+
+    @Override
+    public OperateLeader getOperateLeaderByCityAndWelfareHandler(String city, String welfareHandler) throws Exception {
+        List<OperateLeader> list = systemManageMapper.getOperateLeaderByCityAndWelfareHandler(city, welfareHandler);
+        return (list != null && list.size() > 0) ? list.get(0) : null;
     }
 
     @Override
@@ -226,6 +235,17 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                         "" : socialSecurityList.get(i).get("employee_surcharge_value").toString();
                 String payCycle = socialSecurityList.get(i).get("pay_cycle") == null ? "" :
                         socialSecurityList.get(i).get("pay_cycle").toString();
+                // 公司舍入原则和公司保留精度
+                String companyRounding = socialSecurityList.get(i).get("company_rounding_policy") == null ? "四舍五入" :
+                        socialSecurityList.get(i).get("company_rounding_policy").toString();
+                String companyPrecision = socialSecurityList.get(i).get("company_precision") == null ? "2" :
+                        socialSecurityList.get(i).get("company_precision").toString();
+                // 个人舍入原则和公司保留精度
+                String employeeRounding = socialSecurityList.get(i).get("employee_rounding_policy") == null ? "四舍五入" :
+                        socialSecurityList.get(i).get("employee_rounding_policy").toString();
+                String employeePrecision = socialSecurityList.get(i).get("employee_precision") == null ? "2" :
+                        socialSecurityList.get(i).get("employee_precision").toString();
+
                 int payMonth = socialSecurityList.get(i).get("pay_month") == null ? 0 :
                         Integer.parseInt(socialSecurityList.get(i).get("pay_month").toString());
                 // 规定的补缴月份 > 实际补缴月份
@@ -242,14 +262,18 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                     employeeRatio = StringUtils.isBlank(personal.get("employee_injury_ratio")) ? employeeRatio :
                             personal.get("employee_injury_ratio");
                 }
-                Double baseDouble = StringUtils.isBlank(base) ? 0 : Double.parseDouble(base);
-                Double companyRatioDouble = StringUtils.isBlank(companyRatio) ? 0 : Double.parseDouble(companyRatio);
-                Double employeeRatioDouble = StringUtils.isBlank(employeeRatio) ? 0 : Double.parseDouble(employeeRatio);
-                Double companySurchargeDouble = StringUtils.isBlank(companySurchargeValue) ? 0 : Double.parseDouble(companySurchargeValue);
-                Double employeeSurchargeDouble = StringUtils.isBlank(employeeSurchargeValue) ? 0 : Double.parseDouble(employeeSurchargeValue);
+                Double baseDouble = StringUtils.isBlank(base) ? 0.0 : Double.parseDouble(base);
+                Double companyRatioDouble = StringUtils.isBlank(companyRatio) ? 0.0 : Double.parseDouble(companyRatio);
+                Double employeeRatioDouble = StringUtils.isBlank(employeeRatio) ? 0.0 : Double.parseDouble(employeeRatio);
+                Double companySurchargeDouble = StringUtils.isBlank(companySurchargeValue) ? 0.0 : Double.parseDouble(companySurchargeValue);
+                Double employeeSurchargeDouble = StringUtils.isBlank(employeeSurchargeValue) ? 0.0 : Double.parseDouble(employeeSurchargeValue);
 
                 Double companyMoney = baseDouble * companyRatioDouble + companySurchargeDouble;
                 Double employeeMoney = baseDouble * employeeRatioDouble + employeeSurchargeDouble;
+                // 数据按照规则处理
+                companyMoney = CommonUtils.processingData(companyMoney, companyRounding, companyPrecision);
+                employeeMoney = CommonUtils.processingData(employeeMoney, employeeRounding, employeePrecision);
+
                 Double sum = companyMoney + employeeMoney;
                 total = total + sum;
 
@@ -266,6 +290,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 map.put("employee_surcharge_value", employeeSurchargeValue);
                 map.put("pay_cycle", payCycle);
                 map.put("start_charge_time", startChargeTime);
+                map.put("name_hide", productName);
 
                 if (productName.indexOf("养老") >= 0) {
                     employeeOrderForm.setEndowment(sum + "(" + companyMoney + "+" + employeeMoney + ")");
@@ -291,6 +316,8 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         if (providentFundList != null && providentFundList.size() > 0) {
             for (int i = 0; i < providentFundList.size(); i++) {
                 String id = providentFundList.get(i).get("id").toString();
+                String productName = providentFundList.get(i).get("product_name") == null ? "" :
+                        providentFundList.get(i).get("product_name").toString();
                 String socialSecurityGroup = providentFundList.get(i).get("social_security_group") == null ? "" :
                         providentFundList.get(i).get("social_security_group").toString();
                 String payCycle = providentFundList.get(i).get("pay_cycle") == null ? "" :
@@ -301,6 +328,17 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                         : providentFundList.get(i).get("company_surcharge_value").toString();
                 String employeeSurchargeValue = providentFundList.get(i).get("employee_surcharge_value") == null ?
                         "" : providentFundList.get(i).get("employee_surcharge_value").toString();
+                // 公司舍入原则和公司保留精度
+                String companyRounding = providentFundList.get(i).get("company_rounding_policy") == null ? "四舍五入" :
+                        providentFundList.get(i).get("company_rounding_policy").toString();
+                String companyPrecision = providentFundList.get(i).get("company_precision") == null ? "2" :
+                        providentFundList.get(i).get("company_precision").toString();
+                // 个人舍入原则和公司保留精度
+                String employeeRounding = providentFundList.get(i).get("employee_rounding_policy") == null ? "四舍五入" :
+                        providentFundList.get(i).get("employee_rounding_policy").toString();
+                String employeePrecision = providentFundList.get(i).get("employee_precision") == null ? "2" :
+                        providentFundList.get(i).get("employee_precision").toString();
+
                 // 规定的补缴月份 > 实际补缴月份
                 calendar.setTime(providentFundStartTime);
                 if (payMonth < gMonth) {
@@ -309,17 +347,23 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 String startChargeTime = sdf.format(calendar.getTime());
 
                 Double baseDouble = providentFundBase;
-                // 个性化设置
-                gcompanyRatio = StringUtils.isBlank(personal.get("company_accumulation_ratio")) ? gcompanyRatio :
+                // 个性化设置 ========== 公积金比例不在个性化设置里面维护
+                /*gcompanyRatio = StringUtils.isBlank(personal.get("company_accumulation_ratio")) ? gcompanyRatio :
                         Double.parseDouble(personal.get("company_accumulation_ratio"));
                 gemployeeRatio = StringUtils.isBlank(personal.get("employee_accumulation_ratio")) ? gemployeeRatio :
-                        Double.parseDouble(personal.get("employee_accumulation_ratio"));
-                Double companySurchargeDouble = StringUtils.isBlank(companySurchargeValue) ? 0 : Double.parseDouble(companySurchargeValue);
-                Double employeeSurchargeDouble = StringUtils.isBlank(employeeSurchargeValue) ? 0 : Double.parseDouble(employeeSurchargeValue);
+                        Double.parseDouble(personal.get("employee_accumulation_ratio"));*/
+                Double companySurchargeDouble = StringUtils.isBlank(companySurchargeValue) ? 0.0 : Double.parseDouble(companySurchargeValue);
+                Double employeeSurchargeDouble = StringUtils.isBlank(employeeSurchargeValue) ? 0.0 : Double.parseDouble(employeeSurchargeValue);
 
                 Double companyMoney = baseDouble * gcompanyRatio + companySurchargeDouble;
                 Double employeeMoney = baseDouble * gemployeeRatio + employeeSurchargeDouble;
+
+                // 数据按照规则处理
+                companyMoney = CommonUtils.processingData(companyMoney, companyRounding, companyPrecision);
+                employeeMoney = CommonUtils.processingData(employeeMoney, employeeRounding, employeePrecision);
+
                 Double sum = companyMoney + employeeMoney;
+                total = total + sum;
 
                 map = new HashMap <>();
                 map.put("product_name", id);
@@ -334,6 +378,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 map.put("employee_surcharge_value", employeeSurchargeValue);
                 map.put("pay_cycle", payCycle);
                 map.put("start_charge_time", startChargeTime);
+                map.put("name_hide", productName);
 
                 employeeOrderForm.setHousingAccumulationFunds(sum + "(" + companyMoney + "+" + employeeMoney + ")");
 
@@ -636,6 +681,12 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         } else {
             throw new RuntimeException("当前选中的数据中没有可以操作的数据！");
         }
+    }
+
+    @Override
+    public void updateOrderFormStatusToPrePoint(String ids, String field) throws Exception {
+        String idArr[] = ids.split(",");
+        addEmployeeMapper.updateOrderFormStatusToPrePoint(idArr, field);
     }
 
     /**
@@ -1288,10 +1339,12 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
             }
             // 公积金基数
             data.put("provident_fund_base", list.get(18));
-            // 公积金比例
-            data.put("provident_fund_ratio", list.get(19));
+            // 单位公积金比例
+            data.put("company_provident_fund_bl", list.get(19));
+            // 个人公积金比例
+            data.put("employee_provident_fund_bl", list.get(20));
             // 备注
-            data.put("remark", list.get(20));
+            data.put("remark", list.get(21));
         } else if (Constants.DELETE_EMPLOYEE_SCHEMA.equals(schemaCode)) { // 减员数据
             // 客户名称
             data.put("client_name", list.get(0));

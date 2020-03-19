@@ -1,6 +1,7 @@
 package com.authine.cloudpivot.web.api.mapper;
 
 import com.authine.cloudpivot.web.api.entity.*;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.mapstruct.Mapper;
 
 import java.util.List;
@@ -47,4 +48,6 @@ public interface AddEmployeeMapper {
     void updateSocialSecurityDeclare(SocialSecurityDeclare socialSecurityDeclare);
 
     void updateProvidentFundDeclare(ProvidentFundDeclare providentFundDeclare);
+
+    void updateOrderFormStatusToPrePoint(@Param("ids")String[] ids, @Param("field")String field);
 }

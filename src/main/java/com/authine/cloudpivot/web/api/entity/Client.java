@@ -17,12 +17,8 @@ public class Client {
     String id;
     /** 客户名称 */
     String clientName;
-    /** 客户账号用户名称 */
-    String employeeName;
     /** 客户账号手机号 */
     String moblie;
     /** 对应用户表的id */
     String userId;
-
-
 }

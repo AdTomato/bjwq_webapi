@@ -1,5 +1,6 @@
 package com.authine.cloudpivot.web.api.controller;
 
+import com.authine.cloudpivot.engine.api.model.organization.DepartmentModel;
 import com.authine.cloudpivot.engine.api.model.organization.UserModel;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
 import com.authine.cloudpivot.web.api.handler.CustomizedOrigin;
@@ -9,10 +10,10 @@ import com.authine.cloudpivot.web.api.view.ResponseResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 社保卡Controller
@@ -25,105 +26,44 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class SocialSecurityCardController extends BaseController {
 
-    @Autowired
-    private SocialSecurityCardService socialSecurityCard;
+    @Resource
+    private SocialSecurityCardService socialSecurityCardService;
 
-    /**
-     * 方法说明：办理社保卡，根据办理人员信息批量开启流程
-     * @Param fileName 导入文件的名称
-     * @return om.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
-     * @throws
-     * @author liulei
-     * @Date 2019/12/16 10:31
-     */
-    @PostMapping("/socialSecurityCardProcess")
+    @GetMapping("/importSocialSecurityCard")
     @ResponseBody
-    @CustomizedOrigin(level = 1)
-    public ResponseResult<String> socialSecurityCardProcess(String fileName){
+    public ResponseResult<String> importSocialSecurityCard(String fileName){
         String userId = "402881c16f63e980016f798408060d3f";
         //String userId = getUserId();
-
-        fileName = "社保卡办理进度表.xlsx";
         if (StringUtils.isBlank(fileName)) {
-            return this.getOkResponseResult("error", "没有获取上传文件!");
+            return this.getErrResponseResult("error", 404l, "没有获取上传文件!");
         }
-
         try {
             // 判断文件类型
             ExcelUtils.checkFileType(fileName);
             // 当前用户
             UserModel user = this.getOrganizationFacade().getUser(userId);
-            // 导入
-            socialSecurityCard.socialSecurityCardProcess(this.getBizObjectFacade(),
-                    this.getWorkflowInstanceFacade(), fileName, userId, user.getDepartmentId());
+            DepartmentModel dept = this.getOrganizationFacade().getDepartment(user.getDepartmentId());
+
+            if (fileName.indexOf("办理申请") >= 0) {
+                /** 紧急交办,业务员,公司名称,姓名,身份证号码,员工状态,地区*/
+                socialSecurityCardService.importSocialSecurityCard(fileName, user, dept,
+                        this.getWorkflowInstanceFacade());
+            } else if (fileName.indexOf("办理记录") >=0){
+                /** 姓名,身份证号码,单据号,办理状态,办理反馈,社保卡号*/
+                socialSecurityCardService.importProcessFeedback(fileName, user, dept,
+                        this.getWorkflowInstanceFacade());
+            } else if (fileName.indexOf("发卡记录") >=0){
+                /** 姓名,身份证号码,单据号,发卡状态,发卡反馈*/
+                socialSecurityCardService.importIssueFeedback(fileName, user, dept,
+                        this.getWorkflowInstanceFacade());
+            } else {
+                return this.getErrResponseResult("error", 404l, "上传文件命名不正确!");
+            }
+
             return this.getOkResponseResult("success", "导入成功!");
         } catch (Exception e) {
             log.info(e.getMessage());
             return this.getOkResponseResult("error", e.getMessage());
-        }
-    }
-
-    /**
-     * 方法说明：导入社保卡办理进度信息
-     * @Param fileName
-     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
-     * @throws
-     * @author liulei
-     * @Date 2019/12/16 16:58
-     */
-    @PostMapping("/importProcessFeedBack")
-    @ResponseBody
-    @CustomizedOrigin(level = 1)
-    public ResponseResult<String> importProcessFeedBack(String fileName){
-        String userId = "402881c16f63e980016f79840a1a0d43";
-        //String userId = getUserId();
-
-        fileName = "社保卡办理表.xlsx";
-        if (StringUtils.isBlank(fileName)) {
-            return this.getOkResponseResult("error", "没有获取上传文件!");
-        }
-
-        try {
-            // 判断文件类型
-            ExcelUtils.checkFileType(fileName);
-            // 导入
-            socialSecurityCard.importProcessFeedBack(this.getWorkflowInstanceFacade(), fileName, userId);
-            return this.getOkResponseResult("success", "导入成功!");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return this.getOkResponseResult("error", "导入失败!");
-        }
-    }
-
-    /**
-     * 方法说明：导入发卡进度信息
-     * @Param fileName
-     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
-     * @throws
-     * @author liulei
-     * @Date 2019/12/18 16:44
-     */
-    @PostMapping("/importIssueFeedBack")
-    @ResponseBody
-    @CustomizedOrigin(level = 1)
-    public ResponseResult<String> importIssueFeedBack(String fileName) throws Exception {
-        String userId = "402881c16f63e980016f798408060d3f";
-        //String userId = getUserId();
-
-        fileName = "社保卡发卡进度表.xlsx";
-        if (StringUtils.isBlank(fileName)) {
-            return this.getOkResponseResult("error", "没有获取上传文件!");
-        }
-
-        try {
-            // 判断文件类型
-            ExcelUtils.checkFileType(fileName);
-            // 导入
-            socialSecurityCard.importIssueFeedBack(this.getWorkflowInstanceFacade(), fileName, userId);
-            return this.getOkResponseResult("success", "导入成功!");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return this.getOkResponseResult("error", "导入失败!");
         }
     }
 }
