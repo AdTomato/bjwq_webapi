@@ -1,13 +1,13 @@
 package com.authine.cloudpivot.web.api.dao.impl;
 
-import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.dao.SocialSecurityCardDao;
 import com.authine.cloudpivot.web.api.utils.ConnectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author liulei
@@ -19,16 +19,15 @@ import java.util.*;
 public class SocialSecurityCardDaoImpl implements SocialSecurityCardDao {
     /**
      * 方法说明：根据单据号和当前节点code查询办理社保卡表单id,所在流程id,状态子表最大sortKey
-     *
-     * @return java.util.Map<java.lang.String, java.lang.Object>
-     * @throws
      * @Param sequenceNo
      * @Param code
+     * @return java.util.Map<java.lang.String,java.lang.Object>
+     * @throws
      * @author liulei
      * @Date 2019/12/19 11:31
      */
     @Override
-    public Map<String, Object> getSocialSecurityCardInfo(String sequenceNo, String userId, String code) throws Exception {
+    public Map <String, Object> getSocialSecurityCardInfo(String sequenceNo, String userId, String code) throws Exception {
 
         StringBuffer sql = new StringBuffer();
 
@@ -44,7 +43,7 @@ public class SocialSecurityCardDaoImpl implements SocialSecurityCardDao {
         sql.append("   AND work.sourceId = '" + code + "'");// 节点code
         sql.append("   AND work.participant = '" + userId + "'");
 
-        List<Map<String, Object>> result = ConnectionUtils.executeSelectSql(sql.toString());
+        List <Map <String, Object>> result = ConnectionUtils.executeSelectSql(sql.toString());
 
         if (result != null && result.size() > 0) {
             return result.get(0);

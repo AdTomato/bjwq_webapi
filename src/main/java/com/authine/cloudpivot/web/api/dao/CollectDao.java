@@ -12,10 +12,9 @@ import java.util.Map;
 public interface CollectDao {
     /**
      * 方法说明：根据id获取发起采集业务信息
-     *
-     * @return java.util.Map<java.lang.String, java.lang.String>
-     * @throws
      * @Param id
+     * @return java.util.Map<java.lang.String,java.lang.String>
+     * @throws
      * @author liulei
      * @Date 2020/1/10 15:03
      */
@@ -23,12 +22,11 @@ public interface CollectDao {
 
     /**
      * 方法说明：生成对应的采集信息模板
-     *
-     * @return void
-     * @throws
      * @Param id 发起采集信息模板
      * @Param refIds 附件的refId
      * @Param modelIds 新生成的模型id
+     * @return void
+     * @throws
      * @author liulei
      * @Date 2020/1/10 17:35
      */
@@ -36,12 +34,11 @@ public interface CollectDao {
 
     /**
      * 方法说明：基数采集回写附件到发起采集中去
-     *
-     * @return void
-     * @throws
      * @Param id 基数采集业务id
      * @Param refIds 基数采集附件refId
      * @Param startCollectId 发起采集业务id
+     * @return void
+     * @throws
      * @author liulei
      * @Date 2020/1/13 15:36
      */
@@ -49,11 +46,10 @@ public interface CollectDao {
 
     /**
      * 方法说明：过节点申请修改截止时间
-     *
-     * @return void
-     * @throws
      * @Param id 基数采集业务id
      * @Param endTime
+     * @return void
+     * @throws
      * @author liulei
      * @Date 2020/1/13 21:48
      */

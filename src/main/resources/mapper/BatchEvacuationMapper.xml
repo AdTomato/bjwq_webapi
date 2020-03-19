@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.BatchEvacuationMapper">
+
+    <insert id="insertBatchEvacuationDatas" parameterType="java.util.List">
+        INSERT INTO i4fvb_batch_evacuation
+        (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId,
+        sequenceNo, sequenceStatus, ownerDeptQueryCode, unique_num, employee_name, identityNo_type, identityNo,
+        pay_foreign_company, pay_person, separation_costs, separation_costs_months, order_end_date, social_security_end_time,
+        provident_fund_end_time, w_service_fee_end_date, social_security_stop_reason, remark,
+        end_employment_agreement, employee_internal_num)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner},#{item.ownerDeptId},
+            #{item.createdTime}, #{item.modifier}, #{item.modifiedTime},#{item.workflowInstanceId},
+            #{item.sequenceNo}, #{item.sequenceStatus}, #{item.ownerDeptQueryCode}, #{item.uniqueNum}, #{item.employeeName}, #{item.identityNoType}, #{item.identityNo},
+            #{item.payForeignCompany}, #{item.payPerson}, #{item.separationCosts}, #{item.separationCostsMonths}, #{item.orderEndDate}, #{item.socialSecurityEndTime},
+            #{item.providentFundEndTime}, #{item.wServiceFeeEndDate}, #{item.socialSecurityStopReason}, #{item.remark},
+            #{item.endEmploymentAgreement}, #{item.employeeInternalNum})
+        </foreach>
+    </insert>
+
+</mapper>

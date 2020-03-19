@@ -1,21 +1,18 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
-import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
 import com.authine.cloudpivot.engine.api.facade.OrganizationFacade;
 import com.authine.cloudpivot.engine.api.model.organization.DepartmentModel;
 import com.authine.cloudpivot.engine.api.model.organization.UserModel;
-import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
 import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.entity.BatchPreDispatch;
 import com.authine.cloudpivot.web.api.mapper.BatchPreDispatchMapper;
 import com.authine.cloudpivot.web.api.service.BatchPreDispatchService;
+import com.authine.cloudpivot.web.api.utils.SystemDataSetUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @Author: wangyong
@@ -50,7 +47,7 @@ public class BatchPreDispatchServiceImpl implements BatchPreDispatchService {
         UserModel user = organizationFacade.getUser(userId);
         DepartmentModel department = organizationFacade.getDepartment(user.getDepartmentId());
         for (BatchPreDispatch batchPreDispatch : batchPreDispatches) {
-            dataSet(user, department, batchPreDispatch);
+            SystemDataSetUtils.dataSet(user, department, batchPreDispatch.getEmployeeName(), Constants.COMPLETED_STATUS, batchPreDispatch);
             objectIds.add(batchPreDispatch.getId());
             adds.add(batchPreDispatch);
             insertNum++;
@@ -75,18 +72,18 @@ public class BatchPreDispatchServiceImpl implements BatchPreDispatchService {
      * @Date: 2020/2/25 13:43
      * @Description: 用于设置系统数据
      */
-    private void dataSet(UserModel user, DepartmentModel department, BatchPreDispatch batchPreDispatch) {
-        batchPreDispatch.setId(UUID.randomUUID().toString().replace("-", ""));
-        batchPreDispatch.setName(batchPreDispatch.getEmployeeName());
-        batchPreDispatch.setCreater(user.getId());
-        batchPreDispatch.setCreatedDeptId(user.getDepartmentId());
-        batchPreDispatch.setOwner(user.getId());
-        batchPreDispatch.setOwnerDeptId(user.getDepartmentId());
-        batchPreDispatch.setCreatedTime(new Date());
-        batchPreDispatch.setModifier(user.getId());
-        batchPreDispatch.setModifiedTime(new Date());
-        batchPreDispatch.setSequenceStatus(Constants.COMPLETED_STATUS);
-        batchPreDispatch.setOwnerDeptQueryCode(department.getQueryCode());
-    }
+//    private void dataSet(UserModel user, DepartmentModel department, BatchPreDispatch batchPreDispatch) {
+//        batchPreDispatch.setId(UUID.randomUUID().toString().replace("-", ""));
+//        batchPreDispatch.setName(batchPreDispatch.getEmployeeName());
+//        batchPreDispatch.setCreater(user.getId());
+//        batchPreDispatch.setCreatedDeptId(user.getDepartmentId());
+//        batchPreDispatch.setOwner(user.getId());
+//        batchPreDispatch.setOwnerDeptId(user.getDepartmentId());
+//        batchPreDispatch.setCreatedTime(new Date());
+//        batchPreDispatch.setModifier(user.getId());
+//        batchPreDispatch.setModifiedTime(new Date());
+//        batchPreDispatch.setSequenceStatus(Constants.COMPLETED_STATUS);
+//        batchPreDispatch.setOwnerDeptQueryCode(department.getQueryCode());
+//    }
 
 }

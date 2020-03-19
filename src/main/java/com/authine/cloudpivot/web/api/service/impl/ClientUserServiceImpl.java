@@ -5,9 +5,7 @@ import com.authine.cloudpivot.web.api.service.ClientUserService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -25,11 +23,10 @@ public class ClientUserServiceImpl implements ClientUserService {
 
     /**
      * 方法说明：更新客户信息表对应的用户id
-     *
-     * @return void
-     * @throws
      * @Param id
      * @Param userId
+     * @return void
+     * @throws
      * @author liulei
      * @Date 2020/1/6 12:57
      */
@@ -40,34 +37,32 @@ public class ClientUserServiceImpl implements ClientUserService {
 
     /**
      * 方法说明：客户用户重置密码
-     *
+     * @Param ids
      * @return void
      * @throws
-     * @Param ids
      * @author liulei
      * @Date 2020/1/14 15:09
      */
     @Override
-    public void clientResetPassword(String ids) throws Exception {
+    public void clientResetPassword(String ids) throws Exception{
         clientUserDao.clientResetPassword(ids);
     }
 
     /**
      * 方法说明：客户导入员工信息，提交后维护修改截止时间
-     *
-     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
-     * @throws
      * @Param id
      * @Param sbCityId 社保缴纳城市id
      * @Param gjjCityId 公积金缴纳城市id
      * @Param clientNumber 客户编码
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @throws
      * @author liulei
      * @Date 2020/1/19 13:51
      */
     @Override
     public void updateEndTime(String id, String sbCityId, String gjjCityId, String clientNumber) throws Exception {
         // 判断当前客户是否是个性化客户，是返回个性化客户设置的数据
-        List<Map<String, Object>> setList = clientUserDao.getPersonalizedSetByNo(clientNumber);
+        List <Map <String, Object>> setList = clientUserDao.getPersonalizedSetByNo(clientNumber);
         if (setList != null && setList.size() > 0) {
             String timeNode = setList.get(0).get("time_node").toString();
             String companyInjuryRatio = setList.get(0).get("company_injury_ratio").toString();
@@ -81,7 +76,7 @@ public class ClientUserServiceImpl implements ClientUserService {
                     employeeFundRatio);
         } else {
             // 根据社保缴纳城市id和公积金缴纳城市id获取最小的一个时间节点
-            String timeNode = clientUserDao.getTimeNodeByIds(sbCityId + "," + gjjCityId);
+            String timeNode = clientUserDao.getTimeNodeByIds(sbCityId + "," +gjjCityId);
             String endTime = this.getEndTime(Integer.parseInt(timeNode));
 
             clientUserDao.updateEndTime(id, endTime, null, null, null, null);

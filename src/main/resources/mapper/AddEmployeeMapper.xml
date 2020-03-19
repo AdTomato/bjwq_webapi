@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.AddEmployeeMapper">
+    <select id="getSocialSecurityDeclareByClientNameAndIdentityNo" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare">
+        SELECT * FROM i4fvb_social_security_declare
+        <where>
+            <if test="identityNo != null">
+                AND identityNo = #{identityNo}
+            </if>
+            <if test="clientName != null">
+                AND client_name = #{clientName}
+            </if>
+        </where>
+    </select>
+
+    <select id="getProvidentFundDeclareByClientNameAndIdentityNo" resultType="com.authine.cloudpivot.web.api.entity.ProvidentFundDeclare">
+        SELECT * FROM i4fvb_provident_fund_declare
+        <where>
+            <if test="identityNo != null">
+                AND identityNo = #{identityNo}
+            </if>
+            <if test="clientName != null">
+                AND client_name = #{clientName}
+            </if>
+        </where>
+    </select>
+
+    <select id="getEmployeeOrderFormById" resultType="com.authine.cloudpivot.web.api.entity.EmployeeOrderForm">
+        SELECT * FROM i4fvb_employee_order_form WHERE id =#{id}
+    </select>
+
+    <update id="updateEmployeeFiles" parameterType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
+        update i4fvb_employee_files
+        SET name = #{name},
+            entrusted_unit = #{entrustedUnit},
+            client_name = #{clientName},
+            salesman = #{salesman},
+            employee_name = #{employeeName},
+            id_type = #{idType},
+            id_no = #{idNo},
+            gender = #{gender},
+            birth_date = #{birthDate},
+            employee_nature = #{employeeNature},
+            household_register_nature = #{householdRegisterNature},
+            mobile = #{mobile},
+            labour_contract_start_time = #{labourContractStartTime},
+            labour_contract_end_time = #{labourContractEndTime},
+            salary = #{salary},
+            probation_start_time = #{probationStartTime},
+            probation_end_time = #{probationEndTime},
+            probation_salary = #{probationSalary},
+            social_security_city = #{socialSecurityCity},
+            provident_fund_city = #{providentFundCity},
+            report_entry_time = #{reportEntryTime},
+            report_recruits = #{reportRecruits},
+            entry_time = #{entryTime},
+            social_security_charge_start = #{socialSecurityChargeStart},
+            provident_fund_charge_start = #{providentFundChargeStart},
+            social_security_area = #{socialSecurityArea},
+            provident_fund_area = #{providentFundArea},
+            entry_description = #{entryDescription},
+            report_quit_date = #{reportQuitDate},
+            report_severance_officer = #{reportSeveranceOfficer},
+            quit_date = #{quitDate},
+            social_security_charge_end = #{socialSecurityChargeEnd},
+            provident_fund_charge_end = #{providentFundChargeEnd},
+            quit_reason = #{quitReason},
+            quit_remark = #{quitRemark},
+            entry_notice = #{entryNotice},
+            health_check = #{healthCheck},
+            whether_pay = #{whetherPay},
+            bank_account_number = #{bankAccountNumber},
+            bank_area = #{bankArea},
+            position = #{position},
+            email = #{email},
+            employee_labels = #{employeeLabels},
+            bank_name = #{bankName}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateSocialSecurityDeclare" parameterType="com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare">
+        update i4fvb_social_security_declare
+        SET name = #{name},
+            start_month = #{startMonth},
+            employee_name = #{employeeName},
+            gender = #{gender},
+            identityNo = #{identityNo},
+            dispatch_unit = #{dispatchUnit},
+            client_name = #{clientName},
+            customer_service = #{customerService},
+            customer_services = #{customerServices},
+            applicant = #{applicant},
+            application_date = #{applicationDate},
+            contract_signing_date = #{contractSigningDate},
+            contract_deadline = #{contractDeadline},
+            positive_salary = #{positiveSalary},
+            base_pay = #{basePay},
+            mobile = #{mobile},
+            weather_part_work_injury = #{weatherPartWorkInjury},
+            welfare_handler = #{welfareHandler},
+            birthday = #{birthday},
+            identityNo_type = #{identityNoType},
+            return_reason_already = #{returnReasonAlready},
+            operate_leader = #{operateLeader},
+            employee_order_form_id = #{employeeOrderFormId},
+            is_change = #{isChange}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateProvidentFundDeclare" parameterType="com.authine.cloudpivot.web.api.entity.ProvidentFundDeclare">
+        update i4fvb_provident_fund_declare
+        SET name = #{name},
+            employee_name = #{employeeName},
+            gender = #{gender},
+            identityNo = #{identityNo},
+            dispatch_unit = #{dispatchUnit},
+            client_name = #{clientName},
+            customer_service = #{customerService},
+            applicant = #{applicant},
+            application_date = #{applicationDate},
+            start_month = #{startMonth},
+            provident_fund_base = #{providentFundBase},
+            corporate_payment = #{corporatePayment},
+            personal_deposit = #{personalDeposit},
+            total_deposit = #{totalDeposit},
+            welfare_handler = #{welfareHandler},
+            birthday = #{birthday},
+            customer_services = #{customerServices},
+            identityNo_type = #{identityNoType},
+            operate_leader = #{operateLeader},
+            employee_order_form_id = #{employeeOrderFormId},
+            is_change = #{isChange}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

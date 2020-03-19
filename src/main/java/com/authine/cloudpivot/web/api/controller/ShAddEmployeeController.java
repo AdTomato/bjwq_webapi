@@ -2,17 +2,17 @@ package com.authine.cloudpivot.web.api.controller;
 
 import com.authine.cloudpivot.engine.api.facade.OrganizationFacade;
 import com.authine.cloudpivot.engine.api.model.organization.UserModel;
+import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
-import com.authine.cloudpivot.web.api.service.ShAddEmployeeService;
-import com.authine.cloudpivot.web.api.utils.ExcelUtils;
-import com.authine.cloudpivot.web.api.utils.FileUtils;
-import com.authine.cloudpivot.web.api.utils.UserUtils;
+import com.authine.cloudpivot.web.api.utils.*;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.thymeleaf.util.StringUtils;
+
+import javax.annotation.Resource;
 
 /**
  * @Author: wangyong
@@ -23,8 +23,11 @@ import org.thymeleaf.util.StringUtils;
 @RequestMapping("/controller/shAddEmployee")
 public class ShAddEmployeeController extends BaseController {
 
-    @Autowired
-    ShAddEmployeeService shAddEmployeeService;
+    @Resource
+    ExcelFileUtils excelFileUtils;
+
+    @Resource
+    ShReadAddExcelFile shReadAddExcelFile;
 
     @PostMapping("/importEmployee")
     public ResponseResult<String> importEmployee(String fileName) {
@@ -41,7 +44,11 @@ public class ShAddEmployeeController extends BaseController {
         String userId = UserUtils.getUserId(this.getUserId());
         UserModel user = organizationFacade.getUser(userId);
 
-        shAddEmployeeService.importEmployee(fileName, userId, user.getDepartmentId(), this.getBizObjectFacade(), this.getOrganizationFacade(), this.getWorkflowInstanceFacade());
+        shReadAddExcelFile.setTableName(Constants.SH_ADD_EMPLOYEE_TABLE_NAME);
+        shReadAddExcelFile.setWorkflowCode(Constants.SH_ADD_EMPLOYEE_SCHEMA_WF);
+
+        excelFileUtils.insertData(fileName, userId, user.getDepartmentId(), this.getBizObjectFacade(), this.getOrganizationFacade(), this.getWorkflowInstanceFacade(), shReadAddExcelFile);
+
 
         return this.getOkResponseResult("success", "导入成功");
     }

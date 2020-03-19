@@ -4,16 +4,22 @@ import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
 import com.authine.cloudpivot.engine.api.facade.OrganizationFacade;
 import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
 import com.authine.cloudpivot.engine.api.model.organization.UserModel;
+import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
-import com.authine.cloudpivot.web.api.service.NationalDeliveryService;
+import com.authine.cloudpivot.web.api.utils.ExcelFileUtils;
 import com.authine.cloudpivot.web.api.utils.ExcelUtils;
+import com.authine.cloudpivot.web.api.utils.NationalDeliveryReadExcelFile;
 import com.authine.cloudpivot.web.api.utils.UserUtils;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
+import org.apache.ibatis.jdbc.Null;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.thymeleaf.util.StringUtils;
+
+import javax.annotation.Resource;
 
 /**
  * @Author: wangyong
@@ -24,8 +30,11 @@ import org.thymeleaf.util.StringUtils;
 @RequestMapping("/controller/nationalDelivery")
 public class NationalDeliveryController extends BaseController {
 
-    @Autowired
-    NationalDeliveryService nationalDeliveryService;
+    @Resource
+    ExcelFileUtils excelFileUtils;
+
+    @Resource
+    NationalDeliveryReadExcelFile nationalDeliveryReadExcelFile;
 
     @PostMapping("/importDeliveryData")
     public ResponseResult<String> importDeliveryData(String fileName) {
@@ -44,7 +53,14 @@ public class NationalDeliveryController extends BaseController {
         String userId = UserUtils.getUserId(this.getUserId());
         UserModel user = organizationFacade.getUser(userId);
 
-        nationalDeliveryService.importEmployee(fileName, userId, user.getDepartmentId(), bizObjectFacade, organizationFacade, workflowInstanceFacade);
+        nationalDeliveryReadExcelFile.setTableName(Constants.NATIONWIDE_DISPATCH_TABLE_NAME);
+        nationalDeliveryReadExcelFile.setWorkflowCode(null);
+
+        excelFileUtils.insertData(fileName, userId, user.getDepartmentId(), bizObjectFacade, organizationFacade, workflowInstanceFacade, nationalDeliveryReadExcelFile);
+
+//        PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("123456");
+
+//        nationalDeliveryService.importEmployee(fileName, userId, user.getDepartmentId(), bizObjectFacade, organizationFacade, workflowInstanceFacade);
 
         return this.getOkResponseResult("success", "导入成功");
     }

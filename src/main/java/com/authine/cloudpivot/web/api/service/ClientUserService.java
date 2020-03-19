@@ -10,11 +10,10 @@ public interface ClientUserService {
 
     /**
      * 方法说明：更新客户信息表对应的用户id
-     *
-     * @return void
-     * @throws
      * @Param id
      * @Param userId
+     * @return void
+     * @throws
      * @author liulei
      * @Date 2020/1/6 12:57
      */
@@ -22,10 +21,9 @@ public interface ClientUserService {
 
     /**
      * 方法说明：客户用户重置密码
-     *
+     * @Param ids
      * @return void
      * @throws
-     * @Param ids
      * @author liulei
      * @Date 2020/1/14 15:09
      */
@@ -33,13 +31,12 @@ public interface ClientUserService {
 
     /**
      * 方法说明：客户导入员工信息，提交后维护修改截止时间
-     *
-     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
-     * @throws
      * @Param id
      * @Param sbCityId 社保缴纳城市id
      * @Param gjjCityId 公积金缴纳城市id
      * @Param clientNumber 客户编码
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @throws
      * @author liulei
      * @Date 2020/1/19 13:51
      */

@@ -4,9 +4,11 @@ import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
 import com.authine.cloudpivot.engine.api.facade.OrganizationFacade;
 import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
 import com.authine.cloudpivot.engine.api.model.organization.UserModel;
+import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
-import com.authine.cloudpivot.web.api.service.ShDeleteEmployeeService;
+import com.authine.cloudpivot.web.api.utils.ExcelFileUtils;
 import com.authine.cloudpivot.web.api.utils.ExcelUtils;
+import com.authine.cloudpivot.web.api.utils.ShReadDeleteExcelFile;
 import com.authine.cloudpivot.web.api.utils.UserUtils;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
 
 /**
  * @Author: wangyong
@@ -24,8 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/controller/shDeleteEmployee")
 public class ShDeleteEmployeeController extends BaseController {
 
-    @Autowired
-    ShDeleteEmployeeService shDeleteEmployeeService;
+
+    @Resource
+    ExcelFileUtils excelFileUtils;
+
+    @Resource
+    ShReadDeleteExcelFile shReadDeleteExcelFile;
 
     @PostMapping("/importEmployee")
     public ResponseResult<String> importEmployee(String fileName) {
@@ -43,7 +51,11 @@ public class ShDeleteEmployeeController extends BaseController {
         WorkflowInstanceFacade workflowInstanceFacade = this.getWorkflowInstanceFacade();
         String userId = UserUtils.getUserId(this.getUserId());
         UserModel user = organizationFacade.getUser(userId);
-        shDeleteEmployeeService.importEmployee(fileName,userId, user.getDepartmentId(), bizObjectFacade, organizationFacade, workflowInstanceFacade);
+
+        shReadDeleteExcelFile.setTableName(Constants.SH_DELETE_EMPLOYEE_TABLE_NAME);
+        shReadDeleteExcelFile.setWorkflowCode(Constants.SH_DELETE_EMPLOYEE_SCHEMA_WF);
+
+        excelFileUtils.insertData(fileName, userId, user.getDepartmentId(), bizObjectFacade, organizationFacade, workflowInstanceFacade, shReadDeleteExcelFile);
         return this.getOkResponseResult("success", "导入成功");
     }
 

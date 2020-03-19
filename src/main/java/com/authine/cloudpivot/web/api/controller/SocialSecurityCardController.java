@@ -4,6 +4,7 @@ import com.authine.cloudpivot.engine.api.model.organization.UserModel;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
 import com.authine.cloudpivot.web.api.handler.CustomizedOrigin;
 import com.authine.cloudpivot.web.api.service.SocialSecurityCardService;
+import com.authine.cloudpivot.web.api.utils.ExcelUtils;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 社保卡Controller
- *
  * @author liulei
  * @ClassName com.authine.cloudpivot.web.api.controller.SocialSecurityCardController
  * @Date 2019/12/16 10:12
@@ -30,17 +30,16 @@ public class SocialSecurityCardController extends BaseController {
 
     /**
      * 方法说明：办理社保卡，根据办理人员信息批量开启流程
-     *
+     * @Param fileName 导入文件的名称
      * @return om.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
      * @throws
-     * @Param fileName 导入文件的名称
      * @author liulei
      * @Date 2019/12/16 10:31
      */
     @PostMapping("/socialSecurityCardProcess")
     @ResponseBody
     @CustomizedOrigin(level = 1)
-    public ResponseResult<String> socialSecurityCardProcess(String fileName) {
+    public ResponseResult<String> socialSecurityCardProcess(String fileName){
         String userId = "402881c16f63e980016f798408060d3f";
         //String userId = getUserId();
 
@@ -51,7 +50,7 @@ public class SocialSecurityCardController extends BaseController {
 
         try {
             // 判断文件类型
-            checkFileType(fileName);
+            ExcelUtils.checkFileType(fileName);
             // 当前用户
             UserModel user = this.getOrganizationFacade().getUser(userId);
             // 导入
@@ -66,17 +65,16 @@ public class SocialSecurityCardController extends BaseController {
 
     /**
      * 方法说明：导入社保卡办理进度信息
-     *
+     * @Param fileName
      * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
      * @throws
-     * @Param fileName
      * @author liulei
      * @Date 2019/12/16 16:58
      */
     @PostMapping("/importProcessFeedBack")
     @ResponseBody
     @CustomizedOrigin(level = 1)
-    public ResponseResult<String> importProcessFeedBack(String fileName) {
+    public ResponseResult<String> importProcessFeedBack(String fileName){
         String userId = "402881c16f63e980016f79840a1a0d43";
         //String userId = getUserId();
 
@@ -87,7 +85,7 @@ public class SocialSecurityCardController extends BaseController {
 
         try {
             // 判断文件类型
-            checkFileType(fileName);
+            ExcelUtils.checkFileType(fileName);
             // 导入
             socialSecurityCard.importProcessFeedBack(this.getWorkflowInstanceFacade(), fileName, userId);
             return this.getOkResponseResult("success", "导入成功!");
@@ -99,10 +97,9 @@ public class SocialSecurityCardController extends BaseController {
 
     /**
      * 方法说明：导入发卡进度信息
-     *
+     * @Param fileName
      * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
      * @throws
-     * @Param fileName
      * @author liulei
      * @Date 2019/12/18 16:44
      */
@@ -120,7 +117,7 @@ public class SocialSecurityCardController extends BaseController {
 
         try {
             // 判断文件类型
-            checkFileType(fileName);
+            ExcelUtils.checkFileType(fileName);
             // 导入
             socialSecurityCard.importIssueFeedBack(this.getWorkflowInstanceFacade(), fileName, userId);
             return this.getOkResponseResult("success", "导入成功!");
@@ -128,39 +125,5 @@ public class SocialSecurityCardController extends BaseController {
             e.printStackTrace();
             return this.getOkResponseResult("error", "导入失败!");
         }
-    }
-
-    /**
-     * 方法说明：判断文件类型是否为“xxxx.xlsx”
-     *
-     * @return boolean
-     * @throws
-     * @Param fileName
-     * @author liulei
-     * @Date 2019/12/27 10:05
-     */
-    private void checkFileType(String fileName) throws Exception {
-        String[] fileNameArray = fileName.split("\\.");
-        if (!"xlsx".equals(fileNameArray[1])) {
-            throw new Exception("文件类型不是xlsx");
-        }
-    }
-
-    /**
-     * 测试使用
-     */
-    @PostMapping("/submit")
-    public void submit() throws Exception {
-        String userId = "402881c16f63e980016f798408060d3f";
-        socialSecurityCard.submit(this.getWorkflowInstanceFacade(), userId);
-    }
-
-    /**
-     * 测试使用
-     */
-    @PostMapping("/reject")
-    public void reject() throws Exception {
-        String userId = "402881c16f63e980016f79840a1a0d43";
-        socialSecurityCard.reject(this.getWorkflowInstanceFacade(), userId);
     }
 }

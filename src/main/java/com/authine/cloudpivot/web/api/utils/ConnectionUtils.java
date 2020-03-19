@@ -14,16 +14,11 @@ import java.util.Map;
 public class ConnectionUtils {
 
     public static final String DRIVER = "com.mysql.cj.jdbc.Driver";
-
-    public static final String URL = "jdbc:mysql://127.0.0.1:3306/cloudpivot?serverTimezone=Asia/Shanghai&characterEncoding=utf8";
-    //public static final String URL = "jdbc:mysql://127.0.0.1:3306/cloudpivot27?serverTimezone=Asia/Shanghai&characterEncoding=utf8";
-
     public static final String USER = "root";
-
+    public static final String URL = "jdbc:mysql://127.0.0.1:3306/cloudpivot?serverTimezone=Asia/Shanghai&characterEncoding=utf8";
     public static final String PASSWORD = "Bjwq_123456";
-    //public static final String PASSWORD = "root";
 
-    public static Connection CreateConnection() throws Exception {
+    public static Connection CreateConnection() throws Exception{
         Connection conn = null;
         try {
             //注册JDBC驱动程序
@@ -74,14 +69,13 @@ public class ConnectionUtils {
 
     /**
      * 方法说明：执行查询sql,返回查询结果
-     *
+     * @Param sql
      * @return java.sql.ResultSet
      * @throws
-     * @Param sql
      * @author liulei
      * @Date 2020/1/7 13:43
      */
-    public static List<Map<String, Object>> executeSelectSql(String sql) throws Exception {
+    public static List <Map <String, Object>> executeSelectSql(String sql) throws Exception{
         Connection conn = null;
         Statement statement = null;
         try {
@@ -90,11 +84,11 @@ public class ConnectionUtils {
             System.out.println("=====================" + sql);
             ResultSet rs = statement.executeQuery(sql);
 
-            List<Map<String, Object>> result = new ArrayList<>();
+            List <Map <String, Object>> result = new ArrayList <>();
             ResultSetMetaData md = rs.getMetaData();
             int columnCount = md.getColumnCount();   //获得列数
             while (rs.next()) {
-                Map<String, Object> rowData = new HashMap<String, Object>();
+                Map<String,Object> rowData = new HashMap<String,Object>();
                 for (int i = 1; i <= columnCount; i++) {
                     rowData.put(md.getColumnName(i), rs.getObject(i));
                 }
@@ -112,15 +106,14 @@ public class ConnectionUtils {
 
     /**
      * 方法说明：执行查询sql,返回查询结果
-     *
+     * @Param sql
      * @return java.sql.ResultSet
      * @throws
-     * @Param sql
      * @author liulei
      * @Date 2020/1/7 13:43
      */
-    public static List<Map<String, String>> executeSelectSql1(String sql) throws Exception {
-        List<Map<String, String>> result = new ArrayList<>();
+    public static List <Map <String, String>> executeSelectSql1(String sql) throws Exception{
+        List <Map <String, String>> result = new ArrayList <>();
 
         Connection conn = null;
         Statement statement = null;
@@ -130,7 +123,7 @@ public class ConnectionUtils {
             System.out.println("=====================" + sql);
             ResultSet rs = statement.executeQuery(sql);
             while (rs.next()) {
-                Map<String, String> map = new HashMap<>();
+                Map<String, String> map = new HashMap <>();
                 map.put("message", rs.getString("message"));
                 String salesman = "";
                 if ("1".equals(rs.getString("type"))) {
@@ -155,17 +148,17 @@ public class ConnectionUtils {
     private static String formatJsonSting(String str) {
         String result = "";
         // 去除[}]
-        str = str.substring(1, str.length() - 2);
+        str = str.substring(1, str.length() -2);
         // 去除{
         str = str.replaceAll("\\{", "");
         String[] strArr = str.split("},");
         if (strArr.length > 0) {
             for (int i = 0; i < strArr.length; i++) {
                 String idStr = strArr[i].split(",")[0];
-                String id = idStr.substring(6, idStr.length() - 1);
+                String id = idStr.substring(6, idStr.length()-1);
                 result += id + ",";
             }
-            result = result.substring(0, result.length() - 1);
+            result = result.substring(0, result.length()-1);
         }
 
         return result;
@@ -174,14 +167,13 @@ public class ConnectionUtils {
 
     /**
      * 方法说明：执行查询sql
-     *
+     * @Param sql
      * @return void
      * @throws
-     * @Param sql
      * @author liulei
      * @Date 2020/1/7 13:43
      */
-    public static boolean executeSql(String sql) throws Exception {
+    public static boolean executeSql(String sql) throws Exception{
         Connection conn = null;
         Statement statement = null;
         try {
@@ -199,21 +191,20 @@ public class ConnectionUtils {
 
     /**
      * 方法说明：
-     *
+     * @Param sqlArr
      * @return void
      * @throws
-     * @Param sqlArr
      * @author liulei
      * @Date 2020/1/7 13:59
      */
-    public static void executeSql(String[] sqlArr) throws Exception {
+    public static void executeSql(String[] sqlArr) throws Exception{
         Connection conn = null;
         Statement statement = null;
         try {
             conn = CreateConnection();
             statement = conn.createStatement();
 
-            for (int i = 0; i < sqlArr.length; i++) {
+            for (int i=0; i< sqlArr.length; i++) {
                 statement.addBatch(sqlArr[i]);
                 System.out.println("=====================" + sqlArr[i]);
             }

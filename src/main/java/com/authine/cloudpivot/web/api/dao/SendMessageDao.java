@@ -13,8 +13,7 @@ public interface SendMessageDao {
 
     /**
      * 方法说明：获取超时信息
-     *
-     * @return java.util.List<java.util.Map < java.lang.String, java.lang.Object>>
+     * @return java.util.List<java.util.Map<java.lang.String,java.lang.Object>>
      * @throws
      * @author liulei
      * @Date 2020/1/7 13:37

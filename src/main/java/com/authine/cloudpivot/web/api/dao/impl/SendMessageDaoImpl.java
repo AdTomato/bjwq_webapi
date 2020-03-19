@@ -16,7 +16,7 @@ import java.util.Map;
 @Repository
 public class SendMessageDaoImpl implements SendMessageDao {
     @Override
-    public List<Map<String, String>> getHaveTimeOutInfo() throws Exception {
+    public List <Map <String, String>> getHaveTimeOutInfo() throws Exception{
 
         String sql = " select CONCAT(employee_name, '社保卡办理') as message,salesman, operator, '1' type from " +
                 "iewep_social_security_card where end_time is not null and date_format(end_time, '%Y-%m-%d') < " +

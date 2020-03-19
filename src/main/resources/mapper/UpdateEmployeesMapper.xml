@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.UpdateEmployeesMapper">
+    <select id="getAddEmployeeUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.AddEmployee">
+        SELECT * FROM i4fvb_add_employee_update WHERE id = #{id}
+    </select>
+
+    <select id="getShAddEmployeeUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ShAddEmployee">
+        SELECT * FROM i4fvb_sh_add_employee_update WHERE id = #{id}
+    </select>
+
+    <select id="getQgAddEmployeeUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
+        SELECT * FROM i4fvb_nationwide_dispatch_update WHERE id = #{id}
+    </select>
+
+    <select id="getDeleteEmployeeUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
+        SELECT * FROM i4fvb_add_employee_update WHERE id = #{id}
+    </select>
+
+    <select id="getShDeleteEmployeeUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ShDeleteEmployee">
+        SELECT * FROM i4fvb_sh_add_employee_update WHERE id = #{id}
+    </select>
+
+    <select id="getQgDeleteEmployeeUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
+        SELECT * FROM i4fvb_nationwide_dispatch_update WHERE id = #{id}
+    </select>
+
+    <select id="getEmployeeFilesUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
+        SELECT * FROM i4fvb_employee_files_update WHERE id = #{id}
+    </select>
+</mapper>

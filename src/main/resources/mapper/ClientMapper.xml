@@ -9,9 +9,18 @@
         SELECT salesman FROM id34a_first_level_client_salesman WHERE parentId = #{parentId} AND area = #{area} AND staff_nature = #{staffNature}
     </select>
 
+    <!-- 根据客户名称获取一级客户里面的业务员 -->
+    <select id="getFirstLevelClientSalesmanByCompanyName" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT salesman FROM id34a_first_level_client WHERE company_name = #{companyNam}
+    </select>
+
     <!-- 获取二级客户中的业务员 -->
     <select id="getSecondLevelClientSalesman" resultType="java.lang.String">
         SELECT salesman FROM id34a_second_level_client_salesman WHERE parentId = #{parentId} AND area = #{area} AND staff_nature = #{staffNature}
+    </select>
+
+    <select id="getSecondLevelClientSalesmanByCompanyName" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT salesman FROM id34a_second_level_client WHERE company_name = #{companyName}
     </select>
 
     <!-- 获取一级客户的服务费 -->

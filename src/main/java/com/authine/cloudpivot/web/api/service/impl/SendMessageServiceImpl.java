@@ -1,9 +1,5 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
-import com.authine.cloudpivot.engine.api.facade.IMMessageFacade;
-import com.authine.cloudpivot.engine.api.model.im.MessageModel;
-import com.authine.cloudpivot.engine.enums.type.IMMessageChannelType;
-import com.authine.cloudpivot.engine.enums.type.IMMessageType;
 import com.authine.cloudpivot.web.api.dao.SendMessageDao;
 import com.authine.cloudpivot.web.api.service.SendMessageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +21,9 @@ public class SendMessageServiceImpl implements SendMessageService {
     private SendMessageDao sendMessageDao;
 
     @Override
-    public void sendMessageHaveTimeout() throws Exception {
+    public void sendMessageHaveTimeout() throws Exception{
         // 获取需要提醒的数据
-        List<Map<String, String>> sendMessage = sendMessageDao.getHaveTimeOutInfo();
+        List <Map <String, String>> sendMessage = sendMessageDao.getHaveTimeOutInfo();
         // 发送钉钉消息
         if (sendMessage != null && sendMessage.size() > 0) {
             for (int i = 0; i < sendMessage.size(); i++) {

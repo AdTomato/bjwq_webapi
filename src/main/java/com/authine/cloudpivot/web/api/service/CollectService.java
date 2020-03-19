@@ -14,14 +14,13 @@ public interface CollectService {
 
     /**
      * 方法说明：激活提交采集流程
-     *
-     * @return void
-     * @throws Exception
      * @Param bizObjectFacade
      * @Param workflowInstanceFacade
      * @Param id 发起采集流程业务id
      * @Param userId
      * @Param departmentId
+     * @return void
+     * @throws Exception
      * @author liulei
      * @Date 2020/1/10 14:08
      */
@@ -31,12 +30,11 @@ public interface CollectService {
 
     /**
      * 方法说明：基数采集回写附件到发起采集中去
-     *
-     * @return void
-     * @throws
      * @Param id 基数采集业务id
      * @Param refIds 基数采集附件refId
      * @Param startCollectId 发起采集业务id
+     * @return void
+     * @throws
      * @author liulei
      * @Date 2020/1/13 15:36
      */
@@ -44,11 +42,10 @@ public interface CollectService {
 
     /**
      * 方法说明：过节点申请修改截止时间
-     *
-     * @return void
-     * @throws
      * @Param id 基数采集业务id
      * @Param endTime
+     * @return void
+     * @throws
      * @author liulei
      * @Date 2020/1/13 21:48
      */

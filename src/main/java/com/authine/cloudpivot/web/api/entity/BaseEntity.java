@@ -1,6 +1,8 @@
 package com.authine.cloudpivot.web.api.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
@@ -10,6 +12,8 @@ import java.util.Date;
  * @Description: 云枢所有表单实体类的基类
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class BaseEntity {
 
     /**
@@ -76,5 +80,4 @@ public class BaseEntity {
      * 部门查询编码
      */
     public String ownerDeptQueryCode;
-
 }

@@ -29,17 +29,16 @@ public class CollectController extends BaseController {
 
     /**
      * 方法说明：发起数据采集时，激活需要上传数据的人员对应流程
-     *
-     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
-     * @throws
      * @Param id 发起数据采集的流程业务id
      * @Param refIds 附件的refId
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @throws
      * @author liulei
      * @Date 2020/1/13 14:14
      */
     @GetMapping("/startCollect")
     @ResponseBody
-    public ResponseResult<String> startCollect(String id, String refIds) {
+    public ResponseResult <String> startCollect(String id, String refIds) {
         if (StringUtils.isBlank(id)) {
             log.info("没有业务id，激活失败!");
             return this.getOkResponseResult("error", "没有业务id，激活失败!");
@@ -66,18 +65,17 @@ public class CollectController extends BaseController {
 
     /**
      * 方法说明：基数采集回写附件到发起采集中去
-     *
-     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
-     * @throws
      * @Param id 基数采集业务id
      * @Param refIds 基数采集附件refId
      * @Param startCollectId 发起采集业务id
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @throws
      * @author liulei
      * @Date 2020/1/13 15:34
      */
     @GetMapping("/returnCollect")
     @ResponseBody
-    public ResponseResult<String> returnCollect(String id, String refIds, String startCollectId) {
+    public ResponseResult <String> returnCollect(String id, String refIds, String startCollectId) {
         if (StringUtils.isBlank(id)) {
             log.info("没有业务id，回写附件失败!");
             return this.getOkResponseResult("error", "没有业务id，回写附件失败!");
@@ -105,17 +103,16 @@ public class CollectController extends BaseController {
 
     /**
      * 方法说明：过节点申请修改截止时间
-     *
-     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
-     * @throws
      * @Param id 基数采集业务id
      * @Param endTime
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @throws
      * @author liulei
      * @Date 2020/1/13 15:34
      */
     @GetMapping("/updateEndTime")
     @ResponseBody
-    public ResponseResult<String> updateEndTime(String id, String endTime) {
+    public ResponseResult <String> updateEndTime(String id, String endTime) {
         if (StringUtils.isBlank(id)) {
             log.info("没有业务id，过节点申请修改截止时间失败!");
             return this.getOkResponseResult("error", "没有业务id，过节点申请修改截止时间失败!");

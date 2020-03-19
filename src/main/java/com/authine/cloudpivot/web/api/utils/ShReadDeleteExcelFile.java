@@ -9,11 +9,14 @@ import java.text.SimpleDateFormat;
 /**
  * @Author: wangyong
  * @Date: 2020-02-05 11:11
- * @Description:
+ * @Description: 读取减员
  */
 @Component
-public class ReadDeleteExcelFile extends ReadExcelFile {
+public class ShReadDeleteExcelFile extends ReadExcelFile {
 
+    public static final String TABLE_NAME = "";
+
+    public static final String WORKFLOW_CODE = "";
 
     @Override
     protected Object conversion(String key, Object value) throws ParseException {
@@ -32,5 +35,6 @@ public class ReadDeleteExcelFile extends ReadExcelFile {
         }
         return result;
     }
+
 
 }

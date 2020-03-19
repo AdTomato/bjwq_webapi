@@ -24,16 +24,15 @@ public class SendMailController extends BaseController {
 
     /**
      * 方法说明：
-     *
-     * @return java.lang.String
-     * @throws
      * @Param mailBody 五险一金享受邮件发送内容实体
+     * @return java.lang.String
+     * @throws 
      * @author liulei
      * @Date 2019/12/26 10:57
      */
     @PostMapping("/sendMail")
     @CustomizedOrigin(level = 1)
-    public ResponseResult<String> sendMail(@RequestBody MailBody mailBody) {
+    public ResponseResult <String> sendMail(@RequestBody MailBody mailBody){
 
         String recipients = mailBody.getRecipients();
 

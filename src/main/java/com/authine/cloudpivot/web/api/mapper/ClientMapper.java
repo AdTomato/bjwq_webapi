@@ -21,6 +21,14 @@ public interface ClientMapper {
     public List<String> getFirstLevelClientSalesman(String parentId, String area, String staffNature);
 
     /**
+     * 根据客户名称获取一级客户联的业务员
+     *
+     * @param companyName 公司名称
+     * @return 业务员
+     */
+    public List<String> getFirstLevelClientSalesmanByCompanyName(String companyName);
+
+    /**
      * 根据公司名称，委托单位获取一级客户id
      *
      * @param clientName    公司名称
@@ -47,6 +55,14 @@ public interface ClientMapper {
      * @return 业务员
      */
     public List<String> getSecondLevelClientSalesman(String parentId, String area, String staffNature);
+
+    /**
+     * 根据客户名称获取二级客户里面的业务员
+     *
+     * @param companyName 客户名称
+     * @return 业务员
+     */
+    public List<String> getSecondLevelClientSalesmanByCompanyName(String companyName);
 
     /**
      * 根据公司名称，委托单位获取二级客户id

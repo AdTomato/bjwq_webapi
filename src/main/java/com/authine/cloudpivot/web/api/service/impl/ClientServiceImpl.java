@@ -1,9 +1,15 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
+import com.authine.cloudpivot.web.api.dto.SalesContractDto;
+import com.authine.cloudpivot.web.api.entity.ServiceChargeUnitPrice;
 import com.authine.cloudpivot.web.api.entity.Unit;
 import com.authine.cloudpivot.web.api.mapper.ClientMapper;
 import com.authine.cloudpivot.web.api.service.ClientService;
+import com.authine.cloudpivot.web.api.service.SalesContractService;
+import com.authine.cloudpivot.web.api.utils.AreaUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
+import org.omg.CORBA.OBJ_ADAPTER;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +28,9 @@ public class ClientServiceImpl implements ClientService {
 
     @Resource
     ClientMapper clientMapper;
+
+    @Autowired
+    SalesContractService salesContractService;
 
     @Autowired
     Unit unit;
@@ -52,6 +61,19 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getFirstLevelClientSalesman(String parentId, String area, String staffNature) {
         List<String> result = clientMapper.getFirstLevelClientSalesman(parentId, area, staffNature);
+        return null == result ? null : result.get(0);
+    }
+
+    /**
+     * @param companyName: 客户名称
+     * @Author: wangyong
+     * @Date: 2020/3/18 16:21
+     * @return: java.lang.String
+     * @Description: 根据客户名称获取一级客户里面的业务员
+     */
+    @Override
+    public String getFirstLevelClientSalesmanByCompanyName(String companyName) {
+        List<String> result = clientMapper.getFirstLevelClientSalesmanByCompanyName(companyName);
         return null == result ? null : result.get(0);
     }
 
@@ -99,6 +121,19 @@ public class ClientServiceImpl implements ClientService {
     }
 
     /**
+     * @param companyName: 客户名称
+     * @Author: wangyong
+     * @Date: 2020/3/18 16:22
+     * @return: java.lang.String
+     * @Description: 根据客户名称获取二级客户里面的业务员
+     */
+    @Override
+    public String getSecondLevelClientSalesmanByCompanyName(String companyName) {
+        List<String> result = clientMapper.getSecondLevelClientSalesmanByCompanyName(companyName);
+        return null == result ? null : result.get(0);
+    }
+
+    /**
      * @param clientName    : 公司名称
      * @param entrustedUnit : 委托单位
      * @return : java.lang.String
@@ -115,7 +150,7 @@ public class ClientServiceImpl implements ClientService {
 
     /**
      * @param clientName    : 公司名称
-     * @param entrustedUnit : 委托单位
+     * @param entrustedUnit : 委托单位(可为空)
      * @param area          : 地区
      * @param staffNature   : 员工性质
      * @return : java.util.Map
@@ -124,31 +159,64 @@ public class ClientServiceImpl implements ClientService {
      * @Description: 根据公司名称，委托单位，地区，员工性质获取业务员和服务费
      */
     @Override
-    public Map getClientSalesmanAndFee(String clientName, String entrustedUnit, String area, String staffNature) {
+    public Map<String, Object> getClientSalesmanAndFee(String clientName, String entrustedUnit, String area, String staffNature) {
         Map<String, Object> result = new HashMap<>();
-        // 获取一级客户的id值
-        String id = getFirstLevelClientId(clientName, entrustedUnit);
-        if (StringUtils.isEmpty(id)) {
-            // 为空，一级客户不存在
-            id = getSecondLevelClientId(clientName, entrustedUnit);
-            if (StringUtils.isEmpty(id)) {
-                // 为空，二级客户不存在
-                // 返回空值
-                return null;
-            } else {
-                // 不为空，从二级客户里面获取业务员和服务费
-                String salesman = getSecondLevelClientSalesman(id, area, staffNature);
-                Integer fee = getSecondLevelClientFee(id, area);
-                result.put("salesman", salesman);
-                result.put("fee", fee);
-            }
+        String salesman = getFirstLevelClientSalesmanByCompanyName(clientName);
+        if (Strings.isEmpty(salesman)) {
+            // 为空，以及客户中没有查找到
+            salesman = getSecondLevelClientSalesmanByCompanyName(clientName);
+        }
+        result.put("salesman", salesman);
+        SalesContractDto salesContractDto = salesContractService.getSalesContractDto(clientName, staffNature);
+        result.put("fee", getFee(salesContractDto, area));
+        return result;
+    }
+
+    /**
+     * @param salesContractDto: 销售合同
+     * @Author: wangyong
+     * @Date: 2020/3/18 21:33
+     * @return: java.lang.Double
+     * @Description: 获取销售合同中该地区的服务费
+     */
+    private Double getFee(SalesContractDto salesContractDto, String area) {
+        List<ServiceChargeUnitPrice> serviceChargeUnitPrices = salesContractDto.getServiceChargeUnitPrices();
+        boolean isAnhuiCity = AreaUtils.isAnhuiCity(area);
+        String flag = "";
+        if (isAnhuiCity) {
+            flag = "省内";
         } else {
-            // 不为空，从一级客户里面获取业务员和服务费
-            String salesman = getFirstLevelClientSalesman(id, area, staffNature);
-            Integer fee = getFirstLevelClientFee(id, area);
-            result.put("salesman", salesman);
-            result.put("fee", fee);
+            flag = "省外";
+        }
+        if (null == serviceChargeUnitPrices || 0 == serviceChargeUnitPrices.size()) {
+            return 0D;
+        }
+        if (serviceChargeUnitPrices.size() == 1) {
+            return serviceChargeUnitPrices.get(0).getServiceChargeUnitPrice();
+        }
+        int level = 0;
+        Double result = 0D;
+        for (ServiceChargeUnitPrice serviceChargeUnitPrice : serviceChargeUnitPrices) {
+            if (flag.equals(serviceChargeUnitPrice.getServiceArea())) {
+                level = 1;
+                if (serviceChargeUnitPrice.getAreaDetails().length() > area.length()) {
+                    if (serviceChargeUnitPrice.getAreaDetails().contains(area)) {
+                        level = 2;
+                        result = serviceChargeUnitPrice.getServiceChargeUnitPrice();
+                    }
+                } else {
+                    if (area.contains(serviceChargeUnitPrice.getAreaDetails())) {
+                        level = 2;
+                        result = serviceChargeUnitPrice.getServiceChargeUnitPrice();
+                    }
+                }
+            }
+            if (level == 2) {
+                // 达到最终筛选条件了
+                break;
+            }
         }
         return result;
     }
+
 }

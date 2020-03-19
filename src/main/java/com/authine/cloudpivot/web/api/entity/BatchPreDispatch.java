@@ -1,6 +1,8 @@
 package com.authine.cloudpivot.web.api.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
@@ -10,6 +12,8 @@ import java.util.Date;
  * @Description: 批量预派
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class BatchPreDispatch extends BaseEntity {
 
     /**
@@ -131,4 +135,20 @@ public class BatchPreDispatch extends BaseEntity {
      * 备注
      */
     private String remark;
+
+    public BatchPreDispatch(String employeeName, String identityNo, String mobile, Double socialInsuranceAmount,
+                            String providentFundRatio, String suppleProvidentFundRatio, Double providentFundAmount,
+                            Date entryDate, Date orderStartDate, String delegatedArea, String remark) {
+        this.employeeName = employeeName;
+        this.identityNo = identityNo;
+        this.mobile = mobile;
+        this.socialInsuranceAmount = socialInsuranceAmount;
+        this.providentFundRatio = providentFundRatio;
+        this.suppleProvidentFundRatio = suppleProvidentFundRatio;
+        this.providentFundAmount = providentFundAmount;
+        this.entryDate = entryDate;
+        this.orderStartDate = orderStartDate;
+        this.delegatedArea = delegatedArea;
+        this.remark = remark;
+    }
 }

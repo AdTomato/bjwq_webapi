@@ -1,11 +1,15 @@
 package com.authine.cloudpivot.web.api.utils;
 
-import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
-import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
-import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
+import com.authine.cloudpivot.engine.api.model.organization.DepartmentModel;
+import com.authine.cloudpivot.engine.api.model.organization.UserModel;
 import com.authine.cloudpivot.web.api.entity.ColumnComment;
 import com.authine.cloudpivot.web.api.service.TableService;
+import lombok.Data;
+import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +22,11 @@ import java.util.*;
  * @Date: 2020-02-05 11:08
  * @Description: 上海(增员)读取excel
  */
+@Data
 public abstract class ReadExcelFile {
+
+    private String tableName;
+    private String workflowCode;
 
     @Autowired
     TableService tableService;
@@ -34,45 +42,20 @@ public abstract class ReadExcelFile {
      * @Date: 2020/2/5 13:25
      * @Description: 将excel中的需要读取的sheet转换为List对象
      */
-    public List<Map<String, Object>> readFile(Sheet sheet, Integer startRowNum, Integer endRowNum, Map<Integer, String> cellMapRelationship, Set<String> required) throws ParseException {
+    public List<Map<String, Object>> readFile(UserModel user, DepartmentModel department, String sequenceStatus, Sheet sheet, Integer startRowNum, Integer endRowNum, Map<Integer, String> cellMapRelationship, Map<String, String> tableColumnComment, List<String> ids, Set<String> required) throws ParseException {
         List<Map<String, Object>> result = new ArrayList<>();
         for (int i = startRowNum; i < endRowNum; i++) {
             Row row = sheet.getRow(i);
-            Map<String, Object> map = getRowData(row, cellMapRelationship, required);
+            Map<String, Object> map = getRowData(user, department, sequenceStatus, row, cellMapRelationship, tableColumnComment, required);
             if (map != null) {
                 // 不是空行，存储
+                ids.add(map.get("id") + "");
                 result.add(map);
             }
         }
         return result;
     }
 
-    /**
-     * @param sheet               : 需要读取的sheet
-     * @param startRowNum         : 开始行
-     * @param endRowNum           : 结束行
-     * @param cellMapRelationship : 每列和数据库字段映射关系
-     * @param schemaCode          : 表单编码
-     * @param sequenceStatus      : 表单状态
-     * @param required            : 必填项
-     * @return : java.util.List<com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel>
-     * @Author: wangyong
-     * @Date: 2020/2/5 13:22
-     * @Description: 将需要读取的excel中的sheet每一行转换成model
-     */
-    public List<BizObjectModel> readFileToModel(Sheet sheet, Integer startRowNum, Integer endRowNum, Map<Integer, String> cellMapRelationship, String schemaCode, String sequenceStatus, Set<String> required) throws ParseException {
-
-        List<BizObjectModel> result = new ArrayList<>();
-        for (int i = startRowNum; i < endRowNum; i++) {
-            Row row = sheet.getRow(i);
-            Map<String, Object> map = getRowData(row, cellMapRelationship, required);
-            if (map != null) {
-                // 不是空行，存储
-                result.add(getModel(schemaCode, sequenceStatus, map));
-            }
-        }
-        return result;
-    }
 
     /**
      * @param row                 : 读取的行
@@ -82,21 +65,47 @@ public abstract class ReadExcelFile {
      * @Date: 2020/2/5 13:27
      * @Description: 读取excel一行数据
      */
-    private Map<String, Object> getRowData(Row row, Map<Integer, String> cellMapRelationship, Set<String> required) throws ParseException {
+    private Map<String, Object> getRowData(UserModel user, DepartmentModel department, String sequenceStatus, Row row, Map<Integer, String> cellMapRelationship, Map<String, String> tableColumnComment, Set<String> required) throws ParseException {
         Map<String, Object> result = new HashMap<>();
+        copyKey(result, tableColumnComment);
         int cellNum = row.getLastCellNum();
         int nullNum = 0;
         Boolean flag = true;  // 用于标记是否存在必填项没有填，默认不存在
         for (int j = 0; j < cellNum; j++) {
-            String cellValue = row.getCell(j).getStringCellValue();
-            if (StringUtils.isEmpty(cellValue)) {
-                nullNum++;
-                if (required.contains(cellMapRelationship.get(j))) {
-                    // 该列是必填项，且必填项为空
-                    flag = false;
-                    break;
+            Cell cell = row.getCell(j);
+            String cellValue = "";
+            if (null != cell) {
+                // 不为空
+                CellType cellType = cell.getCellType();
+
+                if ("NUMERIC".equals(cellType.toString())) {
+                    // 数字类型
+                    if (HSSFDateUtil.isCellDateFormatted(cell)) {
+                        // 是时间
+                        Date date = cell.getDateCellValue();
+                        if (null != date) {
+                            cellValue = DateFormatUtils.format(date, "yyyy-MM-dd");
+                        }
+                    } else {
+                        cell.setCellType(CellType.STRING);
+                        cellValue = cell.getStringCellValue();
+                    }
+                } else if ("DATE".equals(cellType.toString())) {
+                    cellValue = cell.getDateCellValue().toString();
+                } else {
+                    cellValue = cell.getStringCellValue();
+                }
+
+                if (StringUtils.isEmpty(cellValue)) {
+                    nullNum++;
+                    if (required.contains(cellMapRelationship.get(j))) {
+                        // 该列是必填项，且必填项为空
+                        flag = false;
+                        break;
+                    }
                 }
             }
+
             result.put(cellMapRelationship.get(j), conversion(cellMapRelationship.get(j), cellValue));
         }
         if (nullNum == cellNum) {
@@ -106,26 +115,10 @@ public abstract class ReadExcelFile {
         if (!flag) {
             throw new RuntimeException("第：" + row.getRowNum() + "行存在必填项没有填写");
         }
+        SystemDataSetUtils.dataSet(user, department, "", sequenceStatus, result);
         return result;
     }
 
-    /**
-     * @param map : model内部数据
-     * @return : com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel
-     * @Author: wangyong
-     * @Date: 2020/2/4 14:12
-     * @Description: 创建BizObjectModel
-     */
-    private BizObjectModel getModel(String schemaCode, String sequenceStatus, Map<String, Object> map) throws ParseException {
-
-        BizObjectModel result = new BizObjectModel();
-        result.setSchemaCode(schemaCode);
-        // 设置草稿状态
-        result.setSequenceStatus(sequenceStatus);
-        result.put(map);
-
-        return result;
-    }
 
     /**
      * @param row : 第一行内容
@@ -186,24 +179,12 @@ public abstract class ReadExcelFile {
         return result;
     }
 
-    /**
-     * @param userId                 : 当前操作人id
-     * @param departmentId           : 当前操作人的部门id
-     * @param workflowCode           : 需要开启的流程
-     * @param models                 : 数据
-     * @param bizObjectFacade        : 用于创建数据的工具类
-     * @param workflowInstanceFacade : 用于创建流程实例的工具类
-     * @return : void
-     * @Author: wangyong
-     * @Date: 2020/2/6 15:12
-     * @Description: 开启流程
-     */
-    public void startWorkflow(String userId, String departmentId, String workflowCode, List<BizObjectModel> models, BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade) {
-        List<String> ids = bizObjectFacade.addBizObjects(userId, models, "id");
-        for (String id : ids) {
-            workflowInstanceFacade.startWorkflowInstance(departmentId, userId, workflowCode, id, false);
+    private void copyKey(Map<String, Object> result, Map<String, String> cellMapRelationship) {
+        for (String value : cellMapRelationship.values()) {
+            result.put(value, null);
         }
     }
+
 
     /**
      * 需要转换的列
@@ -214,4 +195,5 @@ public abstract class ReadExcelFile {
      * @throws ParseException
      */
     protected abstract Object conversion(String key, Object value) throws ParseException;
+
 }

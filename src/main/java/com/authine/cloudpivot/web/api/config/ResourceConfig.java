@@ -115,10 +115,9 @@ public class ResourceConfig extends ResourceServerConfigurerAdapter {
                     .antMatchers("/fonts/**").permitAll()
                     .antMatchers("/favicon.*").permitAll()
                     .antMatchers("/api/dingtalk/**").permitAll()
+
                     // 新增修改客户用户
                     .antMatchers("/controller/clientUser/**").permitAll()
-                    // 测试
-                    .antMatchers("/controller/import/importSocialSecurityCardsPersonnelInfo").permitAll()
                     // 社保办卡导入
                     .antMatchers("/controller/socialSecurityCard/**").permitAll()
                     // 发送邮件
@@ -127,11 +126,26 @@ public class ResourceConfig extends ResourceServerConfigurerAdapter {
                     .antMatchers("/controller/collectController/**").permitAll()
                     // 征缴政策
                     .antMatchers("/controller/product/updateProduct").permitAll()
+                    // 增减员
+                    .antMatchers("/controller/employeeMaintain/**").permitAll()
                     // 上海增员
                     .antMatchers("/controller/shAddEmployee/**").permitAll()
+                    // 上海减员
+                    .antMatchers("/controller/shDeleteEmployee/**").permitAll()
+                    // 全国增减或减员
+                    .antMatchers("/controller/nationalDelivery/**").permitAll()
+                    // 商保
+                    .antMatchers("/controller/businessInsurance/**").permitAll()
+                    // 客户管理
                     .antMatchers("/controller/clientController/**").permitAll()
+                    // 系统管理
                     .antMatchers("/controller/systemManage/**").permitAll()
+                    // 员工档案
                     .antMatchers("/controller/employeeFiles/**").permitAll()
+                    // 数据修改
+                    .antMatchers("/controller/dataModify/**").permitAll()
+                    //政策平台
+                    .antMatchers("/controller/policyPlatform/**").permitAll()
                     // 测试类
                     .antMatchers("/controller/test/**").permitAll()
                     //test

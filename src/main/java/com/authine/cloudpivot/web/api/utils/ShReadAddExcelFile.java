@@ -12,8 +12,11 @@ import java.text.SimpleDateFormat;
  * @Description:
  */
 @Component
-public class ReadAddExcelFile extends ReadExcelFile {
+public class ShReadAddExcelFile extends ReadExcelFile {
 
+    public static final String TABLE_NAME = "";
+
+    public static final String WORKFLOW_CODE = "";
 
     @Override
     protected Object conversion(String key, Object value) throws ParseException {
@@ -25,7 +28,7 @@ public class ReadAddExcelFile extends ReadExcelFile {
         switch (key) {
             case "service_fee":
             case "with_file":
-            case "social_security_section":
+//            case "social_security_section":
             case "social_security_base":
             case "provident_fund_base":
             case "supplement_provident_fund_p":
@@ -53,5 +56,6 @@ public class ReadAddExcelFile extends ReadExcelFile {
         }
         return result;
     }
+
 
 }

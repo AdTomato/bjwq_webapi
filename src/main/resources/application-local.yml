@@ -8,8 +8,6 @@ spring:
   #redis
   redis:
     host: 127.0.0.1  #地址
-    #host: 121.199.57.68  #地址 网订
-    #host: 112.132.218.104     #地址 北京外企
     database: 1         #
     password: H3yuncom  #密码
     port: 6379          #端口
@@ -18,10 +16,9 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    #    url: jdbc:mysql://10.7.11.35:3306/cloudpivot?serverTimezone=Asia/Shanghai&characterEncoding=utf8
+    #    url: jdbc:mysql://127.0.0.1:3306/cloudpivot?serverTimezone=Asia/Shanghai&characterEncoding=utf8
     url: jdbc:mysql://127.0.0.1:3306/wqcloudpivot?serverTimezone=Asia/Shanghai&characterEncoding=utf8
     username: root
-    #    password: Rlzyb_1910
     password: Wy_123456
     hikari:
       maximum-pool-size: 30                #根据系统并发用户数
@@ -45,8 +42,6 @@ dubbo:
   registry:
     protocol: zookeeper
     address: 127.0.0.1  #服务注册地址
-    #address: 121.199.57.68
-    #address: 112.132.218.104
     port: 2181          #端口
     timeout: 3000       #超时时间
     check: true
@@ -63,14 +58,14 @@ cloudpivot:
     multi_language_toggle_switch: false  #多语言开关 默认关
   attachment:   # 文件存储方式
     oss:
-      enabled: false     #是否启用
-    sftp:
       enabled: true     #是否启用
+    sftp:
+      enabled: false     #是否启用
   api:
     oauth:
-      enabled: true   # 是否开启权限校验
+      enabled: false   # 是否开启权限校验
       test:
-        userid: f8cf3b3469a36a300169a36e88f101eb      # 模拟测试用户ID，不能用于生产环境
+        userid: 2c9280a26706a73a016706a93ccf002b      # 模拟测试用户ID，不能用于生产环境
   bizlog:
     endpoint:        #地域节点 如：oss-cn-shenzhen.aliyuncs.com
     accessKeyId:     #用户AccessKey
@@ -79,7 +74,7 @@ cloudpivot:
     logStore: webapi_log    #web-sso日志库
 
 mybatis:
-  mapper-locations: classpath:mybatis/mapper/*.xml  # 设置mapper的路径
+  mapper-locations: classpath:/mapper/*.xml  # 设置mapper的路径
   configuration:
     map-underscore-to-camel-case: true  # 开启驼峰命名法
 

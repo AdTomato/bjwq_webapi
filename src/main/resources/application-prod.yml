@@ -7,7 +7,7 @@ server:
 spring:
   #redis
   redis:
-    host: 112.132.218.104     #地址
+    host: 127.0.0.1     #地址
     database: 1         #
     password: H3yuncom  #密码
     port: 6379          #端口
@@ -25,7 +25,7 @@ logging:
 dubbo:
   registry:
     protocol: zookeeper
-    address: 112.132.218.104  #服务注册地址
+    address: 127.0.0.1  #服务注册地址
     port: 2181          #端口
     timeout: 3000       #超时时间
     check: true
@@ -44,7 +44,7 @@ cloudpivot:
     oss:
       enabled: true     #是否启用
     sftp:
-      enabled: true      #是否启用
+      enabled: false      #是否启用
   bizlog:
     endpoint:        #地域节点 如：oss-cn-shenzhen.aliyuncs.com
     accessKeyId:     #用户AccessKey

@@ -28,6 +28,13 @@ public interface ClientService {
      */
     public String getFirstLevelClientSalesman(String parentId, String area, String staffNature);
 
+    /**
+     * 根据客户名称获取一级客户里面的业务员
+     *
+     * @param companyName 客户名称
+     * @return 业务员
+     */
+    public String getFirstLevelClientSalesmanByCompanyName(String companyName);
 
     /**
      * 根据公司名称，委托单位获取一级客户id
@@ -57,6 +64,13 @@ public interface ClientService {
      */
     public String getSecondLevelClientSalesman(String parentId, String area, String staffNature);
 
+    /**
+     * 根据客户名称获取二级客户里面的业务员
+     *
+     * @param companyName 客户名称
+     * @return 业务员
+     */
+    public String getSecondLevelClientSalesmanByCompanyName(String companyName);
 
     /**
      * 根据公司名称，委托单位获取二级客户id
@@ -77,6 +91,6 @@ public interface ClientService {
      * @param staffNature   员工性质
      * @return 业务员和服务费
      */
-    public Map getClientSalesmanAndFee(String clientName, String entrustedUnit, String area, String staffNature);
+    public Map<String, Object> getClientSalesmanAndFee(String clientName, String entrustedUnit, String area, String staffNature);
 
 }

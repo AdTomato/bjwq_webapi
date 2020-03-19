@@ -1,6 +1,5 @@
 package com.authine.cloudpivot.web.api.service;
 
-import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
 import com.authine.cloudpivot.engine.api.facade.OrganizationFacade;
 import com.authine.cloudpivot.web.api.entity.BatchPreDispatch;
 

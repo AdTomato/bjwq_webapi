@@ -34,24 +34,23 @@ public class ClientUserDaoImpl implements ClientUserDao {
     }
 
     @Override
-    public List<Map<String, Object>> getPersonalizedSetByNo(String clientNumber) throws Exception {
+    public List <Map <String, Object>> getPersonalizedSetByNo(String clientNumber) throws Exception {
         String sql = "select time_node, company_injury_ratio, employee_injury_ratio, company_accumulation_ratio, " +
                 "employee_accumulation_ratio from id34a_ccps where client_number = '" + clientNumber + "'";
-        List<Map<String, Object>> list = ConnectionUtils.executeSelectSql(sql);
+        List <Map <String, Object>> list = ConnectionUtils.executeSelectSql(sql);
         return list;
     }
 
     /**
      * 方法说明：客户导入员工信息，提交后维护修改截止时间，工伤比例，公积金比例
-     *
-     * @return void
-     * @throws
      * @Param id
      * @Param endTime
      * @Param companyInjuryRatio
      * @Param employeeInjuryRatio
      * @Param companyFundRatio
      * @Param employeeFundRatio
+     * @return void
+     * @throws
      * @author liulei
      * @Date 2020/1/19 14:53
      */
@@ -82,10 +81,9 @@ public class ClientUserDaoImpl implements ClientUserDao {
 
     /**
      * 方法说明：根据城市id获取时间节点
-     *
+     * @Param ids
      * @return java.lang.String
      * @throws
-     * @Param ids
      * @author liulei
      * @Date 2020/1/19 15:24
      */
@@ -93,8 +91,8 @@ public class ClientUserDaoImpl implements ClientUserDao {
     public String getTimeNodeByIds(String ids) throws Exception {
         String sql = "select min(time_node) time_node from id34a_city_time_node where id in ('" +
                 ids.replaceAll(",", "','") + "')";
-        List<Map<String, Object>> list = ConnectionUtils.executeSelectSql(sql);
-        if (list != null && list.size() > 0) {
+        List <Map <String, Object>> list = ConnectionUtils.executeSelectSql(sql);
+        if (list != null && list.size() >0) {
             return list.get(0).get("time_node").toString();
         } else {
             throw new Exception("根据城市id获取时间节点失败。");

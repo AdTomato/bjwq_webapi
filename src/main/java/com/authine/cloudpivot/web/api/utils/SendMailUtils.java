@@ -20,12 +20,11 @@ public class SendMailUtils {
 
     /**
      * 方法说明：发送邮件
-     *
-     * @return void
-     * @throws
      * @Param subject 邮件主题
      * @Param body 邮件内容
      * @Param recipients 收件人
+     * @return void
+     * @throws
      * @author liulei
      * @Date 2019/12/26 14:38
      */
@@ -44,9 +43,9 @@ public class SendMailUtils {
         // 设置发件人邮箱地址
         message.setFrom(new InternetAddress("C-LOOP@fesco.com.cn"));
         // 设置收件人邮箱地址
-        List<InternetAddress> internetAddressesList = new ArrayList<>();
+        List <InternetAddress> internetAddressesList = new ArrayList <>();
         String[] recipientArr = recipients.split(",");
-        for (String recipient : recipientArr) {//收件人
+        for (String recipient : recipientArr){//收件人
             internetAddressesList.add(new InternetAddress(recipient));
         }
         Address[] address = new Address[internetAddressesList.size()];

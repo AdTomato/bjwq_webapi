@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.SystemManageMapper">
+    <select id="getTimeNodeByCity" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select time_node from id34a_city_time_node where city = #{cityName}
+    </select>
+
+    <select id="getWelfareHandlerByClientNameAndCity"
+            resultType="com.authine.cloudpivot.web.api.entity.AppointmentSheet">
+        select * from id34a_appointment_sheet where client_name = #{clientName} and city = #{city}
+    </select>
+
+    <select id="getOrgUserByMobile" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.OrgUser">
+        SELECT * FROM h_org_user WHERE mobile = #{mobile}
+    </select>
+
+    <select id="getSmsHistoryById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.SmsHistory">
+        SELECT * FROM id34a_sms_history WHERE id = #{id}
+    </select>
+
+</mapper>

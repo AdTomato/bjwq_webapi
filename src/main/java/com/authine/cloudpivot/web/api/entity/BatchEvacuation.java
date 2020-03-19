@@ -1,6 +1,8 @@
 package com.authine.cloudpivot.web.api.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
@@ -10,6 +12,8 @@ import java.util.Date;
  * @Description: 批量撤离
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class BatchEvacuation extends BaseEntity{
 
     /**
@@ -88,8 +92,21 @@ public class BatchEvacuation extends BaseEntity{
     private String remark;
 
     /**
-     * 备注
+     * 终止用工协议
      */
     private String endEmploymentAgreement;
 
+
+    public BatchEvacuation(String employeeName, String identityNoType, String identityNo, Date orderEndDate,
+                           Date socialSecurityEndTime, Date providentFundEndTime, String socialSecurityStopReason,
+                           String remark) {
+        this.employeeName = employeeName;
+        this.identityNoType = identityNoType;
+        this.identityNo = identityNo;
+        this.orderEndDate = orderEndDate;
+        this.socialSecurityEndTime = socialSecurityEndTime;
+        this.providentFundEndTime = providentFundEndTime;
+        this.socialSecurityStopReason = socialSecurityStopReason;
+        this.remark = remark;
+    }
 }

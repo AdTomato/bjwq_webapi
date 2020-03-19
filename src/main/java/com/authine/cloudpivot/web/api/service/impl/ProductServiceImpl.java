@@ -22,10 +22,9 @@ public class ProductServiceImpl implements ProductService {
 
     /**
      * 方法说明：修改征缴产品时更新对应的征缴政策里的数据
-     *
+     * @Param id 征缴产品id
      * @return void
      * @throws
-     * @Param id 征缴产品id
      * @author liulei
      * @Date 2020/1/16 15:52
      */

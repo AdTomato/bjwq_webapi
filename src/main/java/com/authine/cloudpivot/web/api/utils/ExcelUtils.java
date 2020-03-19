@@ -27,42 +27,54 @@ import java.util.List;
 public class ExcelUtils extends BaseQueryRuntimeController {
 
     /**
-     * 方法说明：
-     *
-     * @return java.util.List<java.lang.String [ ]>
+     * 方法说明：判断文件类型是否为“xxxx.xlsx”
+     * @Param fileName
+     * @return boolean
      * @throws
+     * @author liulei
+     * @Date 2019/12/27 10:05
+     */
+    public static void checkFileType(String fileName) throws Exception{
+        String[] fileNameArray = fileName.split("\\.");
+        if (!"xlsx".equals(fileNameArray[1])) {
+            throw new Exception("文件类型不是xlsx");
+        }
+    }
+
+    /**
+     * 方法说明：
      * @Param filePath 要解析的文件名称
      * @Param startRow 开始解析的行号  从0开始
      * @Param startCol 开始解析数据的列 从0开始
      * @Param endCol 解析结束的列 从0开始
+     * @return java.util.List<java.lang.String[]>
+     * @throws 
      * @author liulei
      * @Date 2019/12/12 16:40
      */
-    public static List<String[]> readFile(String fileName, int startRow, int startCol, int endCol) throws Exception {
-        return readFile(fileName, startRow, startCol, endCol, 0);
+    public static List<String[]> readFile(String fileName,int startRow,int startCol,int endCol) throws Exception{
+        return readFile(fileName, startRow, startCol, endCol,0);
     }
-
     /**
      * 方法说明：读取Excel中的内容
-     *
-     * @return java.util.List<java.lang.String [ ]>
-     * @throws
      * @Param fileName 要解析的文件名称
      * @Param startRow 开始解析的行号  从0开始
      * @Param startCol 开始解析数据的列 从0开始
      * @Param endCol 解析结束的列 从0开始
      * @Param sheetNum 要解析的sheet 从0开始
+     * @return java.util.List<java.lang.String[]>
+     * @throws
      * @author liulei
      * @Date 2019/12/12 16:43
      */
-    private static List<String[]> readFile(String fileName, int startRow, int startCol, int endCol, int sheetNum) throws Exception {
+    private static List <String[]> readFile(String fileName, int startRow, int startCol, int endCol, int sheetNum)  throws Exception{
 
-        if (startCol == endCol || startCol > endCol || endCol == 0) {
+        if(startCol == endCol || startCol > endCol || endCol == 0){
             throw new Exception("startCol必须大于endCol，且endCol不能等于零");
         }
 
         //最终返回的excel内容
-        List<String[]> excelContents = new ArrayList<String[]>();
+        List<String[]> excelContents = new ArrayList <String[]>();
 
         // 文件写入输入流
         InputStream inputStream = null;

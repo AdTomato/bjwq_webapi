@@ -1,10 +1,8 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
 import com.authine.cloudpivot.engine.api.facade.OrganizationFacade;
 import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
-import com.authine.cloudpivot.engine.api.model.organization.UserModel;
 import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
 import com.authine.cloudpivot.web.api.dao.CollectDao;
 import com.authine.cloudpivot.web.api.service.CollectService;
@@ -32,14 +30,13 @@ public class CollectServiceImpl implements CollectService {
 
     /**
      * 方法说明：激活提交采集流程
-     *
-     * @return void
-     * @throws Exception
      * @Param bizObjectFacade
      * @Param workflowInstanceFacade
      * @Param id 发起采集流程业务id
      * @Param userId
      * @Param departmentId
+     * @return void
+     * @throws Exception
      * @author liulei
      * @Date 2020/1/10 14:08
      */
@@ -54,10 +51,10 @@ public class CollectServiceImpl implements CollectService {
             throw new RuntimeException("没有获取到业务数据！");
         }
         // 创建业务对象
-        List<BizObjectModel> models = createBizObjectModel(data, organizationFacade);
+        List <BizObjectModel> models = createBizObjectModel(data, organizationFacade);
 
         // 批量生成业务数据
-        List<String> modelIds = new ArrayList<>();
+        List<String> modelIds = new ArrayList <>();
         if (models != null && models.size() > 0) {
             modelIds = bizObjectFacade.addBizObjects(userId, models, "id");
         }
@@ -69,16 +66,15 @@ public class CollectServiceImpl implements CollectService {
 
     /**
      * 方法说明：生成业务数据模型
-     *
+     * @Param data
      * @return java.util.List<com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel>
      * @throws
-     * @Param data
      * @author liulei
      * @Date 2020/1/10 15:51
      */
     private List<BizObjectModel> createBizObjectModel(Map<String, String> data, OrganizationFacade organizationFacade)
             throws Exception {
-        List<BizObjectModel> models = new ArrayList<>();
+        List <BizObjectModel> models = new ArrayList <>();
         // 主题
         String title = data.get("title");
         if (StringUtils.isBlank(title)) {
@@ -103,7 +99,7 @@ public class CollectServiceImpl implements CollectService {
 
         if (clientArr.length > 0) {
             for (int i = 0; i < clientArr.length; i++) {
-                Map<String, Object> objData = new HashMap<>();
+                Map<String, Object> objData = new HashMap <>();
                 objData.put("title", title);
                 objData.put("end_time", date);
                 /*String[] userIds = clientArr[i].split(",");
@@ -127,12 +123,11 @@ public class CollectServiceImpl implements CollectService {
 
     /**
      * 方法说明：基数采集回写附件到发起采集中去
-     *
-     * @return void
-     * @throws
      * @Param id 基数采集业务id
      * @Param refIds 基数采集附件refId
      * @Param startCollectId 发起采集业务id
+     * @return void
+     * @throws
      * @author liulei
      * @Date 2020/1/13 15:36
      */
@@ -143,11 +138,10 @@ public class CollectServiceImpl implements CollectService {
 
     /**
      * 方法说明：过节点申请修改截止时间
-     *
-     * @return void
-     * @throws
      * @Param id 基数采集业务id
      * @Param endTime
+     * @return void
+     * @throws
      * @author liulei
      * @Date 2020/1/13 21:48
      */
