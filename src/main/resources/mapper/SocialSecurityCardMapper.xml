@@ -6,20 +6,20 @@
     <insert id="batchInsertSocialSecurityCard" parameterType="java.util.List">
         INSERT INTO ivdlf_social_security_card
         (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId,
-         sequenceNo, sequenceStatus, ownerDeptQueryCode, city, submission_list, is_vip, is_emerg, upload_info, is_get,
-         receive, salesman, operator, employee_name, company_name, identityNo, employee_status, mobile, process_select,
-         process_detail, sin_card, have_submission_list, is_class, track_long, track_hide, issue_select, issue_detail,
-         track_detail, address)
+        sequenceNo, sequenceStatus, ownerDeptQueryCode, city, submission_list, is_vip, is_emerg, upload_info, is_get,
+        receive, salesman, operator, employee_name, company_name, identityNo, employee_status, mobile, process_select,
+        process_detail, sin_card, have_submission_list, is_class, track_long, track_hide, issue_select, issue_detail,
+        track_detail, address)
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">
             (#{item.id},#{item.name},#{item.creater},#{item.createdDeptId},#{item.owner},#{item.ownerDeptId},
-             #{item.createdTime},#{item.modifier},#{item.modifiedTime}, #{item.workflowInstanceId},#{item.sequenceNo},
-             #{item.sequenceStatus},#{item.ownerDeptQueryCode},#{item.city},#{item.submissionList},#{item.isVip},
-             #{item.isEmerg},#{item.uploadInfo}, #{item.isGet},#{item.receive},#{item.salesman},#{item.operator},
-             #{item.employeeName},#{item.companyName},#{item.identityNo},#{item.employeeStatus},#{item.mobile},
-             #{item.processSelect},#{item.processDetail},#{item.sinCard},#{item.haveSubmissionList},#{item.isClass},
-             #{item.trackLong},#{item.trackHide},#{item.issueSelect},#{item.issueDetail},#{item.trackDetail},
-             #{item.address})
+            #{item.createdTime},#{item.modifier},#{item.modifiedTime}, #{item.workflowInstanceId},#{item.sequenceNo},
+            #{item.sequenceStatus},#{item.ownerDeptQueryCode},#{item.city},#{item.submissionList},#{item.isVip},
+            #{item.isEmerg},#{item.uploadInfo}, #{item.isGet},#{item.receive},#{item.salesman},#{item.operator},
+            #{item.employeeName},#{item.companyName},#{item.identityNo},#{item.employeeStatus},#{item.mobile},
+            #{item.processSelect},#{item.processDetail},#{item.sinCard},#{item.haveSubmissionList},#{item.isClass},
+            #{item.trackLong},#{item.trackHide},#{item.issueSelect},#{item.issueDetail},#{item.trackDetail},
+            #{item.address})
         </foreach>
     </insert>
 
@@ -28,7 +28,7 @@
         LEFT JOIN h_org_user org ON org.name = card.salesman
         LEFT JOIN id34a_operate_area area ON area.city = card.city
         LEFT JOIN i4fvb_employee_files files ON files.id_no = card.identityNo AND files.client_name = card.company_name
-        SET card.salesman = CONCAT('[{"id":"', org.id, '","type":3'),
+        SET card.salesman = CONCAT('[{"id":"', org.id, '","type":3}]'),
         card.city = area.id,
         card.operator = area.operator,
         card.is_vip = (case when files.employee_labels is null or files.employee_labels = '' then null when
@@ -40,7 +40,7 @@
         </foreach>
         AND org.departmentId in
         ('402881c16eed73b5016eeea565c50063','402881c16eed73b5016eeea574930086','402881c16eed73b5016eeea5676c0066',
-         '402881c16eed73b5016eeea5978500e4','402881c16eed73b5016eeea5a07800fb','402881c16eed73b5016eeea5a730010a')
+        '402881c16eed73b5016eeea5978500e4','402881c16eed73b5016eeea5a07800fb','402881c16eed73b5016eeea5a730010a')
     </update>
 
     <insert id="insertTempData" parameterType="java.util.List">
@@ -49,7 +49,7 @@
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">
             (#{item.id},#{item.sourceId},#{item.sequenceNo},#{item.processSelect},#{item.processDetail},#{item.sinCard},
-            #{item.issueSelect},#{item.issueDetail}
+            #{item.issueSelect},#{item.issueDetail})
         </foreach>
     </insert>
 
@@ -57,7 +57,7 @@
         UPDATE ivdlf_process process
         JOIN ivdlf_social_security_card card ON card.id = process.parentId
         JOIN import_social_security_card_temp temp ON temp.sequenceNo = card.sequenceNo AND process.process_status = temp.process_select
-        SET process.process_feedback = CONCAT(IFNULL(process.process_feedback,''), date_format(SYSDATE(), '%Y-%m-%d %H:%i' ), ':', IF(temp.process_detail,'',temp.process_detail), ':', IF(temp.sin_card,'',temp.sin_card), ';/n' )
+        SET process.process_feedback = CONCAT(IFNULL(process.process_feedback,''), date_format(SYSDATE(), '%Y-%m-%d %H:%i' ), ':', IFNULL(temp.process_detail,' '), ':', IFNULL(temp.sin_card,' '), ';', CHAR(10))
         WHERE temp.source_id = #{sourceId}
     </update>
 
@@ -73,8 +73,8 @@
     <update id="updateIssueByTempTable" parameterType="java.lang.String">
         UPDATE ivdlf_issue issue
         JOIN ivdlf_social_security_card card ON card.id = issue.parentId
-        JOIN import_social_security_card_temp temp ON temp.sequenceNo = card.sequenceNo AND issue.issue_status = issue.issue_select
-        SET issue.issue_feedback = CONCAT(IFNULL(issue.issue_feedback,''), date_format(SYSDATE(), '%Y-%m-%d %H:%i' ), ':', IFNULL(temp.issue_detail,''), ';/n' )
+        JOIN import_social_security_card_temp temp ON temp.sequenceNo = card.sequenceNo AND issue.issue_status = temp.issue_select
+        SET issue.issue_feedback = CONCAT(IFNULL(issue.issue_feedback,''), date_format(SYSDATE(), '%Y-%m-%d %H:%i' ), ':', IFNULL(temp.issue_detail,' '), ';', CHAR(10))
         WHERE temp.source_id = #{sourceId}
     </update>
 

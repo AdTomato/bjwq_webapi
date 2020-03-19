@@ -61,7 +61,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getFirstLevelClientSalesman(String parentId, String area, String staffNature) {
         List<String> result = clientMapper.getFirstLevelClientSalesman(parentId, area, staffNature);
-        return null == result ? null : result.get(0);
+        return null == result || result.size() > 0 ? null : result.get(0);
     }
 
     /**
@@ -74,7 +74,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getFirstLevelClientSalesmanByCompanyName(String companyName) {
         List<String> result = clientMapper.getFirstLevelClientSalesmanByCompanyName(companyName);
-        return null == result ? null : result.get(0);
+        return null == result || result.size() > 0 ? null : result.get(0);
     }
 
     /**
@@ -88,7 +88,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getFirstLevelClientId(String clientName, String entrustedUnit) {
         List<String> firstLevelClientId = clientMapper.getFirstLevelClientId(clientName, entrustedUnit);
-        return null == firstLevelClientId ? null : firstLevelClientId.get(0);
+        return null == firstLevelClientId || firstLevelClientId.size() > 0 ? null : firstLevelClientId.get(0);
     }
 
     /**
@@ -102,7 +102,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public Integer getSecondLevelClientFee(String parentId, String area) {
         List<Integer> secondLevelClientFee = clientMapper.getSecondLevelClientFee(parentId, area);
-        return null == secondLevelClientFee ? null : secondLevelClientFee.get(0);
+        return null == secondLevelClientFee || secondLevelClientFee.size() > 0 || secondLevelClientFee.size() > 0 ? null : secondLevelClientFee.get(0);
     }
 
     /**
@@ -117,7 +117,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getSecondLevelClientSalesman(String parentId, String area, String staffNature) {
         List<String> result = clientMapper.getSecondLevelClientSalesman(parentId, area, staffNature);
-        return null == result ? null : result.get(0);
+        return null == result || result.size() > 0 ? null : result.get(0);
     }
 
     /**
@@ -130,7 +130,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getSecondLevelClientSalesmanByCompanyName(String companyName) {
         List<String> result = clientMapper.getSecondLevelClientSalesmanByCompanyName(companyName);
-        return null == result ? null : result.get(0);
+        return null == result || result.size() > 0 ? null : result.get(0);
     }
 
     /**
@@ -144,7 +144,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getSecondLevelClientId(String clientName, String entrustedUnit) {
         List<String> secondLevelClientId = clientMapper.getSecondLevelClientId(clientName, entrustedUnit);
-        return null == secondLevelClientId ? null : secondLevelClientId.get(0);
+        return null == secondLevelClientId || secondLevelClientId.size() > 0 ?  null : secondLevelClientId.get(0);
     }
 
 
@@ -165,10 +165,17 @@ public class ClientServiceImpl implements ClientService {
         if (Strings.isEmpty(salesman)) {
             // 为空，以及客户中没有查找到
             salesman = getSecondLevelClientSalesmanByCompanyName(clientName);
+            if (Strings.isEmpty(salesman)) {
+                throw new RuntimeException("销售人员没有找到");
+            }
         }
         result.put("salesman", salesman);
         SalesContractDto salesContractDto = salesContractService.getSalesContractDto(clientName, staffNature);
-        result.put("fee", getFee(salesContractDto, area));
+        if (null != salesContractDto) {
+            result.put("fee", getFee(salesContractDto, area));
+        } else {
+            result.put("fee", 0D);
+        }
         return result;
     }
 

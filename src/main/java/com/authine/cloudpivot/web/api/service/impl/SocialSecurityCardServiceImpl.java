@@ -25,7 +25,6 @@ import java.util.*;
  **/
 @Service
 @Slf4j
-@Transactional
 public class SocialSecurityCardServiceImpl implements SocialSecurityCardService {
 
     @Resource
@@ -33,7 +32,7 @@ public class SocialSecurityCardServiceImpl implements SocialSecurityCardService 
 
     @Override
     public void importSocialSecurityCard(String fileName, UserModel user, DepartmentModel dept,
-                                                  WorkflowInstanceFacade workflowInstanceFacade) throws Exception {
+                                         WorkflowInstanceFacade workflowInstanceFacade) throws Exception {
         List <String[]> fileList = ExcelUtils.readFile(fileName, 1, 0, 6);
         if (fileList != null && fileList.size() > 0) {
             // 保存创建成功的id值，用于后面激活流程使用
@@ -46,6 +45,7 @@ public class SocialSecurityCardServiceImpl implements SocialSecurityCardService 
                 SocialSecurityCard socialSecurityCard = new SocialSecurityCard(id, user, dept, "DRAFT", list.get(6),
                         list.get(0), list.get(1), list.get(3), list.get(2), list.get(4), list.get(5));
                 socialSecurityCards.add(socialSecurityCard);
+                ids.add(id);
             }
             // 插入数据
             // 修改已经生成的数据
@@ -110,6 +110,8 @@ public class SocialSecurityCardServiceImpl implements SocialSecurityCardService 
                         Constants.SOCIAL_SECURITY_CARD_PROCESS_NODE_UPLOAD_INFO, false);
             }
         }
+        String i = "111111\n" +
+                "22222";
     }
 
     @Override

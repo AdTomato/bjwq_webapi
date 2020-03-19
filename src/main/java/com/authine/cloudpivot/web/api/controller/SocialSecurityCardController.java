@@ -32,8 +32,7 @@ public class SocialSecurityCardController extends BaseController {
     @GetMapping("/importSocialSecurityCard")
     @ResponseBody
     public ResponseResult<String> importSocialSecurityCard(String fileName){
-        String userId = "402881c16f63e980016f798408060d3f";
-        //String userId = getUserId();
+        String userId = getUserId();
         if (StringUtils.isBlank(fileName)) {
             return this.getErrResponseResult("error", 404l, "没有获取上传文件!");
         }
