@@ -119,4 +119,8 @@
           AND temp.source_id = #{sourceId}
           AND workitem.participant = #{userId}
     </select>
+
+    <delete id="deleteTempData" parameterType="java.lang.String">
+        DELETE FROM import_social_security_card_temp WHERE source_id = #{sourceId}
+    </delete>
 </mapper>

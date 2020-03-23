@@ -109,9 +109,9 @@ public class SocialSecurityCardServiceImpl implements SocialSecurityCardService 
                 CommonUtils.rejectWorkItem(workflowInstanceFacade, user.getId(), errorIds,
                         Constants.SOCIAL_SECURITY_CARD_PROCESS_NODE_UPLOAD_INFO, false);
             }
+            // 删除临时表数据
+            socialSecurityCardMapper.deleteTempData(sourceId);
         }
-        String i = "111111\n" +
-                "22222";
     }
 
     @Override
@@ -144,6 +144,8 @@ public class SocialSecurityCardServiceImpl implements SocialSecurityCardService 
                 //  提交办理成功的流程
                 CommonUtils.submitWorkItem(workflowInstanceFacade, user.getId(), successIds, true);
             }
+            // 删除临时表数据
+            socialSecurityCardMapper.deleteTempData(sourceId);
         }
     }
 }

@@ -105,4 +105,6 @@ public interface SocialSecurityCardMapper {
      * @Date 2020/3/17 15:07
      */
     List<String> getWorkItemIdsWhenIssueSuccess(String sourceId, String userId);
+
+    void deleteTempData(String sourceId);
 }
