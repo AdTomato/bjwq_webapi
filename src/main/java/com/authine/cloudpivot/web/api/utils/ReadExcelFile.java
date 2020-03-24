@@ -179,6 +179,18 @@ public abstract class ReadExcelFile {
         return result;
     }
 
+    /**
+     * @param tableName: 表格名称
+     * @Author: wangyong
+     * @Date: 2020/3/23 10:45
+     * @return: java.util.List<java.lang.String>
+     * @Description: 数据库表格列名
+     */
+
+    public List<String> getTableColumn(String tableName) {
+        return tableService.getTableColumn(tableName);
+    }
+
     private void copyKey(Map<String, Object> result, Map<String, String> cellMapRelationship) {
         for (String value : cellMapRelationship.values()) {
             result.put(value, null);

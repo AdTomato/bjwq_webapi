@@ -4,6 +4,7 @@ import com.authine.cloudpivot.web.api.dto.SalesContractDto;
 import com.authine.cloudpivot.web.api.entity.SalesContractBasic;
 import com.authine.cloudpivot.web.api.entity.ServiceChargeUnitPrice;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -20,6 +21,8 @@ public interface SalesContractMapper {
      * @return 销售合同
      */
     List<SalesContractDto> getSalesContractByBillDay(String bill);
+
+    List<SalesContractDto> getSalesContractByGenerateBillDate(Date startDate, Date endDate);
 
     /**
      * 根据客户名称，业务类型获取销售合同

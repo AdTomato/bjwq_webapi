@@ -14,6 +14,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -85,6 +86,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private ApplicationContext applicationContext;
+	@Autowired
+    private RedisTemplate redisTemplate;
 
 
 //    @Value("${cloudpivot.webmvc.corsmappings:true}")
@@ -174,8 +177,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
 
-    public UsernamePasswordAuthenticationFilter loginAuthenticationFilter() {
-        UsernamePasswordAuthenticationFilter loginAuthenticationFilter = new UsernamePasswordAuthenticationFilter();
+    public RASUsernamePasswordFilter loginAuthenticationFilter() {
+        RASUsernamePasswordFilter loginAuthenticationFilter = new RASUsernamePasswordFilter(redisTemplate);
         loginAuthenticationFilter.setAuthenticationManager(authenticationManagerBean());
         loginAuthenticationFilter.setAuthenticationSuccessHandler(defaultAuthenticationSuccessHandler);
         loginAuthenticationFilter.setAuthenticationFailureHandler(defaultAuthenticationFailureHandler);

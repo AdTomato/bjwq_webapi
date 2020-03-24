@@ -13,6 +13,10 @@
         SELECT * FROM i8c71_sales_contract WHERE bill_day = #{billDay} AND (business_type = '派遣业务' OR business_type = '专项外包' OR business_type = '代理业务')
     </select>
 
+    <select id="getSalesContractByGenerateBillDate" resultMap="salesContractDto">
+        SELECT * FROM i8c71_sales_contract WHERE
+    </select>
+
 
     <select id="getSalesContractDto" resultMap="salesContractDto">
         SELECT * FROM i8c71_sales_contract WHERE client_name = #{clientName} AND business_type LIKE CONCAT('%', #{businessType}, '%') LIMIT 0, 1

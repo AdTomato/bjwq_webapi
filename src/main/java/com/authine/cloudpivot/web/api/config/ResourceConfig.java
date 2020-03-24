@@ -143,6 +143,8 @@ public class ResourceConfig extends ResourceServerConfigurerAdapter {
                     .antMatchers("/controller/dataModify/**").permitAll()
                     //政策平台
                     .antMatchers("/controller/policyPlatform/**").permitAll()
+                    // 基数采集
+                    .antMatchers("/controller/baseCollection/**").permitAll()
                     // 测试类
                     .antMatchers("/controller/test/**").permitAll()
                     //test

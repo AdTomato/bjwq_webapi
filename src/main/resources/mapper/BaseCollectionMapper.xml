@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.BaseCollectionMapper">
+    <insert id="insertAttachment" parameterType="java.util.Map">
+        insert into
+          h_biz_attachment (id,bizObjectId,bizPropertyCode,fileSize,mimeType,name,refId,schemaCode)
+        values
+          (#{id},#{bizObjectId},#{bizPropertyCode},#{fileSize},#{mimeType},#{name},#{refId},#{schemaCode})
+    </insert>
+    <update id="updateFileSize">
+        update h_biz_attachment set fileSize = #{param2} where id = #{param1}
+    </update>
+
+    <select id="findClientIds" parameterType="java.lang.String" resultType="java.lang.String">
+        select
+          id
+        from
+          i080j_submit_collect
+        where
+          start_collect_id = #{bizObjectId}
+        and
+          JSON_CONTAINS(client , JSON_OBJECT('id',(select user_id from  id34a_client_management where client_name = #{clientName})))
+    </select>
+    <select id="findClientName" parameterType="java.util.List" resultType="java.util.Map">
+        select
+          user_id as userId ,client_name as clientName from id34a_client_management
+        where
+          user_id in
+        <trim prefix="(" suffix=")">
+            <foreach collection="list" index="index" item="id" separator=",">
+                #{id}
+            </foreach>
+        </trim>
+    </select>
+    <select id="findAttachment" resultType="java.lang.String">
+        select id from h_biz_attachment where bizObjectId = #{bizObjectId} and bizPropertyCode ='collect_data'
+    </select>
+
+    <select id="findAttachmentName" resultType="java.lang.String">
+        select name from h_biz_attachment where id = #{attachmentId}
+    </select>
+</mapper>
