@@ -104,6 +104,9 @@ public class SocialSecurityDeclare extends BaseEntity {
 
     String isChange;
 
+    /** 待办，在办，预点，在缴，驳回*/
+    String status;
+
     // 社保申报详细
     List <Map <String, String>> socialSecurityDetail;
 

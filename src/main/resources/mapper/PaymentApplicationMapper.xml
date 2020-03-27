@@ -1,0 +1,575 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.PaymentApplicationMapper">
+    <select id="getNotDraftAmount" parameterType="java.util.List" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM i4fvb_payment_application WHERE sequenceStatus <![CDATA[ <> ]]> 'DRAFT' AND id IN
+        <foreach item="item" collection="list" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getPaymentApplicationByIds" parameterType="java.util.List"
+            resultType="com.authine.cloudpivot.web.api.entity.PaymentApplication">
+        SELECT * FROM i4fvb_payment_application WHERE id IN
+        <foreach item="item" collection="list" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getPaymentApplicationById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.PaymentApplication">
+        SELECT * FROM i4fvb_payment_application WHERE id = #{id}
+    </select>
+
+    <insert id="insertPaymentApplication" parameterType="com.authine.cloudpivot.web.api.entity.PaymentApplication">
+        INSERT INTO i4fvb_payment_application(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
+                                              modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus,
+                                              ownerDeptQueryCode, payment_type, entrust_unit, insured_area, supplier_id,
+                                              company_tax_number, bank_account, opening_bank, opening_place,
+                                              supplier_type, supplier_code, remarks, accumulation_fund_total,
+                                              social_security_total, paid_amount_total, wages_total,
+                                              welfare_products_total, service_fee_total, added_tax_total,
+                                              paid_in_lieu_total, cost_total, voucher_number, create_voucher,
+                                              approval_time, bill_year, data_type, source_id)
+        VALUES (#{id}, #{name}, #{creater}, #{createdDeptId}, #{owner}, #{ownerDeptId}, #{createdTime}, #{modifier},
+                #{modifiedTime}, #{workflowInstanceId}, #{sequenceNo}, #{sequenceStatus}, #{ownerDeptQueryCode},
+                #{paymentType}, #{entrustUnit}, #{insuredArea}, #{supplierId}, #{companyTaxNumber}, #{bankAccount},
+                #{openingBank}, #{openingPlace}, #{supplierType}, #{supplierCode}, #{remarks},
+                #{accumulationFundTotal}, #{socialSecurityTotal}, #{paidAmountTotal}, #{wagesTotal}, #{welfareProductsTotal},
+                #{serviceFeeTotal}, #{addedTaxTotal}, #{paidInLieuTotal}, #{costTotal}, #{voucherNumber},
+                #{createVoucher}, #{approvalTime}, #{billYear}, #{dataType}, #{sourceId})
+    </insert>
+
+    <insert id="batchInsertPaymentApplication" parameterType="java.util.List">
+        INSERT INTO i4fvb_payment_application(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
+                                              modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus,
+                                              ownerDeptQueryCode, payment_type, entrust_unit, insured_area, supplier_id,
+                                              company_tax_number, bank_account, opening_bank, opening_place,
+                                              supplier_type, supplier_code, remarks, accumulation_fund_total,
+                                              social_security_total, paid_amount_total, wages_total,
+                                              welfare_products_total, service_fee_total, added_tax_total,
+                                              paid_in_lieu_total, cost_total, voucher_number, create_voucher,
+                                              approval_time, bill_year, data_type, source_id)
+        VALUES
+        <foreach collection="details" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner},
+            #{item.ownerDeptId},#{item.createdTime}, #{item.modifier},#{item.modifiedTime}, #{item.workflowInstanceId},
+            #{item.sequenceNo}, #{item.sequenceStatus},#{item.ownerDeptQueryCode},#{item.paymentType},
+            #{item.entrustUnit}, #{item.insuredArea},
+            #{item.supplierId},#{item.companyTaxNumber},#{item.bankAccount},#{item.openingBank}, #{item.openingPlace},
+            #{item.supplierType}, #{item.supplierCode}, #{item.remarks},#{item.accumulationFundTotal},
+            #{item.socialSecurityTotal}, #{item.paidAmountTotal},
+            #{item.wagesTotal},#{item.welfareProductsTotal},#{item.serviceFeeTotal}, #{item.addedTaxTotal},
+            #{item.paidInLieuTotal}, #{item.costTotal},#{item.voucherNumber},#{item.createVoucher},
+            #{item.approvalTime}, #{item.billYear}, #{item.dataType}, #{item.sourceId})
+        </foreach>
+    </insert>
+
+    <select id="getPaymentClientDetailsByParentIds" parameterType="java.util.List"
+            resultType="com.authine.cloudpivot.web.api.entity.PaymentClientDetails">
+        SELECT IFNULL( entrust_unit, '' ) entrust_unit,IFNULL( insured_area, '' ) insured_area,client_name,client_code,
+               department_code,gross_profit_analysis_code,IFNULL(source_id, '') source_id,IFNULL(data_type, '') data_type,
+               SUM( IFNULL( social_security, 0 ) ) social_security,
+               SUM( IFNULL( accumulation_fund, 0 ) ) accumulation_fund,SUM( IFNULL( wages, 0 ) ) wages,
+               SUM( IFNULL( welfare_products, 0 ) ) welfare_products,SUM( IFNULL( service_fee, 0 ) ) service_fee,
+               SUM( IFNULL( added_tax, 0 ) ) added_tax,SUM( IFNULL( paid_amount, 0 ) ) paid_amount
+        FROM i4fvb_payment_client_details
+        WHERE parentId IN
+        <foreach item="item" collection="list" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        GROUP BY IFNULL ( entrust_unit, '' ),IFNULL ( insured_area, '' ),client_name,client_code,department_code,
+        gross_profit_analysis_code,IFNULL(source_id, ''),IFNULL(data_type, '')
+    </select>
+
+    <insert id="insertPaymentClientDetails">
+        INSERT INTO i4fvb_payment_client_details(entrust_unit, client_name, insured_area, social_security,
+        accumulation_fund, wages, welfare_products, service_fee, added_tax,
+        paid_amount, client_code, department_code, gross_profit_analysis_code,
+        id, parentId, sortKey,source_id, data_type)
+        VALUES
+        <foreach collection="details" item="item" index="index" separator=",">
+            (#{item.entrustUnit},#{item.clientName},#{item.insuredArea},#{item.socialSecurity},#{item.accumulationFund},
+             #{item.wages},#{item.welfareProducts},#{item.serviceFee},#{item.addedTax},#{item.paidAmount},
+             #{item.clientCode},#{item.departmentCode},#{item.grossProfitAnalysisCode},MD5(UUID()),#{parentId},
+             #{index},#{item.sourceId}, #{dataType})
+        </foreach>
+    </insert>
+
+    <delete id="deletePaymentClientDetailsByParentIds" parameterType="java.util.List">
+        DELETE FROM i4fvb_payment_client_details WHERE parentId IN
+        <foreach item="item" collection="list" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <update id="updatePaymentDetailsPaymentApplicationId">
+        UPDATE i4fvb_payment_details SET payment_application_id = #{id} WHERE payment_application_id IN
+        <foreach collection="ids" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <!--查询需要生成支付申请的公积金数据  start-->
+    <resultMap id="employeeFilesDto" type="com.authine.cloudpivot.web.api.dto.EmployeeFilesDto">
+        <id column="id" property="id"></id>
+        <collection property="employeeOrderFormDtos" select="com.authine.cloudpivot.web.api.mapper.PaymentApplicationMapper.getEmployeeOrderFormByEmployeeFilesId" column="id"></collection>
+    </resultMap>
+    <select id="getPaymentApplicationAccumulationFundData" resultMap="employeeFilesDto">
+        SELECT * FROM i4fvb_employee_files WHERE ifNull(g_payment_application, '0' ) &lt; #{billYear}
+    </select>
+
+    <resultMap id="employeeOrderFormDto" type="com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto">
+        <id column="id" property="id"></id>
+        <collection property="socialSecurityFundDetails" select="com.authine.cloudpivot.web.api.mapper.PaymentApplicationMapper.getSocialSecurityFundDetailByParentId" column="id"></collection>
+    </resultMap>
+    <select id="getEmployeeOrderFormByEmployeeFilesId" resultMap="employeeOrderFormDto">
+        SELECT * FROM i4fvb_employee_order_form WHERE employee_files_id = #{id} AND is_history = '否' AND provident_fund_status = '在缴'
+    </select>
+
+    <select id="getSocialSecurityFundDetailByParentId" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityFundDetail">
+        SELECT * FROM i4fvb_social_security_fund_detail WHERE parentId = #{id} AND name_hide LIKE '%公积金%'
+    </select>
+    <!--查询需要生成支付申请的公积金数据  end-->
+
+    <!--查询需要生成支付申请的社保数据  start-->
+    <resultMap id="employeeFilesDtoS" type="com.authine.cloudpivot.web.api.dto.EmployeeFilesDto">
+        <id column="id" property="id"></id>
+        <collection property="employeeOrderFormDtos" select="com.authine.cloudpivot.web.api.mapper.PaymentApplicationMapper.getEmployeeOrderFormByEmployeeFilesId1" column="id"></collection>
+    </resultMap>
+    <select id="getPaymentApplicationSocialSecurityData" resultMap="employeeFilesDtoS">
+        SELECT * FROM i4fvb_employee_files WHERE ifNull(s_payment_application, '0' ) &lt; #{billYear}
+    </select>
+
+    <resultMap id="employeeOrderFormDtoS" type="com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto">
+        <id column="id" property="id"></id>
+        <collection property="socialSecurityFundDetails" select="com.authine.cloudpivot.web.api.mapper.PaymentApplicationMapper.getSocialSecurityFundDetailByParentId1" column="id"></collection>
+    </resultMap>
+    <select id="getEmployeeOrderFormByEmployeeFilesId1" resultMap="employeeOrderFormDtoS">
+        SELECT * FROM i4fvb_employee_order_form WHERE employee_files_id = #{id} AND is_history = '否' AND social_security_status = '在缴'
+    </select>
+
+    <select id="getSocialSecurityFundDetailByParentId1" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityFundDetail">
+        SELECT * FROM i4fvb_social_security_fund_detail WHERE parentId = #{id} AND name_hide NOT LIKE '%公积金%'
+    </select>
+    <!--查询需要生成支付申请的社保数据  end-->
+
+    <insert id="batchInsertPaymentDetailsTemp" parameterType="java.util.List">
+        INSERT INTO i4fvb_payment_details_temp(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
+        modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode, bill_year,
+        business_year, client_name, employee_name, id_no, delegated_area, pension_enterprise_base,
+        pension_enterprise_ratio, pension_enterprise_attach, pension_enterprise_pay, pension_personal_base,
+        pension_personal_ratio, pension_personal_attach, pension_personal_pay, pension_subtotal, pension_payment_method,
+        medical_enterprise_base, medical_enterprise_ratio, medical_enterprise_attach, medical_enterprise_pay,
+        medical_personal_base, medical_personal_ratio, medical_personal_attach, medical_personal_pay, medical_subtotal,
+        medical_payment_method, unemp_enterprise_base, unemp_enterprise_ratio, unemp_enterprise_attach,
+        unemp_enterprise_pay, unemp_personal_base, unemp_personal_ratio, unemp_personal_attach, unemp_personal_pay,
+        unemp_subtotal, unemp_payment_method, injury_enterprise_base, injury_enterprise_ratio, injury_enterprise_attach,
+        injury_enterprise_pay, injury_subtotal, injury_payment_method, fertility_enterprise_base,
+        fertility_enterprise_ratio, fertility_enterprise_attach, fertility_enterprise_pay, fertility_subtotal,
+        fertility_payment_method, d_medical_enterprise_base, d_medical_enterprise_ratio, d_medical_enterprise_attach,
+        d_medical_enterprise_pay, d_medical_personal_base, d_medical_personal_ratio, d_medical_personal_attach,
+        d_medical_personal_pay, d_medical_subtotal, d_medical_payment_method, complex_enterprise_base,
+        complex_enterprise_ratio, complex_enterprise_attach, complex_enterprise_pay, complex_personal_base,
+        complex_personal_ratio, complex_personal_attach, complex_personal_pay, complex_subtotal, complex_payment_method,
+        b_injury_enterprise_base, b_injury_enterprise_ratio, b_injury_enterprise_attach, b_injury_enterprise_pay,
+        b_injury_subtotal, b_injury_payment_method, social_security_enterprise, social_security_personal,
+        social_security_total, provident_enterprise_base, provident_enterprise_ratio, provident_enterprise_pay,
+        provident_personal_base, provident_personal_ratio, provident_personal_pay, provident_subtotal,
+        provident_payment_method, b_provident_enterprise_base, b_provident_enterprise_ratio, b_provident_enterprise_pay,
+        b_provident_personal_base, b_provident_personal_ratio, b_provident_personal_pay, b_provident_subtotal,
+        b_provident_payment_method, provident_enterprise, provident_personal, provident_total, y_toll_total,
+        y_toll_remark, y_social_enterprise_d, y_social_personal_d, y_social_total_d, y_provident_enterprise_d,
+        y_provident_personal_d, y_provident_total_d, y_social_enterprise_t, y_social_personal_t, y_social_total_t,
+        y_provident_enterprise_t, y_provident_personal_t, y_provident_total_t, social_provident_total,
+        total_welfare_products, total_charge, is_lock, whether_compare, entrust_unit, service_fee_total,
+        enterprise_total, personal_total, social_security_payment, provident_payment, social_provident_payment,
+        temporary_cost_total, total_sum, temporary_cost_description, temporary_cost_remarks, total_paid_wages,
+        total_amount_paid, l_social_security_enterprise, l_social_security_personal, l_social_security_pay_method,
+        l_provident_enterprise, l_provident_personal, l_provident_pay_method, quit_temporary_charge, wages_temporary_charge,
+        s_temporary_charge, g_temporary_charge, service_fee_temporary_charge, welfare_temporary_charge,
+        ts_temporary_charge, paid_other_temporary_charge, paid_temporary_charge, payment_application_id,
+        injury_personal_base, injury_personal_attach, injury_personal_ratio, injury_personal_pay,
+        fertility_personal_base, fertility_personal_ratio, fertility_personal_attach, fertility_personal_pay,
+        b_injury_personal_base, b_injury_personal_ratio, b_injury_personal_attach, b_injury_personal_pay,
+        provident_personal_attach, provident_enterprise_attach, b_provident_personal_attach, b_provident_enterprise_add,
+        source_id, data_type)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id},#{item.name},#{item.creater},#{item.createdDeptId},#{item.owner},#{item.ownerDeptId},
+             #{item.createdTime},#{item.modifier},#{item.modifiedTime},#{item.workflowInstanceId},#{item.sequenceNo},
+             #{item.sequenceStatus},#{item.ownerDeptQueryCode},#{item.bill_year},#{item.business_year},
+             #{item.client_name},#{item.employee_name},#{item.id_no},#{item.delegated_area},
+             #{item.pension_enterprise_base},#{item.pension_enterprise_ratio},#{item.pension_enterprise_attach},
+             #{item.pension_enterprise_pay},#{item.pension_personal_base},#{item.pension_personal_ratio},
+             #{item.pension_personal_attach},#{item.pension_personal_pay},#{item.pension_subtotal},
+             #{item.pension_payment_method},#{item.medical_enterprise_base},#{item.medical_enterprise_ratio},
+             #{item.medical_enterprise_attach},#{item.medical_enterprise_pay},#{item.medical_personal_base},
+             #{item.medical_personal_ratio},#{item.medical_personal_attach},#{item.medical_personal_pay},
+             #{item.medical_subtotal},#{item.medical_payment_method},#{item.unemp_enterprise_base},
+             #{item.unemp_enterprise_ratio},#{item.unemp_enterprise_attach},#{item.unemp_enterprise_pay},
+             #{item.unemp_personal_base},#{item.unemp_personal_ratio},#{item.unemp_personal_attach},
+             #{item.unemp_personal_pay},#{item.unemp_subtotal},#{item.unemp_payment_method},
+             #{item.injury_enterprise_base},#{item.injury_enterprise_ratio},#{item.injury_enterprise_attach},
+             #{item.injury_enterprise_pay},#{item.injury_subtotal},#{item.injury_payment_method},
+             #{item.fertility_enterprise_base},#{item.fertility_enterprise_ratio},#{item.fertility_enterprise_attach},
+             #{item.fertility_enterprise_pay},#{item.fertility_subtotal},#{item.fertility_payment_method},
+             #{item.d_medical_enterprise_base},#{item.d_medical_enterprise_ratio},#{item.d_medical_enterprise_attach},
+             #{item.d_medical_enterprise_pay},#{item.d_medical_personal_base},#{item.d_medical_personal_ratio},
+             #{item.d_medical_personal_attach},#{item.d_medical_personal_pay},#{item.d_medical_subtotal},
+             #{item.d_medical_payment_method},#{item.complex_enterprise_base},#{item.complex_enterprise_ratio},
+             #{item.complex_enterprise_attach},#{item.complex_enterprise_pay},#{item.complex_personal_base},
+             #{item.complex_personal_ratio},#{item.complex_personal_attach},#{item.complex_personal_pay},
+             #{item.complex_subtotal},#{item.complex_payment_method},#{item.b_injury_enterprise_base},
+             #{item.b_injury_enterprise_ratio},#{item.b_injury_enterprise_attach},#{item.b_injury_enterprise_pay},
+             #{item.b_injury_subtotal},#{item.b_injury_payment_method},#{item.social_security_enterprise},
+             #{item.social_security_personal},#{item.social_security_total},#{item.provident_enterprise_base},
+             #{item.provident_enterprise_ratio},#{item.provident_enterprise_pay},#{item.provident_personal_base},
+             #{item.provident_personal_ratio},#{item.provident_personal_pay},#{item.provident_subtotal},
+             #{item.provident_payment_method},#{item.b_provident_enterprise_base},#{item.b_provident_enterprise_ratio},
+             #{item.b_provident_enterprise_pay},#{item.b_provident_personal_base},#{item.b_provident_personal_ratio},
+             #{item.b_provident_personal_pay},#{item.b_provident_subtotal},#{item.b_provident_payment_method},
+             #{item.provident_enterprise},#{item.provident_personal},#{item.provident_total},#{item.y_toll_total},
+             #{item.y_toll_remark},#{item.y_social_enterprise_d},#{item.y_social_personal_d},#{item.y_social_total_d},
+             #{item.y_provident_enterprise_d},#{item.y_provident_personal_d},#{item.y_provident_total_d},
+             #{item.y_social_enterprise_t},#{item.y_social_personal_t},#{item.y_social_total_t},
+             #{item.y_provident_enterprise_t},#{item.y_provident_personal_t},#{item.y_provident_total_t},
+             #{item.social_provident_total},#{item.total_welfare_products},#{item.total_charge},#{item.is_lock},
+             #{item.whether_compare},#{item.entrust_unit},#{item.service_fee_total},#{item.enterprise_total},
+             #{item.personal_total},#{item.social_security_payment},#{item.provident_payment},
+             #{item.social_provident_payment},#{item.temporary_cost_total},#{item.total_sum},
+             #{item.temporary_cost_description},#{item.temporary_cost_remarks},#{item.total_paid_wages},
+             #{item.total_amount_paid},#{item.l_social_security_enterprise},#{item.l_social_security_personal},
+             #{item.l_social_security_pay_method},#{item.l_provident_enterprise},#{item.l_provident_personal},
+             #{item.l_provident_pay_method},#{item.quit_temporary_charge},#{item.wages_temporary_charge},#{item.s_temporary_charge},
+             #{item.g_temporary_charge},#{item.service_fee_temporary_charge},#{item.welfare_temporary_charge},
+             #{item.ts_temporary_charge},#{item.paid_other_temporary_charge},#{item.paid_temporary_charge},
+             #{item.payment_application_id},#{item.injury_personal_base},#{item.injury_personal_attach},
+             #{item.injury_personal_ratio},#{item.injury_personal_pay},#{item.fertility_personal_base},
+             #{item.fertility_personal_ratio},#{item.fertility_personal_attach},#{item.fertility_personal_pay},
+             #{item.b_injury_personal_base},#{item.b_injury_personal_ratio},#{item.b_injury_personal_attach},
+             #{item.b_injury_personal_pay},#{item.provident_personal_attach},#{item.provident_enterprise_attach},
+             #{item.b_provident_personal_attach},#{item.b_provident_enterprise_add},#{item.source_id},#{item.data_type})
+        </foreach>
+    </insert>
+
+    <update id="updatePaymentDetailsByTemp" parameterType="java.lang.String">
+        UPDATE i4fvb_payment_details detail
+        JOIN ON i4fvb_payment_details_temp temp ON detail.client_name = temp.client_name
+        AND detail.id_no = temp.id_no
+        AND detail.bill_year = temp.bill_year
+        AND detail.data_type = temp.data_type
+        AND (detail.source_id is null or detail.source_id = '' or detail.source_id <![CDATA[ <> ]]> temp.source_id)
+        SET	detail.entrust_unit = temp.entrust_unit ,
+        detail.service_fee_total = temp.service_fee_total ,
+        detail.delegated_area = temp.delegated_area ,
+        detail.source_id = temp.source_id ,
+        detail.id = temp.id ,
+        <!-- 补充公积金 -->
+        detail.b_provident_enterprise_base = temp.b_provident_enterprise_base ,
+        detail.b_provident_enterprise_ratio = temp.b_provident_enterprise_ratio ,
+        detail.b_provident_enterprise_add = temp.b_provident_enterprise_add ,
+        detail.b_provident_enterprise_pay = temp.b_provident_enterprise_pay ,
+        detail.b_provident_personal_base = temp.b_provident_personal_base ,
+        detail.b_provident_personal_ratio = temp.b_provident_personal_ratio ,
+        detail.b_provident_personal_attach = temp.b_provident_personal_attach ,
+        detail.b_provident_personal_pay = temp.b_provident_personal_pay ,
+        detail.b_provident_subtotal = temp.b_provident_subtotal ,
+        detail.b_provident_payment_method = temp.b_provident_payment_method ,
+        <!-- 公积金 -->
+        detail.provident_enterprise_base = temp.provident_enterprise_base ,
+        detail.provident_enterprise_ratio = temp.provident_enterprise_ratio ,
+        detail.provident_enterprise_pay = temp.provident_enterprise_pay ,
+        detail.provident_personal_base = temp.provident_personal_base ,
+        detail.provident_personal_ratio = temp.provident_personal_ratio ,
+        detail.provident_personal_pay = temp.provident_personal_pay ,
+        detail.provident_subtotal = temp.provident_subtotal ,
+        detail.provident_personal_attach = temp.provident_personal_attach ,
+        detail.provident_enterprise_attach = temp.provident_enterprise_attach ,
+        detail.provident_payment_method = temp.provident_payment_method ,
+        <!-- 养老 -->
+        detail.pension_enterprise_base = temp.pension_enterprise_base ,
+        detail.pension_enterprise_ratio = temp.pension_enterprise_ratio ,
+        detail.pension_enterprise_attach = temp.pension_enterprise_attach ,
+        detail.pension_enterprise_pay = temp.pension_enterprise_pay ,
+        detail.pension_personal_base = temp.pension_personal_base ,
+        detail.pension_personal_ratio = temp.pension_personal_ratio ,
+        detail.pension_personal_attach = temp.pension_personal_attach ,
+        detail.pension_personal_pay = temp.pension_personal_pay ,
+        detail.pension_subtotal = temp.pension_subtotal ,
+        detail.pension_payment_method = temp.pension_payment_method ,
+        <!-- 医疗 -->
+        detail.medical_enterprise_base = temp.medical_enterprise_base ,
+        detail.medical_enterprise_ratio = temp.medical_enterprise_ratio ,
+        detail.medical_enterprise_attach = temp.medical_enterprise_attach ,
+        detail.medical_enterprise_pay = temp.medical_enterprise_pay ,
+        detail.medical_personal_base = temp.medical_personal_base ,
+        detail.medical_personal_ratio = temp.medical_personal_ratio ,
+        detail.medical_personal_attach = temp.medical_personal_attach ,
+        detail.medical_personal_pay = temp.medical_personal_pay ,
+        detail.medical_subtotal = temp.medical_subtotal ,
+        detail.medical_payment_method = temp.medical_payment_method ,
+        <!-- 失业 -->
+        detail.unemp_enterprise_base = temp.unemp_enterprise_base ,
+        detail.unemp_enterprise_ratio = temp.unemp_enterprise_ratio ,
+        detail.unemp_enterprise_attach = temp.unemp_enterprise_attach ,
+        detail.unemp_enterprise_pay = temp.unemp_enterprise_pay ,
+        detail.unemp_personal_base = temp.unemp_personal_base ,
+        detail.unemp_personal_ratio = temp.unemp_personal_ratio ,
+        detail.unemp_personal_attach = temp.unemp_personal_attach ,
+        detail.unemp_personal_pay = temp.unemp_personal_pay ,
+        detail.unemp_subtotal = temp.unemp_subtotal ,
+        detail.unemp_payment_method = temp.unemp_payment_method ,
+        <!-- 工伤 -->
+        detail.injury_enterprise_base = temp.injury_enterprise_base ,
+        detail.injury_enterprise_ratio = temp.injury_enterprise_ratio ,
+        detail.injury_enterprise_attach = temp.injury_enterprise_attach ,
+        detail.injury_enterprise_pay = temp.injury_enterprise_pay ,
+        detail.injury_personal_base = temp.injury_personal_base ,
+        detail.injury_personal_attach = temp.injury_personal_attach ,
+        detail.injury_personal_ratio = temp.injury_personal_ratio ,
+        detail.injury_personal_pay = temp.injury_personal_pay ,
+        detail.injury_subtotal = temp.injury_subtotal ,
+        detail.injury_payment_method = temp.injury_payment_method ,
+        <!-- 补充工伤 -->
+        detail.b_injury_enterprise_base = temp.b_injury_enterprise_base ,
+        detail.b_injury_enterprise_ratio = temp.b_injury_enterprise_ratio ,
+        detail.b_injury_enterprise_attach = temp.b_injury_enterprise_attach ,
+        detail.b_injury_enterprise_pay = temp.b_injury_enterprise_pay ,
+        detail.b_injury_personal_base = temp.b_injury_personal_base ,
+        detail.b_injury_personal_ratio = temp.b_injury_personal_ratio ,
+        detail.b_injury_personal_attach = temp.b_injury_personal_attach ,
+        detail.b_injury_personal_pay = temp.b_injury_personal_pay ,
+        detail.b_injury_subtotal = temp.b_injury_subtotal ,
+        detail.b_injury_payment_method = temp.b_injury_payment_method ,
+        <!-- 大病医疗 -->
+        detail.d_medical_enterprise_base = temp.d_medical_enterprise_base ,
+        detail.d_medical_enterprise_ratio = temp.d_medical_enterprise_ratio ,
+        detail.d_medical_enterprise_attach = temp.d_medical_enterprise_attach ,
+        detail.d_medical_enterprise_pay = temp.d_medical_enterprise_pay ,
+        detail.d_medical_personal_base = temp.d_medical_personal_base ,
+        detail.d_medical_personal_ratio = temp.d_medical_personal_ratio ,
+        detail.d_medical_personal_attach = temp.d_medical_personal_attach ,
+        detail.d_medical_personal_pay = temp.d_medical_personal_pay ,
+        detail.d_medical_subtotal = temp.d_medical_subtotal ,
+        detail.d_medical_payment_method = temp.d_medical_payment_method ,
+        <!-- 生育 -->
+        detail.fertility_enterprise_base = temp.fertility_enterprise_base ,
+        detail.fertility_enterprise_ratio = temp.fertility_enterprise_ratio ,
+        detail.fertility_enterprise_attach = temp.fertility_enterprise_attach ,
+        detail.fertility_enterprise_pay = temp.fertility_enterprise_pay ,
+        detail.fertility_subtotal = temp.fertility_subtotal ,
+        detail.fertility_personal_base = temp.fertility_personal_base ,
+        detail.fertility_personal_ratio = temp.fertility_personal_ratio ,
+        detail.fertility_personal_attach = temp.fertility_personal_attach ,
+        detail.fertility_personal_pay = temp.fertility_personal_pay ,
+        detail.fertility_payment_method = temp.fertility_payment_method ,
+        <!-- 综合 -->
+        detail.complex_enterprise_base = temp.complex_enterprise_base ,
+        detail.complex_enterprise_ratio = temp.complex_enterprise_ratio ,
+        detail.complex_enterprise_attach = temp.complex_enterprise_attach ,
+        detail.complex_enterprise_pay = temp.complex_enterprise_pay ,
+        detail.complex_personal_base = temp.complex_personal_base ,
+        detail.complex_personal_ratio = temp.complex_personal_ratio ,
+        detail.complex_personal_attach = temp.complex_personal_attach ,
+        detail.complex_personal_pay = temp.complex_personal_pay ,
+        detail.complex_subtotal = temp.complex_subtotal ,
+        detail.complex_payment_method = temp.complex_payment_method
+        WHERE temp.source_id = #{sourceId}
+    </update>
+
+    <insert id="insertPaymentDetailsByTemp" parameterType="java.lang.String">
+        INSERT INTO i4fvb_payment_details
+        (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId,
+         sequenceNo, sequenceStatus, ownerDeptQueryCode, bill_year, business_year, client_name, employee_name, id_no,
+         delegated_area, pension_enterprise_base, pension_enterprise_ratio, pension_enterprise_attach,
+         pension_enterprise_pay, pension_personal_base, pension_personal_ratio, pension_personal_attach,
+         pension_personal_pay, pension_subtotal, pension_payment_method, medical_enterprise_base,
+         medical_enterprise_ratio, medical_enterprise_attach, medical_enterprise_pay, medical_personal_base,
+         medical_personal_ratio, medical_personal_attach, medical_personal_pay, medical_subtotal,
+         medical_payment_method, unemp_enterprise_base, unemp_enterprise_ratio, unemp_enterprise_attach,
+         unemp_enterprise_pay, unemp_personal_base, unemp_personal_ratio, unemp_personal_attach, unemp_personal_pay,
+         unemp_subtotal, unemp_payment_method, injury_enterprise_base, injury_enterprise_ratio,
+         injury_enterprise_attach, injury_enterprise_pay, injury_subtotal, injury_payment_method,
+         fertility_enterprise_base, fertility_enterprise_ratio, fertility_enterprise_attach, fertility_enterprise_pay,
+         fertility_subtotal, fertility_payment_method, d_medical_enterprise_base, d_medical_enterprise_ratio,
+         d_medical_enterprise_attach, d_medical_enterprise_pay, d_medical_personal_base, d_medical_personal_ratio,
+         d_medical_personal_attach, d_medical_personal_pay, d_medical_subtotal, d_medical_payment_method,
+         complex_enterprise_base, complex_enterprise_ratio, complex_enterprise_attach, complex_enterprise_pay,
+         complex_personal_base, complex_personal_ratio, complex_personal_attach, complex_personal_pay, complex_subtotal,
+         complex_payment_method, b_injury_enterprise_base, b_injury_enterprise_ratio, b_injury_enterprise_attach,
+         b_injury_enterprise_pay, b_injury_subtotal, b_injury_payment_method, social_security_enterprise,
+         social_security_personal, social_security_total, provident_enterprise_base, provident_enterprise_ratio,
+         provident_enterprise_pay, provident_personal_base, provident_personal_ratio, provident_personal_pay,
+         provident_subtotal, provident_payment_method, b_provident_enterprise_base, b_provident_enterprise_ratio,
+         b_provident_enterprise_pay, b_provident_personal_base, b_provident_personal_ratio, b_provident_personal_pay,
+         b_provident_subtotal, b_provident_payment_method, provident_enterprise, provident_personal, provident_total,
+         y_toll_total, y_toll_remark, y_social_enterprise_d, y_social_personal_d, y_social_total_d,
+         y_provident_enterprise_d, y_provident_personal_d, y_provident_total_d, y_social_enterprise_t,
+         y_social_personal_t, y_social_total_t, y_provident_enterprise_t, y_provident_personal_t, y_provident_total_t,
+         social_provident_total, total_welfare_products, total_charge, is_lock, whether_compare, entrust_unit,
+         service_fee_total, enterprise_total, personal_total, social_security_payment, provident_payment,
+         social_provident_payment, temporary_cost_total, total_sum, temporary_cost_description, temporary_cost_remarks,
+         total_paid_wages, total_amount_paid, l_social_security_enterprise, l_social_security_personal,
+         l_social_security_pay_method, l_provident_enterprise, l_provident_personal, l_provident_pay_method,
+         quit_temporary_charge, wages_temporary_charge, s_temporary_charge, g_temporary_charge,
+         service_fee_temporary_charge, welfare_temporary_charge, ts_temporary_charge, paid_other_temporary_charge,
+         paid_temporary_charge, payment_application_id, injury_personal_base, injury_personal_attach,
+         injury_personal_ratio, injury_personal_pay, fertility_personal_base, fertility_personal_ratio,
+         fertility_personal_attach, fertility_personal_pay, b_injury_personal_base, b_injury_personal_ratio,
+         b_injury_personal_attach, b_injury_personal_pay, provident_personal_attach, provident_enterprise_attach,
+         b_provident_personal_attach, b_provident_enterprise_add, source_id, data_type)
+        SELECT id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId,
+               sequenceNo, sequenceStatus, ownerDeptQueryCode, bill_year, business_year, client_name, employee_name, id_no,
+               delegated_area, pension_enterprise_base, pension_enterprise_ratio, pension_enterprise_attach,
+               pension_enterprise_pay, pension_personal_base, pension_personal_ratio, pension_personal_attach,
+               pension_personal_pay, pension_subtotal, pension_payment_method, medical_enterprise_base,
+               medical_enterprise_ratio, medical_enterprise_attach, medical_enterprise_pay, medical_personal_base,
+               medical_personal_ratio, medical_personal_attach, medical_personal_pay, medical_subtotal,
+               medical_payment_method, unemp_enterprise_base, unemp_enterprise_ratio, unemp_enterprise_attach,
+               unemp_enterprise_pay, unemp_personal_base, unemp_personal_ratio, unemp_personal_attach, unemp_personal_pay,
+               unemp_subtotal, unemp_payment_method, injury_enterprise_base, injury_enterprise_ratio,
+               injury_enterprise_attach, injury_enterprise_pay, injury_subtotal, injury_payment_method,
+               fertility_enterprise_base, fertility_enterprise_ratio, fertility_enterprise_attach, fertility_enterprise_pay,
+               fertility_subtotal, fertility_payment_method, d_medical_enterprise_base, d_medical_enterprise_ratio,
+               d_medical_enterprise_attach, d_medical_enterprise_pay, d_medical_personal_base, d_medical_personal_ratio,
+               d_medical_personal_attach, d_medical_personal_pay, d_medical_subtotal, d_medical_payment_method,
+               complex_enterprise_base, complex_enterprise_ratio, complex_enterprise_attach, complex_enterprise_pay,
+               complex_personal_base, complex_personal_ratio, complex_personal_attach, complex_personal_pay, complex_subtotal,
+               complex_payment_method, b_injury_enterprise_base, b_injury_enterprise_ratio, b_injury_enterprise_attach,
+               b_injury_enterprise_pay, b_injury_subtotal, b_injury_payment_method, social_security_enterprise,
+               social_security_personal, social_security_total, provident_enterprise_base, provident_enterprise_ratio,
+               provident_enterprise_pay, provident_personal_base, provident_personal_ratio, provident_personal_pay,
+               provident_subtotal, provident_payment_method, b_provident_enterprise_base, b_provident_enterprise_ratio,
+               b_provident_enterprise_pay, b_provident_personal_base, b_provident_personal_ratio, b_provident_personal_pay,
+               b_provident_subtotal, b_provident_payment_method, provident_enterprise, provident_personal, provident_total,
+               y_toll_total, y_toll_remark, y_social_enterprise_d, y_social_personal_d, y_social_total_d,
+               y_provident_enterprise_d, y_provident_personal_d, y_provident_total_d, y_social_enterprise_t,
+               y_social_personal_t, y_social_total_t, y_provident_enterprise_t, y_provident_personal_t, y_provident_total_t,
+               social_provident_total, total_welfare_products, total_charge, is_lock, whether_compare, entrust_unit,
+               service_fee_total, enterprise_total, personal_total, social_security_payment, provident_payment,
+               social_provident_payment, temporary_cost_total, total_sum, temporary_cost_description, temporary_cost_remarks,
+               total_paid_wages, total_amount_paid, l_social_security_enterprise, l_social_security_personal,
+               l_social_security_pay_method, l_provident_enterprise, l_provident_personal, l_provident_pay_method,
+               quit_temporary_charge, wages_temporary_charge, s_temporary_charge, g_temporary_charge,
+               service_fee_temporary_charge, welfare_temporary_charge, ts_temporary_charge, paid_other_temporary_charge,
+               paid_temporary_charge, payment_application_id, injury_personal_base, injury_personal_attach,
+               injury_personal_ratio, injury_personal_pay, fertility_personal_base, fertility_personal_ratio,
+               fertility_personal_attach, fertility_personal_pay, b_injury_personal_base, b_injury_personal_ratio,
+               b_injury_personal_attach, b_injury_personal_pay, provident_personal_attach, provident_enterprise_attach,
+               b_provident_personal_attach, b_provident_enterprise_add, source_id, data_type
+        FROM i4fvb_payment_details_temp
+        WHERE source_id = #{sourceId}
+          AND id NOT IN (select id from i4fvb_payment_details WHERE source_id = #{sourceId})
+    </insert>
+
+    <insert id="insertPaymentClientDetailsBySourceId" parameterType="java.lang.String">
+        INSERT INTO i4fvb_payment_client_details
+        (entrust_unit, client_name, insured_area, social_security, accumulation_fund, wages, welfare_products,
+         service_fee, added_tax, paid_amount, client_code, department_code, gross_profit_analysis_code, id, parentId,
+         sortKey, source_id, data_type)
+        SELECT entrust_unit,
+               client_name,
+               delegated_area,
+               SUM(IFNULL(social_security_total, 0)),
+               SUM(IFNULL(provident_total, 0)),
+               SUM(IFNULL(total_paid_wages, 0)),
+               SUM(IFNULL(total_welfare_products, 0)),
+               SUM(IFNULL(service_fee_total, 0)),
+               0,
+               SUM(IFNULL(social_security_total, 0)) + SUM(IFNULL(provident_total, 0)) +
+               SUM(IFNULL(total_paid_wages, 0)) + SUM(IFNULL(total_welfare_products, 0)) +
+               SUM(IFNULL(service_fee_total, 0)),
+               null,
+               null,
+               null,
+               MD5(UUID()),
+               NULL,
+               NULL,
+               source_id,
+               data_type
+        FROM i4fvb_payment_details
+        where source_id = #{sourceId}
+        GROUP BY entrust_unit,client_name,delegated_area,source_id,data_type
+    </insert>
+
+    <select id="getSnPaymentApplicationBySourceId" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.PaymentApplication">
+        SELECT SUM(IFNULL(social_security, 0))   social_security_total,
+               SUM(IFNULL(accumulation_fund, 0)) accumulation_fund_total,
+               SUM(IFNULL(wages, 0))             wages_total,
+               SUM(IFNULL(welfare_products, 0))  welfare_products_total,
+               SUM(IFNULL(service_fee, 0))       service_fee_total,
+               SUM(IFNULL(added_tax_total, 0))   added_tax_total,
+               insured_area,source_id,data_type
+        FROM i4fvb_payment_client_details
+        WHERE source_id = #{sourceId}
+          AND INSTR('合肥市、宿州市、淮北市、亳州市、阜阳市、蚌埠市、淮南市、滁州市、六安市、马鞍山市、安庆市、芜湖市、铜陵市、宣城市、池州市、黄山市', insured_area)
+        GROUP BY insured_area,source_id,data_type
+    </select>
+
+    <select id="getSwPaymentApplicationBySourceId" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.PaymentApplication">
+        SELECT SUM(IFNULL(social_security, 0))   social_security_total,
+               SUM(IFNULL(accumulation_fund, 0)) accumulation_fund_total,
+               SUM(IFNULL(wages, 0))             wages_total,
+               SUM(IFNULL(welfare_products, 0))  welfare_products_total,
+               SUM(IFNULL(service_fee, 0))       service_fee_total,
+               SUM(IFNULL(added_tax_total, 0))   added_tax_total,
+               entrust_unit,source_id,data_type
+        FROM i4fvb_payment_client_details
+        WHERE source_id = #{sourceId}
+          AND INSTR('合肥市、宿州市、淮北市、亳州市、阜阳市、蚌埠市、淮南市、滁州市、六安市、马鞍山市、安庆市、芜湖市、铜陵市、宣城市、池州市、黄山市', insured_area) = 0
+        GROUP BY entrust_unit,source_id,data_type
+    </select>
+
+    <update id="updatePaymentClientDetailsParentIdBySourceId" parameterType="java.lang.String">
+        UPDATE i4fvb_payment_client_details detail
+            JOIN i4fvb_payment_application app
+        ON (INSTR ('合肥市、宿州市、淮北市、亳州市、阜阳市、蚌埠市、淮南市、滁州市、六安市、马鞍山市、安庆市、芜湖市、铜陵市、宣城市、池州市、黄山市', detail.insured_area ) > 0 AND detail.insured_area = app.insured_area)
+          OR (INSTR ('合肥市、宿州市、淮北市、亳州市、阜阳市、蚌埠市、淮南市、滁州市、六安市、马鞍山市、安庆市、芜湖市、铜陵市、宣城市、池州市、黄山市', detail .insured_area ) =0 AND detail.entrust_unit =app.entrust_unit)
+        SET detail.parentId = app.id
+        WHERE detail.source_id = #{sourceId} and app.source_id = #{sourceId}
+    </update>
+
+    <update id="updatePaymentDetailsByClientDetails" parameterType="java.lang.String">
+        UPDATE i4fvb_payment_details detail
+            JOIN i4fvb_payment_client_details client ON client.entrust_unit = detail.entrust_unit AND client.client_name = detail.client_name AND client.insured_area = detail.insured_area
+        SET detail.payment_application_id = client.parentId
+        WHERE detail.source_id = #{sourceId} and client.source_id = #{sourceId}
+    </update>
+
+    <select id="getRepeatPaymentApplicationData" parameterType="java.lang.String" resultType="java.util.HashMap">
+        SELECT
+        a.id,
+        b.id yId
+        FROM
+        i4fvb_payment_application a
+        LEFT JOIN i4fvb_payment_application b ON IFNULL( a.entrust_unit, '' ) = IFNULL( b.entrust_unit, '' )
+        AND IFNULL( a.insured_area, '' ) = IFNULL( b.insured_area, '' )
+        AND IFNULL( a.source_id, '' ) <![CDATA[ <> ]]> IFNULL( b.source_id, '' )
+        AND a.bill_year = a.bill_year
+        AND a.data_type = b.data_type
+        WHERE
+        a.source_id = ''
+        AND b.sequenceStatus = 'DRAFT'
+    </select>
+
+    <delete id="deletePaymentDetailsTempBySourceId" parameterType="java.lang.String">
+        DELETE FROM i4fvb_payment_details_temp WHERE source_id = #{sourceId}
+    </delete>
+
+    <update id="updatePaymentDetailsSourceIdToNull" parameterType="java.lang.String">
+        UPDATE i4fvb_payment_details SET source_id = NULL WHERE source_id = #{sourceId}
+    </update>
+
+    <update id="updatePaymentClientDetailsSourceIdToNull" parameterType="java.lang.String">
+        UPDATE i4fvb_payment_client_details SET source_id = NULL WHERE source_id = #{sourceId}
+    </update>
+
+    <update id="updatePaymentApplicationSourceIdToNull" parameterType="java.lang.String">
+        UPDATE i4fvb_payment_application SET source_id = NULL WHERE source_id = #{sourceId}
+    </update>
+</mapper>

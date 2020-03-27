@@ -1,5 +1,6 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
+import com.authine.cloudpivot.web.api.entity.StartCollect;
 import com.authine.cloudpivot.web.api.mapper.BaseCollectionMapper;
 import com.authine.cloudpivot.web.api.service.BaseCollectionService;
 import org.springframework.stereotype.Service;
@@ -68,6 +69,11 @@ public class BaseCollectionServiceImpl implements BaseCollectionService {
     @Override
     public void updateFileSize(String attachmentId, long length) {
         baseCollectionMapper.updateFileSize(attachmentId,length);
+    }
+
+    @Override
+    public StartCollect getStartCollectById(String bizObjectId) {
+        return baseCollectionMapper.getStartCollectById(bizObjectId);
     }
 
 

@@ -5,6 +5,7 @@ import io.lettuce.core.dynamic.annotation.Param;
 import org.mapstruct.Mapper;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: 刘磊
@@ -49,5 +50,8 @@ public interface AddEmployeeMapper {
 
     void updateProvidentFundDeclare(ProvidentFundDeclare providentFundDeclare);
 
-    void updateOrderFormStatusToPrePoint(@Param("ids")String[] ids, @Param("field")String field);
+    void updateOrderFormStatusToPrePoint(@Param("ids") String[] ids, @Param("field") String field);
+
+    void updateDeclareOrCloseStatus(@Param("ids") String[] ids, @Param("declareTableName") String declareTableName,
+                                    @Param("status") String status);
 }

@@ -81,30 +81,6 @@ public class SocialSecurityClose extends BaseEntity {
     /** 运行负责人*/
     String operateLeader;
 
-
-    public SocialSecurityClose(String employeeOrderFormId, String employeeName, String gender, Date birthday,
-                               String identityNoType, String identityNo, String dispatchUnit, String clientName,
-                               String customerService, String welfareHandler, String applicant, Date applicationTime,
-                               Date startMonth, Date chargeEndMonth, Double socialSecurityBase,
-                               String resignationRemarks, String operateLeader, String id, String creater) {
-        this.employeeOrderFormId = employeeOrderFormId;
-        this.employeeName = employeeName;
-        this.gender = gender;
-        this.birthday = birthday;
-        this.identityNoType = identityNoType;
-        this.identityNo = identityNo;
-        this.dispatchUnit = dispatchUnit;
-        this.clientName = clientName;
-        this.customerService = customerService;
-        this.welfareHandler = welfareHandler;
-        this.applicant = applicant;
-        this.applicationTime = applicationTime;
-        this.startMonth = startMonth;
-        this.chargeEndMonth = chargeEndMonth;
-        this.socialSecurityBase = socialSecurityBase;
-        this.resignationRemarks = resignationRemarks;
-        this.operateLeader = operateLeader;
-        setId(id);
-        setCreater(creater);
-    }
+    /** 待办，在办，停缴，驳回*/
+    String status;
 }

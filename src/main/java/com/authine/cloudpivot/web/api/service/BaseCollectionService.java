@@ -1,5 +1,7 @@
 package com.authine.cloudpivot.web.api.service;
 
+import com.authine.cloudpivot.web.api.entity.StartCollect;
+
 import java.util.List;
 import java.util.Map;
 
@@ -50,4 +52,6 @@ public interface BaseCollectionService {
      * @param length
      */
     void updateFileSize(String attachment, long length);
+
+    StartCollect getStartCollectById(String bizObjectId);
 }

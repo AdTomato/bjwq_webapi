@@ -272,4 +272,9 @@ public class Constants {
 
     public static final String PAY_METHOD = "代收代付";
 
+    /**
+     * 发起基数采集SCHEMA_CODE
+     */
+    public static final String SUBMIT_COLLECT_SCHEMA = "submit_collect";
+
 }

@@ -257,7 +257,7 @@
     
     <resultMap id="employeeOrderFormDto" type="com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto">
         <id column="id" property="id"></id>
-        <collection property="socialSecurityFundDetails" select="com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper.getSocialSecurityFundDetailByParentId" column="id"></collection>
+        <collection property="socialSecurityFundDetail" select="com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper.getSocialSecurityFundDetailByParentId" column="id"></collection>
     </resultMap>
     <select id="getEmployeeOrderFormByEmployeeFilesId" resultMap="employeeOrderFormDto">
         SELECT * FROM i4fvb_employee_order_form WHERE employee_files_id = #{id} AND is_history = '否'

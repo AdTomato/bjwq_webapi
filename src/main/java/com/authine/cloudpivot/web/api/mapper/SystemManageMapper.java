@@ -1,9 +1,6 @@
 package com.authine.cloudpivot.web.api.mapper;
 
-import com.authine.cloudpivot.web.api.entity.AppointmentSheet;
-import com.authine.cloudpivot.web.api.entity.OperateLeader;
-import com.authine.cloudpivot.web.api.entity.OrgUser;
-import com.authine.cloudpivot.web.api.entity.SmsHistory;
+import com.authine.cloudpivot.web.api.entity.*;
 
 import java.util.List;
 
@@ -58,4 +55,13 @@ public interface SystemManageMapper {
      * @Date 2020/3/18 16:35
      */
     List<OperateLeader> getOperateLeaderByCityAndWelfareHandler(String city, String welfareHandler);
+
+    /**
+     * 方法说明：根据id查询供应商数据
+     * @param id
+     * @return com.authine.cloudpivot.web.api.entity.Supplier
+     * @author liulei
+     * @Date 2020/3/20 16:24
+     */
+    Supplier getSupplierById(String id);
 }

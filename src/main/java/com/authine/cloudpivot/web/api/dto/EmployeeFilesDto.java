@@ -17,6 +17,6 @@ import java.util.List;
 @NoArgsConstructor
 public class EmployeeFilesDto extends EmployeeFiles {
 
-    private List<EmployeeOrderFormDto> employeeOrderFormDtos;
+    private EmployeeOrderFormDto employeeOrderFormDto;
 
 }

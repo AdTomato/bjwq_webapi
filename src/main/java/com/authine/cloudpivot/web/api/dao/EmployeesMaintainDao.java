@@ -307,4 +307,6 @@ public interface EmployeesMaintainDao {
      * @Date 2020/3/3 14:18
      */
     void updateDeclareEmployeeOrderFormId(String oldId, String newId) throws Exception;
+
+    List<Map<String, Object>> getAddOrDelWorkItemId(String ids, String table) throws Exception;
 }

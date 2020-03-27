@@ -22,6 +22,13 @@ public interface SalesContractMapper {
      */
     List<SalesContractDto> getSalesContractByBillDay(String bill);
 
+    /**
+     * 根据账单生成时间在startDate和endDate之间的时间获取销售合同
+     *
+     * @param startDate 开始时间
+     * @param endDate   结束时间
+     * @return 销售合同
+     */
     List<SalesContractDto> getSalesContractByGenerateBillDate(Date startDate, Date endDate);
 
     /**

@@ -661,6 +661,15 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
         ConnectionUtils.executeSql(sqlArr);
     }
 
+    @Override
+    public List <Map <String, Object>> getAddOrDelWorkItemId(String ids, String tableName) throws Exception {
+       String sql = " SELECT * FROM( SELECT code.id, workitem.id workItemId FROM " + tableName + " code " +
+               " JOIN biz_workflow_instance instance ON instance.bizObjectId = code.id" +
+               " JOIN biz_workitem workitem ON workitem.instanceId = instance.id" +
+               " WHERE code.sequenceStatus != 'COMPLETED' AND code.id IN ('"+ ids.replaceAll(",", "','") +"') ) AS a";
+        return ConnectionUtils.executeSelectSql(sql);
+    }
+
     /**
      * 方法说明：获取sql:根据源表修改目标表数据
      * @param targetTable 目标表

@@ -14,7 +14,7 @@
     </select>
 
     <select id="getSalesContractByGenerateBillDate" resultMap="salesContractDto">
-        SELECT * FROM i8c71_sales_contract WHERE
+        SELECT * FROM i8c71_sales_contract WHERE generate_bill_date BETWEEN #{startDate} AND #{endDate}
     </select>
 
 

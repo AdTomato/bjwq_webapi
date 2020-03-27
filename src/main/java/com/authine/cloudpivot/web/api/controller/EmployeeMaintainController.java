@@ -215,7 +215,7 @@ public class EmployeeMaintainController extends BaseController {
                     delEmployee.getIdentityNoType(), delEmployee.getIdentityNo(), employeeFiles.getEntrustedUnit(),
                     delEmployee.getClientName(), employeeFiles.getSalesman(), employeeFiles.getSocialSecurityArea(),
                     applicant, delEmployee.getCreatedTime(), startMonth, delEmployee.getSocialSecurityEndTime(),
-                    socialSecurityBase, delEmployee.getLeaveReason(), socialSecurityOperateLeader);
+                    socialSecurityBase, delEmployee.getLeaveReason(), socialSecurityOperateLeader, "待办");
 
             // 公积金停缴实体
             ProvidentFundClose providentFundClose = new ProvidentFundClose(socialSecurityFund.get(
@@ -223,7 +223,7 @@ public class EmployeeMaintainController extends BaseController {
                     delEmployee.getIdentityNoType(), delEmployee.getIdentityNo(), employeeFiles.getEntrustedUnit(),
                     delEmployee.getClientName(), employeeFiles.getSalesman(), employeeFiles.getProvidentFundArea(),
                     applicant, delEmployee.getCreatedTime(), startMonth, delEmployee.getProvidentFundEndTime(),
-                    providentFundBase, enterpriseDeposit, personalDeposit, totalDeposit, providentFundOperateLeader);
+                    providentFundBase, enterpriseDeposit, personalDeposit, totalDeposit, providentFundOperateLeader, "待办");
 
             employeeFiles.setReportQuitDate(delEmployee.getCreatedTime());
             employeeFiles.setReportSeveranceOfficer(applicant);
@@ -330,7 +330,7 @@ public class EmployeeMaintainController extends BaseController {
             }
             // 根据员工档案的单据号获取社保公积金信息
             Map <String, String> socialSecurityFund =
-                    employeeMaintainService.getSocialSecurityFundDetail(employeeFiles.getSequenceNo());
+                    employeeMaintainService.getSocialSecurityFundDetail(employeeFiles.getId());
             // 开始时间
             Date startMonth = null;
             if (StringUtils.isNotBlank(socialSecurityFund.get("startMonth"))) {
@@ -369,7 +369,7 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFiles.getEntrustedUnit(), shDeleteEmployee.getClientName(), employeeFiles.getSalesman(),
                     employeeFiles.getSocialSecurityArea(), applicant, shDeleteEmployee.getCreatedTime(), startMonth,
                     shDeleteEmployee.getChargeEndTime(), socialSecurityBase, shDeleteEmployee.getLeaveReason(),
-                    socialSecurityOperateLeader);
+                    socialSecurityOperateLeader, "待办");
 
             // 公积金停缴实体
             ProvidentFundClose providentFundClose = new ProvidentFundClose(socialSecurityFund.get(
@@ -378,7 +378,7 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFiles.getEntrustedUnit(), shDeleteEmployee.getClientName(), employeeFiles.getSalesman(),
                     employeeFiles.getProvidentFundArea(), applicant, shDeleteEmployee.getCreatedTime(), startMonth,
                     shDeleteEmployee.getChargeEndTime(), providentFundBase, enterpriseDeposit, personalDeposit,
-                    totalDeposit, providentFundOperateLeader);
+                    totalDeposit, providentFundOperateLeader, "待办");
 
             employeeFiles.setReportQuitDate(shDeleteEmployee.getCreatedTime());
             employeeFiles.setReportSeveranceOfficer(applicant);
@@ -480,7 +480,7 @@ public class EmployeeMaintainController extends BaseController {
                     providentFundOperateLeader = operateLeader.getProvidentFundLeader();
                 } else {
                     operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
-                                    employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                            employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
                     if (operateLeader != null) {
                         providentFundOperateLeader = operateLeader.getProvidentFundLeader();
                     }
@@ -488,7 +488,7 @@ public class EmployeeMaintainController extends BaseController {
             }
             // 根据员工档案的单据号获取社保公积金信息
             Map <String, String> socialSecurityFund =
-                    employeeMaintainService.getSocialSecurityFundDetail(employeeFiles.getSequenceNo());
+                    employeeMaintainService.getSocialSecurityFundDetail(employeeFiles.getId());
             // 开始时间
             Date startMonth = null;
             if (StringUtils.isNotBlank(socialSecurityFund.get("startMonth"))) {
@@ -529,7 +529,7 @@ public class EmployeeMaintainController extends BaseController {
                     nationwideDispatch.getCreatedTime(), startMonth, nationwideDispatch.getSServiceFeeEndDate(),
                     socialSecurityBase,
                     nationwideDispatch.getSocialSecurityStopReason() + nationwideDispatch.getDepartureRemark(),
-                    socialSecurityOperateLeader);
+                    socialSecurityOperateLeader, "待办");
 
             // 公积金停缴实体
             ProvidentFundClose providentFundClose = new ProvidentFundClose(socialSecurityFund.get(
@@ -538,7 +538,7 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFiles.getEntrustedUnit(), nationwideDispatch.getBusinessCustomerName(),
                     employeeFiles.getSalesman(), employeeFiles.getProvidentFundArea(), applicant,
                     nationwideDispatch.getCreatedTime(), startMonth, nationwideDispatch.getGServiceFeeEndDate(),
-                    providentFundBase, enterpriseDeposit, personalDeposit, totalDeposit, providentFundOperateLeader);
+                    providentFundBase, enterpriseDeposit, personalDeposit, totalDeposit, providentFundOperateLeader, "待办");
 
             employeeFiles.setReportQuitDate(nationwideDispatch.getCreatedTime());
             employeeFiles.setReportSeveranceOfficer(applicant);
@@ -722,6 +722,7 @@ public class EmployeeMaintainController extends BaseController {
                     addEmployee.getSocialSecurityStartTime(), addEmployee.getContractSalary(),
                     addEmployee.getSocialSecurityBase(), addEmployee.getMobile(), weatherPartWorkInjury, socialSecurityOperateLeader
                     , employeeOrderForm.getSocialSecurityDetail());
+            socialSecurityDeclare.setStatus("待办");
 
             /** 公积金申报实体*/
             ProvidentFundDeclare providentFundDeclare = new ProvidentFundDeclare(addEmployee.getEmployeeName(),
@@ -731,6 +732,7 @@ public class EmployeeMaintainController extends BaseController {
                     addEmployee.getCreatedTime(), addEmployee.getProvidentFundStartTime(),
                     addEmployee.getProvidentFundBase(), providentFundOperateLeader,
                     employeeOrderForm.getProvidentFundDetail());
+            providentFundDeclare.setStatus("待办");
 
             /** 缴存总额*/
             Double totalDeposit = null;
@@ -943,6 +945,7 @@ public class EmployeeMaintainController extends BaseController {
                     shAddEmployee.getSocialSecurityBase(), shAddEmployee.getSocialSecurityBase(),
                     shAddEmployee.getMobile(), weatherPartWorkInjury, socialSecurityOperateLeader,
                     employeeOrderForm.getSocialSecurityDetail());
+            socialSecurityDeclare.setStatus("待办");
 
             /** 公积金申报实体*/
             ProvidentFundDeclare providentFundDeclare = new ProvidentFundDeclare(shAddEmployee.getEmployeeName(),
@@ -951,7 +954,7 @@ public class EmployeeMaintainController extends BaseController {
                     salesman, customerServices, employeeFiles.getProvidentFundArea(), applicant,
                     shAddEmployee.getCreatedTime(), shAddEmployee.getProvidentFundStartTime(),
                     shAddEmployee.getProvidentFundBase(), providentFundOperateLeader, employeeOrderForm.getProvidentFundDetail());
-
+            providentFundDeclare.setStatus("待办");
             /** 缴存总额*/
             Double totalDeposit = null;
             /** 企业缴存额*/
@@ -1168,7 +1171,7 @@ public class EmployeeMaintainController extends BaseController {
                             nationwideDispatch.getSocialInsuranceAmount(),
                             nationwideDispatch.getSocialInsuranceAmount(), nationwideDispatch.getContactNumber(),
                             weatherPartWorkInjury, socialSecurityOperateLeader, employeeOrderForm.getSocialSecurityDetail());
-
+            socialSecurityDeclare.setStatus("待办");
             /** 公积金申报实体*/
             ProvidentFundDeclare providentFundDeclare = new ProvidentFundDeclare(nationwideDispatch.getEmployeeName(),
                     employeeFiles.getGender(), employeeFiles.getBirthDate(), nationwideDispatch.getIdentityNoType(),
@@ -1177,6 +1180,7 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFiles.getProvidentFundArea(), applicant, nationwideDispatch.getCreatedTime(),
                     nationwideDispatch.getGServiceFeeStartDate(), nationwideDispatch.getProvidentFundAmount(),
                     providentFundOperateLeader, employeeOrderForm.getProvidentFundDetail());
+            providentFundDeclare.setStatus("待办");
 
             /** 缴存总额*/
             Double totalDeposit = null;
@@ -2268,15 +2272,15 @@ public class EmployeeMaintainController extends BaseController {
 
     /**
      * 方法说明：修改员工钉钉状态为预点
-     * @param ids 表单id
+     * @param ids 表单id,多个id使用“,”隔开
      * @param field 修改字段名称
      * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
      * @author liulei
      * @Date 2020/3/17 14:08
      */
-    @GetMapping("/updateOrderFormStatusToPrePoint")
+    @GetMapping("/updateStatusToPrePoint")
     @ResponseBody
-    public ResponseResult<String> updateOrderFormStatusToPrePoint(String ids, String field) {
+    public ResponseResult<String> updateStatusToPrePoint(String ids, String field) {
         if (StringUtils.isBlank(ids)) {
             return this.getErrResponseResult("error", 404l, "没有获取到ids！");
         }
@@ -2284,7 +2288,72 @@ public class EmployeeMaintainController extends BaseController {
             return this.getErrResponseResult("error", 404l, "没有获取到修改字段值！");
         }
         try {
-            employeeMaintainService.updateOrderFormStatusToPrePoint(ids, field);
+            employeeMaintainService.updateStatusToPrePoint(ids, field);
+            return this.getOkResponseResult("success", "操作成功！");
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return this.getErrResponseResult("error", 404l, e.getMessage());
+        }
+    }
+
+    /**
+     * 方法说明：增减员批量提交
+     * @param ids 表单id,多个id使用“,”隔开
+     * @param type 类型（增员_客户：add；增员_上海：shAdd；增员_全国：qgAdd；减员_客户：del；减员_上海：shDel；减员_全国：qgDel；）
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @author liulei
+     * @Date 2020/3/26 9:50
+     */
+    @GetMapping("/batchAddOrDelSubmit")
+    @ResponseBody
+    public ResponseResult<String> batchAddOrDelSubmit(String ids, String type) {
+        if (StringUtils.isBlank(ids)) {
+            return this.getErrResponseResult("error", 404l, "没有获取到ids！");
+        }
+        if (StringUtils.isBlank(type)) {
+            return this.getErrResponseResult("error", 404l, "没有获取到提交类型！");
+        }
+        String tableName = "";
+        if ("add".equals(type)) {
+            tableName = "add_employee";
+        } else if ("shAdd".equals(type)) {
+            tableName = "sh_add_employee";
+        } else if ("qgAdd".equals(type)) {
+            tableName = "nationwide_dispatch";
+        } else if ("del".equals(type)) {
+            tableName = "delete_employee";
+        } else if ("shDel".equals(type)) {
+            tableName = "sh_delete_employee";
+        } else if ("qgDel".equals(type)) {
+            tableName = "nationwide_dispatch_delete";
+        } else {
+            return this.getErrResponseResult("error", 404l, "提交类型出错！");
+        }
+        try {
+            // 获取当前表单的代办任务id
+            List<Map<String, Object>> list = employeeMaintainService.getAddOrDelWorkItemId(ids, tableName);
+            String userId = this.getUserId();
+            if (list != null && list.size() > 0) {
+                for (int i = 0; i < list.size(); i ++) {
+                    String id = list.get(i).get("id").toString();
+                    String workItemId = list.get(i).get("workItemId").toString();
+                    // 提交流程
+                    this.getWorkflowInstanceFacade().submitWorkItem(userId, workItemId, true);
+                    if ("add".equals(type)) {
+                        this.addEmployeeSubmit(id);
+                    } else if ("shAdd".equals(type)) {
+                        this.shAddEmployeeSubmit(id);
+                    } else if ("qgAdd".equals(type)) {
+                        this.qgAddEmployeeSubmit(id);
+                    } else if ("del".equals(type)) {
+                        this.deleteEmployeeSubmit(id);
+                    } else if ("shDel".equals(type)) {
+                        this.shDeleteEmployeeSubmit(id);
+                    } else if ("qgDel".equals(type)) {
+                        this.qgDeleteEmployeeSubmit(id);
+                    }
+                }
+            }
             return this.getOkResponseResult("success", "操作成功！");
         } catch (Exception e) {
             log.error(e.getMessage());

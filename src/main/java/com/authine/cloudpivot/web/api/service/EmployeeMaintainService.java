@@ -6,6 +6,7 @@ import com.authine.cloudpivot.engine.api.model.organization.UserModel;
 import com.authine.cloudpivot.web.api.entity.*;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -128,7 +129,7 @@ public interface EmployeeMaintainService {
     EmployeeOrderForm getEmployeeOrderForm(String socialSecurityCity, Date socialSecurityStartTime,
                                            Double socialSecurityBase, String providentFundCity,
                                            Date providentFundStartTime, Double providentFundBase,
-                                           Double companyRatio, Double employeeRatio, Map <String, String> personal) throws Exception;
+                                           Double companyRatio, Double employeeRatio, Map<String, String> personal) throws Exception;
 
     /**
      * 方法说明：获取当前时间节点,如果是个性化客户，获取个性化设置
@@ -355,5 +356,15 @@ public interface EmployeeMaintainService {
      * @author liulei
      * @Date 2020/3/17 14:17
      */
-    void updateOrderFormStatusToPrePoint(String ids, String field) throws Exception;
+    void updateStatusToPrePoint(String ids, String field) throws Exception;
+
+    /**
+     * 方法说明：获取增减员的任务id
+     * @param ids
+     * @param tableName
+     * @return java.util.List<java.util.Map<java.lang.String,java.lang.Object>>
+     * @author liulei
+     * @Date 2020/3/26 10:24
+     */
+    List<Map<String, Object>> getAddOrDelWorkItemId(String ids, String tableName) throws Exception;
 }

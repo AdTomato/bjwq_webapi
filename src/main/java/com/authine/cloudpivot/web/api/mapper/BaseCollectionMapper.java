@@ -1,5 +1,7 @@
 package com.authine.cloudpivot.web.api.mapper;
 
+import com.authine.cloudpivot.web.api.entity.StartCollect;
+
 import java.util.List;
 import java.util.Map;
 
@@ -41,5 +43,7 @@ public interface BaseCollectionMapper {
     String findAttachmentName(String attachmentId);
 
     void updateFileSize(String attachmentId, long length);
+
+    StartCollect getStartCollectById(String bizObjectId);
 
 }

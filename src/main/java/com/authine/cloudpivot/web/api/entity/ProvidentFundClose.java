@@ -86,33 +86,6 @@ public class ProvidentFundClose extends BaseEntity {
     /** 运行负责人*/
     String operateLeader;
 
-
-    public ProvidentFundClose(String employeeOrderFormId, String employeeName, String gender, Date birthday,
-                              String identityNoType, String identityNo, String dispatchUnit, String clientName,
-                              String customerService, String welfareHandler, String applicant, Date applicationTime,
-                              Date startMonth, Date chargeEndMonth, Double providentFundBase,
-                              Double enterpriseDeposit, Double personalDeposit, Double totalDeposit,
-                              String operateLeader, String id, String creater) {
-        this.employeeOrderFormId = employeeOrderFormId;
-        this.employeeName = employeeName;
-        this.gender = gender;
-        this.birthday = birthday;
-        this.identityNoType = identityNoType;
-        this.identityNo = identityNo;
-        this.dispatchUnit = dispatchUnit;
-        this.clientName = clientName;
-        this.customerService = customerService;
-        this.welfareHandler = welfareHandler;
-        this.applicant = applicant;
-        this.applicationTime = applicationTime;
-        this.startMonth = startMonth;
-        this.chargeEndMonth = chargeEndMonth;
-        this.providentFundBase = providentFundBase;
-        this.enterpriseDeposit = enterpriseDeposit;
-        this.personalDeposit = personalDeposit;
-        this.totalDeposit = totalDeposit;
-        this.operateLeader = operateLeader;
-        setId(id);
-        setCreater(creater);
-    }
+    /** 待办，在办，停缴，驳回*/
+    String status;
 }

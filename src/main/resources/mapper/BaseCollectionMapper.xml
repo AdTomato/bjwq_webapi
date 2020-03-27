@@ -5,9 +5,9 @@
 <mapper namespace="com.authine.cloudpivot.web.api.mapper.BaseCollectionMapper">
     <insert id="insertAttachment" parameterType="java.util.Map">
         insert into
-          h_biz_attachment (id,bizObjectId,bizPropertyCode,fileSize,mimeType,name,refId,schemaCode)
+          h_biz_attachment (id,creater,createdTime,bizObjectId,bizPropertyCode,fileSize,mimeType,name,refId,schemaCode)
         values
-          (#{id},#{bizObjectId},#{bizPropertyCode},#{fileSize},#{mimeType},#{name},#{refId},#{schemaCode})
+          (#{id},#{creater}, #{createdTime}, #{bizObjectId},#{bizPropertyCode},#{fileSize},#{mimeType},#{name},#{refId},#{schemaCode})
     </insert>
     <update id="updateFileSize">
         update h_biz_attachment set fileSize = #{param2} where id = #{param1}
@@ -25,9 +25,9 @@
     </select>
     <select id="findClientName" parameterType="java.util.List" resultType="java.util.Map">
         select
-          user_id as userId ,client_name as clientName from id34a_client_management
+        user_id as userId ,client_name as clientName from id34a_client_management
         where
-          user_id in
+        user_id in
         <trim prefix="(" suffix=")">
             <foreach collection="list" index="index" item="id" separator=",">
                 #{id}
@@ -40,5 +40,8 @@
 
     <select id="findAttachmentName" resultType="java.lang.String">
         select name from h_biz_attachment where id = #{attachmentId}
+    </select>
+    <select id="getStartCollectById" resultType="com.authine.cloudpivot.web.api.entity.StartCollect">
+        SELECT * FROM i080j_start_collect WHERE id = #{bizObjectId}
     </select>
 </mapper>

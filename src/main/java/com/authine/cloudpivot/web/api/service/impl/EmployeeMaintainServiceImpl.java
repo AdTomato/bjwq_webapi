@@ -5,6 +5,7 @@ import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
 import com.authine.cloudpivot.engine.api.model.organization.UserModel;
 import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
 import com.authine.cloudpivot.web.api.constants.Constants;
+import com.authine.cloudpivot.web.api.dao.EmployeesMaintainDao;
 import com.authine.cloudpivot.web.api.dao.impl.EmployeeMaintainDaoImpl;
 import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.mapper.AddEmployeeMapper;
@@ -34,7 +35,7 @@ import java.util.*;
 public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
 
     @Resource
-    private EmployeeMaintainDaoImpl employeesMaintainDao;
+    private EmployeesMaintainDao employeesMaintainDao;
 
     @Resource
     private SystemManageMapper systemManageMapper;
@@ -550,6 +551,8 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         if (Constants.SOCIAL_SECURITY_CLOSE_SCHEMA.equals(code) || Constants.PROVIDENT_FUND_CLOSE_SCHEMA.equals(code)) {
             status = "停缴";
         }
+        // 提交之后需要更新当前表单状态
+        String successIds = "";
         // 判断是否有操作权限
         List <Map <String, Object>> list = employeesMaintainDao.getWorkItemInfo(userId, ids, code,
                 Constants.OPERATE_TYPE_SUBMIT);
@@ -581,6 +584,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                         } else {
                             employeeOrderFormIds += employeeOrderFormId + ",";
                         }
+                        successIds += id + ",";
                         success++;
                     }
                 } else if ("close".equals(activityCode) && StringUtils.isNotBlank(workItemId)) {
@@ -588,6 +592,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                     boolean flag = workflowInstanceFacade.submitWorkItem(userId, workItemId, true);
                     if (flag) {
                         employeeOrderFormIds += employeeOrderFormId + ",";
+                        successIds += id + ",";
                         success++;
                     }
                 }
@@ -595,6 +600,11 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
             if (StringUtils.isNotBlank(employeeOrderFormIds)) {
                 employeeOrderFormIds = employeeOrderFormIds.substring(0, employeeOrderFormIds.length() -1);
                 this.updateEmployeeOrderFormStatus(employeeOrderFormIds, field, status);
+            }
+            if (StringUtils.isNotBlank(successIds)) {
+                successIds = successIds.substring(0, successIds.length() -1);
+                String successIdArr[] = successIds.split(",");
+                addEmployeeMapper.updateDeclareOrCloseStatus(successIdArr, "i4fvb_" + code, status);
             }
             if (idArr.length == list.size()) {
                 if (success > 0) {
@@ -624,6 +634,8 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         if (Constants.SOCIAL_SECURITY_DECLARE_SCHEMA.equals(code) || Constants.SOCIAL_SECURITY_CLOSE_SCHEMA.equals(code)) {
             field = "social_security_status";
         }
+        // 提交之后需要更新当前表单状态
+        String successIds = "";
         // 判断是否有操作权限
         List <Map <String, Object>> list = employeesMaintainDao.getWorkItemInfo(userId, ids, code,
                 Constants.OPERATE_TYPE_REJECT);
@@ -632,6 +644,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 // 当前流程节点
                 String activityCode = list.get(i).get("sourceId") == null ? "" :
                         list.get(i).get("sourceId").toString();
+                String id = list.get(i).get("id") == null ? "" : list.get(i).get("id").toString();
                 String sequenceStatus = list.get(i).get("sequenceStatus") == null ? "" :
                         list.get(i).get("sequenceStatus").toString();
                 String employeeOrderFormId = list.get(i).get("employee_order_form_id") == null ? "" :
@@ -647,12 +660,14 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                     if (flag) {
                         success++;
                         employeeOrderFormIds += employeeOrderFormId + ",";
+                        successIds += id + ",";
                     }
                 } else if ("declare".equals(activityCode) && StringUtils.isNotBlank(workItemId)) {
                     // 当前节点是申报，驳回至填写申请单节点,需要更新订单状态
                     boolean flag = workflowInstanceFacade.rejectWorkItem(userId, workItemId, "fill_application", true);
                     if (flag) {
                         employeeOrderFormIds += employeeOrderFormId + ",";
+                        successIds += id + ",";
                         success++;
                     }
                 } else if ("close".equals(activityCode) && StringUtils.isNotBlank(workItemId)) {
@@ -660,12 +675,18 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                     boolean flag = workflowInstanceFacade.rejectWorkItem(userId, workItemId, "fill_application", true);
                     if (flag) {
                         success++;
+                        successIds += id + ",";
                     }
                 }
             }
             if (StringUtils.isNotBlank(employeeOrderFormIds)) {
                 employeeOrderFormIds = employeeOrderFormIds.substring(0, employeeOrderFormIds.length() -1);
                 this.updateEmployeeOrderFormStatus(employeeOrderFormIds, field, status);
+            }
+            if (StringUtils.isNotBlank(successIds)) {
+                successIds = successIds.substring(0, successIds.length() -1);
+                String successIdArr[] = successIds.split(",");
+                addEmployeeMapper.updateDeclareOrCloseStatus(successIdArr, "i4fvb_" + code, status);
             }
             if (idArr.length == list.size()) {
                 if (success > 0) {
@@ -684,9 +705,14 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     }
 
     @Override
-    public void updateOrderFormStatusToPrePoint(String ids, String field) throws Exception {
+    public void updateStatusToPrePoint(String ids, String field) throws Exception {
         String idArr[] = ids.split(",");
         addEmployeeMapper.updateOrderFormStatusToPrePoint(idArr, field);
+    }
+
+    @Override
+    public List <Map<String, Object>> getAddOrDelWorkItemId(String ids, String tableName) throws Exception {
+        return employeesMaintainDao.getAddOrDelWorkItemId(ids, "i4fvb_" + tableName);
     }
 
     /**
@@ -794,6 +820,8 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         // 运行负责人
         data.put("operate_leader", providentFundClose.getOperateLeader());
 
+        data.put("status", providentFundClose.getStatus());
+
         bizObjectModel.put(data);
 
         // 创建业务对象模型
@@ -857,6 +885,8 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         data.put("welfare_handler", socialSecurityClose.getWelfareHandler());
         // 运行负责人
         data.put("operate_leader", socialSecurityClose.getOperateLeader());
+
+        data.put("status", socialSecurityClose.getStatus());
 
         bizObjectModel.put(data);
 
@@ -993,6 +1023,8 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         // 运行负责人
         data.put("operate_leader", providentFundDeclare.getOperateLeader());
 
+        data.put("status", providentFundDeclare.getStatus());
+
         bizObjectModel.put(data);
         // 创建业务对象模型
         String providentFundId = bizObjectFacade.saveBizObjectModel(customerService.getId(), bizObjectModel, "id");
@@ -1067,6 +1099,8 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         data.put("welfare_handler", socialSecurityDeclare.getWelfareHandler());
         // 运行负责人
         data.put("operate_leader", socialSecurityDeclare.getOperateLeader());
+
+        data.put("status", socialSecurityDeclare.getStatus());
 
         bizObjectModel.put(data);
 
