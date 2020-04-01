@@ -59,7 +59,7 @@ public class SystemManageController extends BaseController {
         log.info("发送验证码，手机号码为：" + mobile);
         OrgUser user = systemManageService.getOrgUserByMobile(mobile);
         if (null == user) {
-            this.getErrResponseResult(null, 404L, "该手机号码不存在系统中");
+            return this.getErrResponseResult(null, 404L, "该手机号码不存在系统中");
         }
         String userId = Constants.ADMIN_ID;
         String code = getCode();

@@ -17,7 +17,7 @@ public interface EmployeeFilesService {
     /**
      * 根据员工身份证（必填）和客户名称（非必填，可为空）获取员工档案
      *
-     * @param idNo     身份证（必填）
+     * @param idNo       身份证（必填）
      * @param clientName 客户名称（非必填，可为空）
      * @return 员工档案实体
      */
@@ -136,11 +136,17 @@ public interface EmployeeFilesService {
     EmployeeFiles getEmployeeFilesUpdateData(String id);
 
     void addEmployeeUpdateDetail(List<ChangeValue> data);
+
     void shAddEmployeeUpdateDetail(List<ChangeValue> data);
+
     void nationAddUpdateDetail(List<ChangeValue> data);
+
     void delEmployeeUpdateDetail(List<ChangeValue> data);
+
     void shDelEmployeeUpdateDetail(List<ChangeValue> data);
+
     void nationDelUpdateDetail(List<ChangeValue> data);
+
     void employeeFilesUpdateDetail(List<ChangeValue> data);
 
     /**
@@ -162,8 +168,17 @@ public interface EmployeeFilesService {
 
     /**
      * 根据员工订单id获取员工
+     *
      * @param id
      * @return
      */
     List<SocialSecurityFundDetail> getSocialSecurityFundDetailByParentId(String id);
+
+    /**
+     * 根据员工的证件号码获取之前没有对比的账单
+     *
+     * @param idNo
+     * @return
+     */
+    List<Bill> getNoCompareBills(String idNo);
 }

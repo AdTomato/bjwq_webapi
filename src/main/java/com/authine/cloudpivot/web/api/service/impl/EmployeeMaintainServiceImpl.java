@@ -9,6 +9,7 @@ import com.authine.cloudpivot.web.api.dao.EmployeesMaintainDao;
 import com.authine.cloudpivot.web.api.dao.impl.EmployeeMaintainDaoImpl;
 import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.mapper.AddEmployeeMapper;
+import com.authine.cloudpivot.web.api.mapper.ReturnReasonAlreadyMapper;
 import com.authine.cloudpivot.web.api.mapper.SystemManageMapper;
 import com.authine.cloudpivot.web.api.service.EmployeeMaintainService;
 import com.authine.cloudpivot.web.api.utils.CommonUtils;
@@ -42,6 +43,9 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
 
     @Resource
     private AddEmployeeMapper addEmployeeMapper;
+
+    @Resource
+    private ReturnReasonAlreadyMapper returnReasonAlreadyMapper;
 
     // 业务list
     private List <BizObjectModel> models = new ArrayList <>();
@@ -713,6 +717,104 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     @Override
     public List <Map<String, Object>> getAddOrDelWorkItemId(String ids, String tableName) throws Exception {
         return employeesMaintainDao.getAddOrDelWorkItemId(ids, "i4fvb_" + tableName);
+    }
+
+    @Override
+    public void rejectImport(String fileName, String code, String userId,
+                             WorkflowInstanceFacade workflowInstanceFacade) throws Exception {
+        // 读取文件信息
+        List <String[]> fileList = ExcelUtils.readFile(fileName, 0, 0, 4);
+
+        if (fileList != null && fileList.size() > 2) {
+            Map<String, Integer> locationMap = CommonUtils.getImportLocation(Arrays.asList(fileList.get(0)));
+            int sequenceNoInt = 0, returnReasonAlreadyInt = 0;
+            if (locationMap.get("sequenceNo") != null && locationMap.get("sequenceNo") != 0 && locationMap.get(
+                    "return_reason_already") != null && locationMap.get("return_reason_already") != 0) {
+                sequenceNoInt = locationMap.get("sequenceNo") - 1;
+                returnReasonAlreadyInt = locationMap.get("return_reason_already") - 1;
+            } else {
+                throw new RuntimeException("导入文件表头信息错误！");
+            }
+            String sourceId = UUID.randomUUID().toString().replaceAll("-", "");
+            List<Map<String, Object>> dataList = new ArrayList <>();
+            Map<String, Object> data = new HashMap <>();
+            data.put("sourceId", sourceId);
+            for (int i = 2; i < fileList.size(); i++) {
+                List <String> list = Arrays.asList(fileList.get(i));
+                data = new HashMap <>();
+                data.put("id", UUID.randomUUID().toString().replaceAll("-", ""));
+                data.put("sourceId", sourceId);
+                data.put("sequenceNo", list.get(sequenceNoInt));
+                data.put("returnReasonAlready", list.get(returnReasonAlreadyInt));
+
+                dataList.add(data);
+            }
+            if (dataList != null && dataList.size() > 0) {
+                int listSize = dataList.size();
+                int toIndex = 500;
+                for (int j = 0; j < dataList.size(); j += 500) {
+                    if (j + 500 > listSize) {        //作用为toIndex最后没有500条数据则剩余几条newList中就装几条
+                        toIndex = listSize - j;
+                    }
+                    List<Map<String, Object>> newList = dataList.subList(j, j + toIndex);
+                    returnReasonAlreadyMapper.insertReturnReasonAlready(newList);
+                }
+
+                // 更新已有返回数据
+                returnReasonAlreadyMapper.updateReturnReasonAlready("i4fvb_" + code, sourceId);
+                // 查询需要驳回数据流程，代办信息
+                List <Map <String, Object>> workItemList = returnReasonAlreadyMapper.getWorkItemInfo("i4fvb_" + code,
+                        sourceId);
+                if (workItemList != null && workItemList.size() > 0) {
+                    List<String> employeeOrderFormIds = new ArrayList <>();
+                    List<String> sequenceNos = new ArrayList <>();
+                    String field = "provident_fund_status";
+                    String status = "驳回";
+                    if (Constants.SOCIAL_SECURITY_DECLARE_SCHEMA.equals(code)) {
+                        field = "social_security_status";
+                    }
+                    for (int i = 0; i < workItemList.size(); i++) {
+                        // 当前流程节点
+                        String activityCode = workItemList.get(i).get("sourceId") == null ? "" :
+                                workItemList.get(i).get("sourceId").toString();
+                        String workItemId = workItemList.get(i).get("id") == null ? "" :
+                                workItemList.get(i).get("id").toString();
+                        String sequenceStatus = workItemList.get(i).get("sequenceStatus") == null ? "" :
+                                workItemList.get(i).get("sequenceStatus").toString();
+                        String employeeOrderFormId = workItemList.get(i).get("employee_order_form_id") == null ? "" :
+                                workItemList.get(i).get("employee_order_form_id").toString();
+                        String workflowInstanceId = workItemList.get(i).get("workflowInstanceId") == null ? "" :
+                                workItemList.get(i).get("workflowInstanceId").toString();
+                        String sequenceNo = workItemList.get(i).get("sequenceNo") == null ? "" :
+                                workItemList.get(i).get("sequenceNo").toString();
+                        if ("COMPLETED".equals(sequenceStatus) && StringUtils.isNotBlank(workflowInstanceId)) {
+                            // 办结，此时是申报驳回操作,需要更新订单状态
+                            boolean flag = workflowInstanceFacade.activateActivity(userId, workflowInstanceId,
+                                    "fill_application");
+                            if (flag) {
+                                employeeOrderFormIds.add(employeeOrderFormId);
+                                sequenceNos.add(sequenceNo);
+                            }
+                        } else if ("declare".equals(activityCode) && StringUtils.isNotBlank(workItemId)) {
+                            // 当前节点是申报，驳回至填写申请单节点,需要更新订单状态
+                            boolean flag = workflowInstanceFacade.rejectWorkItem(userId, workItemId, "fill_application", true);
+                            if (flag) {
+                                employeeOrderFormIds.add(employeeOrderFormId);
+                                sequenceNos.add(sequenceNo);
+                            }
+                        }
+                    }
+                    if (employeeOrderFormIds != null && employeeOrderFormIds.size() > 0) {
+                        returnReasonAlreadyMapper.updateEmployeeOrderFormStatus(employeeOrderFormIds, field, status);
+                    }
+                    if (sequenceNos != null && sequenceNos.size() > 0) {
+                        returnReasonAlreadyMapper.updateDeclareStatus(sequenceNos, "i4fvb_" + code, status);
+                    }
+                }
+            }
+
+            returnReasonAlreadyMapper.deleteTempDataBySourceId(sourceId);
+        }
     }
 
     /**

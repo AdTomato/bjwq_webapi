@@ -480,7 +480,7 @@ public class EmployeeMaintainController extends BaseController {
                     providentFundOperateLeader = operateLeader.getProvidentFundLeader();
                 } else {
                     operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
-                            employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                                    employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
                     if (operateLeader != null) {
                         providentFundOperateLeader = operateLeader.getProvidentFundLeader();
                     }
@@ -2338,7 +2338,7 @@ public class EmployeeMaintainController extends BaseController {
                     String id = list.get(i).get("id").toString();
                     String workItemId = list.get(i).get("workItemId").toString();
                     // 提交流程
-                    this.getWorkflowInstanceFacade().submitWorkItem(userId, workItemId, true);
+                    this.getWorkflowInstanceFacade().submitWorkItem(this.getUserId(), workItemId, true);
                     if ("add".equals(type)) {
                         this.addEmployeeSubmit(id);
                     } else if ("shAdd".equals(type)) {
@@ -2357,6 +2357,34 @@ public class EmployeeMaintainController extends BaseController {
             return this.getOkResponseResult("success", "操作成功！");
         } catch (Exception e) {
             log.error(e.getMessage());
+            return this.getErrResponseResult("error", 404l, e.getMessage());
+        }
+    }
+
+    /**
+     * 方法说明：申报驳回导入
+     * @param fileName 文件名称
+     * @param code 申报表单code(社保申报：social_security_declare；公积金申报：provident_fund_declare；)
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @author liulei
+     * @Date 2020/3/27 10:01
+     */
+    @GetMapping("/rejectImport")
+    @ResponseBody
+    public ResponseResult<String> rejectImport(String fileName, String code) {
+        if (StringUtils.isBlank(fileName)) {
+            return this.getErrResponseResult("error", 404l, "没有获取上传文件!");
+        }
+        try {
+            // 当前用户
+            String userId = this.getUserId();
+            // 判断文件类型
+            ExcelUtils.checkFileType(fileName);
+            // 导入
+            employeeMaintainService.rejectImport(fileName, code, userId, this.getWorkflowInstanceFacade());
+            return this.getOkResponseResult("success", "导入成功!");
+        } catch (Exception e) {
+            log.info(e.getMessage());
             return this.getErrResponseResult("error", 404l, e.getMessage());
         }
     }

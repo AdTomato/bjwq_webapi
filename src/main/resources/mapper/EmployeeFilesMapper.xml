@@ -19,7 +19,8 @@
 
     <insert id="insertShAddEmployeeData" parameterType="java.util.List">
         INSERT INTO i4fvb_sh_add_employee
-        (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode,
+        (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId,
+        sequenceNo, sequenceStatus, ownerDeptQueryCode,
         employee_name, unique_num, identityNo, commission_send, identityNo_type, order_code,
         quotation_code, sys_client_num, client_name, client_short_name, project_proposals_name,
         provident_fund_pay_direct, social_security_pay_direct, service_fee, with_file,
@@ -36,151 +37,209 @@
         weather_Induction_E)
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">
-            (#{item.id}, #{item.employee_name}, #{item.creater}, #{item.createdDeptId}, #{item.owner},#{item.ownerDeptId},
+            (#{item.id}, #{item.employee_name}, #{item.creater}, #{item.createdDeptId},
+            #{item.owner},#{item.ownerDeptId},
             #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId},
             #{item.sequenceNo}, #{item.sequenceStatus}, #{item.ownerDeptQueryCode},
-            #{item.employee_name}, #{item.unique_num}, #{item.identityNo}, #{item.commission_send}, #{item.identityNo_type}, #{item.order_code},
-            #{item.quotation_code}, #{item.sys_client_num}, #{item.client_name}, #{item.client_short_name}, #{item.project_proposals_name},
-            #{item.provident_fund_pay_direct}, #{item.social_security_pay_direct}, #{item.service_fee}, #{item.with_file},
+            #{item.employee_name}, #{item.unique_num}, #{item.identityNo}, #{item.commission_send},
+            #{item.identityNo_type}, #{item.order_code},
+            #{item.quotation_code}, #{item.sys_client_num}, #{item.client_name}, #{item.client_short_name},
+            #{item.project_proposals_name},
+            #{item.provident_fund_pay_direct}, #{item.social_security_pay_direct}, #{item.service_fee},
+            #{item.with_file},
             #{item.package_involves_procedures}, #{item.entry_time}, #{item.benefit_start_time}, #{item.mobile},
             #{item.provident_fund_start_time}, #{item.whether_consistent}, #{item.social_security_section},
-            #{item.social_security_base}, #{item.provident_fund_base}, #{item.p_supplement_provident_fund}, #{item.u_supplement_provident_fund},
+            #{item.social_security_base}, #{item.provident_fund_base}, #{item.p_supplement_provident_fund},
+            #{item.u_supplement_provident_fund},
             #{item.supplement_provident_fund_b}, #{item.charge_start_date}, #{item.dispatch_period_start_date},
-            #{item.dispatch_deadline}, #{item.start_date_trial}, #{item.end_time_trial}, #{item.wage_trial}, #{item.start_date_positive},
-            #{item.end_date_positive}, #{item.wage_positive}, #{item.phone}, #{item.employee_customer_side_num}, #{item.contact_address},
-            #{item.postal_code}, #{item.Hukou_location}, #{item.mail}, #{item.bank_name}, #{item.bank_account}, #{item.account_province_name},
-            #{item.account_city_name}, #{item.account_name}, #{item.bank_category}, #{item.city_name}, #{item.tax_properties}, #{item.job_num},
-            #{item.HRO}, #{item.business_unit}, #{item.employee_status}, #{item.synchronous_CSS}, #{item.Induction_remark}, #{item.tax_bureau},
+            #{item.dispatch_deadline}, #{item.start_date_trial}, #{item.end_time_trial}, #{item.wage_trial},
+            #{item.start_date_positive},
+            #{item.end_date_positive}, #{item.wage_positive}, #{item.phone}, #{item.employee_customer_side_num},
+            #{item.contact_address},
+            #{item.postal_code}, #{item.Hukou_location}, #{item.mail}, #{item.bank_name}, #{item.bank_account},
+            #{item.account_province_name},
+            #{item.account_city_name}, #{item.account_name}, #{item.bank_category}, #{item.city_name},
+            #{item.tax_properties}, #{item.job_num},
+            #{item.HRO}, #{item.business_unit}, #{item.employee_status}, #{item.synchronous_CSS},
+            #{item.Induction_remark}, #{item.tax_bureau},
             #{item.employee_attributes}, #{item.social_security_standards}, #{item.weather_online}, #{item.work_system},
             #{item.weather_Induction_E})
         </foreach>
     </insert>
 
     <insert id="insertShDeleteEmployeeData" parameterType="java.util.List">
-        INSERT INTO i4fvb_sh_delete_employee(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode,
-        employee_name, identityNo, client_num, client_name, client_short_name, OS_initiated_departure_time, departure_time,
-        charge_end_time, leave_reason, leave_remark, provident_fund_transfer_mode, backtrack, GE_leave_reason, customer_num,
+        INSERT INTO i4fvb_sh_delete_employee(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
+        modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode,
+        employee_name, identityNo, client_num, client_name, client_short_name, OS_initiated_departure_time,
+        departure_time,
+        charge_end_time, leave_reason, leave_remark, provident_fund_transfer_mode, backtrack, GE_leave_reason,
+        customer_num,
         weather_leave_E, identityNo_type)
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">
-            (#{item.id}, #{item.employee_name}, #{item.creater}, #{item.createdDeptId}, #{item.owner},#{item.ownerDeptId},
+            (#{item.id}, #{item.employee_name}, #{item.creater}, #{item.createdDeptId},
+            #{item.owner},#{item.ownerDeptId},
             #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId},
             #{item.sequenceNo}, #{item.sequenceStatus}, #{item.ownerDeptQueryCode},
-            #{item.employee_name}, #{item.identityNo}, #{item.client_num}, #{item.client_name}, #{item.client_short_name}, #{item.OS_initiated_departure_time}, #{item.departure_time},
-            #{item.charge_end_time}, #{item.leave_reason}, #{item.leave_remark}, #{item.provident_fund_transfer_mode}, #{item.backtrack}, #{item.GE_leave_reason}, #{item.customer_num},
+            #{item.employee_name}, #{item.identityNo}, #{item.client_num}, #{item.client_name},
+            #{item.client_short_name}, #{item.OS_initiated_departure_time}, #{item.departure_time},
+            #{item.charge_end_time}, #{item.leave_reason}, #{item.leave_remark}, #{item.provident_fund_transfer_mode},
+            #{item.backtrack}, #{item.GE_leave_reason}, #{item.customer_num},
             #{item.weather_leave_E}, #{item.identityNo_type})
         </foreach>
     </insert>
 
     <insert id="insertNationwideAddEmployee" parameterType="java.util.List">
-        INSERT INTO i4fvb_nationwide_dispatch(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode,
+        INSERT INTO i4fvb_nationwide_dispatch(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
+        modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode,
         unique_num, employee_name, contact_number, identityNo_type, identityNo, national_business_wf_flag, involved,
-        business_customer_num, business_customer_name, business_wf_status, order_type, processing_status, contracting_supplier,
+        business_customer_num, business_customer_name, business_wf_status, order_type, processing_status,
+        contracting_supplier,
         contracting_representative, contracting_party_department, into_pending_date, task_list_update_date, entry_date,
-        rmployee_internal_num, employee_email, order_id, order_start_date, assignment_date, entry_procedures_num, business_tips,
+        rmployee_internal_num, employee_email, order_id, order_start_date, assignment_date, entry_procedures_num,
+        business_tips,
         order_end_date, withdrawal_date, social_insurance_amount, provident_fund_amount, supple_provident_fund_amount,
-        revocation_reason, social_security_stop_reason, departure_date, departure_remark, change_details, change_take_effect_date,
+        revocation_reason, social_security_stop_reason, departure_date, departure_remark, change_details,
+        change_take_effect_date,
         business_unit, salesman, social_security_pay_method, provident_fund_pay_method, supplier_agreement_name,
         provident_fund_ratio, supple_provident_fund_ratio, social_security_standard, s_service_fee_start_date,
         s_service_fee_end_date, g_service_fee_start_date, g_service_fee_end_date, remark)
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">
-            (#{item.id}, #{item.employee_name}, #{item.creater}, #{item.createdDeptId}, #{item.owner},#{item.ownerDeptId},
+            (#{item.id}, #{item.employee_name}, #{item.creater}, #{item.createdDeptId},
+            #{item.owner},#{item.ownerDeptId},
             #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId},
             #{item.sequenceNo}, #{item.sequenceStatus}, #{item.ownerDeptQueryCode},
-            #{item.unique_num}, #{item.employee_name}, #{item.contact_number}, #{item.identityNo_type}, #{item.identityNo}, #{item.national_business_wf_flag}, #{item.involved},
-            #{item.business_customer_num}, #{item.business_customer_name}, #{item.business_wf_status}, #{item.order_type}, #{item.processing_status}, #{item.contracting_supplier},
-            #{item.contracting_representative}, #{item.contracting_party_department}, #{item.into_pending_date}, #{item.task_list_update_date}, #{item.entry_date},
-            #{item.rmployee_internal_num}, #{item.employee_email}, #{item.order_id}, #{item.order_start_date}, #{item.assignment_date}, #{item.entry_procedures_num}, #{item.business_tips},
-            #{item.order_end_date}, #{item.withdrawal_date}, #{item.social_insurance_amount}, #{item.provident_fund_amount}, #{item.supple_provident_fund_amount},
-            #{item.revocation_reason}, #{item.social_security_stop_reason}, #{item.departure_date}, #{item.departure_remark}, #{item.change_details}, #{item.change_take_effect_date},
-            #{item.business_unit}, #{item.salesman}, #{item.social_security_pay_method}, #{item.provident_fund_pay_method}, #{item.supplier_agreement_name},
-            #{item.provident_fund_ratio}, #{item.supple_provident_fund_ratio}, #{item.social_security_standard}, #{item.s_service_fee_start_date},
-            #{item.s_service_fee_end_date}, #{item.g_service_fee_start_date}, #{item.g_service_fee_end_date}, #{item.remark})
+            #{item.unique_num}, #{item.employee_name}, #{item.contact_number}, #{item.identityNo_type},
+            #{item.identityNo}, #{item.national_business_wf_flag}, #{item.involved},
+            #{item.business_customer_num}, #{item.business_customer_name}, #{item.business_wf_status},
+            #{item.order_type}, #{item.processing_status}, #{item.contracting_supplier},
+            #{item.contracting_representative}, #{item.contracting_party_department}, #{item.into_pending_date},
+            #{item.task_list_update_date}, #{item.entry_date},
+            #{item.rmployee_internal_num}, #{item.employee_email}, #{item.order_id}, #{item.order_start_date},
+            #{item.assignment_date}, #{item.entry_procedures_num}, #{item.business_tips},
+            #{item.order_end_date}, #{item.withdrawal_date}, #{item.social_insurance_amount},
+            #{item.provident_fund_amount}, #{item.supple_provident_fund_amount},
+            #{item.revocation_reason}, #{item.social_security_stop_reason}, #{item.departure_date},
+            #{item.departure_remark}, #{item.change_details}, #{item.change_take_effect_date},
+            #{item.business_unit}, #{item.salesman}, #{item.social_security_pay_method},
+            #{item.provident_fund_pay_method}, #{item.supplier_agreement_name},
+            #{item.provident_fund_ratio}, #{item.supple_provident_fund_ratio}, #{item.social_security_standard},
+            #{item.s_service_fee_start_date},
+            #{item.s_service_fee_end_date}, #{item.g_service_fee_start_date}, #{item.g_service_fee_end_date},
+            #{item.remark})
         </foreach>
     </insert>
 
     <insert id="insertNationwideDeleteEmployee" parameterType="java.util.List">
-        INSERT INTO i4fvb_nationwide_dispatch_delete(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode,
+        INSERT INTO i4fvb_nationwide_dispatch_delete(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
+        modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode,
         unique_num, employee_name, contact_number, identityNo_type, identityNo, national_business_wf_flag, involved,
-        business_customer_num, business_customer_name, business_wf_status, order_type, processing_status, contracting_supplier,
+        business_customer_num, business_customer_name, business_wf_status, order_type, processing_status,
+        contracting_supplier,
         contracting_representative, contracting_party_department, into_pending_date, task_list_update_date, entry_date,
-        rmployee_internal_num, employee_email, order_id, order_start_date, assignment_date, entry_procedures_num, business_tips,
+        rmployee_internal_num, employee_email, order_id, order_start_date, assignment_date, entry_procedures_num,
+        business_tips,
         order_end_date, withdrawal_date, social_insurance_amount, provident_fund_amount, supple_provident_fund_amount,
-        revocation_reason, social_security_stop_reason, departure_date, departure_remark, change_details, change_take_effect_date,
+        revocation_reason, social_security_stop_reason, departure_date, departure_remark, change_details,
+        change_take_effect_date,
         business_unit, salesman, social_security_pay_method, provident_fund_pay_method, supplier_agreement_name,
         provident_fund_ratio, supple_provident_fund_ratio, social_security_standard, s_service_fee_start_date,
         s_service_fee_end_date, g_service_fee_start_date, g_service_fee_end_date, remark)
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">
-            (#{item.id}, #{item.employee_name}, #{item.creater}, #{item.createdDeptId}, #{item.owner},#{item.ownerDeptId},
+            (#{item.id}, #{item.employee_name}, #{item.creater}, #{item.createdDeptId},
+            #{item.owner},#{item.ownerDeptId},
             #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId},
             #{item.sequenceNo}, #{item.sequenceStatus}, #{item.ownerDeptQueryCode},
-            #{item.unique_num}, #{item.employee_name}, #{item.contact_number}, #{item.identityNo_type}, #{item.identityNo}, #{item.national_business_wf_flag}, #{item.involved},
-            #{item.business_customer_num}, #{item.business_customer_name}, #{item.business_wf_status}, #{item.order_type}, #{item.processing_status}, #{item.contracting_supplier},
-            #{item.contracting_representative}, #{item.contracting_party_department}, #{item.into_pending_date}, #{item.task_list_update_date}, #{item.entry_date},
-            #{item.rmployee_internal_num}, #{item.employee_email}, #{item.order_id}, #{item.order_start_date}, #{item.assignment_date}, #{item.entry_procedures_num}, #{item.business_tips},
-            #{item.order_end_date}, #{item.withdrawal_date}, #{item.social_insurance_amount}, #{item.provident_fund_amount}, #{item.supple_provident_fund_amount},
-            #{item.revocation_reason}, #{item.social_security_stop_reason}, #{item.departure_date}, #{item.departure_remark}, #{item.change_details}, #{item.change_take_effect_date},
-            #{item.business_unit}, #{item.salesman}, #{item.social_security_pay_method}, #{item.provident_fund_pay_method}, #{item.supplier_agreement_name},
-            #{item.provident_fund_ratio}, #{item.supple_provident_fund_ratio}, #{item.social_security_standard}, #{item.s_service_fee_start_date},
-            #{item.s_service_fee_end_date}, #{item.g_service_fee_start_date}, #{item.g_service_fee_end_date}, #{item.remark})
+            #{item.unique_num}, #{item.employee_name}, #{item.contact_number}, #{item.identityNo_type},
+            #{item.identityNo}, #{item.national_business_wf_flag}, #{item.involved},
+            #{item.business_customer_num}, #{item.business_customer_name}, #{item.business_wf_status},
+            #{item.order_type}, #{item.processing_status}, #{item.contracting_supplier},
+            #{item.contracting_representative}, #{item.contracting_party_department}, #{item.into_pending_date},
+            #{item.task_list_update_date}, #{item.entry_date},
+            #{item.rmployee_internal_num}, #{item.employee_email}, #{item.order_id}, #{item.order_start_date},
+            #{item.assignment_date}, #{item.entry_procedures_num}, #{item.business_tips},
+            #{item.order_end_date}, #{item.withdrawal_date}, #{item.social_insurance_amount},
+            #{item.provident_fund_amount}, #{item.supple_provident_fund_amount},
+            #{item.revocation_reason}, #{item.social_security_stop_reason}, #{item.departure_date},
+            #{item.departure_remark}, #{item.change_details}, #{item.change_take_effect_date},
+            #{item.business_unit}, #{item.salesman}, #{item.social_security_pay_method},
+            #{item.provident_fund_pay_method}, #{item.supplier_agreement_name},
+            #{item.provident_fund_ratio}, #{item.supple_provident_fund_ratio}, #{item.social_security_standard},
+            #{item.s_service_fee_start_date},
+            #{item.s_service_fee_end_date}, #{item.g_service_fee_start_date}, #{item.g_service_fee_end_date},
+            #{item.remark})
         </foreach>
     </insert>
 
-    <select id="getAddEmployeeData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.AddEmployee">
+    <select id="getAddEmployeeData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.AddEmployee">
         SELECT * FROM i4fvb_add_employee WHERE id = #{id}
     </select>
 
-    <select id="getAddEmployeeUpdateData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.AddEmployee">
+    <select id="getAddEmployeeUpdateData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.AddEmployee">
         SELECT * FROM i4fvb_add_employee_update WHERE id = #{id}
     </select>
 
-    <select id="getDeleteEmployeeData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
+    <select id="getDeleteEmployeeData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
         SELECT * FROM i4fvb_delete_employee WHERE id = #{id}
     </select>
 
-    <select id="getDeleteEmployeeUpdateData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
+    <select id="getDeleteEmployeeUpdateData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
         SELECT * FROM i4fvb_delete_employee_update WHERE id = #{id}
     </select>
 
-    <select id="getShAddEmployeeData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ShAddEmployee">
+    <select id="getShAddEmployeeData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.ShAddEmployee">
         SELECT * FROM i4fvb_sh_add_employee WHERE id = #{id}
     </select>
 
-    <select id="getShAddEmployeeUpdateData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ShAddEmployee">
+    <select id="getShAddEmployeeUpdateData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.ShAddEmployee">
         SELECT * FROM i4fvb_sh_add_employee_update WHERE id = #{id}
     </select>
 
-    <select id="getShDeleteEmployeeData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ShDeleteEmployee">
+    <select id="getShDeleteEmployeeData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.ShDeleteEmployee">
         SELECT * FROM i4fvb_sh_delete_employee WHERE id = #{id}
     </select>
 
-    <select id="getShDeleteEmployeeUpdateData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ShDeleteEmployee">
+    <select id="getShDeleteEmployeeUpdateData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.ShDeleteEmployee">
         SELECT * FROM i4fvb_sh_delete_employee_update WHERE id = #{id}
     </select>
 
-    <select id="getNationwideAddEmployeeData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
+    <select id="getNationwideAddEmployeeData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
         SELECT * FROM i4fvb_nationwide_dispatch WHERE id = #{id}
     </select>
 
-    <select id="getNationwideAddEmployeeUpdateData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
+    <select id="getNationwideAddEmployeeUpdateData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
         SELECT * FROM i4fvb_nationwide_dispatch_update WHERE id = #{id}
     </select>
 
-    <select id="getNationwideDeleteEmployeeData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
+    <select id="getNationwideDeleteEmployeeData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
         SELECT * FROM i4fvb_nationwide_dispatch_delete WHERE id = #{id}
     </select>
 
-    <select id="getNationwideDeleteEmployeeUpdateData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
+    <select id="getNationwideDeleteEmployeeUpdateData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
         SELECT * FROM i4fvb_nationwide_dispatch_update WHERE id = #{id}
     </select>
 
-    <select id="getEmployeeFilesData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
+    <select id="getEmployeeFilesData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
         SELECT * FROM i4fvb_employee_files WHERE id = #{id}
     </select>
-    
-    <select id="getEmployeeFilesUpdateData" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
+
+    <select id="getEmployeeFilesUpdateData" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
         SELECT * FROM i4fvb_employee_files_update WHERE id = #{id}
     </select>
 
@@ -249,22 +308,31 @@
 
     <resultMap id="employeeFilesDto" type="com.authine.cloudpivot.web.api.dto.EmployeeFilesDto">
         <id column="id" property="id"></id>
-        <collection property="employeeOrderFormDtos" select="com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper.getEmployeeOrderFormByEmployeeFilesId" column="id"></collection>
+        <collection property="employeeOrderFormDtos"
+                    select="com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper.getEmployeeOrderFormByEmployeeFilesId"
+                    column="id"></collection>
     </resultMap>
     <select id="getEmployeeFilesCanGenerateBillByClientName" resultMap="employeeFilesDto">
         SELECT * FROM i4fvb_employee_files WHERE client_name = #{clientName} AND stop_generate_bill = 0 AND employee_nature = #{employeeNature}
     </select>
-    
+
     <resultMap id="employeeOrderFormDto" type="com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto">
         <id column="id" property="id"></id>
-        <collection property="socialSecurityFundDetail" select="com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper.getSocialSecurityFundDetailByParentId" column="id"></collection>
+        <collection property="socialSecurityFundDetails"
+                    select="com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper.getSocialSecurityFundDetailByParentId"
+                    column="id"></collection>
     </resultMap>
     <select id="getEmployeeOrderFormByEmployeeFilesId" resultMap="employeeOrderFormDto">
         SELECT * FROM i4fvb_employee_order_form WHERE employee_files_id = #{id} AND is_history = '否'
     </select>
-    
-    <select id="getSocialSecurityFundDetailByParentId" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityFundDetail">
+
+    <select id="getSocialSecurityFundDetailByParentId"
+            resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityFundDetail">
         SELECT * FROM i4fvb_social_security_fund_detail WHERE parentId = #{id}
     </select>
-    
+    <select id="getNoCompareBills" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.Bill">
+        SELECT * FROM i4fvb_bill_details WHERE id_no = #{idNo}
+    </select>
+
 </mapper>

@@ -367,4 +367,16 @@ public interface EmployeeMaintainService {
      * @Date 2020/3/26 10:24
      */
     List<Map<String, Object>> getAddOrDelWorkItemId(String ids, String tableName) throws Exception;
+
+    /**
+     * 方法说明：申报驳回导入
+     * @param fileName 文件名称
+     * @param code 表单code
+     * @param userId 当前用户
+     * @param workflowInstanceFacade 流程实例接口
+     * @return void
+     * @author liulei
+     * @Date 2020/3/27 10:07
+     */
+    void rejectImport(String fileName, String code, String userId, WorkflowInstanceFacade workflowInstanceFacade) throws Exception;
 }

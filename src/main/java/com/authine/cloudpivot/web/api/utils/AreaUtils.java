@@ -20,7 +20,7 @@ public class AreaUtils {
         if (cityName.contains("巢湖") || cityName.contains("合肥") || cityName.contains("芜湖") || cityName.contains("蚌埠") || cityName.contains("淮南") || cityName.contains("马鞍山") || cityName.contains("铜陵") || cityName.contains("安庆") || cityName.contains("黄山") || cityName.contains("滁州") || cityName.contains("阜阳") || cityName.contains("宿州") || cityName.contains("六安") || cityName.contains("亳州") || cityName.contains("池州") || cityName.contains("宣城")) {
             return true;
         }
-        return true;
+        return false;
     }
 
 }

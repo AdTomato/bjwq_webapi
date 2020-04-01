@@ -94,7 +94,7 @@
             (#{item.entrustUnit},#{item.clientName},#{item.insuredArea},#{item.socialSecurity},#{item.accumulationFund},
              #{item.wages},#{item.welfareProducts},#{item.serviceFee},#{item.addedTax},#{item.paidAmount},
              #{item.clientCode},#{item.departmentCode},#{item.grossProfitAnalysisCode},MD5(UUID()),#{parentId},
-             #{index},#{item.sourceId}, #{dataType})
+             #{index},#{item.sourceId}, #{item.dataType})
         </foreach>
     </insert>
 
@@ -543,18 +543,19 @@
 
     <select id="getRepeatPaymentApplicationData" parameterType="java.lang.String" resultType="java.util.HashMap">
         SELECT
-        a.id,
-        b.id yId
+            a.id,
+            b.yId
         FROM
-        i4fvb_payment_application a
-        LEFT JOIN i4fvb_payment_application b ON IFNULL( a.entrust_unit, '' ) = IFNULL( b.entrust_unit, '' )
-        AND IFNULL( a.insured_area, '' ) = IFNULL( b.insured_area, '' )
-        AND IFNULL( a.source_id, '' ) <![CDATA[ <> ]]> IFNULL( b.source_id, '' )
-        AND a.bill_year = a.bill_year
-        AND a.data_type = b.data_type
+            i4fvb_payment_application a
+                LEFT JOIN (select id yId,entrust_unit,insured_area,source_id,bill_year,data_type,sequenceStatus
+                           from i4fvb_payment_application) b ON IFNULL(a.entrust_unit, '') = IFNULL(b.entrust_unit, '')
+                AND IFNULL(a.insured_area, '') = IFNULL(b.insured_area, '')
+                AND IFNULL(a.source_id, '') <![CDATA[ <> ]]> IFNULL(b.source_id, '')
+                AND a.bill_year = a.bill_year
+                AND a.data_type = b.data_type
         WHERE
-        a.source_id = ''
-        AND b.sequenceStatus = 'DRAFT'
+            a.source_id = #{sourceId}
+          AND b.sequenceStatus = 'DRAFT'
     </select>
 
     <delete id="deletePaymentDetailsTempBySourceId" parameterType="java.lang.String">

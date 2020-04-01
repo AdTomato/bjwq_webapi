@@ -182,4 +182,11 @@ public interface EmployeeFilesMapper {
      */
     List<SocialSecurityFundDetail> getSocialSecurityFundDetailByParentId(String id);
 
+    /**
+     * 根据员工的证件号码获取之前没有对比的账单
+     *
+     * @param idNo
+     * @return
+     */
+    List<Bill> getNoCompareBills(String idNo);
 }

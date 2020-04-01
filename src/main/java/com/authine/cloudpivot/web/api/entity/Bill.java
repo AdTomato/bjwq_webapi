@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Bill extends BaseEntity{
+public class Bill extends BaseEntity {
     /**
      * supplier	varchar(200)
      * business_year	varchar(200)
@@ -265,7 +265,7 @@ public class Bill extends BaseEntity{
      */
     private Double yProvidentEnterpriseD;
     private Double yProvidentPersonalD;
-    private Double y_ProvidentTotalD;
+    private Double yProvidentTotalD;
 
     /**
      * y_social_enterprise_t	decimal(19,6)
@@ -276,36 +276,73 @@ public class Bill extends BaseEntity{
     private Double ySocialPersonalT;
     private Double ySocialTotalT;
 
+
     /**
-     * y_provident_enterprise_t	decimal(19,6)
-     * y_provident_personal_t	decimal(19,6)
-     * y_provident_total_t	decimal(19,6)
+     * 一次性公积金企业-托收
      */
     private Double yProvidentEnterpriseT;
+    /**
+     * 一次性公积金个人-托收
+     */
     private Double yProvidentPersonalT;
+    /**
+     * 一次性公积金合计-托收
+     */
     private Double yProvidentTotalT;
 
     /**
-     * social_provident_total	decimal(19,6)
-     * total_charge	decimal(19,6)
-     * vat_tax	decimal(19,6)
-     * total_welfare_products	decimal(19,6)
-     * risk_manage_fee	decimal(19,6)
-     * outsourcing_manage_fee	decimal(19,6)
-     * business_tax	decimal(19,6)
-     * whether_define	varchar(200)
-     * relation_enquiry_receivable	varchar(200)
+     * 社保公积金合计
      */
     private Double socialProvidentTotal;
-    private Double totalCharge;
-    private Double vatTax;
-    private Double totalWelfareProducts;
-    private Double riskManageFee;
-    private Double outsourcingManageFee;
-    private Double businessTax;
-    private String whetherDefine;
-    private String relationEnquiryReceivable;
 
+    /**
+     * 增值税税费
+     */
+    private Double vatTax;
+    /**
+     * 福利产品总额
+     */
+    private Double totalWelfareProducts;
+    /**
+     * 风险管理费
+     */
+    private Double riskManageFee;
+    /**
+     * 外包管理费
+     */
+    private Double outsourcingManageFee;
+    /**
+     * 营业税税费
+     */
+    private Double businessTax;
+    /**
+     * 合计收费
+     */
+    private Double totalCharge;
+
+    /**
+     * 是否确定
+     */
+    private Integer whetherDefine;
+    /**
+     * 是否差异数据
+     */
+    private Integer whetherDifferenceData;
+    /**
+     * 是否对比
+     */
+    private Integer whetherCompare;
+    /**
+     * 是否锁定
+     */
     private Integer isLock;
+    /**
+     * 关联查询应收
+     */
+    private String relationEnquiryReceivable;
+    /**
+     * 关联员工档案
+     */
+    private String relationEmployeeFiles;
 
 }
