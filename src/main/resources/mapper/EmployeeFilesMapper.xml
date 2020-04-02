@@ -308,12 +308,12 @@
 
     <resultMap id="employeeFilesDto" type="com.authine.cloudpivot.web.api.dto.EmployeeFilesDto">
         <id column="id" property="id"></id>
-        <collection property="employeeOrderFormDtos"
+        <collection property="employeeOrderFormDto"
                     select="com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper.getEmployeeOrderFormByEmployeeFilesId"
                     column="id"></collection>
     </resultMap>
     <select id="getEmployeeFilesCanGenerateBillByClientName" resultMap="employeeFilesDto">
-        SELECT * FROM i4fvb_employee_files WHERE client_name = #{clientName} AND stop_generate_bill = 0 AND employee_nature = #{employeeNature}
+        SELECT * FROM i4fvb_employee_files WHERE client_name = #{clientName} AND stop_generate_bill = 0 AND employee_nature = #{employeeNature} AND social_security_city REGEXP "合肥|巢湖|芜湖|蚌埠|淮南|马鞍山|铜陵|安庆|黄山|滁州|阜阳|宿州|六安|亳州|池州|宣城"
     </select>
 
     <resultMap id="employeeOrderFormDto" type="com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto">
@@ -333,6 +333,11 @@
     <select id="getNoCompareBills" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.Bill">
         SELECT * FROM i4fvb_bill_details WHERE id_no = #{idNo}
+    </select>
+
+    <!-- 根据账单年月，证件号码获取信息收费账单 -->
+    <select id="getPayrollBills" resultType="com.authine.cloudpivot.web.api.entity.PayrollBill">
+        SELECT * FROM i4fvb_payroll_bill WHERE bill_year = #{billYear} AND id_no = #{idNo} ORDER BY createdTime DESC
     </select>
 
 </mapper>

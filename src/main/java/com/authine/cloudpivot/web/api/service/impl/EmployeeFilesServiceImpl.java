@@ -188,4 +188,18 @@ public class EmployeeFilesServiceImpl implements EmployeeFilesService {
     public List<Bill> getNoCompareBills(String idNo) {
         return employeeFilesMapper.getNoCompareBills(idNo);
     }
+
+    /**
+     * @param billYear: 账单年月
+     * @param idNo:     证件号码
+     * @Author: wangyong
+     * @Date: 2020/4/2 13:22
+     * @return: com.authine.cloudpivot.web.api.entity.PayrollBill
+     * @Description:
+     */
+    @Override
+    public PayrollBill getPayrollBill(String billYear, String idNo) {
+        List<PayrollBill> payrollBills = employeeFilesMapper.getPayrollBills(billYear, idNo);
+        return payrollBills == null || payrollBills.size() == 0 ? null : payrollBills.get(0);
+    }
 }

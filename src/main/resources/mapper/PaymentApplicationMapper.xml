@@ -53,7 +53,7 @@
                                               paid_in_lieu_total, cost_total, voucher_number, create_voucher,
                                               approval_time, bill_year, data_type, source_id)
         VALUES
-        <foreach collection="details" item="item" index="index" separator=",">
+        <foreach collection="list" item="item" index="index" separator=",">
             (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner},
             #{item.ownerDeptId},#{item.createdTime}, #{item.modifier},#{item.modifiedTime}, #{item.workflowInstanceId},
             #{item.sequenceNo}, #{item.sequenceStatus},#{item.ownerDeptQueryCode},#{item.paymentType},
@@ -118,7 +118,10 @@
         <collection property="employeeOrderFormDtos" select="com.authine.cloudpivot.web.api.mapper.PaymentApplicationMapper.getEmployeeOrderFormByEmployeeFilesId" column="id"></collection>
     </resultMap>
     <select id="getPaymentApplicationAccumulationFundData" resultMap="employeeFilesDto">
-        SELECT * FROM i4fvb_employee_files WHERE ifNull(g_payment_application, '0' ) &lt; #{billYear}
+        SELECT *
+        FROM i4fvb_employee_files
+        WHERE ifNull(g_payment_application, '0') &lt; #{billYear}
+          AND INSTR('合肥市、宿州市、淮北市、亳州市、阜阳市、蚌埠市、淮南市、滁州市、六安市、马鞍山市、安庆市、芜湖市、铜陵市、宣城市、池州市、黄山市', provident_fund_city)
     </select>
 
     <resultMap id="employeeOrderFormDto" type="com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto">
@@ -140,7 +143,10 @@
         <collection property="employeeOrderFormDtos" select="com.authine.cloudpivot.web.api.mapper.PaymentApplicationMapper.getEmployeeOrderFormByEmployeeFilesId1" column="id"></collection>
     </resultMap>
     <select id="getPaymentApplicationSocialSecurityData" resultMap="employeeFilesDtoS">
-        SELECT * FROM i4fvb_employee_files WHERE ifNull(s_payment_application, '0' ) &lt; #{billYear}
+        SELECT *
+        FROM i4fvb_employee_files
+        WHERE ifNull(s_payment_application, '0') &lt; #{billYear}
+          AND INSTR('合肥市、宿州市、淮北市、亳州市、阜阳市、蚌埠市、淮南市、滁州市、六安市、马鞍山市、安庆市、芜湖市、铜陵市、宣城市、池州市、黄山市', social_security_city)
     </select>
 
     <resultMap id="employeeOrderFormDtoS" type="com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto">
@@ -156,8 +162,8 @@
     </select>
     <!--查询需要生成支付申请的社保数据  end-->
 
-    <insert id="batchInsertPaymentDetailsTemp" parameterType="java.util.List">
-        INSERT INTO i4fvb_payment_details_temp(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
+    <insert id="batchInsertPaymentDetailsTemp">
+        INSERT INTO ${tableName} (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
         modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode, bill_year,
         business_year, client_name, employee_name, id_no, delegated_area, pension_enterprise_base,
         pension_enterprise_ratio, pension_enterprise_attach, pension_enterprise_pay, pension_personal_base,
@@ -197,7 +203,7 @@
         provident_personal_attach, provident_enterprise_attach, b_provident_personal_attach, b_provident_enterprise_add,
         source_id, data_type)
         VALUES
-        <foreach collection="list" item="item" index="index" separator=",">
+        <foreach collection="paymentDetails" item="item" index="index" separator=",">
             (#{item.id},#{item.name},#{item.creater},#{item.createdDeptId},#{item.owner},#{item.ownerDeptId},
              #{item.createdTime},#{item.modifier},#{item.modifiedTime},#{item.workflowInstanceId},#{item.sequenceNo},
              #{item.sequenceStatus},#{item.ownerDeptQueryCode},#{item.bill_year},#{item.business_year},
@@ -257,7 +263,7 @@
 
     <update id="updatePaymentDetailsByTemp" parameterType="java.lang.String">
         UPDATE i4fvb_payment_details detail
-        JOIN ON i4fvb_payment_details_temp temp ON detail.client_name = temp.client_name
+        JOIN i4fvb_payment_details_temp temp ON detail.client_name = temp.client_name
         AND detail.id_no = temp.id_no
         AND detail.bill_year = temp.bill_year
         AND detail.data_type = temp.data_type
@@ -266,7 +272,6 @@
         detail.service_fee_total = temp.service_fee_total ,
         detail.delegated_area = temp.delegated_area ,
         detail.source_id = temp.source_id ,
-        detail.id = temp.id ,
         <!-- 补充公积金 -->
         detail.b_provident_enterprise_base = temp.b_provident_enterprise_base ,
         detail.b_provident_enterprise_ratio = temp.b_provident_enterprise_ratio ,
@@ -376,7 +381,16 @@
         detail.complex_personal_attach = temp.complex_personal_attach ,
         detail.complex_personal_pay = temp.complex_personal_pay ,
         detail.complex_subtotal = temp.complex_subtotal ,
-        detail.complex_payment_method = temp.complex_payment_method
+        detail.complex_payment_method = temp.complex_payment_method ,
+        <!-- 合计字段 -->
+        detail.provident_enterprise = temp.provident_enterprise,
+        detail.provident_personal = temp.provident_personal,
+        detail.provident_total = temp.provident_total,
+        detail.social_provident_total = temp.social_provident_total,
+        detail.total_charge = temp.total_charge,
+        detail.social_security_enterprise = temp.social_security_enterprise,
+        detail.social_security_personal = temp.social_security_personal,
+        detail.social_security_total = temp.social_security_total
         WHERE temp.source_id = #{sourceId}
     </update>
 
@@ -460,9 +474,10 @@
                fertility_personal_attach, fertility_personal_pay, b_injury_personal_base, b_injury_personal_ratio,
                b_injury_personal_attach, b_injury_personal_pay, provident_personal_attach, provident_enterprise_attach,
                b_provident_personal_attach, b_provident_enterprise_add, source_id, data_type
-        FROM i4fvb_payment_details_temp
+        FROM i4fvb_payment_details_temp temp
         WHERE source_id = #{sourceId}
-          AND id NOT IN (select id from i4fvb_payment_details WHERE source_id = #{sourceId})
+          AND (SELECT COUNT(1) FROM i4fvb_payment_details detail WHERE detail.client_name = temp.client_name AND
+            detail.id_no = temp.id_no AND detail.bill_year = temp.bill_year AND detail.data_type = temp.data_type) = 0
     </insert>
 
     <insert id="insertPaymentClientDetailsBySourceId" parameterType="java.lang.String">
@@ -470,30 +485,150 @@
         (entrust_unit, client_name, insured_area, social_security, accumulation_fund, wages, welfare_products,
          service_fee, added_tax, paid_amount, client_code, department_code, gross_profit_analysis_code, id, parentId,
          sortKey, source_id, data_type)
-        SELECT entrust_unit,
-               client_name,
-               delegated_area,
-               SUM(IFNULL(social_security_total, 0)),
-               SUM(IFNULL(provident_total, 0)),
-               SUM(IFNULL(total_paid_wages, 0)),
-               SUM(IFNULL(total_welfare_products, 0)),
-               SUM(IFNULL(service_fee_total, 0)),
-               0,
-               SUM(IFNULL(social_security_total, 0)) + SUM(IFNULL(provident_total, 0)) +
-               SUM(IFNULL(total_paid_wages, 0)) + SUM(IFNULL(total_welfare_products, 0)) +
-               SUM(IFNULL(service_fee_total, 0)),
-               null,
-               null,
-               null,
-               MD5(UUID()),
-               NULL,
-               NULL,
-               source_id,
-               data_type
-        FROM i4fvb_payment_details
-        where source_id = #{sourceId}
-        GROUP BY entrust_unit,client_name,delegated_area,source_id,data_type
+        SELECT
+            entrust_unit,
+            client_name,
+            delegated_area,
+            SUM(social_security),
+            SUM(accumulation_fund),
+            SUM(wages),
+            SUM(welfare_products),
+            SUM(service_fee),
+            SUM(added_tax),
+            SUM(social_security) + SUM(accumulation_fund) + SUM(wages) + SUM(welfare_products) + SUM(service_fee) +
+            SUM(added_tax),
+            NULL,
+            NULL,
+            NULL,
+            MD5(UUID()),
+            NULL,
+            NULL,
+            source_id,
+            data_type
+        FROM
+            (
+                SELECT
+                    entrust_unit,
+                    client_name,
+                    delegated_area,
+                    source_id,
+                    data_type,
+                    CASE
+                        WHEN IFNULL(social_security_payment, '') <![CDATA[ <> ]]> ''
+                            AND social_security_payment <![CDATA[ <> ]]> 0 THEN
+                            social_security_payment
+                        WHEN IFNULL(pension_payment_method, '') = ''
+                            AND IFNULL(medical_payment_method, '') = ''
+                            AND IFNULL(unemp_payment_method, '') = ''
+                            AND IFNULL(injury_payment_method, '') = ''
+                            AND IFNULL(fertility_payment_method, '') = ''
+                            AND IFNULL(d_medical_payment_method, '') = ''
+                            AND IFNULL(complex_payment_method, '') = ''
+                            AND IFNULL(b_injury_payment_method, '') = '' THEN
+                                IFNULL(social_security_enterprise, 0) + IFNULL(social_security_personal, 0)
+                        ELSE
+                                CASE
+                                    WHEN pension_payment_method = '代收代付'
+                                        OR IFNULL(pension_payment_method, '') = '' THEN
+                                        IFNULL(pension_enterprise_pay, 0) + IFNULL(pension_personal_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN medical_payment_method = '代收代付'
+                                        OR IFNULL(medical_payment_method, '') = '' THEN
+                                        IFNULL(medical_enterprise_pay, 0) + IFNULL(medical_personal_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN unemp_payment_method = '代收代付'
+                                        OR IFNULL(unemp_payment_method, '') = '' THEN
+                                        IFNULL(unemp_enterprise_pay, 0) + IFNULL(unemp_personal_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN injury_payment_method = '代收代付'
+                                        OR IFNULL(injury_payment_method, '') = '' THEN
+                                        IFNULL(injury_enterprise_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN fertility_payment_method = '代收代付'
+                                        OR IFNULL(fertility_payment_method, '') = '' THEN
+                                        IFNULL(fertility_enterprise_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN d_medical_payment_method = '代收代付'
+                                        OR IFNULL(d_medical_payment_method, '') = '' THEN
+                                            IFNULL(d_medical_enterprise_pay, 0) + IFNULL(d_medical_personal_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN complex_payment_method = '代收代付'
+                                        OR IFNULL(complex_payment_method, '') = '' THEN
+                                        IFNULL(complex_enterprise_pay, 0) + IFNULL(complex_personal_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN b_injury_payment_method = '代收代付'
+                                        OR IFNULL(b_injury_payment_method, '') = '' THEN
+                                        IFNULL(b_injury_enterprise_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN l_social_security_pay_method = '代收代付'
+                                        OR IFNULL(l_social_security_pay_method, '') = '' THEN
+                                            IFNULL(l_social_security_enterprise, 0) +
+                                            IFNULL(l_social_security_personal, 0)
+                                    ELSE 0
+                                    END + IFNULL(y_social_total_d, 0)
+                        END                                                                social_security,
+                    CASE
+                        WHEN IFNULL(provident_payment, '') <![CDATA[ <> ]]> ''
+                            AND provident_payment <![CDATA[ <> ]]> 0 THEN
+                            provident_payment
+                        WHEN IFNULL(provident_payment_method, '') = ''
+                            AND IFNULL(b_provident_payment_method, '') = '' THEN
+                            IFNULL(provident_enterprise, 0) + IFNULL(provident_personal, 0)
+                        ELSE
+                                CASE
+                                    WHEN provident_payment_method = '代收代付'
+                                        OR IFNULL(provident_payment_method, '') = '' THEN
+                                            IFNULL(provident_enterprise_pay, 0) + IFNULL(b_provident_enterprise_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN b_provident_payment_method = '代收代付'
+                                        OR IFNULL(b_provident_payment_method, '') = '' THEN
+                                            IFNULL(b_provident_enterprise_pay, 0) + IFNULL(b_provident_personal_pay, 0)
+                                    ELSE 0
+                                    END + IFNULL(y_provident_total_d, 0)
+                        END                                                                accumulation_fund,
+                    IFNULL(total_paid_wages, 0)                                            wages,
+                    IFNULL(total_welfare_products, 0)                                      welfare_products,
+                    IFNULL(service_fee_total, 0) + IFNULL(service_fee_temporary_charge, 0) service_fee,
+                    0                                                                      added_tax
+                FROM
+                    i4fvb_payment_details
+                WHERE
+                    source_id = #{sourceId}
+            ) AS a
+        GROUP BY
+            entrust_unit,
+            client_name,
+            delegated_area,
+            source_id,
+            data_type
     </insert>
+
+    <update id="giveClientDetailsAssignmentClientCode" parameterType="java.lang.String">
+        UPDATE i4fvb_payment_client_details detail
+          JOIN id34a_client_code client ON client.company_name = detail.client_name
+        SET detail.client_code = client.client_code,
+            detail.department_code = client.department_code,
+            detail.gross_profit_analysis_code = client.gross_profit_analysis_code
+        WHERE detail.source_id = #{sourceId}
+    </update>
 
     <select id="getSnPaymentApplicationBySourceId" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.PaymentApplication">
@@ -502,7 +637,11 @@
                SUM(IFNULL(wages, 0))             wages_total,
                SUM(IFNULL(welfare_products, 0))  welfare_products_total,
                SUM(IFNULL(service_fee, 0))       service_fee_total,
-               SUM(IFNULL(added_tax_total, 0))   added_tax_total,
+               SUM(IFNULL(added_tax, 0))   added_tax_total,
+               SUM(IFNULL(social_security, 0)) + SUM(IFNULL(accumulation_fund, 0)) + SUM(IFNULL(wages, 0)) paid_in_lieu_total,
+               SUM(IFNULL(welfare_products, 0)) + SUM(IFNULL(service_fee, 0)) + SUM(IFNULL(added_tax, 0)) cost_total,
+               SUM(IFNULL(social_security, 0)) + SUM(IFNULL(accumulation_fund, 0)) + SUM(IFNULL(wages, 0)) +
+               SUM(IFNULL(welfare_products, 0)) + SUM(IFNULL(service_fee, 0)) + SUM(IFNULL(added_tax, 0)) paid_amount_total,
                insured_area,source_id,data_type
         FROM i4fvb_payment_client_details
         WHERE source_id = #{sourceId}
@@ -517,7 +656,11 @@
                SUM(IFNULL(wages, 0))             wages_total,
                SUM(IFNULL(welfare_products, 0))  welfare_products_total,
                SUM(IFNULL(service_fee, 0))       service_fee_total,
-               SUM(IFNULL(added_tax_total, 0))   added_tax_total,
+               SUM(IFNULL(added_tax, 0))   added_tax_total,
+               SUM(IFNULL(social_security, 0)) + SUM(IFNULL(accumulation_fund, 0)) + SUM(IFNULL(wages, 0)) paid_in_lieu_total,
+               SUM(IFNULL(welfare_products, 0)) + SUM(IFNULL(service_fee, 0)) + SUM(IFNULL(added_tax, 0)) cost_total,
+               SUM(IFNULL(social_security, 0)) + SUM(IFNULL(accumulation_fund, 0)) + SUM(IFNULL(wages, 0)) +
+               SUM(IFNULL(welfare_products, 0)) + SUM(IFNULL(service_fee, 0)) + SUM(IFNULL(added_tax, 0)) paid_amount_total,
                entrust_unit,source_id,data_type
         FROM i4fvb_payment_client_details
         WHERE source_id = #{sourceId}
@@ -536,7 +679,7 @@
 
     <update id="updatePaymentDetailsByClientDetails" parameterType="java.lang.String">
         UPDATE i4fvb_payment_details detail
-            JOIN i4fvb_payment_client_details client ON client.entrust_unit = detail.entrust_unit AND client.client_name = detail.client_name AND client.insured_area = detail.insured_area
+            JOIN i4fvb_payment_client_details client ON client.entrust_unit = detail.entrust_unit AND client.client_name = detail.client_name AND client.insured_area = detail.delegated_area
         SET detail.payment_application_id = client.parentId
         WHERE detail.source_id = #{sourceId} and client.source_id = #{sourceId}
     </update>
@@ -572,5 +715,309 @@
 
     <update id="updatePaymentApplicationSourceIdToNull" parameterType="java.lang.String">
         UPDATE i4fvb_payment_application SET source_id = NULL WHERE source_id = #{sourceId}
+    </update>
+
+    <update id="updatePaymentDetailsOneTimeFee">
+        UPDATE i4fvb_payment_details detail
+        JOIN i4fvb_payment_details_temp temp ON detail.client_name = temp.client_name
+        AND detail.id_no = temp.id_no
+        AND detail.bill_year = temp.bill_year
+        SET detail.source_id = temp.source_id,
+        detail.y_toll_total = temp.y_toll_total,
+        detail.y_toll_remark = temp.y_toll_remark,
+        <if test="dataType == '社保'">
+            detail.y_social_enterprise_d = temp.y_social_enterprise_d,
+            detail.y_social_personal_d = temp.y_social_personal_d,
+            detail.y_social_total_d = temp.y_social_total_d,
+            detail.y_social_enterprise_t = temp.y_social_enterprise_t,
+            detail.y_social_personal_t = temp.y_social_personal_t,
+            detail.y_social_total_t = temp.y_social_total_t
+        </if>
+        <if test="dataType == '公积金'">
+            detail.y_provident_enterprise_d = temp.y_provident_enterprise_d,
+            detail.y_provident_personal_d = temp.y_provident_personal_d,
+            detail.y_provident_total_d = temp.y_provident_total_d,
+            detail.y_provident_enterprise_t = temp.y_provident_enterprise_t,
+            detail.y_provident_personal_t = temp.y_provident_personal_t,
+            detail.y_provident_total_t = temp.y_provident_total_t
+        </if>
+        WHERE temp.source_id = #{sourceId}
+        <if test="dataType == '社保'">
+            AND detail.data_type = '社保'
+            AND ((IFNULL( temp.y_social_total_d, '' ) <![CDATA[ <> ]]> '' and temp.y_social_total_d <![CDATA[ <> ]]> 0)
+            OR (IFNULL( temp.y_social_total_t, '' ) <![CDATA[ <> ]]> '' and temp.y_social_total_t <![CDATA[ <> ]]> 0))
+        </if>
+        <if test="dataType == '公积金'">
+            AND detail.data_type = '公积金'
+            AND ((IFNULL( temp.y_provident_total_d, '' ) <![CDATA[ <> ]]> '' and temp.y_provident_total_d <![CDATA[ <> ]]> 0)
+            OR (IFNULL( temp.y_provident_total_t, '' ) <![CDATA[ <> ]]> '' and temp.y_provident_total_t <![CDATA[ <> ]]> 0))
+        </if>
+    </update>
+
+    <insert id="insertPaymentDetailsOneTimeFee">
+        INSERT INTO i4fvb_payment_details(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
+        modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode, bill_year,
+        business_year, client_name, employee_name, id_no, delegated_area, y_toll_total, y_toll_remark,
+        y_social_enterprise_d, y_social_personal_d, y_social_total_d, y_social_enterprise_t, y_social_personal_t,
+        y_social_total_t, y_provident_enterprise_d, y_provident_personal_d, y_provident_total_d,
+        y_provident_enterprise_t, y_provident_personal_t, y_provident_total_t, source_id, data_type)
+        SELECT MD5(UUID()), temp.name, temp.creater, temp.createdDeptId, temp.owner, temp.ownerDeptId, temp.createdTime,
+        temp.modifier, temp.modifiedTime, temp.workflowInstanceId, temp.sequenceNo, temp.sequenceStatus,
+        temp.ownerDeptQueryCode, temp.bill_year, temp.business_year, temp.client_name, temp.employee_name, temp.id_no,
+        temp.delegated_area, temp.y_toll_total, temp.y_toll_remark,
+        <if test="dataType == '社保'">
+            temp.y_social_enterprise_d, temp.y_social_personal_d, temp.y_social_total_d, temp.y_social_enterprise_t,
+            temp.y_social_personal_t, temp.y_social_total_t, NULL, NULL, NULL, NULL, NULL, NULL, temp.source_id, '社保'
+        </if>
+        <if test="dataType == '公积金'">
+            NULL, NULL, NULL, NULL, NULL, NULL, temp.y_provident_enterprise_d, temp.y_provident_personal_d,
+            temp.y_provident_total_d, temp.y_provident_enterprise_t, temp.y_provident_personal_t,
+            temp.y_provident_total_t, temp.source_id, '公积金'
+        </if>
+        FROM i4fvb_payment_details_temp temp
+        WHERE temp.source_id = #{sourceId}
+        <if test="dataType == '社保'">
+            AND (SELECT COUNT(1) FROM i4fvb_payment_details detail WHERE detail.client_name = temp.client_name AND
+            detail.id_no = temp.id_no AND detail.bill_year = temp.bill_year AND detail.data_type = '社保') = 0
+            AND ((IFNULL(temp.y_social_total_d, '') <![CDATA[ <> ]]> '' and temp.y_social_total_d <![CDATA[ <> ]]> 0)
+              OR (IFNULL(temp.y_social_total_t, '') <![CDATA[ <> ]]> '' and temp.y_social_total_t <![CDATA[ <> ]]> 0))
+        </if>
+        <if test="dataType == '公积金'">
+            AND (SELECT COUNT(1) FROM i4fvb_payment_details detail WHERE detail.client_name = temp.client_name AND
+            detail.id_no = temp.id_no AND detail.bill_year = temp.bill_year AND detail.data_type = '公积金') = 0
+            AND ((IFNULL(temp.y_provident_total_d, '') <![CDATA[ <> ]]> '' and temp.y_provident_total_d <![CDATA[ <> ]]> 0)
+            OR (IFNULL(temp.y_provident_total_t, '') <![CDATA[ <> ]]> '' and temp.y_provident_total_t <![CDATA[ <> ]]> 0))
+        </if>
+    </insert>
+
+    <update id="updatePaymentClientDetailsOneTimeFee">
+        UPDATE
+        i4fvb_payment_client_details detail
+        JOIN (
+          SELECT
+            SUM( IFNULL( y_social_total_d, 0 ) ) y_social_total_d,
+            SUM( IFNULL( y_provident_total_d, 0 ) ) y_provident_total_d,
+            client_name, entrust_unit, delegated_area, bill_year, data_type, source_id, payment_application_id
+          FROM
+            i4fvb_payment_details
+          WHERE data_type = #{dataType} AND source_id = #{sourceId}
+          GROUP BY client_name, entrust_unit, delegated_area, bill_year, data_type, source_id, payment_application_id
+        ) temp ON temp.client_name = detail.client_name
+        AND temp.entrust_unit = detail.entrust_unit
+        AND temp.delegated_area = detail.insured_area
+        AND temp.data_type = detail.data_type
+        AND temp.payment_application_id = detail.parentId
+        SET detail.source_id = temp.source_id,
+        <if test="dataType == '社保'">
+            detail.social_security = detail.social_security + temp.y_social_total_d,
+            detail.paid_amount = detail.paid_amount + temp.y_social_total_d
+        </if>
+        <if test="dataType == '公积金'">
+            detail.accumulation_fund = detail.accumulation_fund + temp.y_provident_total_d,
+            detail.paid_amount = detail.paid_amount + temp.y_provident_total_d
+        </if>
+    </update>
+
+    <update id="updatePaymentApplicationOneTimeFee">
+        UPDATE i4fvb_payment_application pa
+            JOIN (
+            SELECT
+            parentId,
+            SUM( IFNULL( social_security, 0 ) ) social_security,
+            SUM( IFNULL( accumulation_fund, 0 ) ) accumulation_fund
+            FROM
+            i4fvb_payment_client_details
+            WHERE
+            source_id = #{sourceId}
+            GROUP BY
+            parentId
+            ) temp ON temp.parentId = pa.id
+        SET
+        <if test="dataType == '社保'">
+            pa.social_security_total = temp.social_security,
+            pa.paid_in_lieu_total = temp.social_security + IFNULL(pa.accumulation_fund_total, 0) + IFNULL(pa.wages_total, 0),
+            pa.paid_amount_total = temp.social_security + IFNULL(pa.accumulation_fund_total, 0) + IFNULL(pa.wages_total, 0) +
+            IFNULL(pa.welfare_products_total, 0) + IFNULL(pa.service_fee_total, 0) + IFNULL(pa.added_tax_total, 0)
+        </if>
+        <if test="dataType == '公积金'">
+            pa.accumulation_fund_total = temp.accumulation_fund,
+            pa.paid_in_lieu_total = IFNULL(pa.social_security_total, 0) + temp.accumulation_fund + IFNULL(pa.wages_total, 0),
+            pa.paid_amount_total = IFNULL(pa.social_security_total, 0) + temp.accumulation_fund + IFNULL(pa.wages_total, 0) +
+            IFNULL(pa.welfare_products_total, 0) + IFNULL(pa.service_fee_total, 0) + IFNULL(pa.added_tax_total, 0)
+        </if>
+    </update>
+
+    <insert id="insertPaymentApplicationBySourceId">
+        INSERT INTO i4fvb_payment_application(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
+                                              modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus,
+                                              ownerDeptQueryCode, payment_type, entrust_unit, insured_area,
+                                              paid_amount_total, social_security_total, accumulation_fund_total,
+                                              wages_total, welfare_products_total, service_fee_total, added_tax_total,
+                                              paid_in_lieu_total, cost_total, bill_year, source_id, data_type)
+        SELECT MD5(UUID()),
+               #{name},
+               #{userId},
+               #{deptId},
+               #{userId},
+               #{deptId},
+               SYSDATE(),
+               #{userId},
+               SYSDATE(),
+               NULL,
+               NULL,
+               #{sequenceStatus},
+               #{queryCode},
+               '一对一',
+               entrust_unit,
+               delegated_area,
+               SUM(social_security) + SUM(accumulation_fund) + SUM(wages) + SUM(welfare_products) + SUM(service_fee) +
+               SUM(added_tax),
+               SUM(social_security),
+               SUM(accumulation_fund),
+               SUM(wages),
+               SUM(welfare_products),
+               SUM(service_fee),
+               SUM(added_tax),
+               SUM(social_security) + SUM(accumulation_fund) + SUM(wages),
+               SUM(welfare_products) + SUM(service_fee) + SUM(added_tax),
+               bill_year,
+               source_id,
+               data_type
+        FROM
+            (
+                SELECT
+                    CASE
+                        WHEN
+                                INSTR('合肥市、宿州市、淮北市、亳州市、阜阳市、蚌埠市、淮南市、滁州市、六安市、马鞍山市、安庆市、芜湖市、铜陵市、宣城市、池州市、黄山市',
+                                      delegated_area) = 0 THEN
+                            entrust_unit
+                        ELSE ''
+                        END                                                                entrust_unit,
+                    client_name,
+                    CASE
+                        WHEN INSTR('合肥市、宿州市、淮北市、亳州市、阜阳市、蚌埠市、淮南市、滁州市、六安市、马鞍山市、安庆市、芜湖市、铜陵市、宣城市、池州市、黄山市', delegated_area) =
+                             0 THEN
+                            ''
+                        ELSE delegated_area
+                        END                                                                delegated_area,
+                    source_id,
+                    bill_year,
+                    data_type,
+                    CASE
+                        WHEN IFNULL(social_security_payment, '') <![CDATA[ <> ]]> ''
+                            AND social_security_payment <![CDATA[ <> ]]> 0 THEN
+                            social_security_payment
+                        WHEN IFNULL(pension_payment_method, '') = ''
+                            AND IFNULL(medical_payment_method, '') = ''
+                            AND IFNULL(unemp_payment_method, '') = ''
+                            AND IFNULL(injury_payment_method, '') = ''
+                            AND IFNULL(fertility_payment_method, '') = ''
+                            AND IFNULL(d_medical_payment_method, '') = ''
+                            AND IFNULL(complex_payment_method, '') = ''
+                            AND IFNULL(b_injury_payment_method, '') = '' THEN
+                                IFNULL(social_security_enterprise, 0) + IFNULL(social_security_personal, 0)
+                        ELSE
+                                CASE
+                                    WHEN pension_payment_method = '代收代付'
+                                        OR IFNULL(pension_payment_method, '') = '' THEN
+                                        IFNULL(pension_enterprise_pay, 0) + IFNULL(pension_personal_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN medical_payment_method = '代收代付'
+                                        OR IFNULL(medical_payment_method, '') = '' THEN
+                                        IFNULL(medical_enterprise_pay, 0) + IFNULL(medical_personal_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN unemp_payment_method = '代收代付'
+                                        OR IFNULL(unemp_payment_method, '') = '' THEN
+                                        IFNULL(unemp_enterprise_pay, 0) + IFNULL(unemp_personal_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN injury_payment_method = '代收代付'
+                                        OR IFNULL(injury_payment_method, '') = '' THEN
+                                        IFNULL(injury_enterprise_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN fertility_payment_method = '代收代付'
+                                        OR IFNULL(fertility_payment_method, '') = '' THEN
+                                        IFNULL(fertility_enterprise_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN d_medical_payment_method = '代收代付'
+                                        OR IFNULL(d_medical_payment_method, '') = '' THEN
+                                            IFNULL(d_medical_enterprise_pay, 0) + IFNULL(d_medical_personal_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN complex_payment_method = '代收代付'
+                                        OR IFNULL(complex_payment_method, '') = '' THEN
+                                        IFNULL(complex_enterprise_pay, 0) + IFNULL(complex_personal_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN b_injury_payment_method = '代收代付'
+                                        OR IFNULL(b_injury_payment_method, '') = '' THEN
+                                        IFNULL(b_injury_enterprise_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN l_social_security_pay_method = '代收代付'
+                                        OR IFNULL(l_social_security_pay_method, '') = '' THEN
+                                            IFNULL(l_social_security_enterprise, 0) +
+                                            IFNULL(l_social_security_personal, 0)
+                                    ELSE 0
+                                    END + IFNULL(y_social_total_d, 0)
+                        END                                                                social_security,
+                    CASE
+                        WHEN IFNULL(provident_payment, '') <![CDATA[ <> ]]> ''
+                            AND provident_payment <![CDATA[ <> ]]> 0 THEN
+                            provident_payment
+                        WHEN IFNULL(provident_payment_method, '') = ''
+                            AND IFNULL(b_provident_payment_method, '') = '' THEN
+                            IFNULL(provident_enterprise, 0) + IFNULL(provident_personal, 0)
+                        ELSE
+                                CASE
+                                    WHEN provident_payment_method = '代收代付'
+                                        OR IFNULL(provident_payment_method, '') = '' THEN
+                                            IFNULL(provident_enterprise_pay, 0) + IFNULL(b_provident_enterprise_pay, 0)
+                                    ELSE 0
+                                    END +
+                                CASE
+                                    WHEN b_provident_payment_method = '代收代付'
+                                        OR IFNULL(b_provident_payment_method, '') = '' THEN
+                                            IFNULL(b_provident_enterprise_pay, 0) + IFNULL(b_provident_personal_pay, 0)
+                                    ELSE 0
+                                    END + IFNULL(y_provident_total_d, 0)
+                        END                                                                accumulation_fund,
+                    IFNULL(total_paid_wages, 0)                                            wages,
+                    IFNULL(total_welfare_products, 0)                                      welfare_products,
+                    IFNULL(service_fee_total, 0) + IFNULL(service_fee_temporary_charge, 0) service_fee,
+                    0                                                                      added_tax
+                FROM
+                    i4fvb_payment_details
+                WHERE
+                    source_id = #{sourceId}
+            ) AS a
+        GROUP BY
+            entrust_unit,
+            bill_year,
+            delegated_area,
+            source_id,
+            data_type
+    </insert>
+
+    <update id="updateEmployeeFilesPaymentApplication">
+        UPDATE i4fvb_employee_files SET
+        <if test="processType == '公积金'">g_payment_application = #{billYear}</if>
+        <if test="processType == '社保'">s_payment_application = #{billYear}</if>
+        WHERE id IN
+        <foreach collection="ids" item="item" open="(" separator="," close=")" index="index">
+            #{item}
+        </foreach>
     </update>
 </mapper>

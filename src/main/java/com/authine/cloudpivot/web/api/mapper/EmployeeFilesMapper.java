@@ -177,6 +177,7 @@ public interface EmployeeFilesMapper {
 
     /**
      * 根据员工订单id获取员工
+     *
      * @param id
      * @return
      */
@@ -189,4 +190,13 @@ public interface EmployeeFilesMapper {
      * @return
      */
     List<Bill> getNoCompareBills(String idNo);
+
+    /**
+     * 根据账单年月，证件号码获取薪资收费账单
+     *
+     * @param billYear
+     * @param idNo
+     * @return 薪资收费账单
+     */
+    List<PayrollBill> getPayrollBills(String billYear, String idNo);
 }

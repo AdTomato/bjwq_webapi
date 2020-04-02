@@ -22,6 +22,7 @@ public class ServiceChargeUnitPrice {
     private String areaDetails;
     private Double serviceChargeUnitPrice;
     private Double riskManagementFee;
+    private Double totalWelfareProducts;
     private Double vatTaxes;
     private Double outsourcingManagementFee;
     private Double businessTax;

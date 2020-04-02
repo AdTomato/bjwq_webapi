@@ -723,7 +723,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     public void rejectImport(String fileName, String code, String userId,
                              WorkflowInstanceFacade workflowInstanceFacade) throws Exception {
         // 读取文件信息
-        List <String[]> fileList = ExcelUtils.readFile(fileName, 0, 0, 4);
+        List <String[]> fileList = ExcelUtils.readFile(fileName);
 
         if (fileList != null && fileList.size() > 2) {
             Map<String, Integer> locationMap = CommonUtils.getImportLocation(Arrays.asList(fileList.get(0)));
@@ -738,7 +738,6 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
             String sourceId = UUID.randomUUID().toString().replaceAll("-", "");
             List<Map<String, Object>> dataList = new ArrayList <>();
             Map<String, Object> data = new HashMap <>();
-            data.put("sourceId", sourceId);
             for (int i = 2; i < fileList.size(); i++) {
                 List <String> list = Arrays.asList(fileList.get(i));
                 data = new HashMap <>();

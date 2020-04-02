@@ -9,271 +9,465 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Bill extends BaseEntity {
     /**
-     * supplier	varchar(200)
-     * business_year	varchar(200)
-     * client_name	varchar(200)
-     * employee_name	varchar(200)
-     * id_no	varchar(200)
-     * unique_num	varchar(200)
-     * delegated_area	varchar(200)
+     * 主供应商
      */
     private String supplier;
+    /**
+     * 账单年月
+     */
     private String billYear;
+    /**
+     * 业务年月
+     */
     private String businessYear;
+    /**
+     * 客户名称
+     */
     private String clientName;
+    /**
+     * 雇员姓名
+     */
     private String employeeName;
+    /**
+     * 雇员证件号
+     */
     private String idNo;
+    /**
+     * 雇员唯一号
+     */
     private String uniqueNum;
+    /**
+     * 委派地区
+     */
     private String delegatedArea;
 
+
     /**
-     * pension_enterprise_base	decimal(19,6)
-     * pension_enterprise_ratio	decimal(19,6)
-     * pension_enterprise_attach	decimal(19,6)
-     * pension_enterprise_pay	decimal(19,6)
-     * pension_personal_base	decimal(19,6)
-     * pension_personal_ratio	decimal(19,6)
-     * pension_personal_attach	decimal(19,6)
-     * pension_personal_pay	decimal(19,6)
-     * pension_subtotal	decimal(19,6)
-     * pension_payment_method	varchar(200)
+     * 养老企业基数
      */
     private Double pensionEnterpriseBase;
+    /**
+     * 养老企业比例
+     */
     private Double pensionEnterpriseRatio;
+    /**
+     * 养老企业附加
+     */
     private Double pensionEnterpriseAttach;
+    /**
+     * 养老企业缴纳
+     */
     private Double pensionEnterprisePay;
+    /**
+     * 养老个人基数
+     */
     private Double pensionPersonalBase;
+    /**
+     * 养老个人比例
+     */
     private Double pensionPersonalRatio;
+    /**
+     * 养老个人附加
+     */
     private Double pensionPersonalAttach;
+    /**
+     * 养老个人缴纳
+     */
     private Double pensionPersonalPay;
+    /**
+     * 养老缴纳小计
+     */
     private Double pensionSubtotal;
+    /**
+     * 养老支付方式
+     */
     private String pensionPaymentMethod;
 
+
     /**
-     * medical_enterprise_base	decimal(19,6)
-     * medical_enterprise_ratio	decimal(19,6)
-     * medical_enterprise_attach	decimal(19,6)
-     * medical_enterprise_pay	decimal(19,6)
-     * medical_personal_base	decimal(19,6)
-     * medical_personal_ratio	decimal(19,6)
-     * medical_personal_attach	decimal(19,6)
-     * medical_personal_pay	decimal(19,6)
-     * medical_subtotal	decimal(19,6)
-     * medical_payment_method	varchar(200)
+     * 医疗企业基数
      */
     private Double medicalEnterpriseBase;
+    /**
+     * 医疗企业比例
+     */
     private Double medicalEnterpriseRatio;
+    /**
+     * 医疗企业附加
+     */
     private Double medicalEnterpriseAttach;
+    /**
+     * 医疗企业缴纳
+     */
     private Double medicalEnterprisePay;
+    /**
+     * 医疗个人基数
+     */
     private Double medicalPersonalBase;
+    /**
+     * 医疗个人比例
+     */
     private Double medicalPersonalRatio;
+    /**
+     * 医疗个人附加
+     */
     private Double medicalPersonalAttach;
+    /**
+     * 医疗个人缴纳
+     */
     private Double medicalPersonalPay;
+    /**
+     * 医疗缴纳小计
+     */
     private Double medicalSubtotal;
+    /**
+     * 医疗支付方式
+     */
     private String medicalPaymentMethod;
 
+
     /**
-     * unemp_enterprise_base	decimal(19,6)
-     * unemp_enterprise_ratio	decimal(19,6)
-     * unemp_enterprise_attach	decimal(19,6)
-     * unemp_enterprise_pay	decimal(19,6)
-     * unemp_personal_base	decimal(19,6)
-     * unemp_personal_ratio	decimal(19,6)
-     * unemp_personal_attach	decimal(19,6)
-     * unemp_personal_pay	decimal(19,6)
-     * unemp_subtotal	decimal(19,6)
-     * unemp_payment_method	varchar(200)
+     * 失业企业基数
      */
     private Double unempEnterpriseBase;
+    /**
+     * 失业企业比例
+     */
     private Double unempEnterpriseRatio;
+    /**
+     * 失业企业附加
+     */
     private Double unempEnterpriseAttach;
+    /**
+     * 失业企业缴纳
+     */
     private Double unempEnterprisePay;
+    /**
+     * 失业个人基数
+     */
     private Double unempPersonalBase;
+    /**
+     * 失业个人比例
+     */
     private Double unempPersonalRatio;
+    /**
+     * 失业个人附加
+     */
     private Double unempPersonalAttach;
+    /**
+     * 失业个人缴纳
+     */
     private Double unempPersonalPay;
+    /**
+     * 失业缴纳小计
+     */
     private Double unempSubtotal;
+    /**
+     * 失业支付方式
+     */
     private String unempPaymentMethod;
 
+
     /**
-     * injury_enterprise_base	decimal(19,6)
-     * injury_enterprise_ratio	decimal(19,6)
-     * injury_enterprise_attach	decimal(19,6)
-     * injury_enterprise_pay	decimal(19,6)
-     * injury_subtotal	decimal(19,6)
-     * injury_payment_method	varchar(200)
+     * 工伤企业基数
      */
     private Double injuryEnterpriseBase;
+    /**
+     * 工伤企业比例
+     */
     private Double injuryEnterpriseRatio;
+    /**
+     * 工伤企业附加
+     */
     private Double injuryEnterpriseAttach;
+    /**
+     * 工伤企业缴纳
+     */
     private Double injuryEnterprisePay;
+    /**
+     * 工伤缴纳小计
+     */
     private Double injurySubtotal;
+    /**
+     * 工伤支付方式
+     */
     private String injuryPaymentMethod;
 
+
     /**
-     * fertility_enterprise_base	decimal(19,6)
-     * fertility_enterprise_ratio	decimal(19,6)
-     * fertility_enterprise_attach	decimal(19,6)
-     * fertility_enterprise_pay	decimal(19,6)
-     * fertility_subtotal	decimal(19,6)
-     * fertility_payment_method	varchar(200)
+     * 生育企业基数
      */
     private Double fertilityEnterpriseBase;
+    /**
+     * 生育企业比例
+     */
     private Double fertilityEnterpriseRatio;
+    /**
+     * 生育企业附加
+     */
     private Double fertilityEnterpriseAttach;
+    /**
+     * 生育企业缴纳
+     */
     private Double fertilityEnterprisePay;
+    /**
+     * 生育缴纳小计
+     */
     private Double fertilitySubtotal;
+    /**
+     * 生育支付方式
+     */
     private String fertilityPaymentMethod;
 
-    /**
-     * d_medical_enterprise_base	decimal(19,6)
-     * d_medical_enterprise_ratio	decimal(19,6)
-     * d_medical_enterprise_attach	decimal(19,6)
-     * d_medical_enterprise_pay	decimal(19,6)
-     * d_medical_personal_base	decimal(19,6)
-     * d_medical_personal_ratio	decimal(19,6)
-     * d_medical_personal_attach	decimal(19,6)
-     * d_medical_personal_pay	decimal(19,6)
-     * d_medical_subtotal	decimal(19,6)
-     * d_medical_payment_method	varchar(200)
-     */
-    private Double dMedicalEnterpriseBase;
-    private Double dMedicalEnterpriseRatio;
-    private Double dMedicalEnterpriseAttach;
-    private Double dMedicalEnterprisePay;
-    private Double dMedicalPersonalBase;
-    private Double dMedicalPersonalRatio;
-    private Double dMedicalPersonalAttach;
-    private Double dMedicalPersonalPay;
-    private Double dMedicalSubtotal;
-    private String dMedicalPaymentMethod;
 
     /**
-     * complex_enterprise_base	decimal(19,6)
-     * complex_enterprise_ratio	decimal(19,6)
-     * complex_enterprise_attach	decimal(19,6)
-     * complex_enterprise_pay	decimal(19,6)
-     * complex_personal_base	decimal(19,6)
-     * complex_personal_ratio	decimal(19,6)
-     * complex_personal_attach	decimal(19,6)
-     * complex_personal_pay	decimal(19,6)
-     * complex_subtotal	decimal(19,6)
-     * complex_payment_method	varchar(200)
+     * 大病医疗企业基数
+     */
+    private Double dMedicalEnterpriseBase;
+    /**
+     * 大病医疗企业比例
+     */
+    private Double dMedicalEnterpriseRatio;
+    /**
+     * 大病医疗企业附加
+     */
+    private Double dMedicalEnterpriseAttach;
+    /**
+     * 大病医疗企业缴纳
+     */
+    private Double dMedicalEnterprisePay;
+    /**
+     * 大病医疗个人基数
+     */
+    private Double dMedicalPersonalBase;
+    /**
+     * 大病医疗个人比例
+     */
+    private Double dMedicalPersonalRatio;
+    /**
+     * 大病医疗个人附加
+     */
+    private Double dMedicalPersonalAttach;
+    /**
+     * 大病医疗个人缴纳
+     */
+    private Double dMedicalPersonalPay;
+    /**
+     * 大病医疗缴纳小计
+     */
+    private Double dMedicalSubtotal;
+    /**
+     * 大病医疗支付方式
+     */
+    private String dMedicalPaymentMethod;
+
+
+    /**
+     * 综合企业基数
      */
     private Double complexEnterpriseBase;
+    /**
+     * 综合企业比例
+     */
     private Double complexEnterpriseRatio;
+    /**
+     * 综合企业附加
+     */
     private Double complexEnterpriseAttach;
+    /**
+     * 综合企业缴纳
+     */
     private Double complexEnterprisePay;
+    /**
+     * 综合个人基数
+     */
     private Double complexPersonalBase;
+    /**
+     * 综合个人比例
+     */
     private Double complexPersonalRatio;
+    /**
+     * 综合个人附加
+     */
     private Double complexPersonalAttach;
+    /**
+     * 综合个人缴纳
+     */
     private Double complexPersonalPay;
+    /**
+     * 综合缴纳小计
+     */
     private Double complexSubtotal;
+    /**
+     * 综合支付方式
+     */
     private String complexPaymentMethod;
 
     /**
-     * b_injury_enterprise_base	decimal(19,6)
-     * b_injury_enterprise_ratio	decimal(19,6)
-     * b_injury_enterprise_attach	decimal(19,6)
-     * b_injury_enterprise_pay	decimal(19,6)
-     * b_injury_subtotal	decimal(19,6)
-     * b_injury_payment_method	varchar(200)
+     * 补充工伤企业基数
      */
     private Double bInjuryEnterpriseBase;
+    /**
+     * 补充工伤企业比例
+     */
     private Double bInjuryEnterpriseRatio;
+    /**
+     * 补充工伤企业附加
+     */
     private Double bInjuryEnterpriseAttach;
+    /**
+     * 补充工伤企业缴纳
+     */
     private Double bInjuryEnterprisePay;
+    /**
+     * 补充工伤支付小计
+     */
     private Double bInjurySubtotal;
+    /**
+     * 补充工伤支付方式
+     */
     private String bInjuryPaymentMethod;
 
     /**
-     * social_security_enterprise	decimal(19,6)
-     * social_security_personal	decimal(19,6)
-     * social_security_total	decimal(19,6)
+     * 社保企业缴纳合计
      */
     private Double socialSecurityEnterprise;
+    /**
+     * 社保个人缴纳合计
+     */
     private Double socialSecurityPersonal;
+    /**
+     * 社保缴纳合计
+     */
     private Double socialSecurityTotal;
 
-    /**
-     * provident_enterprise_base	decimal(19,6)
-     * provident_enterprise_ratio	decimal(19,6)
-     * provident_enterprise_pay	decimal(19,6)
-     * provident_personal_base	decimal(19,6)
-     * provident_personal_ratio	decimal(19,6)
-     * provident_personal_pay	decimal(19,6)
-     * provident_subtotal	decimal(19,6)
-     * provident_payment_method	varchar(200)
-     */
-    private Double providentEnterpriseBase;
-    private Double providentEnterpriseRatio;
-    private Double providentEnterprisePay;
-    private Double providentPersonalBase;
-    private Double providentPersonalRatio;
-    private Double providentPersonalPay;
-    private Double providentSubtotal;
-    private String providentPaymentMethod;
 
     /**
-     * b_provident_enterprise_base	decimal(19,6)
-     * b_provident_enterprise_ratio	decimal(19,6)
-     * b_provident_enterprise_pay	decimal(19,6)
-     * b_provident_personal_base	decimal(19,6)
-     * b_provident_personal_ratio	decimal(19,6)
-     * b_provident_personal_pay	decimal(19,6)
-     * b_provident_subtotal	decimal(19,6)
-     * b_provident_payment_method	varchar(200)
+     * 公积金企业基数
+     */
+    private Double providentEnterpriseBase;
+    /**
+     * 公积金企业比例
+     */
+    private Double providentEnterpriseRatio;
+    /**
+     * 公积金企业缴纳
+     */
+    private Double providentEnterprisePay;
+    /**
+     * 公积金个人基数
+     */
+    private Double providentPersonalBase;
+    /**
+     * 公积金个人比例
+     */
+    private Double providentPersonalRatio;
+    /**
+     * 公积金个人比例
+     */
+    private Double providentPersonalPay;
+    /**
+     * 公积金缴纳小计
+     */
+    private Double providentSubtotal;
+    /**
+     * 公积金支付方式
+     */
+    private String providentPaymentMethod;
+
+
+    /**
+     * 补充公积金企业基数
      */
     private Double bProvidentEnterpriseBase;
+    /**
+     * 补充公积金企业比例
+     */
     private Double bProvidentEnterpriseRatio;
+    /**
+     * 补充公积金企业缴纳
+     */
     private Double bProvidentEnterprisePay;
+    /**
+     * 补充公积金个人基数
+     */
     private Double bProvidentPersonalBase;
+    /**
+     * 补充公积金个人比例
+     */
     private Double bProvidentPersonalRatio;
+    /**
+     * 补充公积金个人缴纳
+     */
     private Double bProvidentPersonalPay;
+    /**
+     * 补充公积金缴纳小计
+     */
     private Double bProvidentSubtotal;
+    /**
+     * 补充公积金支付方式
+     */
     private String bProvidentPaymentMethod;
 
     /**
-     * provident_enterprise	decimal(19,6)
-     * provident_personal	decimal(19,6)
-     * provident_total	decimal(19,6)
+     * 公积金企业缴纳合计
      */
     private Double providentEnterprise;
+    /**
+     * 公积金个人缴纳合计
+     */
     private Double providentPersonal;
+    /**
+     * 公积金缴纳合计
+     */
     private Double providentTotal;
 
     /**
-     * y_toll_total	decimal(19,6)
-     * y_toll_remark	varchar(200)
+     * 一次性收费合计
      */
     private Double yTollTotal;
+    /**
+     * 一次性收费备注
+     */
     private String yTollRemark;
 
     /**
-     * y_social_enterprise_d	decimal(19,6)
-     * y_social_personal_d	decimal(19,6)
-     * y_social_total_d	decimal(19,6)
+     * 一次性社保企业-代收代付
      */
     private Double ySocialEnterpriseD;
+    /**
+     * 一次性社保个人-代收代付
+     */
     private Double ySocialPersonalD;
+    /**
+     * 一次性社保合计-代收代付
+     */
     private Double ySocialTotalD;
 
     /**
-     * y_provident_enterprise_d	decimal(19,6)
-     * y_provident_personal_d	decimal(19,6)
-     * y_provident_total_d	decimal(19,6)
+     * 一次性公积金企业-代收代付
      */
     private Double yProvidentEnterpriseD;
+    /**
+     * 一次性公积金个人-代收代付
+     */
     private Double yProvidentPersonalD;
+    /**
+     * 一次性公积金合计-代收代付
+     */
     private Double yProvidentTotalD;
 
     /**
-     * y_social_enterprise_t	decimal(19,6)
-     * y_social_personal_t	decimal(19,6)
-     * y_social_total_t	decimal(19,6)
+     * 一次性社保企业-托收
      */
     private Double ySocialEnterpriseT;
+    /**
+     * 一次性社保个人-托收
+     */
     private Double ySocialPersonalT;
+    /**
+     * 一次性社保合计-托收
+     */
     private Double ySocialTotalT;
 
 
@@ -294,7 +488,10 @@ public class Bill extends BaseEntity {
      * 社保公积金合计
      */
     private Double socialProvidentTotal;
-
+    /**
+     * 服务费
+     */
+    private Double serviceFee;
     /**
      * 增值税税费
      */

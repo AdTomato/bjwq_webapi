@@ -181,4 +181,13 @@ public interface EmployeeFilesService {
      * @return
      */
     List<Bill> getNoCompareBills(String idNo);
+
+    /**
+     * 根据账单年月，证件号码获取薪资收费账单
+     *
+     * @param billYear: 账单年月
+     * @param idNo:     证件号码
+     * @return 薪资收费账单
+     */
+    PayrollBill getPayrollBill(String billYear, String idNo);
 }

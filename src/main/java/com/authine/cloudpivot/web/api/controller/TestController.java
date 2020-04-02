@@ -1,18 +1,17 @@
 package com.authine.cloudpivot.web.api.controller;
 
+import com.authine.cloudpivot.engine.api.model.organization.DepartmentModel;
+import com.authine.cloudpivot.engine.api.model.organization.UserModel;
 import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
 import com.authine.cloudpivot.web.api.dto.EmployeeFilesDto;
 import com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto;
+import com.authine.cloudpivot.web.api.dto.EnquiryReceivableDto;
 import com.authine.cloudpivot.web.api.dto.SalesContractDto;
 import com.authine.cloudpivot.web.api.entity.*;
-import com.authine.cloudpivot.web.api.mapper.TableMapper;
-import com.authine.cloudpivot.web.api.service.BatchEvacuationService;
-import com.authine.cloudpivot.web.api.service.BatchPreDispatchService;
-import com.authine.cloudpivot.web.api.service.EmployeeFilesService;
-import com.authine.cloudpivot.web.api.service.SalesContractService;
-import com.authine.cloudpivot.web.api.utils.DoubleUtils;
-import com.authine.cloudpivot.web.api.utils.SendSmsUtils;
+import com.authine.cloudpivot.web.api.service.*;
+import com.authine.cloudpivot.web.api.service.impl.ClientServiceImpl;
+import com.authine.cloudpivot.web.api.utils.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.Resource;
 import java.io.IOException;
 
 import java.util.*;
@@ -34,8 +32,8 @@ import java.util.*;
 @RequestMapping("/controller/test")
 public class TestController extends BaseController {
 
-    @Resource
-    TableMapper tableMapper;
+    @Autowired
+    ClientServiceImpl clientService;
 
     @Autowired
     RestTemplate restTemplate;
@@ -51,6 +49,9 @@ public class TestController extends BaseController {
 
     @Autowired
     SalesContractService salesContractService;
+
+    @Autowired
+    EnquiryReceivableService enquiryReceivableService;
 
     @RequestMapping("/getProperty")
     public void getProperty() {
@@ -80,8 +81,11 @@ public class TestController extends BaseController {
 
     @GetMapping("/test")
     public Object test() throws IOException {
-        int i = SendSmsUtils.sendSms("您的验证码为：12345，有效时间为3分钟", "13084042075");
-        return i;
+//        int i = SendSmsUtils.sendSms("您的验证码为：12345，有效时间为3分钟", "13084042075");
+        List<String> ids = Arrays.asList("ad8a699cfc6d457db03a96dce1d1d92c");
+        List<EnquiryReceivableDto> enquiryReceivableDtoByIds = enquiryReceivableService.getEnquiryReceivableDtoByIds(ids);
+
+        return enquiryReceivableDtoByIds;
     }
 
     @GetMapping("/getEmployeeFiles")
@@ -95,41 +99,124 @@ public class TestController extends BaseController {
         // 根据账单日获取销售合同，用于生成账单
 //        List<SalesContractDto> salesContractByBillDay = salesContractService.getSalesContractByBillDay(bill);
         List<SalesContractDto> salesContractByBillDay = salesContractService.getSalesContractByGenerateBillDate(null, null);
-
+        UserModel user = this.getOrganizationFacade().getUser(UserUtils.getUserId(getUserId()));
+        DepartmentModel department = this.getOrganizationFacade().getDepartment(user.getDepartmentId());
         for (SalesContractDto salesContractDto : salesContractByBillDay) {
             String clientName = salesContractDto.getClientName();  // 客户名称
             String businessType = salesContractDto.getBusinessType();  // 业务类型
             String billType = salesContractDto.getBillType();  // 账单类型
             String employeeNature = getEmployeeNature(businessType);  // 员工性质
             List<EmployeeFilesDto> employeeFilesDto = employeeFilesService.getEmployeeFilesCanGenerateBillByClientName(clientName, employeeNature);
-            generateBill(billType, employeeFilesDto, salesContractDto);  // 生成账单数据
+            generateBill(user, department, billType, employeeFilesDto, salesContractDto);  // 生成账单数据
         }
         return null;
     }
 
     /**
-     * @param billType          :         账单类型 预收，预估，实收
-     * @param employeeFilesDto  : 员工档案信息
-     * @param salesContractDto: 销售合同
+     * @param user             : 人员
+     * @param department       : 部门
+     * @param billType         : 账单类型 预收，预估，实收
+     * @param employeeFilesDto : 员工档案信息
+     * @param salesContractDto : 销售合同
      * @Author: wangyong
      * @Date: 2020/3/18 23:01
      * @return: void
      * @Description: 生成员工账单
      */
-    private void generateBill(String billType, List<EmployeeFilesDto> employeeFilesDto, SalesContractDto salesContractDto) {
-
+    private void generateBill(UserModel user, DepartmentModel department, String billType, List<EmployeeFilesDto> employeeFilesDto, SalesContractDto salesContractDto) {
+        List<Bill> bills = null;
         switch (billType) {
             case "预收":
-                generateAdvanceReceiptBillData(employeeFilesDto, salesContractDto);
+                bills = generateAdvanceReceiptBillData(user, department, employeeFilesDto, salesContractDto);
                 break;
             case "预估":
-                generateEstimateBillData(employeeFilesDto, salesContractDto);
+                bills = generateEstimateBillData(user, department, employeeFilesDto, salesContractDto);
                 break;
         }
 
     }
 
     /**
+     * @param user
+     * @param department
+     * @param employeeFilesDtos : 员工档案
+     * @param salesContractDto  : 销售合同
+     * @Author: wangyong
+     * @Date: 2020/3/18 23:03
+     * @return: void
+     * @Description: 生成预收数据
+     */
+    private List<Bill> generateAdvanceReceiptBillData(UserModel user, DepartmentModel department, List<EmployeeFilesDto> employeeFilesDtos, SalesContractDto salesContractDto) {
+        // 预收从当月开始
+        String billCycle = salesContractDto.getBillCycle();
+        // 获取预收月数
+        int monthNum = getMonthNum(billCycle);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        // 账单起始月
+        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1);
+        String billYear = getYearAndMonth(calendar); // 账单年月
+
+
+
+        // 账单结束月
+        calendar.add(Calendar.MONTH, monthNum);
+        billYear += getYearAndMonth(calendar);
+        List<Bill> result = new ArrayList<>();
+        for (EmployeeFilesDto employeeFilesDto : employeeFilesDtos) {
+            PayrollBill payrollBill = employeeFilesService.getPayrollBill(billYear, employeeFilesDto.getIdNo());
+            calendar.setTime(new Date());
+            calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1);
+            if (employeeFilesDto.getIsOldEmployee() == 0) {
+                // 不是老员工，是新员工，需要生成之前没有生成的数据
+                if (employeeFilesDto.getSocialSecurityChargeStart() != null || employeeFilesDto.getProvidentFundChargeStart() != null) {
+                    // 社保起缴时间或公积金起缴时间不为空
+                    Calendar socialSecurityChargeStart = Calendar.getInstance();
+                    int socialSecurityChargeNum = 0;
+                    Calendar providentFundChargeStart = Calendar.getInstance();
+                    int providentFundChargeNum = 0;
+                    if (employeeFilesDto.getSocialSecurityChargeStart() != null) {
+                        socialSecurityChargeStart.setTime(employeeFilesDto.getSocialSecurityChargeStart());
+                        socialSecurityChargeNum = (calendar.get(Calendar.YEAR) - socialSecurityChargeStart.get(Calendar.YEAR)) * 12 + calendar.get(Calendar.MONTH) - socialSecurityChargeStart.get(Calendar.MONTH);
+                    }
+                    if (employeeFilesDto.getProvidentFundChargeStart() != null) {
+                        providentFundChargeStart.setTime(employeeFilesDto.getProvidentFundChargeStart());
+                        providentFundChargeNum = (calendar.get(Calendar.YEAR) - providentFundChargeStart.get(Calendar.YEAR)) * 12 + calendar.get(Calendar.MONTH) - providentFundChargeStart.get(Calendar.MONTH);
+                    }
+                    if (socialSecurityChargeNum > 0 || providentFundChargeNum > 0) {
+                        // 需要生成之前没有生成的数据
+                        result.addAll(createOldBillData(user, department, employeeFilesDto, socialSecurityChargeNum, providentFundChargeNum, billYear, 1));
+                    }
+                }
+            }
+            for (int i = 1; i <= monthNum; i++) {
+                String businessYear = getYearAndMonth(calendar);  // 业务年月
+                Bill bill = new Bill();
+                setBillBasicData(bill, employeeFilesDto, billYear, businessYear, 0, 0, 0, 0);
+                setBillOtherData(bill, employeeFilesDto, salesContractDto, calendar);
+                ServiceChargeUnitPrice serviceChargeUnitPrice = getServiceChargeUnitPrice(salesContractDto, employeeFilesDto.getSocialSecurityArea());
+                setServiceChargeData(bill, serviceChargeUnitPrice, payrollBill);
+                calendar.add(Calendar.MONTH, i);
+                SystemDataSetUtils.dataSet(user, department, employeeFilesDto.getEmployeeName(), Constants.COMPLETED_STATUS, bill);
+                result.add(bill);
+            }
+            if (result.size() != 0) {
+                List<Bill> noCompareBills = employeeFilesService.getNoCompareBills(result.get(0).getIdNo());
+                if (noCompareBills != null && noCompareBills.size() != 0) {
+                    // 没有对比的账单不为空
+                    result.addAll(compareBills(user, department, result.get(0), noCompareBills));
+                }
+            }
+        }
+
+        return result;
+    }
+
+
+    /**
+     * @param user
+     * @param department
      * @param employeeFilesDtos : 员工档案
      * @param salesContractDto  : 销售合同
      * @Author: wangyong
@@ -137,41 +224,157 @@ public class TestController extends BaseController {
      * @return: void
      * @Description: 生成预估数据
      */
-    private void generateEstimateBillData(List<EmployeeFilesDto> employeeFilesDtos, SalesContractDto salesContractDto) {
+    private List<Bill> generateEstimateBillData(UserModel user, DepartmentModel department, List<EmployeeFilesDto> employeeFilesDtos, SalesContractDto salesContractDto) {
         // 预估下月的数据
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1);
-        String billYear = getYearAndMonth(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1); // 账单年月
+        String billYear = getYearAndMonth(calendar); // 账单年月
         calendar.add(Calendar.MONTH, 1);
-        String businessYear = getYearAndMonth(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1);  // 业务年月
+        String businessYear = getYearAndMonth(calendar);  // 业务年月
         List<Bill> bills = new ArrayList<>();
         for (EmployeeFilesDto employeeFilesDto : employeeFilesDtos) {
+            if (employeeFilesDto.getIsOldEmployee() == 0) {
+                // 是老员工
+                // 不是老员工，是新员工，需要生成之前没有生成的数据
+                if (employeeFilesDto.getSocialSecurityChargeStart() != null || employeeFilesDto.getProvidentFundChargeStart() != null) {
+                    // 社保起缴时间或公积金起缴时间不为空
+                    Calendar socialSecurityChargeStart = Calendar.getInstance();
+                    int socialSecurityChargeNum = 0;
+                    Calendar providentFundChargeStart = Calendar.getInstance();
+                    int providentFundChargeNum = 0;
+                    if (employeeFilesDto.getSocialSecurityChargeStart() != null) {
+                        socialSecurityChargeStart.setTime(employeeFilesDto.getSocialSecurityChargeStart());
+                        socialSecurityChargeNum = (calendar.get(Calendar.YEAR) - socialSecurityChargeStart.get(Calendar.YEAR)) * 12 + (calendar.get(Calendar.MONTH) - socialSecurityChargeStart.get(Calendar.MONTH) + 1);
+                    }
+                    if (employeeFilesDto.getProvidentFundChargeStart() != null) {
+                        providentFundChargeStart.setTime(employeeFilesDto.getProvidentFundChargeStart());
+                        providentFundChargeNum = (calendar.get(Calendar.YEAR) - providentFundChargeStart.get(Calendar.YEAR)) * 12 + (calendar.get(Calendar.MONTH) - providentFundChargeStart.get(Calendar.MONTH) + 1);
+                    }
+                    if (socialSecurityChargeNum > 0 || providentFundChargeNum > 0) {
+                        // 需要生成之前没有生成的数据
+                        bills.addAll(createOldBillData(user, department, employeeFilesDto, socialSecurityChargeNum, providentFundChargeNum, billYear, 0));
+                    }
+                }
+                employeeFilesDto.setIsOldEmployee(1);
+            }
+
+            if (employeeFilesDto.getQuitDate() != null) {
+                // 离职
+                // 离职日期
+                Calendar quitCalendar = Calendar.getInstance();
+                quitCalendar.setTime(employeeFilesDto.getQuitDate());
+                Calendar nowCalendar = Calendar.getInstance();
+                nowCalendar.setTime(new Date());
+                nowCalendar.add(Calendar.MONTH, 1);  // 账单生成日
+                int monthNum = (nowCalendar.get(Calendar.YEAR) - quitCalendar.get(Calendar.YEAR)) * 12 + (nowCalendar.get(Calendar.MONTH) - nowCalendar.get(Calendar.MONTH));
+                if (monthNum <= 0) {
+                    // 当前时间在离职时间之内
+                    // 判断社保截止时间和公积金截止时间在不在账单期之内
+                    // 社保截止时间
+                    int socialSecurityEndMonthNum = -1;
+                    if (employeeFilesDto.getSocialSecurityChargeEnd() != null) {
+                        Calendar socialSecurityEndCalendar = Calendar.getInstance();
+                        socialSecurityEndCalendar.setTime(employeeFilesDto.getSocialSecurityChargeEnd());
+                        // 获取社保截止时间和下个账期之间的月份差
+                        socialSecurityEndMonthNum = (socialSecurityEndCalendar.get(Calendar.YEAR) - nowCalendar.get(Calendar.YEAR)) * 12 - (socialSecurityEndCalendar.get(Calendar.MONTH) - nowCalendar.get(Calendar.MONTH));
+                    }
+
+                    // 公积金截止时间
+                    int providentFundEndMonthNum = -1;
+                    if (employeeFilesDto.getProvidentFundChargeEnd() != null) {
+                        Calendar providentFundEndCalendar = Calendar.getInstance();
+                        providentFundEndCalendar.setTime(employeeFilesDto.getProvidentFundChargeEnd());
+                        // 获取公积金截止时间和下个账期之间的月份差
+                        providentFundEndMonthNum = (providentFundEndCalendar.get(Calendar.YEAR) - nowCalendar.get(Calendar.YEAR)) * 12 - (providentFundEndCalendar.get(Calendar.MONTH) - nowCalendar.get(Calendar.MONTH));
+                    }
+                    if (socialSecurityEndMonthNum == -1 && providentFundEndMonthNum == -1) {
+                        // 无需在生成账单
+                        // 停止以后生成账单
+                        employeeFilesDto.setStopGenerateBill(1);
+                        continue;
+                    }
+                    if ((socialSecurityEndMonthNum == 0 && providentFundEndMonthNum == 0) || (socialSecurityEndMonthNum == -1 && providentFundEndMonthNum == 0) && (socialSecurityEndMonthNum == 0 && providentFundEndMonthNum == -1)) {
+                        // 停止下月生成账单
+                        employeeFilesDto.setStopGenerateBill(1);
+                    }
+                    // 生成离职订单
+                    bills.addAll(createQuitBillData(user, department, employeeFilesDto, salesContractDto, socialSecurityEndMonthNum, providentFundEndMonthNum, billYear, nowCalendar));
+                    continue;
+                }
+
+            }
+
             Bill bill = new Bill();
             setBillBasicData(bill, employeeFilesDto, billYear, businessYear, 0, 0, 0, 0);
             setBillOtherData(bill, employeeFilesDto, salesContractDto, calendar);
+            // 设置系统数据
+            SystemDataSetUtils.dataSet(user, department, bill.getName(), Constants.COMPLETED_STATUS, bill);
             List<Bill> noCompareBills = employeeFilesService.getNoCompareBills(bill.getIdNo());
             if (noCompareBills != null && noCompareBills.size() != 0) {
                 // 没有对比的账单不为空
-                compareBills(bill, noCompareBills);
+                bills.addAll(compareBills(user, department, bill, noCompareBills));
             }
+            bills.add(bill);
         }
-
+        return bills;
     }
 
     /**
-     * @param bill:           当前账单
-     * @param noCompareBills: 历史账单
+     * @param employeeFilesDto:          员工档案
+     * @param socialSecurityEndMonthNum: 社保需要生成的月份
+     * @param providentFundEndMonthNum:  公积金需要生成的月份
+     * @Author: wangyong
+     * @Date: 2020/4/2 9:49
+     * @return: java.util.List<com.authine.cloudpivot.web.api.entity.Bill>
+     * @Description: 生成离职账单
+     */
+    private List<Bill> createQuitBillData(UserModel user, DepartmentModel department, EmployeeFilesDto employeeFilesDto, SalesContractDto salesContractDto, int socialSecurityEndMonthNum, int providentFundEndMonthNum, String billYear, Calendar businessCalendar) {
+        List<Bill> bills = new LinkedList<>();
+        int maxMonthNum = Math.max(socialSecurityEndMonthNum, providentFundEndMonthNum);
+        int num = 0;
+        List<SocialSecurityFundDetail> socialSecurityFundDetails = employeeFilesDto.getEmployeeOrderFormDto().getSocialSecurityFundDetails();
+        for (int i = 0; i < maxMonthNum; i++) {
+            PayrollBill payrollBill = employeeFilesService.getPayrollBill(billYear, employeeFilesDto.getIdNo());
+            businessCalendar.add(Calendar.MONTH, i);
+            Bill bill = new Bill();
+            String businessYear = getYearAndMonth(businessCalendar);
+            setBillBasicData(bill, employeeFilesDto, billYear, businessYear, 0, 0, 0, 0);
+            SystemDataSetUtils.dataSet(user, department, employeeFilesDto.getEmployeeName(), Constants.COMPLETED_STATUS, bill);
+            for (SocialSecurityFundDetail socialSecurityFundDetail : socialSecurityFundDetails) {
+                if (i < socialSecurityEndMonthNum) {
+                    // 需要生成社保
+                    generateSocialSecurityData(socialSecurityFundDetail, bill, null);
+                }
+                if (i < providentFundEndMonthNum) {
+                    // 需要生成公积金
+                    generateProvidentFund(socialSecurityFundDetail, bill,  null);
+                }
+            }
+            setBillOtherData(bill, employeeFilesDto, salesContractDto, null);
+            ServiceChargeUnitPrice serviceChargeUnitPrice = getServiceChargeUnitPrice(salesContractDto, employeeFilesDto.getSocialSecurityArea());
+            setServiceChargeData(bill, serviceChargeUnitPrice, payrollBill);
+            bills.add(bill);
+        }
+
+        return bills;
+    }
+
+    /**
+     * @param user
+     * @param department
+     * @param bill           :           当前账单
+     * @param noCompareBills : 历史账单
      * @Author: wangyong
      * @Date: 2020/4/1 13:37
      * @return: void
      * @Description: 对比历史账单，查看是否有差异，返回有差异的订单
      */
-    private List<Bill> compareBills(Bill bill, List<Bill> noCompareBills) {
+    private List<Bill> compareBills(UserModel user, DepartmentModel department, Bill bill, List<Bill> noCompareBills) {
         List<Bill> result = new ArrayList<>();
         if (noCompareBills != null || noCompareBills.size() != 0) {
             for (Bill noCompareBill : noCompareBills) {
-                Bill b = compare(bill, noCompareBill);
+                Bill b = compare(user, department, bill, noCompareBill);
                 if (b != null) {
                     result.add(b);
                 }
@@ -181,18 +384,23 @@ public class TestController extends BaseController {
     }
 
     /**
-     * @param nowBill:       当前账单
-     * @param noCompareBill: 历史账单
+     * @param user
+     * @param department
+     * @param nowBill       :       当前账单
+     * @param noCompareBill : 历史账单
      * @Author: wangyong
      * @Date: 2020/4/1 16:01
      * @return: com.authine.cloudpivot.web.api.entity.Bill
      * @Description: 对比账单产生差异
      */
-    private Bill compare(Bill nowBill, Bill noCompareBill) {
+    private Bill compare(UserModel user, DepartmentModel department, Bill nowBill, Bill noCompareBill) {
         Bill bill = new Bill();
         boolean flag = false;
 
         BeanUtils.copyProperties(nowBill, bill);
+        // 设置系统数据
+        SystemDataSetUtils.dataSet(user, department, bill.getName(), Constants.COMPLETED_STATUS, bill);
+
         // 业务年月
         bill.setBusinessYear(noCompareBill.getBusinessYear());
 
@@ -347,6 +555,10 @@ public class TestController extends BaseController {
         bill.setSocialProvidentTotal(bill.getSocialSecurityTotal() + bill.getProvidentTotal());
         // 合计收费
         bill.setTotalCharge(bill.getSocialProvidentTotal());
+        bill.setWhetherDefine(1);
+        bill.setWhetherDifferenceData(1);
+        bill.setWhetherCompare(1);
+        bill.setIsLock(1);
         if (flag) {
             // 有差异，返回当前的差异账单
             return bill;
@@ -354,7 +566,6 @@ public class TestController extends BaseController {
             return null;
         }
     }
-
 
 
     /**
@@ -382,12 +593,67 @@ public class TestController extends BaseController {
             // 生成公积金数据
             generateProvidentFund(socialSecurityFundDetail, bill, calendar);
         }
-        generateOtherData(bill);
     }
 
-    private void generateOtherData(Bill bill) {
+    private void setServiceChargeData(Bill bill, ServiceChargeUnitPrice serviceChargeUnitPrice, PayrollBill payrollBill) {
+        // 社保缴纳合计
         bill.setSocialSecurityTotal(bill.getSocialSecurityEnterprise() + bill.getSocialSecurityPersonal());
+        // 公积金缴纳合计
         bill.setProvidentTotal(bill.getProvidentEnterprise() + bill.getProvidentPersonal());
+        // 社保公积金合计
+        bill.setSocialProvidentTotal(bill.getSocialSecurityTotal() + bill.getProvidentTotal());
+
+        if (serviceChargeUnitPrice != null) {
+            // 服务费
+            bill.setServiceFee(DoubleUtils.nullToDouble(serviceChargeUnitPrice.getServiceChargeUnitPrice()));
+            // 增值税
+            double vatTaxes = DoubleUtils.nullToDouble(serviceChargeUnitPrice.getVatTaxes());
+            if (vatTaxes < 1) {
+                bill.setVatTax(DoubleUtils.doubleRound(vatTaxes * bill.getServiceFee(), 2));
+            } else {
+                bill.setVatTax(serviceChargeUnitPrice.getVatTaxes());
+            }
+            // 福利产品总额
+            double totalWelfareProducts = DoubleUtils.nullToDouble(serviceChargeUnitPrice.getTotalWelfareProducts());
+            bill.setTotalWelfareProducts(totalWelfareProducts);
+
+            // 风险管理费
+            double riskManagementFee = DoubleUtils.nullToDouble(serviceChargeUnitPrice.getRiskManagementFee());
+            if (riskManagementFee < 1) {
+                double payable = 0D; // 应发工资
+                if (payrollBill != null) {
+                    payable = DoubleUtils.nullToDouble(payable);
+                }
+                double socialSecurityEnterprise = DoubleUtils.nullToDouble(bill.getSocialSecurityEnterprise());  // 社保企业缴纳合计
+                double socialSecurityPersonal = DoubleUtils.nullToDouble(bill.getSocialSecurityPersonal());  // 社保个人缴纳合计
+                bill.setRiskManageFee((payable + socialSecurityEnterprise + socialSecurityPersonal) * riskManagementFee);
+            } else {
+                bill.setRiskManageFee(riskManagementFee);  // 风险管理费
+            }
+            // 外包管理费
+            bill.setOutsourcingManageFee(DoubleUtils.nullToDouble(serviceChargeUnitPrice.getOutsourcingManagementFee()));
+
+            // 营业税税费
+            double businessTax = DoubleUtils.nullToDouble(serviceChargeUnitPrice.getBusinessTax());
+            if (businessTax < 1) {
+                double payable = 0D; // 应发工资
+                if (payrollBill != null) {
+                    payable = DoubleUtils.nullToDouble(payable);
+                }
+                double socialSecurityEnterprise = DoubleUtils.nullToDouble(bill.getSocialSecurityEnterprise());  // 社保企业缴纳合计
+                double socialSecurityPersonal = DoubleUtils.nullToDouble(bill.getSocialSecurityPersonal());  // 社保个人缴纳合计
+                double riskManagementFee2 = DoubleUtils.nullToDouble(bill.getRiskManageFee());
+                double outsourcingManageFee = DoubleUtils.nullToDouble(bill.getOutsourcingManageFee());
+                bill.setBusinessTax((payable + socialSecurityEnterprise + socialSecurityPersonal + riskManagementFee2 + outsourcingManageFee) * businessTax);
+            } else {
+                bill.setBusinessTax(businessTax);
+            }
+//            bill.
+        } else {
+
+        }
+
+
     }
 
     /**
@@ -614,27 +880,17 @@ public class TestController extends BaseController {
 //        return 0;
     }
 
-    /**
-     * @param startTime: 开始时间
-     * @param endTime:   结束时间
-     * @Author: wangyong
-     * @Date: 2020/3/19 0:11
-     * @return: boolean
-     * @Description: 判断能否生成数据
-     */
-    private boolean canGenerateData(Calendar startTime, Calendar endTime) {
-        return endTime.getTimeInMillis() - startTime.getTimeInMillis() >= 0 ? true : false;
-    }
 
     /**
-     * @param year:  年
-     * @param month: 月
+     * @param calendar: 日期
      * @Author: wangyong
      * @Date: 2020/3/18 23:29
      * @return: java.lang.String
      * @Description: 将年月组合成字符串
      */
-    private String getYearAndMonth(Integer year, Integer month) {
+    private String getYearAndMonth(Calendar calendar) {
+        Integer month = calendar.get(Calendar.MONTH) + 1;
+        Integer year = calendar.get(Calendar.YEAR);
         return month < 10 ? year.intValue() + "0" + month.intValue() : year.intValue() + "" + month.intValue();
     }
 
@@ -667,61 +923,16 @@ public class TestController extends BaseController {
 
 
     /**
-     * @param employeeFilesDtos : 员工档案
-     * @param salesContractDto  : 销售合同
+     * @param employeeFilesDto:
+     * @param socialSecurityChargeNum:
+     * @param providentFundChargeNum:
+     * @param billYear:
      * @Author: wangyong
-     * @Date: 2020/3/18 23:03
-     * @return: void
-     * @Description: 生成预收数据
+     * @Date: 2020/4/1 16:42
+     * @return: java.util.Collection<? extends com.authine.cloudpivot.web.api.entity.Bill>
+     * @Description: 生成补缴数据
      */
-    private void generateAdvanceReceiptBillData(List<EmployeeFilesDto> employeeFilesDtos, SalesContractDto salesContractDto) {
-        // 预收从当月开始
-        String billCycle = salesContractDto.getBillCycle();
-        int monthNum = getMonthNum(billCycle);
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1);
-        String billYear = getYearAndMonth(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1); // 账单年月
-        List<Bill> result = new ArrayList<>();
-        for (EmployeeFilesDto employeeFilesDto : employeeFilesDtos) {
-            calendar.setTime(new Date());
-            calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1);
-            if (employeeFilesDto.getIsOldEmployee() == 0) {
-                // 不是老员工，是新员工，需要生成之前没有生成的数据
-                if (employeeFilesDto.getSocialSecurityChargeStart() != null || employeeFilesDto.getProvidentFundChargeStart() != null) {
-                    // 社保起缴时间或公积金起缴时间不为空
-                    Calendar socialSecurityChargeStart = Calendar.getInstance();
-                    int socialSecurityChargeNum = 0;
-                    Calendar providentFundChargeStart = Calendar.getInstance();
-                    int providentFundChargeNum = 0;
-                    if (employeeFilesDto.getSocialSecurityChargeStart() != null) {
-                        socialSecurityChargeStart.setTime(employeeFilesDto.getSocialSecurityChargeStart());
-                        socialSecurityChargeNum = calendar.get(Calendar.MONTH) - socialSecurityChargeStart.get(Calendar.MONTH);
-                    }
-                    if (employeeFilesDto.getProvidentFundChargeStart() != null) {
-                        providentFundChargeStart.setTime(employeeFilesDto.getProvidentFundChargeStart());
-                        providentFundChargeNum = calendar.get(Calendar.MONTH) - providentFundChargeStart.get(Calendar.MONTH);
-                    }
-                    if (socialSecurityChargeNum > 0 || providentFundChargeNum > 0) {
-                        // 需要生成之前没有生成的数据
-                        result.addAll(createOldBillData(employeeFilesDto, socialSecurityChargeNum, providentFundChargeNum, billYear));
-                    }
-                }
-            }
-            for (int i = 1; i <= monthNum; i++) {
-                String businessYear = getYearAndMonth(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + i);  // 业务年月
-                Bill bill = new Bill();
-                setBillBasicData(bill, employeeFilesDto, billYear, businessYear, 0, 0, 0, 0);
-                setBillOtherData(bill, employeeFilesDto, salesContractDto, calendar);
-                calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + i, 1);
-                result.add(bill);
-            }
-        }
-
-
-    }
-
-    private Collection<? extends Bill> createOldBillData(EmployeeFilesDto employeeFilesDto, int socialSecurityChargeNum, int providentFundChargeNum, String billYear) {
+    private Collection<? extends Bill> createOldBillData(UserModel user, DepartmentModel departmentModel, EmployeeFilesDto employeeFilesDto, int socialSecurityChargeNum, int providentFundChargeNum, String billYear, Integer start) {
         List<Bill> result = new ArrayList<>();
 
         int num = 0;
@@ -731,21 +942,30 @@ public class TestController extends BaseController {
             // 为空
             return null;
         }
-        for (int i = 1; i <= maxNum; i++) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        for (int i = start; i <= maxNum; i++) {
             num++;
+            Bill bill = new Bill();
+            SystemDataSetUtils.dataSet(user, departmentModel, employeeFilesDto.getEmployeeName(), Constants.COMPLETED_STATUS, bill);
+            calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1);
+            calendar.add(Calendar.MONTH, -i);
+            String businessYear = getYearAndMonth(calendar);
+            setBillBasicData(bill, employeeFilesDto, billYear, businessYear, 0, 0, 0, 0);
             for (SocialSecurityFundDetail socialSecurityFundDetail : socialSecurityFundDetails) {
-                Bill bill = new Bill();
+
                 if (num <= socialSecurityChargeNum) {
                     // 生成社保数据
                     generateSocialSecurityData(socialSecurityFundDetail, bill, null);
                 }
                 if (num <= providentFundChargeNum) {
                     // 生成公积金数据
+                    generateProvidentFund(socialSecurityFundDetail, bill, null);
                 }
             }
-
+            SystemDataSetUtils.dataSet(user, departmentModel, employeeFilesDto.getEmployeeName(), Constants.COMPLETED_STATUS, bill);
+            result.add(bill);
         }
-
         return result;
     }
 
@@ -862,4 +1082,45 @@ public class TestController extends BaseController {
         }
         return result;
     }
+
+    private ServiceChargeUnitPrice getServiceChargeUnitPrice(SalesContractDto salesContractDto, String area) {
+        List<ServiceChargeUnitPrice> serviceChargeUnitPrices = salesContractDto.getServiceChargeUnitPrices();
+        boolean isAnhuiCity = AreaUtils.isAnhuiCity(area);
+        String flag = "";
+        if (isAnhuiCity) {
+            flag = "省内";
+        } else {
+            flag = "省外";
+        }
+        if (null == serviceChargeUnitPrices || 0 == serviceChargeUnitPrices.size()) {
+            return null;
+        }
+        if (serviceChargeUnitPrices.size() == 1) {
+            return serviceChargeUnitPrices.get(0);
+        }
+        int level = 0;
+        ServiceChargeUnitPrice result = null;
+        for (ServiceChargeUnitPrice serviceChargeUnitPrice : serviceChargeUnitPrices) {
+            if (flag.equals(serviceChargeUnitPrice.getServiceArea())) {
+                level = 1;
+                if (serviceChargeUnitPrice.getAreaDetails().length() > area.length()) {
+                    if (serviceChargeUnitPrice.getAreaDetails().contains(area)) {
+                        level = 2;
+                        result = serviceChargeUnitPrice;
+                    }
+                } else {
+                    if (area.contains(serviceChargeUnitPrice.getAreaDetails())) {
+                        level = 2;
+                        result = serviceChargeUnitPrice;
+                    }
+                }
+            }
+            if (level == 2) {
+                // 达到最终筛选条件了
+                break;
+            }
+        }
+        return result;
+    }
+
 }

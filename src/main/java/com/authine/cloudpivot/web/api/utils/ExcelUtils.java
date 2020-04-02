@@ -251,4 +251,90 @@ public class ExcelUtils extends BaseQueryRuntimeController {
         }
         return workbook;
     }
+
+    public static List<String[]> readFile(String fileName) throws Exception{
+        //最终返回的excel内容
+        List<String[]> excelContents = new ArrayList <String[]>();
+        // 文件写入输入流
+        InputStream inputStream = null;
+
+        OutputStream os = null;
+
+        try {
+            File excelFile = FileOperateHelper.getFile(fileName);
+
+            if (!excelFile.exists()) {// 文件不存在，不继续执行
+                throw new RuntimeException("Excel文件导入-上传文件未找到！");
+            }
+
+            // 创建工作表对象
+            Workbook workbook = null;
+            try {
+                workbook = new HSSFWorkbook(new FileInputStream(excelFile));
+            } catch (Exception ex) {
+                workbook = new XSSFWorkbook(new FileInputStream(excelFile));
+            }
+
+            // 获取第一个Sheet
+            Sheet sheet = workbook.getSheetAt(0);
+            if (sheet == null) {
+                throw new RuntimeException("Excel文件导入-文件中没有找到对应工作表");
+            }
+
+            // 开始从第一行遍历
+            int endCol = 0, startCol = 0;
+            for (int rowNum = 0; rowNum <= sheet.getLastRowNum(); rowNum++) {
+                Row row = sheet.getRow(rowNum);
+                if (rowNum == 0) {
+                    if (row == null) {
+                        throw new RuntimeException("表头出错！");
+                    }
+                    endCol = row.getLastCellNum() - 1;
+                    if (endCol < 1) {
+                        throw new RuntimeException("表头出错！");
+                    }
+                }
+                if (row == null) {
+                    continue;
+                }
+
+                //遍历该行的单元格 定义储存数据的单元格数组
+                String[] cells = new String[endCol - startCol + 1];
+                int colNum = 0;
+                int emptyCellCount = 0;
+                for (int i = startCol; i <= endCol; i++) {
+                    Cell cell = row.getCell(i);
+                    if (cell != null && StringUtils.isNotBlank(cell.toString())) {
+                        cells[colNum] = getValue(cell);
+                    } else {
+                        emptyCellCount++;
+                    }
+                    colNum++;
+                }
+                //每个单元格都是空的，则认为该行就是空行，跳过
+                if (emptyCellCount == (endCol - startCol + 1)) {
+                    continue;
+                }
+                excelContents.add(cells);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Excel文件导入-文件读取失败:" + e.getMessage());
+        } finally {
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                    inputStream = null;
+                }
+                if (os != null) {
+                    os.close();
+                    os = null;
+                }
+            } catch (IOException e) {
+                throw new Exception("Excel文件导入-文件读取失败:" + e.getMessage());
+            }
+        }
+        return excelContents;
+    }
 }

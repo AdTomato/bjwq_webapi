@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.EnquiryReceivableMapper">
+
+    <resultMap id="enquiryReceivableDto" type="com.authine.cloudpivot.web.api.dto.EnquiryReceivableDto">
+        <id column="id" property="id"></id>
+        <collection property="bills" select="com.authine.cloudpivot.web.api.mapper.EnquiryReceivableMapper.getBillsByEnquirtReceivableId" column="id"></collection>
+    </resultMap>
+    <select id="getEnquiryReceivableDtoByIds"
+            parameterType="java.lang.String" resultMap="enquiryReceivableDto">
+        SELECT * FROM i4fvb_enquiry_receivable
+        WHERE id IN (
+        <foreach collection="list" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+    </select>
+    <select id="getBillsByEnquirtReceivableId" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.Bill">
+        SELECT * FROM i4fvb_bill_details WHERE relation_enquiry_receivable = #{id}
+    </select>
+</mapper>

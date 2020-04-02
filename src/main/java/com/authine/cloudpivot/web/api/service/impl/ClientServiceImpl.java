@@ -186,7 +186,7 @@ public class ClientServiceImpl implements ClientService {
      * @return: java.lang.Double
      * @Description: 获取销售合同中该地区的服务费
      */
-    private Double getFee(SalesContractDto salesContractDto, String area) {
+    public Double getFee(SalesContractDto salesContractDto, String area) {
         List<ServiceChargeUnitPrice> serviceChargeUnitPrices = salesContractDto.getServiceChargeUnitPrices();
         boolean isAnhuiCity = AreaUtils.isAnhuiCity(area);
         String flag = "";

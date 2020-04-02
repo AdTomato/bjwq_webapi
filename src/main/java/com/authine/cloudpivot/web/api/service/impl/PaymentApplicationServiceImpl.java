@@ -11,6 +11,7 @@ import com.authine.cloudpivot.web.api.mapper.PaymentApplicationMapper;
 import com.authine.cloudpivot.web.api.mapper.SystemManageMapper;
 import com.authine.cloudpivot.web.api.service.PaymentApplicationService;
 import com.authine.cloudpivot.web.api.utils.CommonUtils;
+import com.authine.cloudpivot.web.api.utils.ExcelUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -108,6 +109,122 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                 "公积金");
     }
 
+    @Override
+    public void importOneTimeFee(String fileName, UserModel user, DepartmentModel dept) throws Exception {
+        // 读取文件信息
+        List <String[]> fileList = ExcelUtils.readFile(fileName);
+        if (fileList != null && fileList.size() > 2) {
+            String sourceId = UUID.randomUUID().toString().replaceAll("-", "");
+            // 生成临时表数据
+            insertTempData(fileList, user, dept, sourceId, "");
+
+            // 更新社保一次性收费数据
+            paymentApplicationMapper.updatePaymentDetailsOneTimeFee(sourceId, "社保");
+            // 更新客户明细表数据
+            paymentApplicationMapper.updatePaymentClientDetailsOneTimeFee(sourceId, "社保");
+            // 更新支付申请数据
+            paymentApplicationMapper.updatePaymentApplicationOneTimeFee(sourceId, "社保");
+
+            // 新增社保一次性收费数据
+            paymentApplicationMapper.insertPaymentDetailsOneTimeFee(sourceId, "社保");
+
+            // 更新公积金一次性收费数据
+            paymentApplicationMapper.updatePaymentDetailsOneTimeFee(sourceId, "公积金");
+            // 更新客户明细表数据
+            paymentApplicationMapper.updatePaymentClientDetailsOneTimeFee(sourceId, "公积金");
+            // 更新支付申请数据
+            paymentApplicationMapper.updatePaymentApplicationOneTimeFee(sourceId, "公积金");
+
+            // 新增公积金一次性收费数据
+            paymentApplicationMapper.insertPaymentDetailsOneTimeFee(sourceId, "公积金");
+
+            // 删除支付明细临时表数据
+            paymentApplicationMapper.deletePaymentDetailsTempBySourceId(sourceId);
+            // 更新支付明细表sourceId=null
+            paymentApplicationMapper.updatePaymentDetailsSourceIdToNull(sourceId);
+            // 更新支付客户表sourceId=null
+            paymentApplicationMapper.updatePaymentClientDetailsSourceIdToNull(sourceId);
+            // 更新支付申请表sourceId=null
+            paymentApplicationMapper.updatePaymentApplicationSourceIdToNull(sourceId);
+        }
+
+    }
+
+    @Override
+    public void importPaymentDetails(String fileName, UserModel user, DepartmentModel dept, String systemType,
+                                     WorkflowInstanceFacade workflowInstanceFacade) throws Exception {
+        // 读取文件信息
+        List <String[]> fileList = ExcelUtils.readFile(fileName);
+        if (fileList != null && fileList.size() > 2) {
+            String sourceId = UUID.randomUUID().toString().replaceAll("-", "");
+            // 生成支付明细表表数据
+            insertTempData(fileList, user, dept, sourceId, systemType);
+
+            paymentApplicationMapper.insertPaymentApplicationBySourceId(sourceId, user.getId(), user.getName(),
+                    dept.getId(), dept.getQueryCode(), Constants.DRAFT_STATUS);
+            // 新增客户明细表数据
+            // 生成支付客户明细表数据(此时parentId设为null)
+            paymentApplicationMapper.insertPaymentClientDetailsBySourceId(sourceId);
+            // 给支付客户明细数据客户代码等赋值
+            paymentApplicationMapper.giveClientDetailsAssignmentClientCode(sourceId);
+
+            // 给客户明细表parentId赋值
+            paymentApplicationMapper.updatePaymentClientDetailsParentIdBySourceId(sourceId);
+
+            // 给支付明细表关联支付申请表单字段赋值
+            paymentApplicationMapper.updatePaymentDetailsByClientDetails(sourceId);
+
+            // 更新支付明细表sourceId=null
+            paymentApplicationMapper.updatePaymentDetailsSourceIdToNull(sourceId);
+            // 更新支付客户表sourceId=null
+            paymentApplicationMapper.updatePaymentClientDetailsSourceIdToNull(sourceId);
+            // 更新支付申请表sourceId=null
+            paymentApplicationMapper.updatePaymentApplicationSourceIdToNull(sourceId);
+        }
+    }
+
+    /**
+     * 方法说明：导入支付明细表生成临时表数据
+     * @param fileList 导入文件数据
+     * @param user 当前用户
+     * @param dept 当前部门
+     * @param sourceId 来源id
+     * @return void
+     * @author liulei
+     * @Date 2020/3/30 14:34
+     */
+    private void insertTempData(List<String[]> fileList, UserModel user, DepartmentModel dept, String sourceId, String dataType) throws Exception{
+        String tableName = "mutual_system".equals(dataType) || "national_system".equals(dataType) ?
+                "i4fvb_payment_details" : "i4fvb_payment_details_temp";
+        List<String> fields = Arrays.asList(fileList.get(0));
+        List<Map<String, Object>> dataList = new ArrayList <>();
+        Map<String, Object> data = new HashMap <>();
+        for (int i = 2; i < fileList.size(); i++) {
+            List <String> list = Arrays.asList(fileList.get(i));
+            data = new HashMap <>();
+            for(int j = 0; j < fields.size(); j++) {
+                data.put(fields.get(j), list.get(j));
+            }
+            data.put("source_id", sourceId);
+            data.put("data_type", dataType);
+            data = setSystemField(data, UUID.randomUUID().toString().replaceAll("-", ""), user, dept,
+                    Constants.COMPLETED_STATUS);
+            data.put("name", data.get("bill_year") == null ? "" : data.get("bill_year").toString() + data.get(
+                    "employee_name") == null ? "" : data.get("employee_name").toString());
+            dataList.add(data);
+        }
+        // 生成临时表数据
+        for (int j = 0; j < dataList.size(); j += 500) {
+            int size = dataList.size();
+            int toPasIndex = 500;
+            if (j + 500 > size) {        //作用为toIndex最后没有500条数据则剩余几条newList中就装几条
+                toPasIndex = size - j;
+            }
+            List <Map<String, Object>> newList = dataList.subList(j, j + toPasIndex);
+            paymentApplicationMapper.batchInsertPaymentDetailsTemp(newList, tableName);
+        }
+    }
+
     /**
      * 方法说明：生成社保公积金支付数据
      * @param billYear 账单年月
@@ -144,20 +261,26 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
 
                 this.processingData(newList, billYear, user, dept, sourceId, dataType);
             }
+            // 判断之前是否存在一次性收费数据,存在则更新数据
+            paymentApplicationMapper.updatePaymentDetailsByTemp(sourceId);
+            // 生成新增的数据
+            paymentApplicationMapper.insertPaymentDetailsByTemp(sourceId);
             // 生成支付客户明细表数据(此时parentId设为null)
             paymentApplicationMapper.insertPaymentClientDetailsBySourceId(sourceId);
+            // 给支付客户明细数据客户代码等赋值
+            paymentApplicationMapper.giveClientDetailsAssignmentClientCode(sourceId);
 
             // 获取新增省内支付申请数据
             List <PaymentApplication> pas = new ArrayList <>();
             List <PaymentApplication> pa1 = paymentApplicationMapper.getSnPaymentApplicationBySourceId(sourceId);
             // 新增省外支付申请数据
-            List <PaymentApplication> pa2 = paymentApplicationMapper.getSwPaymentApplicationBySourceId(sourceId);
+            //List <PaymentApplication> pa2 = paymentApplicationMapper.getSwPaymentApplicationBySourceId(sourceId);
 
             pas.addAll(processPaymentApplicationList(pa1, billYear, user, dept, dataType));
-            pas.addAll(processPaymentApplicationList(pa2, billYear, user, dept, dataType));
+            //pas.addAll(processPaymentApplicationList(pa2, billYear, user, dept, dataType));
             if (pas != null && pas.size() > 0) {
                 for (int j = 0; j < pas.size(); j += 500) {
-                    int pasSize = list.size();
+                    int pasSize = pas.size();
                     int toPasIndex = 500;
                     if (j + 500 > pasSize) {        //作用为toIndex最后没有500条数据则剩余几条newList中就装几条
                         toPasIndex = pasSize - j;
@@ -213,7 +336,6 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
             }
         }
 
-        // 删除sourceId
         // 删除支付明细临时表数据
         paymentApplicationMapper.deletePaymentDetailsTempBySourceId(sourceId);
         // 更新支付明细表sourceId=null
@@ -255,6 +377,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                 pa.setOwnerDeptQueryCode(dept.getQueryCode());
                 pa.setBillYear(billYear);
                 pa.setDataType(dataType);
+                pa.setPaymentType("一对一");
 
                 paList.add(pa);
             }
@@ -277,10 +400,14 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
     private void processingData(List <EmployeeFilesDto> list, String billYear, UserModel user, DepartmentModel dept,
                                 String sourceId, String processType) throws Exception {
         List <Map <String, Object>> paymentDetails = new ArrayList <>();
-
-        for (int i = 0; i < list.size(); i += 500) {
+        List<String> employeeFilesIds = new ArrayList <>();
+        for (int i = 0; i < list.size(); i ++) {
             EmployeeFilesDto filesDto = list.get(i);
             if (filesDto.getEmployeeOrderFormDto() == null) {
+                continue;
+            }
+            List<SocialSecurityFundDetail> details = filesDto.getEmployeeOrderFormDto().getSocialSecurityFundDetails();
+            if (details == null || details.size() == 0) {
                 continue;
             }
             Map <String, Object> map = getPaymentDetailsByEmployeeFilesDto(filesDto, processType);
@@ -292,15 +419,16 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
             map = setSystemField(map, id, user, dept, Constants.COMPLETED_STATUS);
             map.put("name", billYear + filesDto.getEmployeeName());
 
+            paymentDetails.add(map);
+
+            employeeFilesIds.add(filesDto.getId());
         }
 
         if (paymentDetails != null && paymentDetails.size() > 0) {
             // 生成临时表数据
-            paymentApplicationMapper.batchInsertPaymentDetailsTemp(paymentDetails);
-            // 判断之前是否存在一次性收费数据,存在则更新数据
-            paymentApplicationMapper.updatePaymentDetailsByTemp(sourceId);
-            // 生成新增的数据
-            paymentApplicationMapper.insertPaymentDetailsByTemp(sourceId);
+            paymentApplicationMapper.batchInsertPaymentDetailsTemp(paymentDetails, "i4fvb_payment_details_temp");
+            // 更新员工档案的支付申请标记
+            paymentApplicationMapper.updateEmployeeFilesPaymentApplication(employeeFilesIds, processType, billYear);
         }
     }
 
@@ -349,13 +477,20 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
         if ("公积金".equals(type)) {
             // 支付方式
             String paymentMethod = null;
+            String welfareHandler = filesDto.getProvidentFundArea();
+            if (StringUtils.isNotBlank(welfareHandler)) {
+                if (welfareHandler.indexOf("大库") >= 0) {
+                    paymentMethod = "代收代付";
+                } else if (welfareHandler.indexOf("单立户") >= 0) {
+                    paymentMethod = "托收";
+                }
+            }
+
             // 公积金企业缴纳合计,公积金个人缴纳合计,公积金缴纳合计
             Double providentEnterprise = 0.0,providentPersonal= 0.0,providentTotal = 0.0;
             map.put("delegated_area", filesDto.getProvidentFundCity());
             List<SocialSecurityFundDetail> details = filesDto.getEmployeeOrderFormDto().getSocialSecurityFundDetails();
-            if (details == null || details.size() == 0) {
-                return map;
-            }
+
             for (int i = 0; i < details.size(); i++) {
                 SocialSecurityFundDetail detail = details.get(i);
                 String productName = detail.getNameHide();
@@ -373,6 +508,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                     map.put("b_provident_personal_pay", detail.getEmployeeMoney());
 
                     map.put("b_provident_subtotal", detail.getSum());
+                    map.put("b_provident_payment_method", paymentMethod);
                 } else {
                     map.put("provident_enterprise_base", detail.getBaseNum());
                     map.put("provident_enterprise_ratio", detail.getCompanyRatio());
@@ -385,11 +521,13 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                     map.put("provident_personal_pay", detail.getEmployeeMoney());
 
                     map.put("provident_subtotal", detail.getSum());
-
+                    map.put("provident_payment_method", paymentMethod);
                 }
-                providentEnterprise += (detail.getCompanyMoney() == null ? 0.0 : detail.getCompanyMoney());
-                providentPersonal += (detail.getEmployeeMoney() == null ? 0.0 : detail.getEmployeeMoney());
-                providentTotal += (detail.getSum() == null ? 0.0 : detail.getSum());
+                if (!"托收".equals(paymentMethod)) {
+                    providentEnterprise += (detail.getCompanyMoney() == null ? 0.0 : detail.getCompanyMoney());
+                    providentPersonal += (detail.getEmployeeMoney() == null ? 0.0 : detail.getEmployeeMoney());
+                    providentTotal += (detail.getSum() == null ? 0.0 : detail.getSum());
+                }
             }
             map.put("provident_enterprise", providentEnterprise);
             map.put("provident_personal", providentPersonal);
@@ -397,6 +535,16 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
             map.put("social_provident_total", providentTotal);
             map.put("total_charge", providentTotal);
         } else {
+            // 支付方式
+            String paymentMethod = null;
+            String welfareHandler = filesDto.getSocialSecurityArea();
+            if (StringUtils.isNotBlank(welfareHandler)) {
+                if (welfareHandler.indexOf("大库") >= 0) {
+                    paymentMethod = "代收代付";
+                } else if (welfareHandler.indexOf("单立户") >= 0) {
+                    paymentMethod = "托收";
+                }
+            }
             // 社保数据
             map.put("service_fee_total", filesDto.getEmployeeOrderFormDto().getServiceFee());// 服务费放到社保里面
             map.put("delegated_area", filesDto.getSocialSecurityCity());
@@ -423,6 +571,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                     map.put("pension_personal_pay", detail.getEmployeeMoney());
 
                     map.put("pension_subtotal", detail.getSum());
+                    map.put("pension_payment_method", paymentMethod);
                 } else if (productName.indexOf("医疗") >= 0) {
                     if (productName.indexOf("大病") >= 0) {
                         map.put("d_medical_enterprise_base", detail.getBaseNum());
@@ -436,6 +585,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                         map.put("d_medical_personal_pay", detail.getEmployeeMoney());
 
                         map.put("d_medical_subtotal", detail.getSum());
+                        map.put("d_medical_payment_method", paymentMethod);
                     } else {
                         map.put("medical_enterprise_base", detail.getBaseNum());
                         map.put("medical_enterprise_ratio", detail.getCompanyRatio());
@@ -448,6 +598,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                         map.put("medical_personal_pay", detail.getEmployeeMoney());
 
                         map.put("medical_subtotal", detail.getSum());
+                        map.put("medical_payment_method", paymentMethod);
                     }
 
                 } else if (productName.indexOf("失业") >= 0) {
@@ -462,6 +613,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                     map.put("unemp_personal_pay", detail.getEmployeeMoney());
 
                     map.put("unemp_subtotal", detail.getSum());
+                    map.put("unemp_payment_method", paymentMethod);
                 } else if (productName.indexOf("工伤") >= 0) {
                     if (productName.indexOf("补充") >= 0) {
                         map.put("b_injury_enterprise_base", detail.getBaseNum());
@@ -475,6 +627,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                         map.put("b_injury_personal_pay", detail.getEmployeeMoney());
 
                         map.put("b_injury_subtotal", detail.getSum());
+                        map.put("b_injury_payment_method", paymentMethod);
                     } else {
                         map.put("injury_enterprise_base", detail.getBaseNum());
                         map.put("injury_enterprise_ratio", detail.getCompanyRatio());
@@ -487,6 +640,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                         map.put("injury_personal_pay", detail.getEmployeeMoney());
 
                         map.put("injury_subtotal", detail.getSum());
+                        map.put("injury_payment_method", paymentMethod);
                     }
                 } else if (productName.indexOf("生育") >= 0) {
                     map.put("fertility_enterprise_base", detail.getBaseNum());
@@ -500,6 +654,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                     map.put("fertility_personal_pay", detail.getEmployeeMoney());
 
                     map.put("fertility_subtotal", detail.getSum());
+                    map.put("fertility_payment_method", paymentMethod);
                 } else if (productName.indexOf("综合") >= 0) {
                     map.put("complex_enterprise_base", detail.getBaseNum());
                     map.put("complex_enterprise_ratio", detail.getCompanyRatio());
@@ -512,16 +667,21 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                     map.put("complex_personal_pay", detail.getEmployeeMoney());
 
                     map.put("complex_subtotal", detail.getSum());
+                    map.put("complex_payment_method", paymentMethod);
                 }
-                socialSecurityEnterprise += (detail.getCompanyMoney() == null ? 0.0 : detail.getCompanyMoney());
-                socialSecurityPersonal += (detail.getEmployeeMoney() == null ? 0.0 : detail.getEmployeeMoney());
-                socialSecurityTotal += (detail.getSum() == null ? 0.0 : detail.getSum());
+                if (!"托收".equals(paymentMethod)) {
+                    socialSecurityEnterprise += (detail.getCompanyMoney() == null ? 0.0 : detail.getCompanyMoney());
+                    socialSecurityPersonal += (detail.getEmployeeMoney() == null ? 0.0 : detail.getEmployeeMoney());
+                    socialSecurityTotal += (detail.getSum() == null ? 0.0 : detail.getSum());
+                }
             }
             map.put("social_security_enterprise", socialSecurityEnterprise);
             map.put("social_security_personal", socialSecurityPersonal);
             map.put("social_security_total", socialSecurityTotal);
             map.put("social_provident_total", socialSecurityTotal);
-            map.put("total_charge", socialSecurityTotal);
+            map.put("total_charge",
+                    socialSecurityTotal + (filesDto.getEmployeeOrderFormDto().getServiceFee() == null ? 0.0 :
+                            filesDto.getEmployeeOrderFormDto().getServiceFee()));
         }
 
         return map;
