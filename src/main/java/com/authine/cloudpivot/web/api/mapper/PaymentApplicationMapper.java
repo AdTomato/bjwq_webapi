@@ -113,12 +113,16 @@ public interface PaymentApplicationMapper {
 
     void updatePaymentApplicationSourceIdToNull(String sourceId);
 
+    @Deprecated
     void updatePaymentDetailsOneTimeFee(String sourceId, String dataType);
 
+    @Deprecated
     void insertPaymentDetailsOneTimeFee(String sourceId, String dataType);
 
+    @Deprecated
     void updatePaymentClientDetailsOneTimeFee(String sourceId, String dataType);
 
+    @Deprecated
     void updatePaymentApplicationOneTimeFee(String sourceId, String dataType);
 
     void insertPaymentApplicationBySourceId(String sourceId, String userId, String name, String deptId,
@@ -127,4 +131,8 @@ public interface PaymentApplicationMapper {
     void updateEmployeeFilesPaymentApplication(@Param("ids") List<String> ids,
                                                @Param("processType") String processType,
                                                @Param("billYear") String billYear);
+
+    List<String> getAddPaymentApplicationIdsBySourceId(String sourceId);
+
+    void updatePaymentDetailsSalesman(String sourceId);
 }

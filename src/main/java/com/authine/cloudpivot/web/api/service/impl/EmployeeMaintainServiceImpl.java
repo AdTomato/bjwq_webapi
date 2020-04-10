@@ -9,6 +9,7 @@ import com.authine.cloudpivot.web.api.dao.EmployeesMaintainDao;
 import com.authine.cloudpivot.web.api.dao.impl.EmployeeMaintainDaoImpl;
 import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.mapper.AddEmployeeMapper;
+import com.authine.cloudpivot.web.api.mapper.PolicyCollectPayMapper;
 import com.authine.cloudpivot.web.api.mapper.ReturnReasonAlreadyMapper;
 import com.authine.cloudpivot.web.api.mapper.SystemManageMapper;
 import com.authine.cloudpivot.web.api.service.EmployeeMaintainService;
@@ -46,6 +47,9 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
 
     @Resource
     private ReturnReasonAlreadyMapper returnReasonAlreadyMapper;
+
+    @Resource
+    private PolicyCollectPayMapper policyCollectPayMapper;
 
     // 业务list
     private List <BizObjectModel> models = new ArrayList <>();
@@ -152,7 +156,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         // 结束时间
         data.put("end_time",employeeOrderForm.getEndTime());
         // 输入时间
-        data.put("input_time", employeeOrderForm.getInputTime());
+        data.put("input_time", new Date());
         if (Constants.SOCIAL_SECURITY.equals(type)) {
             // 社保社保办理成功提交
             // 社保状态
@@ -176,6 +180,10 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         updateEmployeeOrderFormInfo(id, employeeOrderFormId, modelId, type,
                 employeeOrderForm.getServiceFee() == null ? 0.0 : employeeOrderForm.getServiceFee());
 
+        // 更新订单的起始时间为子表中开始时间，结束时间
+        addEmployeeMapper.updateEmployeeOrderFromTime(modelId);
+        // 更新订单的起始时间为子表中开始时间，结束时间
+        addEmployeeMapper.updateEmployeeOrderFromTime(employeeOrderFormId);
     }
 
     @Override
@@ -204,192 +212,232 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     public EmployeeOrderForm getEmployeeOrderForm(String socialSecurityCity, Date socialSecurityStartTime,
                                                   Double socialSecurityBase, String providentFundCity,
                                                   Date providentFundStartTime, Double providentFundBase,
-                                                  Double gcompanyRatio, Double gemployeeRatio,
-                                                  Map <String, String> personal) throws Exception {
-        Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        // 补缴月份
-        int sMonth = StringUtils.isNotBlank(personal.get("pay_month_s")) ? Integer.parseInt(personal.get("pay_month_s")) : 0;
-        int gMonth = StringUtils.isNotBlank(personal.get("pay_month_g")) ? Integer.parseInt(personal.get("pay_month_g")) : 0;
+                                                  Double gcompanyRatio, Double gemployeeRatio, int sMonth, int gMonth,
+                                                  Ccps ccps) throws Exception {
         EmployeeOrderForm employeeOrderForm = new EmployeeOrderForm();
         employeeOrderForm.setStartTime(socialSecurityStartTime);
-        Double total = 0.00;
+
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd");
+
+        List<PolicyCollectPay> sPolicyCollectPays = new ArrayList <>();
+        List<PolicyCollectPay> gPolicyCollectPays = new ArrayList <>();
         List <Map <String, String>> socialSecurityDetail = new ArrayList <>();
         List <Map <String, String>> providentFundDetail = new ArrayList <>();
         Map <String, String> map = new HashMap <>();
-        // 社保详情
-        List <Map <String, Object>> socialSecurityList =
-                employeesMaintainDao.getSocialSecurityFundDetail(socialSecurityCity, socialSecurityStartTime, "社保",
-                        socialSecurityBase);
-        if (socialSecurityList != null && socialSecurityList.size() > 0) {
-            for (int i = 0; i < socialSecurityList.size(); i++) {
-                String id = socialSecurityList.get(i).get("id").toString();
-                String productName = socialSecurityList.get(i).get("product_name") == null ? "" :
-                        socialSecurityList.get(i).get("product_name").toString();
-                String socialSecurityGroup = socialSecurityList.get(i).get("social_security_group") == null ? "" :
-                        socialSecurityList.get(i).get("social_security_group").toString();
-                String base = socialSecurityList.get(i).get("base") == null ? "" :
-                        socialSecurityList.get(i).get("base").toString();
-                String companyRatio = socialSecurityList.get(i).get("company_ratio") == null ? "" :
-                        socialSecurityList.get(i).get("company_ratio").toString();
-                String employeeRatio = socialSecurityList.get(i).get("employee_ratio") == null ? "" :
-                        socialSecurityList.get(i).get("employee_ratio").toString();
-                String companySurchargeValue = socialSecurityList.get(i).get("company_surcharge_value") == null ? ""
-                        : socialSecurityList.get(i).get("company_surcharge_value").toString();
-                String employeeSurchargeValue = socialSecurityList.get(i).get("employee_surcharge_value") == null ?
-                        "" : socialSecurityList.get(i).get("employee_surcharge_value").toString();
-                String payCycle = socialSecurityList.get(i).get("pay_cycle") == null ? "" :
-                        socialSecurityList.get(i).get("pay_cycle").toString();
-                // 公司舍入原则和公司保留精度
-                String companyRounding = socialSecurityList.get(i).get("company_rounding_policy") == null ? "四舍五入" :
-                        socialSecurityList.get(i).get("company_rounding_policy").toString();
-                String companyPrecision = socialSecurityList.get(i).get("company_precision") == null ? "2" :
-                        socialSecurityList.get(i).get("company_precision").toString();
-                // 个人舍入原则和公司保留精度
-                String employeeRounding = socialSecurityList.get(i).get("employee_rounding_policy") == null ? "四舍五入" :
-                        socialSecurityList.get(i).get("employee_rounding_policy").toString();
-                String employeePrecision = socialSecurityList.get(i).get("employee_precision") == null ? "2" :
-                        socialSecurityList.get(i).get("employee_precision").toString();
+        Double baseMax = 0.0, baseMin = 0.0;
+        Double total = 0.0;
+        // 社保
+        if (StringUtils.isNotBlank(socialSecurityCity) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(socialSecurityCity) >= 0 && socialSecurityStartTime != null) {
+            sPolicyCollectPays = policyCollectPayMapper.getPolicyCollectPaysByCity(socialSecurityCity);
+            if (sPolicyCollectPays != null && sPolicyCollectPays.size() > 0) {
+                for (int i = 0; i< sPolicyCollectPays.size(); i++) {
+                    PolicyCollectPay policyCollectPay = sPolicyCollectPays.get(i);
+                    if (StringUtils.isBlank(policyCollectPay.getSocialSecurityGroup()) || policyCollectPay.getSocialSecurityGroup().indexOf("社保") < 0) {
+                        continue;
+                    }
+                    List <ProductBaseNum> productBaseNums = policyCollectPay.getProductBaseNums();
+                    if (productBaseNums == null || productBaseNums.size() == 0) {
+                        continue;
+                    }
+                    int payMonth = policyCollectPay.getPayMonth() == null ? 0 : policyCollectPay.getPayMonth();
+                    calendar.setTime(socialSecurityStartTime);
+                    if (payMonth < sMonth) {
+                        calendar.add(Calendar.MONTH, sMonth - payMonth);
+                    }
+                    String startChargeTime = sdf1.format(calendar.getTime());
+                    int startCharge = Integer.parseInt(sdf.format(calendar.getTime()));
+                    for (int j = 0; j < productBaseNums.size(); j++) {
+                        ProductBaseNum productBaseNum = productBaseNums.get(j);
+                        Date startTime = productBaseNum.getStartTime();
+                        if (startTime == null) {
+                            continue;
+                        }
+                        Date endTime = productBaseNum.getEndTime();
+                        int startStr = Integer.parseInt(sdf.format(startTime));
+                        int endStr = endTime == null ? 100000000 : Integer.parseInt(sdf.format(endTime));
+                        if (startCharge >= startStr && startStr <= endStr) {
+                            String productName = policyCollectPay.getProductName();
+                            Double companyRatio = policyCollectPay.getCompanyRatio() == null ? 0.0 :
+                                    policyCollectPay.getCompanyRatio();
+                            Double employeeRatio = policyCollectPay.getEmployeeRatio() == null ? 0.0 :
+                                    policyCollectPay.getEmployeeRatio();
+                            Double companySurchargeValue = policyCollectPay.getCompanySurchargeValue() == null ? 0.0 : policyCollectPay.getCompanySurchargeValue();
+                            Double employeeSurchargeValue = policyCollectPay.getEmployeeSurchargeValue() == null ? 0.0 : policyCollectPay.getEmployeeSurchargeValue();
+                            String payCycle = policyCollectPay.getPayCycle();
+                            // 公司舍入原则和公司保留精度
+                            String companyRounding = StringUtils.isBlank(policyCollectPay.getCompanyRoundingPolicy()) ? "四舍五入" :
+                                    policyCollectPay.getCompanyRoundingPolicy();
+                            String companyPrecision = StringUtils.isBlank(policyCollectPay.getCompanyPrecision()) ? "四舍五入" :
+                                    policyCollectPay.getCompanyPrecision();
+                            // 个人舍入原则和公司保留精度
+                            String employeeRounding = StringUtils.isBlank(policyCollectPay.getEmployeeRoundingPolicy()) ? "四舍五入" :
+                                    policyCollectPay.getEmployeeRoundingPolicy();
+                            String employeePrecision = StringUtils.isBlank(policyCollectPay.getEmployeePrecision()) ? "四舍五入" :
+                                    policyCollectPay.getEmployeePrecision();
+                            baseMax = productBaseNum.getCompanyMaxBaseNum();
+                            baseMin = productBaseNum.getCompanyMinBaseNum();
+                            Double curBase = socialSecurityBase;
+                            if (curBase > baseMax) {
+                                curBase = baseMax;
+                            }
+                            if (curBase < baseMin) {
+                                curBase = baseMin;
+                            }
+                            if (policyCollectPay.getProductName().indexOf("工伤") >= 0) {
+                                // 个性化设置
+                                companyRatio = ccps.getCompanyInjuryRatio() == null ||
+                                        (ccps.getCompanyInjuryRatio() > -0.0000001 && ccps.getCompanyInjuryRatio() < 0.0000001) ? companyRatio : ccps.getCompanyInjuryRatio();
+                                employeeRatio = ccps.getEmployeeInjuryRatio() == null ||
+                                        (ccps.getEmployeeInjuryRatio() > -0.0000001 && ccps.getEmployeeInjuryRatio() < 0.0000001) ? employeeRatio : ccps.getEmployeeInjuryRatio();
+                            }
 
-                int payMonth = socialSecurityList.get(i).get("pay_month") == null ? 0 :
-                        Integer.parseInt(socialSecurityList.get(i).get("pay_month").toString());
-                // 规定的补缴月份 > 实际补缴月份
-                calendar.setTime(socialSecurityStartTime);
-                if (payMonth < sMonth) {
-                    calendar.add(Calendar.MONTH, sMonth - payMonth);
+                            Double companyMoney = curBase * companyRatio + companySurchargeValue;
+                            Double employeeMoney = curBase * employeeRatio + employeeSurchargeValue;
+                            // 数据按照规则处理
+                            companyMoney = CommonUtils.processingData(companyMoney, companyRounding, companyPrecision);
+                            employeeMoney = CommonUtils.processingData(employeeMoney, employeeRounding, employeePrecision);
+
+                            Double sum = companyMoney + employeeMoney;
+                            total = total + sum;
+
+                            map = new HashMap <>();
+                            map.put("product_name", policyCollectPay.getId());
+                            map.put("social_security_group", policyCollectPay.getSocialSecurityGroup());
+                            map.put("base_num", curBase == null ? "" : String.valueOf(curBase));
+                            map.put("sum", sum == null ? "" : String.valueOf(sum));
+                            map.put("company_money", companyMoney == null ? "" : String.valueOf(companyMoney));
+                            map.put("employee_money", employeeMoney == null ? "" : String.valueOf(employeeMoney));
+                            map.put("company_ratio", companyRatio == null ? "" : String.valueOf(companyRatio));
+                            map.put("employee_ratio", employeeRatio == null ? "" : String.valueOf(employeeRatio));
+                            map.put("company_surcharge_value", companySurchargeValue == null ? "" : String.valueOf(companySurchargeValue));
+                            map.put("employee_surcharge_value", employeeSurchargeValue == null ? "" : String.valueOf(employeeSurchargeValue));
+                            map.put("pay_cycle", payCycle);
+                            map.put("start_charge_time", startChargeTime);
+                            map.put("name_hide", productName);
+
+                            if (productName.indexOf("养老") >= 0) {
+                                employeeOrderForm.setEndowment(sum + "(" + companyMoney + "+" + employeeMoney + ")");
+                            } else if (productName.indexOf("医疗") >= 0 && productName.indexOf("大病") < 0) {
+                                employeeOrderForm.setMedical(sum + "(" + companyMoney + "+" + employeeMoney + ")");
+                            } else if (productName.indexOf("失业") >= 0) {
+                                employeeOrderForm.setUnemployment(sum + "(" + companyMoney + "+" + employeeMoney + ")");
+                            } else if (productName.indexOf("工伤") >= 0 && productName.indexOf("补充") < 0) {
+                                employeeOrderForm.setWorkRelatedInjury(sum + "(" + companyMoney + "+" + employeeMoney + ")");
+                            } else if (productName.indexOf("生育") >= 0) {
+                                employeeOrderForm.setChildbirth(sum + "(" + companyMoney + "+" + employeeMoney + ")");
+                            } else if (productName.indexOf("大病") >= 0) {
+                                employeeOrderForm.setCriticalIllness(sum + "(" + companyMoney + "+" + employeeMoney + ")");
+                            }
+
+                            socialSecurityDetail.add(map);
+                            break;
+                        } else {
+                            continue;
+                        }
+                    }
                 }
-                String startChargeTime = sdf.format(calendar.getTime());
-
-                if (productName.indexOf("工伤") >= 0) {
-                    // 个性化设置
-                    companyRatio = StringUtils.isBlank(personal.get("company_injury_ratio")) ? companyRatio :
-                            personal.get("company_injury_ratio");
-                    employeeRatio = StringUtils.isBlank(personal.get("employee_injury_ratio")) ? employeeRatio :
-                            personal.get("employee_injury_ratio");
-                }
-                Double baseDouble = StringUtils.isBlank(base) ? 0.0 : Double.parseDouble(base);
-                Double companyRatioDouble = StringUtils.isBlank(companyRatio) ? 0.0 : Double.parseDouble(companyRatio);
-                Double employeeRatioDouble = StringUtils.isBlank(employeeRatio) ? 0.0 : Double.parseDouble(employeeRatio);
-                Double companySurchargeDouble = StringUtils.isBlank(companySurchargeValue) ? 0.0 : Double.parseDouble(companySurchargeValue);
-                Double employeeSurchargeDouble = StringUtils.isBlank(employeeSurchargeValue) ? 0.0 : Double.parseDouble(employeeSurchargeValue);
-
-                Double companyMoney = baseDouble * companyRatioDouble + companySurchargeDouble;
-                Double employeeMoney = baseDouble * employeeRatioDouble + employeeSurchargeDouble;
-                // 数据按照规则处理
-                companyMoney = CommonUtils.processingData(companyMoney, companyRounding, companyPrecision);
-                employeeMoney = CommonUtils.processingData(employeeMoney, employeeRounding, employeePrecision);
-
-                Double sum = companyMoney + employeeMoney;
-                total = total + sum;
-
-                map = new HashMap <>();
-                map.put("product_name", id);
-                map.put("social_security_group", socialSecurityGroup);
-                map.put("base_num", base);
-                map.put("sum", String.valueOf(sum));
-                map.put("company_money", String.valueOf(companyMoney));
-                map.put("employee_money", String.valueOf(employeeMoney));
-                map.put("company_ratio", companyRatio);
-                map.put("employee_ratio", employeeRatio);
-                map.put("company_surcharge_value", companySurchargeValue);
-                map.put("employee_surcharge_value", employeeSurchargeValue);
-                map.put("pay_cycle", payCycle);
-                map.put("start_charge_time", startChargeTime);
-                map.put("name_hide", productName);
-
-                if (productName.indexOf("养老") >= 0) {
-                    employeeOrderForm.setEndowment(sum + "(" + companyMoney + "+" + employeeMoney + ")");
-                } else if (productName.indexOf("医疗") >= 0) {
-                    employeeOrderForm.setMedical(sum + "(" + companyMoney + "+" + employeeMoney + ")");
-                } else if (productName.indexOf("失业") >= 0) {
-                    employeeOrderForm.setUnemployment(sum + "(" + companyMoney + "+" + employeeMoney + ")");
-                } else if (productName.indexOf("工伤") >= 0) {
-                    employeeOrderForm.setWorkRelatedInjury(sum + "(" + companyMoney + "+" + employeeMoney + ")");
-                } else if (productName.indexOf("生育") >= 0) {
-                    employeeOrderForm.setChildbirth(sum + "(" + companyMoney + "+" + employeeMoney + ")");
-                } else if (productName.indexOf("大病") >= 0) {
-                    employeeOrderForm.setCriticalIllness(sum + "(" + companyMoney + "+" + employeeMoney + ")");
-                }
-
-                socialSecurityDetail.add(map);
             }
         }
-        // 公积金详情
-        List <Map <String, Object>> providentFundList =
-                employeesMaintainDao.getSocialSecurityFundDetail(providentFundCity,
-                        providentFundStartTime, "公积金", null);
-        if (providentFundList != null && providentFundList.size() > 0) {
-            for (int i = 0; i < providentFundList.size(); i++) {
-                String id = providentFundList.get(i).get("id").toString();
-                String productName = providentFundList.get(i).get("product_name") == null ? "" :
-                        providentFundList.get(i).get("product_name").toString();
-                String socialSecurityGroup = providentFundList.get(i).get("social_security_group") == null ? "" :
-                        providentFundList.get(i).get("social_security_group").toString();
-                String payCycle = providentFundList.get(i).get("pay_cycle") == null ? "" :
-                        providentFundList.get(i).get("pay_cycle").toString();
-                int payMonth = providentFundList.get(i).get("pay_month") == null ? 0 :
-                        Integer.parseInt(providentFundList.get(i).get("pay_month").toString());
-                String companySurchargeValue = providentFundList.get(i).get("company_surcharge_value") == null ? ""
-                        : providentFundList.get(i).get("company_surcharge_value").toString();
-                String employeeSurchargeValue = providentFundList.get(i).get("employee_surcharge_value") == null ?
-                        "" : providentFundList.get(i).get("employee_surcharge_value").toString();
-                // 公司舍入原则和公司保留精度
-                String companyRounding = providentFundList.get(i).get("company_rounding_policy") == null ? "四舍五入" :
-                        providentFundList.get(i).get("company_rounding_policy").toString();
-                String companyPrecision = providentFundList.get(i).get("company_precision") == null ? "2" :
-                        providentFundList.get(i).get("company_precision").toString();
-                // 个人舍入原则和公司保留精度
-                String employeeRounding = providentFundList.get(i).get("employee_rounding_policy") == null ? "四舍五入" :
-                        providentFundList.get(i).get("employee_rounding_policy").toString();
-                String employeePrecision = providentFundList.get(i).get("employee_precision") == null ? "2" :
-                        providentFundList.get(i).get("employee_precision").toString();
+        // 公积金
+        if (StringUtils.isNotBlank(providentFundCity) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(providentFundCity) >= 0 && providentFundStartTime != null) {
+            if (providentFundCity.equals(socialSecurityCity)) {
+                gPolicyCollectPays = sPolicyCollectPays;
+            } else {
+                gPolicyCollectPays = policyCollectPayMapper.getPolicyCollectPaysByCity(providentFundCity);
+            }
+            if (gPolicyCollectPays != null && gPolicyCollectPays.size() > 0) {
+                for (int i = 0; i< gPolicyCollectPays.size(); i++) {
+                    PolicyCollectPay policyCollectPay = gPolicyCollectPays.get(i);
+                    if (StringUtils.isBlank(policyCollectPay.getSocialSecurityGroup()) || policyCollectPay.getSocialSecurityGroup().indexOf("公积金") < 0) {
+                        continue;
+                    }
+                    List <ProductBaseNum> productBaseNums = policyCollectPay.getProductBaseNums();
+                    if (productBaseNums == null || productBaseNums.size() == 0) {
+                        continue;
+                    }
+                    int payMonth =  policyCollectPay.getPayMonth() == null ? 0 : policyCollectPay.getPayMonth();
+                    calendar.setTime(socialSecurityStartTime);
+                    if (payMonth < sMonth) {
+                        calendar.add(Calendar.MONTH, sMonth - payMonth);
+                    }
+                    String startChargeTime = sdf1.format(calendar.getTime());
+                    int startCharge = Integer.parseInt(sdf.format(calendar.getTime()));
+                    for (int j = 0; j < productBaseNums.size(); j++) {
+                        ProductBaseNum productBaseNum = productBaseNums.get(j);
+                        Date startTime = productBaseNum.getStartTime();
+                        if (startTime == null) {
+                            continue;
+                        }
+                        Date endTime = productBaseNum.getEndTime();
+                        int startStr = Integer.parseInt(sdf.format(startTime));
+                        int endStr = endTime == null ? 100000000 : Integer.parseInt(sdf.format(endTime));
+                        if (startCharge >= startStr && startStr <= endStr) {
+                            String productName = policyCollectPay.getProductName();
+                            Double companySurchargeValue = policyCollectPay.getCompanySurchargeValue() == null ? 0.0 : policyCollectPay.getCompanySurchargeValue();
+                            Double employeeSurchargeValue = policyCollectPay.getEmployeeSurchargeValue() == null ? 0.0 : policyCollectPay.getEmployeeSurchargeValue();
 
-                // 规定的补缴月份 > 实际补缴月份
-                calendar.setTime(providentFundStartTime);
-                if (payMonth < gMonth) {
-                    calendar.add(Calendar.MONTH, gMonth - payMonth);
+                            String payCycle = policyCollectPay.getPayCycle();
+                            // 公司舍入原则和公司保留精度
+                            String companyRounding = StringUtils.isBlank(policyCollectPay.getCompanyRoundingPolicy()) ? "四舍五入" :
+                                    policyCollectPay.getCompanyRoundingPolicy();
+                            String companyPrecision = StringUtils.isBlank(policyCollectPay.getCompanyPrecision()) ? "四舍五入" :
+                                    policyCollectPay.getCompanyPrecision();
+                            // 个人舍入原则和公司保留精度
+                            String employeeRounding = StringUtils.isBlank(policyCollectPay.getEmployeeRoundingPolicy()) ? "四舍五入" :
+                                    policyCollectPay.getEmployeeRoundingPolicy();
+                            String employeePrecision = StringUtils.isBlank(policyCollectPay.getEmployeePrecision()) ? "四舍五入" :
+                                    policyCollectPay.getEmployeePrecision();
+                            baseMax = productBaseNum.getCompanyMaxBaseNum();
+                            baseMin = productBaseNum.getCompanyMinBaseNum();
+                            Double curBase = providentFundBase;
+                            if (curBase > baseMax) {
+                                curBase = baseMax;
+                            }
+                            if (curBase < baseMin) {
+                                curBase = baseMin;
+                            }
+
+                            Double companyMoney = curBase * gcompanyRatio + companySurchargeValue;
+                            Double employeeMoney = curBase * gemployeeRatio + employeeSurchargeValue;
+
+                            // 数据按照规则处理
+                            companyMoney = CommonUtils.processingData(companyMoney, companyRounding, companyPrecision);
+                            employeeMoney = CommonUtils.processingData(employeeMoney, employeeRounding, employeePrecision);
+
+                            Double sum = companyMoney + employeeMoney;
+                            total = total + sum;
+
+                            map = new HashMap <>();
+                            map.put("product_name", policyCollectPay.getId());
+                            map.put("social_security_group", policyCollectPay.getSocialSecurityGroup());
+                            map.put("base_num", curBase == null ? "" : String.valueOf(curBase));
+                            map.put("sum", sum == null ? "" : String.valueOf(sum));
+                            map.put("company_money", companyMoney == null ? "" : String.valueOf(companyMoney));
+                            map.put("employee_money", employeeMoney == null ? "" : String.valueOf(employeeMoney));
+                            map.put("company_ratio", gcompanyRatio == null ? "" : String.valueOf(gcompanyRatio));
+                            map.put("employee_ratio", gemployeeRatio == null ? "" : String.valueOf(gemployeeRatio));
+                            map.put("company_surcharge_value", companySurchargeValue == null ? "" : String.valueOf(companySurchargeValue));
+                            map.put("employee_surcharge_value", employeeSurchargeValue == null ? "" : String.valueOf(employeeSurchargeValue));
+                            map.put("pay_cycle", payCycle);
+                            map.put("start_charge_time", startChargeTime);
+                            map.put("name_hide", productName);
+
+                            if (productName.indexOf("补充") < 0) {
+                                employeeOrderForm.setHousingAccumulationFunds(sum + "(" + companyMoney + "+" + employeeMoney + ")");
+                            }
+
+                            providentFundDetail.add(map);
+                            break;
+                        } else {
+                            continue;
+                        }
+                    }
                 }
-                String startChargeTime = sdf.format(calendar.getTime());
-
-                Double baseDouble = providentFundBase;
-                // 个性化设置 ========== 公积金比例不在个性化设置里面维护
-                /*gcompanyRatio = StringUtils.isBlank(personal.get("company_accumulation_ratio")) ? gcompanyRatio :
-                        Double.parseDouble(personal.get("company_accumulation_ratio"));
-                gemployeeRatio = StringUtils.isBlank(personal.get("employee_accumulation_ratio")) ? gemployeeRatio :
-                        Double.parseDouble(personal.get("employee_accumulation_ratio"));*/
-                Double companySurchargeDouble = StringUtils.isBlank(companySurchargeValue) ? 0.0 : Double.parseDouble(companySurchargeValue);
-                Double employeeSurchargeDouble = StringUtils.isBlank(employeeSurchargeValue) ? 0.0 : Double.parseDouble(employeeSurchargeValue);
-
-                Double companyMoney = baseDouble * gcompanyRatio + companySurchargeDouble;
-                Double employeeMoney = baseDouble * gemployeeRatio + employeeSurchargeDouble;
-
-                // 数据按照规则处理
-                companyMoney = CommonUtils.processingData(companyMoney, companyRounding, companyPrecision);
-                employeeMoney = CommonUtils.processingData(employeeMoney, employeeRounding, employeePrecision);
-
-                Double sum = companyMoney + employeeMoney;
-                total = total + sum;
-
-                map = new HashMap <>();
-                map.put("product_name", id);
-                map.put("social_security_group", socialSecurityGroup);
-                map.put("base_num", String.valueOf(baseDouble));
-                map.put("sum", String.valueOf(sum));
-                map.put("company_money", String.valueOf(companyMoney));
-                map.put("employee_money", String.valueOf(employeeMoney));
-                map.put("company_ratio", String.valueOf(gcompanyRatio));
-                map.put("employee_ratio", String.valueOf(gemployeeRatio));
-                map.put("company_surcharge_value", companySurchargeValue);
-                map.put("employee_surcharge_value", employeeSurchargeValue);
-                map.put("pay_cycle", payCycle);
-                map.put("start_charge_time", startChargeTime);
-                map.put("name_hide", productName);
-
-                employeeOrderForm.setHousingAccumulationFunds(sum + "(" + companyMoney + "+" + employeeMoney + ")");
-
-                providentFundDetail.add(map);
             }
         }
+
         employeeOrderForm.setSocialSecurityDetail(socialSecurityDetail);
         employeeOrderForm.setProvidentFundDetail(providentFundDetail);
         employeeOrderForm.setSum(total);
@@ -400,8 +448,17 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     }
 
     @Override
-    public Map <String, String> getTimeNode(String clientName, String city) throws Exception {
-        return employeesMaintainDao.getTimeNode(clientName, city);
+    public Ccps getTimeNode(String clientName, String city) throws Exception {
+        Ccps ccps = new Ccps();
+        List <Ccps> ccpsList = systemManageMapper.getCcpsByClientName(clientName);
+        if (ccpsList != null && ccpsList.size() > 0) {
+            ccps = ccpsList.get(0);
+        } else {
+            // 获取城市时间节点设置
+            int timeNode = systemManageMapper.getTimeNodeByCity(city);
+            ccps.setTimeNode(timeNode);
+        }
+        return ccps;
     }
 
     @Override
@@ -418,13 +475,13 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     public void deleteEmployeeSubmit(BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade,
                                      SocialSecurityClose socialSecurityClose, ProvidentFundClose providentFundClose,
                                      EmployeeFiles employeeFiles, UserModel user) throws Exception {
-        if(socialSecurityClose.getChargeEndMonth() != null) {
+        if(socialSecurityClose.getChargeEndMonth() != null && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) >= 0) {
             createSocialSecurityClose(bizObjectFacade, workflowInstanceFacade, socialSecurityClose, user);
         }
-        if(providentFundClose.getChargeEndMonth() != null) {
+        if(providentFundClose.getChargeEndMonth() != null && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getProvidentFundCity()) >= 0) {
             createProvidentFundClose(bizObjectFacade, workflowInstanceFacade, providentFundClose, user);
         }
-        // 减员时修改员工订单数据
+        // 减员时修改员工档案数据
         employeesMaintainDao.updateEmployeeFilesWhenDelEmployee(employeeFiles);
     }
 
@@ -835,12 +892,13 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         // 更新员工订单数据,申报提交会更新订单数据，此时不更新
         //employeesMaintainDao.updateEmployeeOrderForm(employeeOrderForm);
         // 更新社保申报数据
-        if (StringUtils.isNotBlank(socialSecurityDeclare.getId())) {
+        if (StringUtils.isNotBlank(socialSecurityDeclare.getId()) && socialSecurityDeclare.getStartMonth() != null
+                && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) >= 0) {
             addEmployeeMapper.updateSocialSecurityDeclare(socialSecurityDeclare);
+            // 删除社保申报中社保数据
+            employeesMaintainDao.deleteChildTableDataByTableNameAndParentId("i4fvb_" + Constants.SOCIAL_SECURITY_DETAIL,
+                    socialSecurityDeclare.getId());
             if (socialSecurityDeclare.getSocialSecurityDetail() != null) {
-                // 删除社保申报中社保数据
-                employeesMaintainDao.deleteChildTableDataByTableNameAndParentId("i4fvb_" + Constants.SOCIAL_SECURITY_DETAIL,
-                        socialSecurityDeclare.getId());
                 if (socialSecurityDeclare.getSocialSecurityDetail().size() > 0) {
                     // 创建公积金子表数据
                     employeesMaintainDao.createSocialSecurityFundDetail(socialSecurityDeclare.getId(),
@@ -849,7 +907,8 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
             }
         }
         // 更新公积金申报数据
-        if (StringUtils.isNotBlank(providentFundDeclare.getId())) {
+        if (StringUtils.isNotBlank(providentFundDeclare.getId()) && providentFundDeclare.getStartMonth() != null
+                && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getProvidentFundCity()) >= 0) {
             addEmployeeMapper.updateProvidentFundDeclare(providentFundDeclare);
             if (socialSecurityDeclare.getSocialSecurityDetail() != null) {
                 // 删除公积金申报中公积金数据
@@ -1039,17 +1098,17 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
 
                 if (productName.indexOf("养老") >= 0) {
                     info.put("endowment", str);
-                } else if (productName.indexOf("医疗") >= 0) {
+                } else if (productName.indexOf("医疗") >= 0 && productName.indexOf("大病") < 0) {
                     info.put("medical", str);
                 } else if (productName.indexOf("失业") >= 0) {
                     info.put("unemployment", str);
-                } else if (productName.indexOf("工伤") >= 0) {
+                } else if (productName.indexOf("工伤") >= 0 && productName.indexOf("补充") < 0) {
                     info.put("work_related_injury", str);
                 } else if (productName.indexOf("生育") >= 0) {
                     info.put("childbirth", str);
                 } else if (productName.indexOf("大病") >= 0) {
                     info.put("critical_illness", str);
-                } else if (productName.indexOf("公积金") >= 0) {
+                } else if (productName.indexOf("公积金") >= 0 && productName.indexOf("补充") < 0) {
                     info.put("housing_accumulation_funds", str);
                 }
 
@@ -1286,6 +1345,8 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         employeesMaintainDao.createSocialSecurityFundDetail(modelId, employeeOrderForm.getProvidentFundDetail(),
                 Constants.SOCIAL_SECURITY_FUND_DETAIL);
 
+        // 更新订单的起始时间为子表中开始时间，结束时间
+        addEmployeeMapper.updateEmployeeOrderFromTime(modelId);
         return modelId;
     }
 
@@ -1315,8 +1376,6 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         data.put("client_name", entryNotice.getClientName());
         // 运行签收人
         data.put("operate_signatory", entryNotice.getOperateSignatory());
-        // 用工备案
-        data.put("record_of_employment", entryNotice.getRecordOfEmployment());
         // 社保
         data.put("social_security", entryNotice.getSocialSecurity());
         // 公积金
@@ -1403,6 +1462,9 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         data.put("entry_description", employeeFiles.getEntryDescription());
         //是否入职通知
         data.put("entry_notice", employeeFiles.getEntryNotice());
+
+        data.put("stop_generate_bill", "否");
+        data.put("is_old_employee", "否");
 
         model.put(data);
         // 创建业务对象模型

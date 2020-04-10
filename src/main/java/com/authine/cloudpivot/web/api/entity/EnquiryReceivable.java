@@ -49,57 +49,63 @@ public class EnquiryReceivable extends BaseEntity {
     /**
      * 社保合计
      */
-    private Double socialSecurityTotal;
+    private Double socialSecurityTotal = 0D;
 
     /**
      * 公积金合计
      */
-    private Double accumulationFundTotal;
+    private Double accumulationFundTotal = 0D;
 
     /**
      * 实发工资合计
      */
-    private Double realWagesTotal;
+    private Double realWagesTotal = 0D;
 
     /**
      * 个税合计
      */
-    private Double personalTaxTotal;
+    private Double personalTaxTotal = 0D;
 
     /**
      * 福利产品合计
      */
-    private Double welfareProductsTotal;
+    private Double welfareProductsTotal = 0D;
 
     /**
      * 服务费
      */
-    private Double serviceCharge;
+    private Double serviceCharge = 0D;
+
+    /**
+     * 魏姚加
+     * 一次性质服务费
+     */
+    private Double serviceChargeOnce = 0D;
 
     /**
      * 增值税税费
      */
-    private Double valueAddedTaxTotal;
+    private Double valueAddedTaxTotal = 0D;
 
     /**
      * 风险管理费
      */
-    private Double riskManagementFee;
+    private Double riskManagementFee = 0D;
 
     /**
      * 外包管理费
      */
-    private Double outsourcingManageFee;
+    private Double outsourcingManageFee = 0D;
 
     /**
      * 营业税税费
      */
-    private Double businessTaxesFees;
+    private Double businessTaxesFees = 0D;
 
     /**
      * 应收总计
      */
-    private Double receivableTotal;
+    private Double receivableTotal = 0D;
 
     /**
      * 约定回款日期

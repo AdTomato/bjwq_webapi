@@ -168,4 +168,33 @@
             #{item}
         </foreach>
     </update>
+
+    <select id="getEmployeeOrderFormByEmployeeFilesId" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.EmployeeOrderForm">
+        SELECT * FROM i4fvb_employee_order_form WHERE employee_files_id =#{id} AND is_history = '否'
+    </select>
+
+    <select id="getSocialSecurityDeclareByOrderFormId" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare">
+        SELECT * FROM i4fvb_social_security_declare WHERE employee_order_form_id =#{id}
+    </select>
+
+    <select id="getProvidentFundDeclareByOrderFormId" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ProvidentFundDeclare">
+        SELECT * FROM i4fvb_provident_fund_declare WHERE employee_order_form_id =#{id}
+    </select>
+
+    <update id="updateEmployeeOrderFromTime" parameterType="java.lang.String">
+        UPDATE i4fvb_employee_order_form
+        SET start_time = (SELECT MIN(start_charge_time)
+                          from i4fvb_social_security_fund_detail
+                          where parentId = #{id}
+                            AND start_charge_time IS NOT NULL),
+            end_time   = (SELECT MIN(end_charge_time)
+                          from i4fvb_social_security_fund_detail
+                          where parentId = #{id}
+                            AND end_charge_time IS NOT NULL),
+            detail     = CASE
+                             WHEN end_time IS NULL THEN date_format(start_time, '%Y-%m-%d')
+                             ELSE CONCAT(date_format(start_time, '%Y-%m-%d'), '~',
+                                         date_format(end_time, '%Y-%m-%d')) END
+        WHERE id = #{id}
+    </update>
 </mapper>

@@ -61,7 +61,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getFirstLevelClientSalesman(String parentId, String area, String staffNature) {
         List<String> result = clientMapper.getFirstLevelClientSalesman(parentId, area, staffNature);
-        return null == result || result.size() > 0 ? null : result.get(0);
+        return null == result || result.size() == 0 ? null : result.get(0);
     }
 
     /**
@@ -74,7 +74,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getFirstLevelClientSalesmanByCompanyName(String companyName) {
         List<String> result = clientMapper.getFirstLevelClientSalesmanByCompanyName(companyName);
-        return null == result || result.size() > 0 ? null : result.get(0);
+        return null == result || result.size() == 0 ? null : result.get(0);
     }
 
     /**
@@ -117,7 +117,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getSecondLevelClientSalesman(String parentId, String area, String staffNature) {
         List<String> result = clientMapper.getSecondLevelClientSalesman(parentId, area, staffNature);
-        return null == result || result.size() > 0 ? null : result.get(0);
+        return null == result || result.size() == 0 ? null : result.get(0);
     }
 
     /**
@@ -130,7 +130,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getSecondLevelClientSalesmanByCompanyName(String companyName) {
         List<String> result = clientMapper.getSecondLevelClientSalesmanByCompanyName(companyName);
-        return null == result || result.size() > 0 ? null : result.get(0);
+        return null == result || result.size() == 0 ? null : result.get(0);
     }
 
     /**

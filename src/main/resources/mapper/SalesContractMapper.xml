@@ -7,6 +7,7 @@
     <resultMap id="salesContractDto" type="com.authine.cloudpivot.web.api.dto.SalesContractDto">
         <id column="id" property="id"></id>
         <collection property="serviceChargeUnitPrices" select="com.authine.cloudpivot.web.api.mapper.SalesContractMapper.getServiceChargeUnitPricesById" column="id"></collection>
+        <collection property="clientName" select="com.authine.cloudpivot.web.api.mapper.SalesContractMapper.getClientNameById" column="client_name"></collection>
     </resultMap>
 
     <select id="getSalesContractByBillDay" parameterType="java.lang.String" resultMap="salesContractDto">
@@ -14,9 +15,12 @@
     </select>
 
     <select id="getSalesContractByGenerateBillDate" resultMap="salesContractDto">
-        SELECT * FROM i8c71_sales_contract WHERE generate_bill_date BETWEEN #{startDate} AND #{endDate}
+        SELECT * FROM i8c71_sales_contract WHERE generate_bill_date = #{startDate}
     </select>
 
+    <select id="getClientNameById" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT company_name AS clientName FROM id34a_first_level_client WHERE id = #{client_name}
+    </select>
 
     <select id="getSalesContractDto" resultMap="salesContractDto">
         SELECT * FROM i8c71_sales_contract WHERE client_name = #{clientName} AND business_type LIKE CONCAT('%', #{businessType}, '%') LIMIT 0, 1

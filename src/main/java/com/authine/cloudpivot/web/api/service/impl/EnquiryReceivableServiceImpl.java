@@ -1,6 +1,7 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
 import com.authine.cloudpivot.web.api.dto.EnquiryReceivableDto;
+import com.authine.cloudpivot.web.api.entity.EnquiryReceivable;
 import com.authine.cloudpivot.web.api.mapper.EnquiryReceivableMapper;
 import com.authine.cloudpivot.web.api.service.EnquiryReceivableService;
 import lombok.extern.slf4j.Slf4j;
@@ -32,5 +33,34 @@ public class EnquiryReceivableServiceImpl implements EnquiryReceivableService {
     @Override
     public List<EnquiryReceivableDto> getEnquiryReceivableDtoByIds(List<String> ids) {
         return enquiryReceivableMapper.getEnquiryReceivableDtoByIds(ids);
+    }
+
+    @Override
+    public EnquiryReceivable getEnquiryReceivable(String billYear, String customerName, String employeeNature) {
+        return enquiryReceivableMapper.getEnquiryReceivable(billYear, customerName, employeeNature);
+    }
+
+    /**
+     * @param updateEnquiry:
+     * @Author: wangyong
+     * @Date: 2020/4/8 14:15
+     * @return: void
+     * @Description: 更新账单查询
+     */
+    @Override
+    public void updateEnquiryReceivable(List<EnquiryReceivable> updateEnquiry) {
+        enquiryReceivableMapper.updateEnquiryReceivable(updateEnquiry);
+    }
+
+    /**
+     * @param createEnquiry:
+     * @Author: wangyong
+     * @Date: 2020/4/8 14:15
+     * @return: void
+     * @Description: 创建账单查询
+     */
+    @Override
+    public void createEnquiryReceivable(List<EnquiryReceivable> createEnquiry) {
+        enquiryReceivableMapper.createEnquiryReceivable(createEnquiry);
     }
 }

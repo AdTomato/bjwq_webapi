@@ -30,4 +30,8 @@
     <select id="getSupplierById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.Supplier">
         SELECT * FROM id34a_supplier WHERE id = #{id}
     </select>
+
+    <select id="getCcpsByClientName" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.Ccps">
+        SELECT * FROM id34a_ccps WHERE client = #{clientName}
+    </select>
 </mapper>

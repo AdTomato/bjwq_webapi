@@ -134,6 +134,11 @@ public class Constants {
     public static final String COMPLETED_STATUS = "COMPLETED";
 
     /**
+     * 运行中状态
+     */
+    public static final String PROCESSING_STATUS = "PROCESSING";
+
+    /**
      * 用户type
      */
     public static final Integer USER_TYPE = 3;

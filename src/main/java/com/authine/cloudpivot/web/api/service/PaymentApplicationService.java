@@ -30,7 +30,7 @@ public interface PaymentApplicationService {
                    WorkflowInstanceFacade workflowInstanceFacade, BizObjectFacade bizObjectFacade) throws Exception;
 
     /**
-     * 方法说明：
+     * 方法说明：创建支付明细账单和支付申请数据
      * @param user
      * @param dept
      * @param bizObjectFacade
@@ -51,7 +51,19 @@ public interface PaymentApplicationService {
      * @author liulei
      * @Date 2020/3/30 16:16
      */
+    @Deprecated
     void importOneTimeFee(String fileName, UserModel user, DepartmentModel dept) throws Exception;
+
+    /**
+     * 方法说明：省内导入临时收费数据
+     * @param fileName 文件名称
+     * @param user 当前用户
+     * @param dept 当前部门
+     * @return void
+     * @author liulei
+     * @Date 2020/4/8 11:04
+     */
+    void importTemporaryCharge(String fileName, UserModel user, DepartmentModel dept) throws Exception;
 
     /**
      * 方法说明：导入支付明细，生成支付申请

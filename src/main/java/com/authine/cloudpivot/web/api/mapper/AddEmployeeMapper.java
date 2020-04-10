@@ -54,4 +54,12 @@ public interface AddEmployeeMapper {
 
     void updateDeclareOrCloseStatus(@Param("ids") String[] ids, @Param("declareTableName") String declareTableName,
                                     @Param("status") String status);
+
+    List<EmployeeOrderForm> getEmployeeOrderFormByEmployeeFilesId(String id);
+
+    List<SocialSecurityDeclare> getSocialSecurityDeclareByOrderFormId(String id);
+
+    List<ProvidentFundDeclare> getProvidentFundDeclareByOrderFormId(String id);
+
+    void updateEmployeeOrderFromTime(String id);
 }

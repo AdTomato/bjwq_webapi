@@ -54,6 +54,9 @@ public class EmployeeMaintainController extends BaseController {
     @Resource
     private UpdateEmployeesServiceImpl updateEmployeeService;
 
+    @Resource
+    private CollectionRuleService collectionRuleService;
+
     /**
      * 方法说明：增员导入
      * @Param fileName
@@ -149,31 +152,33 @@ public class EmployeeMaintainController extends BaseController {
             EmployeeFiles employeeFiles =
                     employeeFilesService.getEmployeeFilesByIdNoOrClientName(delEmployee.getIdentityNo(),
                             delEmployee.getClientName());
+
+            boolean sIsOut = false, gIsOut = false;
+            if (StringUtils.isNotBlank(employeeFiles.getSocialSecurityCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
+                sIsOut = true;
+            }
+            if (StringUtils.isNotBlank(employeeFiles.getProvidentFundCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getProvidentFundCity()) < 0) {
+                gIsOut = true;
+            }
+            if (sIsOut || gIsOut) {
+                // 判断批量撤离（省外）
+                List<BatchEvacuation> batchEvacuations = new ArrayList <>();
+                if (Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
+                    BatchEvacuation batchEvacuation = new BatchEvacuation(employeeFiles.getEmployeeName(),
+                            employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getReportQuitDate(),
+                            employeeFiles.getSocialSecurityChargeEnd(), employeeFiles.getProvidentFundChargeEnd(),
+                            employeeFiles.getQuitReason(), employeeFiles.getQuitRemark());
+                    batchEvacuations.add(batchEvacuation);
+                }
+                // 生成批量撤离
+                batchEvacuationService.addBatchEvacuationDatas(this.getUserId(), this.getOrganizationFacade(),
+                        batchEvacuations);
+            }
+
             // 运行负责人
-            OperateLeader operateLeader = null;
-            String socialSecurityOperateLeader = null;
-            String providentFundOperateLeader = null;
-            if (StringUtils.isNotBlank(employeeFiles.getSocialSecurityCity())) {
-                operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
-                        employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
-                if (operateLeader != null) {
-                    socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
-                }
-            }
-            if (StringUtils.isNotBlank(employeeFiles.getProvidentFundCity())) {
-                String welfareHandler = employeeFiles.getSocialSecurityArea() == null ? "" :
-                        employeeFiles.getSocialSecurityArea();
-                if (employeeFiles.getProvidentFundCity().equals(employeeFiles.getSocialSecurityCity())
-                        && welfareHandler.equals(employeeFiles.getProvidentFundArea())) {
-                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
-                } else {
-                    operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
-                            employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
-                    if (operateLeader != null) {
-                        providentFundOperateLeader = operateLeader.getProvidentFundLeader();
-                    }
-                }
-            }
+            OperateLeader operateLeader = getOperateLeader(employeeFiles);
+            String socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
+            String providentFundOperateLeader = operateLeader.getProvidentFundLeader();
 
             // 根据员工档案的id获取社保公积金信息
             Map <String, String> socialSecurityFund =
@@ -243,19 +248,6 @@ public class EmployeeMaintainController extends BaseController {
             UserModel user = this.getOrganizationFacade().getUser(userId);
             employeeMaintainService.deleteEmployeeSubmit(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
                     socialSecurityClose, providentFundClose, employeeFiles, user);
-
-            // 判断批量撤离（省外）
-            List<BatchEvacuation> batchEvacuations = new ArrayList <>();
-            if (Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
-                BatchEvacuation batchEvacuation = new BatchEvacuation(employeeFiles.getEmployeeName(),
-                        employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getReportQuitDate(),
-                        employeeFiles.getSocialSecurityChargeEnd(), employeeFiles.getProvidentFundChargeEnd(),
-                        employeeFiles.getQuitReason(), employeeFiles.getQuitRemark());
-                batchEvacuations.add(batchEvacuation);
-            }
-            // 生成批量撤离
-            batchEvacuationService.addBatchEvacuationDatas(this.getUserId(), this.getOrganizationFacade(),
-                    batchEvacuations);
 
             // 修改员工补充福利（商保，体检，代发福利）的员工状态为已离职
             businessInsuranceService.updateEmployeeStatus(employeeFiles.getClientName(), employeeFiles.getIdNo(),
@@ -399,19 +391,6 @@ public class EmployeeMaintainController extends BaseController {
             employeeMaintainService.deleteEmployeeSubmit(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
                     socialSecurityClose, providentFundClose, employeeFiles, user);
 
-            // 判断批量撤离（省外）
-            List<BatchEvacuation> batchEvacuations = new ArrayList <>();
-            if (Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
-                BatchEvacuation batchEvacuation = new BatchEvacuation(employeeFiles.getEmployeeName(),
-                        employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getReportQuitDate(),
-                        employeeFiles.getSocialSecurityChargeEnd(), employeeFiles.getProvidentFundChargeEnd(),
-                        employeeFiles.getQuitReason(), employeeFiles.getQuitRemark());
-                batchEvacuations.add(batchEvacuation);
-            }
-            // 生成批量撤离
-            batchEvacuationService.addBatchEvacuationDatas(this.getUserId(), this.getOrganizationFacade(),
-                    batchEvacuations);
-
             // 修改员工补充福利（商保，体检，代发福利）的员工状态为已离职
             businessInsuranceService.updateEmployeeStatus(employeeFiles.getClientName(), employeeFiles.getIdNo(),
                     EMPLOYEE_STATUS_QUIT);
@@ -480,7 +459,7 @@ public class EmployeeMaintainController extends BaseController {
                     providentFundOperateLeader = operateLeader.getProvidentFundLeader();
                 } else {
                     operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
-                                    employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+                            employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
                     if (operateLeader != null) {
                         providentFundOperateLeader = operateLeader.getProvidentFundLeader();
                     }
@@ -559,19 +538,6 @@ public class EmployeeMaintainController extends BaseController {
             employeeMaintainService.deleteEmployeeSubmit(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
                     socialSecurityClose, providentFundClose, employeeFiles, user);
 
-            // 判断批量撤离（省外）
-            List<BatchEvacuation> batchEvacuations = new ArrayList <>();
-            if (Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
-                BatchEvacuation batchEvacuation = new BatchEvacuation(employeeFiles.getEmployeeName(),
-                        employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getReportQuitDate(),
-                        employeeFiles.getSocialSecurityChargeEnd(), employeeFiles.getProvidentFundChargeEnd(),
-                        employeeFiles.getQuitReason(), employeeFiles.getQuitRemark());
-                batchEvacuations.add(batchEvacuation);
-            }
-            // 生成批量撤离
-            batchEvacuationService.addBatchEvacuationDatas(this.getUserId(), this.getOrganizationFacade(),
-                    batchEvacuations);
-
             // 修改员工补充福利（商保，体检，代发福利）的员工状态为已离职
             businessInsuranceService.updateEmployeeStatus(employeeFiles.getClientName(), employeeFiles.getIdNo(),
                     EMPLOYEE_STATUS_QUIT);
@@ -622,30 +588,41 @@ public class EmployeeMaintainController extends BaseController {
             /** 员工档案*/
             EmployeeFiles employeeFiles = getEmployeeFilesByAddEmployee(addEmployee);
 
+            boolean sIsOut = false, gIsOut = false;
+            if (StringUtils.isNotBlank(employeeFiles.getSocialSecurityCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
+                sIsOut = true;
+            }
+            if (StringUtils.isNotBlank(employeeFiles.getProvidentFundCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getProvidentFundCity()) < 0) {
+                gIsOut = true;
+            }
+            if (sIsOut || gIsOut) {
+                // 批量生成预派
+                addBatchPreDispatch(addEmployee, employeeFiles, sIsOut, gIsOut);
+            }
+
+            // 查询征缴规则
+            CollectionRule sRule = new CollectionRule();
+            CollectionRule gRule = new CollectionRule();
             // 运行负责人
-            OperateLeader operateLeader = null;
-            String socialSecurityOperateLeader = null;
-            String providentFundOperateLeader = null;
-            if (StringUtils.isNotBlank(addEmployee.getSocialSecurityCity())) {
-                operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
-                        employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
-                if (operateLeader == null && addEmployee.getSocialSecurityStartTime() != null) {
+            OperateLeader operateLeader = getOperateLeader(employeeFiles);
+            String socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
+            String providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+            if (!sIsOut) {
+                sRule = collectionRuleService.getCollectionRuleByCity(employeeFiles.getSocialSecurityCity());
+                if (StringUtils.isBlank(socialSecurityOperateLeader) && addEmployee.getSocialSecurityStartTime() != null) {
                     return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
                 }
-                socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
             }
-            if (StringUtils.isNotBlank(employeeFiles.getProvidentFundCity())) {
-                String welfareHandler = employeeFiles.getSocialSecurityArea() == null ? "" : employeeFiles.getSocialSecurityArea();
-                if (employeeFiles.getProvidentFundCity().equals(employeeFiles.getSocialSecurityCity())
-                        && welfareHandler.equals(employeeFiles.getProvidentFundArea())) {
-                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+            if (!gIsOut) {
+                if (employeeFiles.getProvidentFundCity().equals(employeeFiles.getSocialSecurityCity())) {
+                    // 福利地相同
+                    gRule = sRule;
                 } else {
-                    operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
-                            employeeFiles.getProvidentFundCity(), employeeFiles.getProvidentFundArea());
-                    if (operateLeader == null && addEmployee.getProvidentFundStartTime() != null) {
-                        return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
-                    }
-                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+                    gRule = collectionRuleService.getCollectionRuleByCity(employeeFiles.getProvidentFundCity());
+                }
+
+                if (StringUtils.isBlank(providentFundOperateLeader) && addEmployee.getProvidentFundStartTime() != null) {
+                    return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
                 }
             }
 
@@ -665,38 +642,51 @@ public class EmployeeMaintainController extends BaseController {
             employeeFiles.setSalesman(salesman);
             employeeFiles.setReportRecruits(applicant);
 
+            employeeFiles.setEntryNotice("否");
             /** 入职通知书*/
             EntryNotice entryNotice = new EntryNotice(addEmployee.getEmployeeName(), addEmployee.getIdentityNo(),
                     addEmployee.getSocialSecurityCity(), addEmployee.getClientName());
 
             // 获取当前时间节点,如果是个性化客户，获取个性化设置
-            Map <String, String> personal = employeeMaintainService.getTimeNode(addEmployee.getClientName(),
+            Ccps ccps = employeeMaintainService.getTimeNode(addEmployee.getClientName(),
                     addEmployee.getSocialSecurityCity());
-            String timeNode = personal.get("time_node");
+            int timeNode = ccps.getTimeNode();
+            Ccps gccps = employeeMaintainService.getTimeNode(addEmployee.getClientName(),
+                    addEmployee.getProvidentFundCity());
+            int gTimeNode = gccps.getTimeNode();
             // 补缴月份
             int sMonthDifference = getMonthDifference(timeNode, new Date(), addEmployee.getSocialSecurityStartTime());
-            int gMonthDifference = getMonthDifference(timeNode, new Date(), addEmployee.getProvidentFundStartTime());
+            int gMonthDifference = getMonthDifference(gTimeNode, new Date(), addEmployee.getProvidentFundStartTime());
+            boolean haveEntryNotice = false;
             if (sMonthDifference > 0) {
-                personal.put("pay_month_s", String.valueOf(sMonthDifference));
+                haveEntryNotice = checkHaveEntryNotice(sRule.getCollectionRuleDetails(), sMonthDifference, "社保");
+                if (haveEntryNotice) {
+                    employeeFiles.setEntryNotice("是");
+                    entryNotice.setSocialSecurity(sRule.getSocialSecurity());
+                    entryNotice.setOperateSignatory(socialSecurityOperateLeader);
+                }
             }
             if (gMonthDifference > 0) {
-                personal.put("pay_month_g", String.valueOf(gMonthDifference));
-            }
-            employeeFiles.setEntryNotice("否");
-            if (sMonthDifference > 0) {
-                Map <String, String> entryNoticeInfo = employeeMaintainService.getEntryNoticeInfo(sMonthDifference,
-                        addEmployee.getSocialSecurityCity());
-                if ("true".equals(entryNoticeInfo.get("haveEntryNotice"))) {
+                haveEntryNotice = false;
+                haveEntryNotice = checkHaveEntryNotice(gRule.getCollectionRuleDetails(), sMonthDifference, "公积金");
+                if (haveEntryNotice) {
                     employeeFiles.setEntryNotice("是");
-                    // 运行签收人
-                    entryNotice.setOperateSignatory(entryNoticeInfo.get("operate_signatory"));
-                    // 用工备案
-                    entryNotice.setRecordOfEmployment(entryNoticeInfo.get("record_of_employment"));
-                    // 社保
-                    entryNotice.setSocialSecurity(entryNoticeInfo.get("social_security"));
-                    // 公积金
-                    entryNotice.setProvidentFund(entryNoticeInfo.get("provident_fund"));
+                    entryNotice.setProvidentFund(gRule.getProvidentFund());
+                    entryNotice.setOperateSignatory(providentFundOperateLeader);
                 }
+            }
+
+            //创建员工档案
+            String employeeFilesId = employeeMaintainService.createEmployeeInfoModel(this.getBizObjectFacade(),
+                    this.getWorkflowInstanceFacade(), employeeFiles, customerService);
+            if ("是".equals(employeeFiles.getEntryNotice())) {
+                //创建入职通知
+                employeeMaintainService.createEntryNotice(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
+                        entryNotice, customerService);
+            }
+
+            if (sIsOut && gIsOut) {
+                return this.getOkResponseResult("success", "增员提交成功!");
             }
 
             /** 员工订单实体*/
@@ -704,7 +694,9 @@ public class EmployeeMaintainController extends BaseController {
                     addEmployee.getSocialSecurityCity(), addEmployee.getSocialSecurityStartTime(),
                     addEmployee.getSocialSecurityBase(), addEmployee.getProvidentFundCity(),
                     addEmployee.getProvidentFundStartTime(), addEmployee.getProvidentFundBase(),
-                    addEmployee.getCompanyProvidentFundBl(), addEmployee.getEmployeeProvidentFundBl(), personal);
+                    addEmployee.getCompanyProvidentFundBl(), addEmployee.getEmployeeProvidentFundBl(),
+                    sMonthDifference, gMonthDifference, ccps);
+
 
             employeeOrderForm.setServiceFee(StringUtils.isBlank(serviceFee) ? 0.0 : Double.parseDouble(serviceFee));
             employeeOrderForm.setTotal(employeeOrderForm.getSum() + employeeOrderForm.getServiceFee());
@@ -761,46 +753,22 @@ public class EmployeeMaintainController extends BaseController {
             providentFundDeclare.setPersonalDeposit(personalDeposit);
             providentFundDeclare.setTotalDeposit(totalDeposit);
 
-            //创建员工档案
-            String employeeFilesId = employeeMaintainService.createEmployeeInfoModel(this.getBizObjectFacade(),
-                    this.getWorkflowInstanceFacade(), employeeFiles, customerService);
-            if ("是".equals(employeeFiles.getEntryNotice())) {
-                //创建入职通知
-                employeeMaintainService.createEntryNotice(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
-                        entryNotice, customerService);
-            }
             //创建员工订单
             employeeOrderForm.setEmployeeFilesId(employeeFilesId);
             String employeeOrderFormId = employeeMaintainService.createEmployeeOrderForm(this.getBizObjectFacade(),
                     employeeOrderForm, customerService);
             //创建社保申报
-            if (socialSecurityDeclare.getStartMonth() != null) {
+            if (socialSecurityDeclare.getStartMonth() != null && !sIsOut) {
                 socialSecurityDeclare.setEmployeeOrderFormId(employeeOrderFormId);
                 employeeMaintainService.createSocialSecurityDeclare(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
                         socialSecurityDeclare, customerService);
             }
             //创建公积金申报
-            if (providentFundDeclare.getStartMonth() != null) {
+            if (providentFundDeclare.getStartMonth() != null  && !gIsOut) {
                 providentFundDeclare.setEmployeeOrderFormId(employeeOrderFormId);
                 employeeMaintainService.createProvidentFundDeclare(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
                         providentFundDeclare, customerService);
             }
-
-            // 判断批量预派（省外）
-            List<BatchPreDispatch> batchPreDispatches = new ArrayList <>();
-            if (Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
-                String providentFundRatio =
-                        "" + addEmployee.getCompanyProvidentFundBl() + "+" + addEmployee.getEmployeeProvidentFundBl();
-                BatchPreDispatch batchPreDispatch = new BatchPreDispatch(employeeFiles.getEmployeeName(),
-                        employeeFiles.getIdNo(), employeeFiles.getMobile(), addEmployee.getSocialSecurityBase(),
-                        providentFundRatio, null, addEmployee.getProvidentFundBase(), employeeFiles.getEntryTime(),
-                        employeeFiles.getReportEntryTime(), employeeFiles.getSocialSecurityCity(),
-                        employeeFiles.getEntryDescription());
-                batchPreDispatches.add(batchPreDispatch);
-            }
-            // 生成批量预派
-            batchPreDispatchService.addBatchPreDispatchs(this.getUserId(), this.getOrganizationFacade(),
-                    batchPreDispatches);
 
             return this.getOkResponseResult("success", "增员提交成功!");
         } catch (Exception e) {
@@ -892,43 +860,38 @@ public class EmployeeMaintainController extends BaseController {
             EntryNotice entryNotice = new EntryNotice(shAddEmployee.getEmployeeName(), shAddEmployee.getIdentityNo(),
                     shAddEmployee.getCityName(), shAddEmployee.getClientName());
 
+            CollectionRule rule = collectionRuleService.getCollectionRuleByCity(shAddEmployee.getCityName());
             // 获取当前时间节点,如果是个性化客户，获取个性化设置
-            Map <String, String> personal = employeeMaintainService.getTimeNode(shAddEmployee.getClientName(),
-                    shAddEmployee.getCityName());
-            String timeNode = personal.get("time_node");
+            Ccps ccps = employeeMaintainService.getTimeNode(shAddEmployee.getClientName(), shAddEmployee.getCityName());
+            int timeNode = ccps.getTimeNode();
             // 补缴月份
-            int sMonthDifference = getMonthDifference(timeNode, new Date(), shAddEmployee.getBenefitStartTime());
-            int gMonthDifference = getMonthDifference(timeNode, new Date(), shAddEmployee.getProvidentFundStartTime());
-            if (sMonthDifference > 0) {
-                personal.put("pay_month_s", String.valueOf(sMonthDifference));
-            }
-            if (gMonthDifference > 0) {
-                personal.put("pay_month_g", String.valueOf(gMonthDifference));
-            }
+            int sMonthDifference = getMonthDifference(timeNode, new Date(), employeeFiles.getSocialSecurityChargeStart());
+            int gMonthDifference = getMonthDifference(timeNode, new Date(), employeeFiles.getProvidentFundChargeStart());
             employeeFiles.setEntryNotice("否");
             if (sMonthDifference > 0) {
-                Map <String, String> entryNoticeInfo = employeeMaintainService.getEntryNoticeInfo(sMonthDifference,
-                        shAddEmployee.getCityName());
-                if ("true".equals(entryNoticeInfo.get("haveEntryNotice"))) {
+                boolean haveEntryNotice = checkHaveEntryNotice(rule.getCollectionRuleDetails(), sMonthDifference, "社保");
+                if (haveEntryNotice) {
                     employeeFiles.setEntryNotice("是");
-                    // 运行签收人
-                    entryNotice.setOperateSignatory(entryNoticeInfo.get("operate_signatory"));
-                    // 用工备案
-                    entryNotice.setRecordOfEmployment(entryNoticeInfo.get("record_of_employment"));
-                    // 社保
-                    entryNotice.setSocialSecurity(entryNoticeInfo.get("social_security"));
-                    // 公积金
-                    entryNotice.setProvidentFund(entryNoticeInfo.get("provident_fund"));
+                    entryNotice.setSocialSecurity(rule.getSocialSecurity());
+                    entryNotice.setOperateSignatory(socialSecurityOperateLeader);
+                }
+            }
+            if (gMonthDifference > 0) {
+                boolean haveEntryNotice = checkHaveEntryNotice(rule.getCollectionRuleDetails(), sMonthDifference, "公积金");
+                if (haveEntryNotice) {
+                    employeeFiles.setEntryNotice("是");
+                    entryNotice.setProvidentFund(rule.getProvidentFund());
+                    entryNotice.setOperateSignatory(providentFundOperateLeader);
                 }
             }
 
             /** 员工订单实体*/
             /** 员工订单实体*/
             EmployeeOrderForm employeeOrderForm = employeeMaintainService.getEmployeeOrderForm(
-                    shAddEmployee.getClientName(), shAddEmployee.getBenefitStartTime(),
-                    shAddEmployee.getSocialSecurityBase(), shAddEmployee.getClientName(),
-                    shAddEmployee.getProvidentFundStartTime(), shAddEmployee.getProvidentFundBase(),
-                    shAddEmployee.getPSupplementProvidentFund(), shAddEmployee.getUSupplementProvidentFund(), personal);
+                    shAddEmployee.getCityName(), employeeFiles.getSocialSecurityChargeStart(),
+                    shAddEmployee.getSocialSecurityBase(), shAddEmployee.getCityName(),
+                    employeeFiles.getProvidentFundChargeStart(), shAddEmployee.getProvidentFundBase(),
+                    shAddEmployee.getPSupplementProvidentFund(), shAddEmployee.getUSupplementProvidentFund(), sMonthDifference, gMonthDifference, ccps);
             employeeOrderForm.setServiceFee(StringUtils.isBlank(serviceFee) ? 0.0 : Double.parseDouble(serviceFee));
             employeeOrderForm.setTotal(employeeOrderForm.getSum() + employeeOrderForm.getServiceFee());
 
@@ -941,7 +904,7 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFiles.getGender(), employeeFiles.getBirthDate(), shAddEmployee.getIdentityNoType(),
                     shAddEmployee.getIdentityNo(), employeeFiles.getEntrustedUnit(), shAddEmployee.getClientName(),
                     salesman, customerServices, employeeFiles.getSocialSecurityArea(), applicant,
-                    shAddEmployee.getCreatedTime(), shAddEmployee.getBenefitStartTime(),
+                    shAddEmployee.getCreatedTime(), employeeFiles.getSocialSecurityChargeStart(),
                     shAddEmployee.getSocialSecurityBase(), shAddEmployee.getSocialSecurityBase(),
                     shAddEmployee.getMobile(), weatherPartWorkInjury, socialSecurityOperateLeader,
                     employeeOrderForm.getSocialSecurityDetail());
@@ -952,7 +915,7 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFiles.getGender(), employeeFiles.getBirthDate(), shAddEmployee.getIdentityNoType(),
                     shAddEmployee.getIdentityNo(), employeeFiles.getEntrustedUnit(), shAddEmployee.getClientName(),
                     salesman, customerServices, employeeFiles.getProvidentFundArea(), applicant,
-                    shAddEmployee.getCreatedTime(), shAddEmployee.getProvidentFundStartTime(),
+                    shAddEmployee.getCreatedTime(), employeeFiles.getProvidentFundChargeStart(),
                     shAddEmployee.getProvidentFundBase(), providentFundOperateLeader, employeeOrderForm.getProvidentFundDetail());
             providentFundDeclare.setStatus("待办");
             /** 缴存总额*/
@@ -1005,22 +968,6 @@ public class EmployeeMaintainController extends BaseController {
                 employeeMaintainService.createProvidentFundDeclare(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
                         providentFundDeclare, customerService);
             }
-
-            // 判断批量预派（省外）
-            List<BatchPreDispatch> batchPreDispatches = new ArrayList <>();
-            if (Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
-                String providentFundRatio =
-                        "" + shAddEmployee.getPSupplementProvidentFund() + "+" + shAddEmployee.getUSupplementProvidentFund();
-                BatchPreDispatch batchPreDispatch = new BatchPreDispatch(employeeFiles.getEmployeeName(),
-                        employeeFiles.getIdNo(), employeeFiles.getMobile(), shAddEmployee.getSocialSecurityBase(),
-                        providentFundRatio, providentFundRatio, shAddEmployee.getProvidentFundBase(), employeeFiles.getEntryTime(),
-                        employeeFiles.getReportEntryTime(), employeeFiles.getSocialSecurityCity(),
-                        employeeFiles.getEntryDescription());
-                batchPreDispatches.add(batchPreDispatch);
-            }
-            // 生成批量预派
-            batchPreDispatchService.addBatchPreDispatchs(this.getUserId(), this.getOrganizationFacade(),
-                    batchPreDispatches);
 
             return this.getOkResponseResult("success", "增员提交成功!");
         } catch (Exception e) {
@@ -1108,34 +1055,28 @@ public class EmployeeMaintainController extends BaseController {
                     nationwideDispatch.getInvolved(), nationwideDispatch.getBusinessCustomerName());
 
             // 获取当前时间节点,如果是个性化客户，获取个性化设置
-            Map <String, String> personal =
-                    employeeMaintainService.getTimeNode(nationwideDispatch.getBusinessCustomerName(),
-                            nationwideDispatch.getInvolved());
-            String timeNode = personal.get("time_node");
+            Ccps ccps  = employeeMaintainService.getTimeNode(nationwideDispatch.getBusinessCustomerName(),
+                    nationwideDispatch.getInvolved());
+            CollectionRule rule = collectionRuleService.getCollectionRuleByCity(employeeFiles.getSocialSecurityCity());
+            int timeNode = ccps.getTimeNode();
             // 补缴月份
             int sMonthDifference = getMonthDifference(timeNode, new Date(), nationwideDispatch.getSServiceFeeStartDate());
             int gMonthDifference = getMonthDifference(timeNode, new Date(), nationwideDispatch.getGServiceFeeStartDate());
-            if (sMonthDifference > 0) {
-                personal.put("pay_month_s", String.valueOf(sMonthDifference));
-            }
-            if (gMonthDifference > 0) {
-                personal.put("pay_month_g", String.valueOf(gMonthDifference));
-            }
-
             employeeFiles.setEntryNotice("否");
             if (sMonthDifference > 0) {
-                Map <String, String> entryNoticeInfo = employeeMaintainService.getEntryNoticeInfo(sMonthDifference,
-                        nationwideDispatch.getInvolved());
-                if ("true".equals(entryNoticeInfo.get("haveEntryNotice"))) {
+                boolean haveEntryNotice = checkHaveEntryNotice(rule.getCollectionRuleDetails(), sMonthDifference, "社保");
+                if (haveEntryNotice) {
                     employeeFiles.setEntryNotice("是");
-                    // 运行签收人
-                    entryNotice.setOperateSignatory(entryNoticeInfo.get("operate_signatory"));
-                    // 用工备案
-                    entryNotice.setRecordOfEmployment(entryNoticeInfo.get("record_of_employment"));
-                    // 社保
-                    entryNotice.setSocialSecurity(entryNoticeInfo.get("social_security"));
-                    // 公积金
-                    entryNotice.setProvidentFund(entryNoticeInfo.get("provident_fund"));
+                    entryNotice.setSocialSecurity(rule.getSocialSecurity());
+                    entryNotice.setOperateSignatory(socialSecurityOperateLeader);
+                }
+            }
+            if (gMonthDifference > 0) {
+                boolean haveEntryNotice = checkHaveEntryNotice(rule.getCollectionRuleDetails(), sMonthDifference, "公积金");
+                if (haveEntryNotice) {
+                    employeeFiles.setEntryNotice("是");
+                    entryNotice.setProvidentFund(rule.getProvidentFund());
+                    entryNotice.setOperateSignatory(providentFundOperateLeader);
                 }
             }
 
@@ -1152,7 +1093,7 @@ public class EmployeeMaintainController extends BaseController {
                     nationwideDispatch.getInvolved(), nationwideDispatch.getSServiceFeeStartDate(),
                     nationwideDispatch.getSocialInsuranceAmount(), nationwideDispatch.getInvolved(),
                     nationwideDispatch.getGServiceFeeStartDate(), nationwideDispatch.getProvidentFundAmount(),
-                    companyRatio, employeeRatio, personal);
+                    companyRatio, employeeRatio, sMonthDifference, gMonthDifference, ccps);
             employeeOrderForm.setServiceFee(StringUtils.isBlank(serviceFee) ? 0.0 : Double.parseDouble(serviceFee));
             employeeOrderForm.setTotal(employeeOrderForm.getSum() + employeeOrderForm.getServiceFee());
 
@@ -1233,20 +1174,6 @@ public class EmployeeMaintainController extends BaseController {
                         providentFundDeclare, customerService);
             }
 
-            // 判断批量预派（省外）
-            List<BatchPreDispatch> batchPreDispatches = new ArrayList <>();
-            if (Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
-                BatchPreDispatch batchPreDispatch = new BatchPreDispatch(employeeFiles.getEmployeeName(),
-                        employeeFiles.getIdNo(), employeeFiles.getMobile(),
-                        nationwideDispatch.getSocialInsuranceAmount(), nationwideDispatch.getProvidentFundRatio(),
-                        nationwideDispatch.getSuppleProvidentFundRatio(), nationwideDispatch.getProvidentFundAmount(),
-                        employeeFiles.getEntryTime(), employeeFiles.getReportEntryTime(),
-                        employeeFiles.getSocialSecurityCity(), employeeFiles.getEntryDescription());
-                batchPreDispatches.add(batchPreDispatch);
-            }
-            // 生成批量预派
-            batchPreDispatchService.addBatchPreDispatchs(this.getUserId(), this.getOrganizationFacade(),
-                    batchPreDispatches);
             return this.getOkResponseResult("success", "增员提交成功!");
         } catch (Exception e) {
             log.info(e.getMessage());
@@ -1256,7 +1183,7 @@ public class EmployeeMaintainController extends BaseController {
 
     /**
      * 方法说明：获取补缴月份
-     * @param timeNode
+     * @param node
      * @param curTime 当前时间
      * @param startTime 开始缴纳时间
      * @return int
@@ -1264,7 +1191,7 @@ public class EmployeeMaintainController extends BaseController {
      * @author liulei
      * @Date 2020/2/14 14:30
      */
-    private int getMonthDifference(String timeNode, Date curTime, Date startTime) throws Exception{
+    private int getMonthDifference(int node, Date curTime, Date startTime) throws Exception{
         if (startTime == null) {
             return  0;
         }
@@ -1280,8 +1207,6 @@ public class EmployeeMaintainController extends BaseController {
         int startYear = start.get(Calendar.YEAR);
         int startMonth = start.get(Calendar.MONTH) + 1;
 
-        Double node1 = StringUtils.isBlank(timeNode) ? 0.0 : Double.parseDouble(timeNode);
-        int node = node1.intValue();
         if (curDay > node) {
             curMonth++;
         }
@@ -1696,26 +1621,18 @@ public class EmployeeMaintainController extends BaseController {
             if (oldEmployeeFiles == null) {
                 return this.getErrResponseResult("error", 404l, "没有获取到对应员工档案数据。");
             }
-            // 原社保申报实体
-            SocialSecurityDeclare oldSocialSecurityDeclare =
-                    addEmployeeService.getSocialSecurityDeclareByClientNameAndIdentityNo(oldAddEmployee.getClientName(),
-                            oldAddEmployee.getIdentityNo());
-            if (oldSocialSecurityDeclare == null) {
-                oldSocialSecurityDeclare = new SocialSecurityDeclare();
-            }
-            // 原公积金申报实体
-            ProvidentFundDeclare oldProvidentFundDeclare =
-                    addEmployeeService.getProvidentFundDeclareByClientNameAndIdentityNo(oldAddEmployee.getClientName(),
-                            oldAddEmployee.getIdentityNo());
-            if (oldProvidentFundDeclare == null) {
-                oldProvidentFundDeclare = new ProvidentFundDeclare();
-            }
             // 原员工订单实体
             EmployeeOrderForm oldEmployeeOrderForm =
-                    addEmployeeService.getEmployeeOrderFormById(oldSocialSecurityDeclare.getEmployeeOrderFormId());
+                    addEmployeeService.getEmployeeOrderFormByEmployeeFilesId(oldEmployeeFiles.getId());
             if (oldEmployeeOrderForm == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到对应员工订单数据。");
+                oldEmployeeOrderForm = new EmployeeOrderForm();
             }
+            // 原社保申报实体
+            SocialSecurityDeclare oldSocialSecurityDeclare =
+                    getOldSocialSecurityDeclareByOrderFormId(oldEmployeeOrderForm.getId());
+            // 原公积金申报实体
+            ProvidentFundDeclare oldProvidentFundDeclare =
+                    getOldProvidentFundDeclareByOrderFormId(oldEmployeeOrderForm.getId());
 
             // 创建时间还是原来的创建时间
             addEmployee.setId(oldAddEmployee.getId());
@@ -1725,36 +1642,44 @@ public class EmployeeMaintainController extends BaseController {
 
             /** 员工档案*/
             EmployeeFiles employeeFiles = getEmployeeFilesByAddEmployee(addEmployee);
+            employeeFiles.setId(oldEmployeeFiles.getId());
             employeeFiles.setName(employeeFiles.getEmployeeName());
             employeeFiles.setReportRecruits(applicant);
             employeeFiles.setEntryNotice(employeeFiles.getEntryNotice());
 
+            boolean sIsOut = false, gIsOut = false;
+            if (StringUtils.isNotBlank(employeeFiles.getSocialSecurityCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
+                sIsOut = true;
+            }
+            if (StringUtils.isNotBlank(employeeFiles.getProvidentFundCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getProvidentFundCity()) < 0) {
+                gIsOut = true;
+            }
+
             // 运行负责人
-            OperateLeader operateLeader = null;
-            String socialSecurityOperateLeader = null;
-            String providentFundOperateLeader = null;
-            if (StringUtils.isNotBlank(addEmployee.getSocialSecurityCity())) {
-                operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
-                        employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
-                if (operateLeader == null && addEmployee.getSocialSecurityStartTime() != null) {
+            OperateLeader operateLeader = getOperateLeader(employeeFiles);
+            String socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
+            String providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+            if (!sIsOut) {
+                if (StringUtils.isBlank(socialSecurityOperateLeader) && addEmployee.getSocialSecurityStartTime() != null) {
                     return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
                 }
-                socialSecurityOperateLeader = operateLeader.getSocialSecurityLeader();
             }
-            if (StringUtils.isNotBlank(employeeFiles.getProvidentFundCity())) {
-                String welfareHandler = employeeFiles.getSocialSecurityArea() == null ? "" : employeeFiles.getSocialSecurityArea();
-                if (employeeFiles.getProvidentFundCity().equals(employeeFiles.getSocialSecurityCity())
-                        && welfareHandler.equals(employeeFiles.getProvidentFundArea())) {
-                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
-                } else {
-                    operateLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
-                            employeeFiles.getProvidentFundCity(), employeeFiles.getProvidentFundArea());
-                    if (operateLeader == null && addEmployee.getProvidentFundStartTime() != null) {
-                        return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
-                    }
-                    providentFundOperateLeader = operateLeader.getProvidentFundLeader();
+            if (!gIsOut) {
+                if (StringUtils.isBlank(providentFundOperateLeader) && addEmployee.getProvidentFundStartTime() != null) {
+                    return this.getErrResponseResult("error", 404l, "没有获取到运行负责人！");
                 }
             }
+
+            // 获取当前时间节点,如果是个性化客户，获取个性化设置
+            Ccps ccps = employeeMaintainService.getTimeNode(addEmployee.getClientName(),
+                    addEmployee.getSocialSecurityCity());
+            int timeNode = ccps.getTimeNode();
+            Ccps gccps = employeeMaintainService.getTimeNode(addEmployee.getClientName(),
+                    addEmployee.getProvidentFundCity());
+            int gTimeNode = gccps.getTimeNode();
+            // 补缴月份
+            int sMonthDifference = getMonthDifference(timeNode, new Date(), addEmployee.getSocialSecurityStartTime());
+            int gMonthDifference = getMonthDifference(gTimeNode, new Date(), addEmployee.getProvidentFundStartTime());
 
             // 根据公司名称，委托单位，地区，员工性质获取业务员和服务费
             Map <String, Object> salesmanAndServiceFee =
@@ -1771,27 +1696,12 @@ public class EmployeeMaintainController extends BaseController {
 
             employeeFiles.setSalesman(salesman);
 
-
-            // 获取当前时间节点,如果是个性化客户，获取个性化设置
-            Map <String, String> personal = employeeMaintainService.getTimeNode(addEmployee.getClientName(),
-                    addEmployee.getSocialSecurityCity());
-            String timeNode = personal.get("time_node");
-            // 补缴月份
-            int sMonthDifference = getMonthDifference(timeNode, new Date(), addEmployee.getSocialSecurityStartTime());
-            int gMonthDifference = getMonthDifference(timeNode, new Date(), addEmployee.getProvidentFundStartTime());
-            if (sMonthDifference > 0) {
-                personal.put("pay_month_s", String.valueOf(sMonthDifference));
-            }
-            if (gMonthDifference > 0) {
-                personal.put("pay_month_g", String.valueOf(gMonthDifference));
-            }
-
             /** 员工订单实体*/
             EmployeeOrderForm employeeOrderForm = employeeMaintainService.getEmployeeOrderForm(
                     addEmployee.getSocialSecurityCity(), addEmployee.getSocialSecurityStartTime(),
                     addEmployee.getSocialSecurityBase(), addEmployee.getProvidentFundCity(),
                     addEmployee.getProvidentFundStartTime(), addEmployee.getProvidentFundBase(),
-                    addEmployee.getCompanyProvidentFundBl(), addEmployee.getEmployeeProvidentFundBl(), personal);
+                    addEmployee.getCompanyProvidentFundBl(), addEmployee.getEmployeeProvidentFundBl(), sMonthDifference, gMonthDifference, ccps);
             employeeOrderForm.setId(oldEmployeeOrderForm.getId());
 
             employeeOrderForm.setServiceFee(StringUtils.isBlank(serviceFee) ? 0.0 : Double.parseDouble(serviceFee));
@@ -1812,7 +1722,7 @@ public class EmployeeMaintainController extends BaseController {
                     socialSecurityOperateLeader, employeeOrderForm.getSocialSecurityDetail());
             socialSecurityDeclare.setId(oldSocialSecurityDeclare.getId());
             socialSecurityDeclare.setName(employeeFiles.getEmployeeName());
-            socialSecurityDeclare.setEmployeeOrderFormId(oldSocialSecurityDeclare.getEmployeeOrderFormId());
+            socialSecurityDeclare.setEmployeeOrderFormId(oldEmployeeOrderForm.getId());
             socialSecurityDeclare.setIsChange("是");
 
             /** 公积金申报实体*/
@@ -1825,7 +1735,7 @@ public class EmployeeMaintainController extends BaseController {
                     employeeOrderForm.getProvidentFundDetail());
             providentFundDeclare.setId(oldProvidentFundDeclare.getId());
             providentFundDeclare.setName(employeeFiles.getEmployeeName());
-            providentFundDeclare.setEmployeeOrderFormId(oldProvidentFundDeclare.getEmployeeOrderFormId());
+            providentFundDeclare.setEmployeeOrderFormId(oldEmployeeOrderForm.getId());
             providentFundDeclare.setIsChange("是");
 
             /** 缴存总额*/
@@ -1853,6 +1763,67 @@ public class EmployeeMaintainController extends BaseController {
             providentFundDeclare.setCorporatePayment(corporatePayment);
             providentFundDeclare.setPersonalDeposit(personalDeposit);
             providentFundDeclare.setTotalDeposit(totalDeposit);
+
+            if (!gIsOut || !sIsOut) {
+                // 没有查询到员工订单，此时创建员工订单，没有申报数据
+                if (StringUtils.isBlank(oldEmployeeOrderForm.getId())) {
+                    String employeeOrderFormId = employeeMaintainService.createEmployeeOrderForm(this.getBizObjectFacade(),
+                            employeeOrderForm, customerService);
+                    //创建公积金申报
+                    if (!sIsOut && socialSecurityDeclare.getStartMonth() != null) {
+                        socialSecurityDeclare.setStatus("待办");
+                        socialSecurityDeclare.setEmployeeOrderFormId(employeeOrderFormId);
+                        employeeMaintainService.createSocialSecurityDeclare(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
+                                socialSecurityDeclare, customerService);
+                    }
+                    //创建公积金申报
+                    if (!gIsOut && providentFundDeclare.getStartMonth() != null) {
+                        providentFundDeclare.setStatus("待办");
+                        providentFundDeclare.setEmployeeOrderFormId(employeeOrderFormId);
+                        employeeMaintainService.createProvidentFundDeclare(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
+                                providentFundDeclare, customerService);
+                    }
+                } else {  // 有员工订单
+                    // 不需要生成社保申报，存在历史申报,删除
+                    if ((sIsOut || socialSecurityDeclare.getStartMonth() == null) && StringUtils.isNotBlank(oldSocialSecurityDeclare.getId())) {
+                        this.getBizObjectFacade().removeBizObject(customerService.getId(),
+                                Constants.SOCIAL_SECURITY_DECLARE_SCHEMA, oldSocialSecurityDeclare.getId());
+                    }
+                    // 省内需要生成社保申报，不存在历史申报，创建
+                    if ((!sIsOut && socialSecurityDeclare.getStartMonth() != null) && StringUtils.isBlank(oldSocialSecurityDeclare.getId())) {
+                        socialSecurityDeclare.setStatus("待办");
+
+                        employeeMaintainService.createSocialSecurityDeclare(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
+                                socialSecurityDeclare, customerService);
+                    }
+                    // 不需要生成公积金申报，存在历史申报,删除
+                    if ((gIsOut || providentFundDeclare.getStartMonth() == null) && StringUtils.isNotBlank(oldProvidentFundDeclare.getId())) {
+                        this.getBizObjectFacade().removeBizObject(customerService.getId(),
+                                Constants.PROVIDENT_FUND_DECLARE_SCHEMA, oldProvidentFundDeclare.getId());
+                    }
+                    // 省内需要生成公积金申报，不存在历史申报，创建
+                    if ((!gIsOut && providentFundDeclare.getStartMonth() != null) && StringUtils.isBlank(oldProvidentFundDeclare.getId())) {
+                        providentFundDeclare.setStatus("待办");
+
+                        employeeMaintainService.createProvidentFundDeclare(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
+                                providentFundDeclare, customerService);
+                    }
+                }
+            } else {
+                // 省外,删除申报，员工订单数据
+                if (StringUtils.isNotBlank(oldProvidentFundDeclare.getId())) {
+                    this.getBizObjectFacade().removeBizObject(this.getUserId(),
+                            Constants.PROVIDENT_FUND_DECLARE_SCHEMA, oldProvidentFundDeclare.getId());
+                }
+                if (StringUtils.isNotBlank(oldSocialSecurityDeclare.getId())) {
+                    this.getBizObjectFacade().removeBizObject(this.getUserId(),
+                            Constants.SOCIAL_SECURITY_DECLARE_SCHEMA, oldSocialSecurityDeclare.getId());
+                }
+                if (StringUtils.isNotBlank(oldEmployeeOrderForm.getId())) {
+                    this.getBizObjectFacade().removeBizObject(this.getUserId(),
+                            Constants.EMPLOYEE_ORDER_FORM_SCHEMA, oldEmployeeOrderForm.getId());
+                }
+            }
 
             employeeMaintainService.addEmployeeUpdateSubmit(addEmployee, employeeFiles, employeeOrderForm,
                     socialSecurityDeclare, providentFundDeclare);
@@ -1898,26 +1869,18 @@ public class EmployeeMaintainController extends BaseController {
             if (oldEmployeeFiles == null) {
                 return this.getErrResponseResult("error", 404l, "没有获取到员工档案数据！");
             }
-            // 社保申报实体
-            SocialSecurityDeclare oldSocialSecurityDeclare =
-                    addEmployeeService.getSocialSecurityDeclareByClientNameAndIdentityNo(oldShAddEmployee.getClientName(),
-                            oldShAddEmployee.getIdentityNo());
-            if (oldSocialSecurityDeclare == null) {
-                oldSocialSecurityDeclare = new SocialSecurityDeclare();
-            }
-            // 公积金申报实体
-            ProvidentFundDeclare oldProvidentFundDeclare =
-                    addEmployeeService.getProvidentFundDeclareByClientNameAndIdentityNo(oldShAddEmployee.getClientName(),
-                            oldShAddEmployee.getIdentityNo());
-            if (oldProvidentFundDeclare == null) {
-                oldProvidentFundDeclare = new ProvidentFundDeclare();
-            }
             // 员工订单实体
             EmployeeOrderForm oldEmployeeOrderForm =
-                    addEmployeeService.getEmployeeOrderFormById(oldSocialSecurityDeclare.getEmployeeOrderFormId());
+                    addEmployeeService.getEmployeeOrderFormByEmployeeFilesId(oldEmployeeFiles.getId());
             if (oldEmployeeOrderForm == null) {
                 return this.getErrResponseResult("error", 404l, "没有获取到员工订单数据！");
             }
+            // 原社保申报实体
+            SocialSecurityDeclare oldSocialSecurityDeclare =
+                    getOldSocialSecurityDeclareByOrderFormId(oldEmployeeOrderForm.getId());
+            // 原公积金申报实体
+            ProvidentFundDeclare oldProvidentFundDeclare =
+                    getOldProvidentFundDeclareByOrderFormId(oldEmployeeOrderForm.getId());
 
             // 创建时间还是原来的创建时间
             shAddEmployee.setId(oldShAddEmployee.getId());
@@ -1927,6 +1890,7 @@ public class EmployeeMaintainController extends BaseController {
 
             /** 员工档案*/
             EmployeeFiles employeeFiles = getEmployeeFilesByAddEmployee(shAddEmployee);
+            employeeFiles.setId(oldEmployeeFiles.getId());
             employeeFiles.setName(employeeFiles.getEmployeeName());
             employeeFiles.setReportRecruits(applicant);
             employeeFiles.setEntryNotice(employeeFiles.getEntryNotice());
@@ -1975,25 +1939,19 @@ public class EmployeeMaintainController extends BaseController {
             }
 
             // 获取当前时间节点,如果是个性化客户，获取个性化设置
-            Map <String, String> personal = employeeMaintainService.getTimeNode(shAddEmployee.getClientName(),
+            Ccps ccps = employeeMaintainService.getTimeNode(shAddEmployee.getClientName(),
                     shAddEmployee.getCityName());
-            String timeNode = personal.get("time_node");
+            int timeNode = ccps.getTimeNode();
             // 补缴月份
-            int sMonthDifference = getMonthDifference(timeNode, new Date(), shAddEmployee.getBenefitStartTime());
-            int gMonthDifference = getMonthDifference(timeNode, new Date(), shAddEmployee.getProvidentFundStartTime());
-            if (sMonthDifference > 0) {
-                personal.put("pay_month_s", String.valueOf(sMonthDifference));
-            }
-            if (gMonthDifference > 0) {
-                personal.put("pay_month_g", String.valueOf(gMonthDifference));
-            }
+            int sMonthDifference = getMonthDifference(timeNode, new Date(), employeeFiles.getSocialSecurityChargeStart());
+            int gMonthDifference = getMonthDifference(timeNode, new Date(), employeeFiles.getProvidentFundChargeStart());
 
             /** 员工订单实体*/
             EmployeeOrderForm employeeOrderForm = employeeMaintainService.getEmployeeOrderForm(
-                    shAddEmployee.getClientName(), shAddEmployee.getBenefitStartTime(),
-                    shAddEmployee.getSocialSecurityBase(), shAddEmployee.getClientName(),
-                    shAddEmployee.getProvidentFundStartTime(), shAddEmployee.getProvidentFundBase(),
-                    shAddEmployee.getPSupplementProvidentFund(), shAddEmployee.getUSupplementProvidentFund(), personal);
+                    shAddEmployee.getCityName(), employeeFiles.getSocialSecurityChargeStart(),
+                    shAddEmployee.getSocialSecurityBase(), shAddEmployee.getCityName(),
+                    employeeFiles.getProvidentFundChargeStart(), shAddEmployee.getProvidentFundBase(),
+                    shAddEmployee.getPSupplementProvidentFund(), shAddEmployee.getUSupplementProvidentFund(), sMonthDifference, gMonthDifference, ccps);
             employeeOrderForm.setId(oldEmployeeOrderForm.getId());
             employeeOrderForm.setServiceFee(StringUtils.isBlank(serviceFee) ? 0.0 : Double.parseDouble(serviceFee));
             employeeOrderForm.setTotal(employeeOrderForm.getSum() + employeeOrderForm.getServiceFee());
@@ -2007,13 +1965,13 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFiles.getGender(), employeeFiles.getBirthDate(), shAddEmployee.getIdentityNoType(),
                     shAddEmployee.getIdentityNo(), employeeFiles.getEntrustedUnit(), shAddEmployee.getClientName(),
                     salesman, customerServices, employeeFiles.getSocialSecurityArea(), applicant,
-                    shAddEmployee.getCreatedTime(), shAddEmployee.getBenefitStartTime(),
+                    shAddEmployee.getCreatedTime(), employeeFiles.getSocialSecurityChargeStart(),
                     shAddEmployee.getSocialSecurityBase(), shAddEmployee.getSocialSecurityBase(),
                     shAddEmployee.getMobile(), weatherPartWorkInjury, socialSecurityOperateLeader,
                     employeeOrderForm.getSocialSecurityDetail());
             socialSecurityDeclare.setId(oldSocialSecurityDeclare.getId());
             socialSecurityDeclare.setName(employeeFiles.getEmployeeName());
-            socialSecurityDeclare.setEmployeeOrderFormId(oldSocialSecurityDeclare.getEmployeeOrderFormId());
+            socialSecurityDeclare.setEmployeeOrderFormId(oldEmployeeOrderForm.getId());
             socialSecurityDeclare.setIsChange("是");
 
             /** 公积金申报实体*/
@@ -2021,11 +1979,11 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFiles.getGender(), employeeFiles.getBirthDate(), shAddEmployee.getIdentityNoType(),
                     shAddEmployee.getIdentityNo(), employeeFiles.getEntrustedUnit(), shAddEmployee.getClientName(),
                     salesman, customerServices, employeeFiles.getProvidentFundArea(), applicant,
-                    shAddEmployee.getCreatedTime(), shAddEmployee.getProvidentFundStartTime(),
+                    shAddEmployee.getCreatedTime(), employeeFiles.getProvidentFundChargeStart(),
                     shAddEmployee.getProvidentFundBase(), providentFundOperateLeader, employeeOrderForm.getProvidentFundDetail());
             providentFundDeclare.setId(oldProvidentFundDeclare.getId());
             providentFundDeclare.setName(employeeFiles.getEmployeeName());
-            providentFundDeclare.setEmployeeOrderFormId(oldProvidentFundDeclare.getEmployeeOrderFormId());
+            providentFundDeclare.setEmployeeOrderFormId(oldEmployeeOrderForm.getId());
             providentFundDeclare.setIsChange("是");
 
             /** 缴存总额*/
@@ -2053,6 +2011,31 @@ public class EmployeeMaintainController extends BaseController {
             providentFundDeclare.setCorporatePayment(corporatePayment);
             providentFundDeclare.setPersonalDeposit(personalDeposit);
             providentFundDeclare.setTotalDeposit(totalDeposit);
+
+            // 不需要生成社保申报，存在历史申报,删除
+            if (socialSecurityDeclare.getStartMonth() == null && StringUtils.isNotBlank(oldSocialSecurityDeclare.getId())) {
+                this.getBizObjectFacade().removeBizObject(this.getUserId(),
+                        Constants.SOCIAL_SECURITY_DECLARE_SCHEMA, oldSocialSecurityDeclare.getId());
+            }
+            // 省内需要生成社保申报，不存在历史申报，创建
+            if (socialSecurityDeclare.getStartMonth() != null && StringUtils.isBlank(oldSocialSecurityDeclare.getId())) {
+                socialSecurityDeclare.setStatus("待办");
+
+                employeeMaintainService.createSocialSecurityDeclare(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
+                        socialSecurityDeclare, customerService);
+            }
+            // 不需要生成公积金申报，存在历史申报,删除
+            if (providentFundDeclare.getStartMonth() == null && StringUtils.isNotBlank(oldProvidentFundDeclare.getId())) {
+                this.getBizObjectFacade().removeBizObject(this.getUserId(),
+                        Constants.PROVIDENT_FUND_DECLARE_SCHEMA, oldProvidentFundDeclare.getId());
+            }
+            // 省内需要生成公积金申报，不存在历史申报，创建
+            if (providentFundDeclare.getStartMonth() != null && StringUtils.isBlank(oldProvidentFundDeclare.getId())) {
+                providentFundDeclare.setStatus("待办");
+
+                employeeMaintainService.createProvidentFundDeclare(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
+                        providentFundDeclare, customerService);
+            }
 
             employeeMaintainService.shAddEmployeeUpdateSubmit(shAddEmployee, employeeFiles, employeeOrderForm,
                     socialSecurityDeclare, providentFundDeclare);
@@ -2098,26 +2081,19 @@ public class EmployeeMaintainController extends BaseController {
             if (oldEmployeeFiles == null) {
                 return this.getErrResponseResult("error", 404l, "没有获取到员工档案数据！");
             }
-            // 社保申报实体
-            SocialSecurityDeclare oldSocialSecurityDeclare =
-                    addEmployeeService.getSocialSecurityDeclareByClientNameAndIdentityNo(
-                            nationwideDispatch.getBusinessCustomerName(), nationwideDispatch.getIdentityNo());
-            if (oldSocialSecurityDeclare == null) {
-                oldSocialSecurityDeclare = new SocialSecurityDeclare();
-            }
-            // 公积金申报实体
-            ProvidentFundDeclare oldProvidentFundDeclare =
-                    addEmployeeService.getProvidentFundDeclareByClientNameAndIdentityNo(
-                            nationwideDispatch.getBusinessCustomerName(), nationwideDispatch.getIdentityNo());
-            if (oldProvidentFundDeclare == null) {
-                oldProvidentFundDeclare = new ProvidentFundDeclare();
-            }
             // 员工订单实体
             EmployeeOrderForm oldEmployeeOrderForm =
-                    addEmployeeService.getEmployeeOrderFormById(oldSocialSecurityDeclare.getEmployeeOrderFormId());
+                    addEmployeeService.getEmployeeOrderFormByEmployeeFilesId(oldEmployeeFiles.getId());
             if (oldEmployeeOrderForm == null) {
                 return this.getErrResponseResult("error", 404l, "没有获取到员工订单数据！");
             }
+            // 原社保申报实体
+            SocialSecurityDeclare oldSocialSecurityDeclare =
+                    getOldSocialSecurityDeclareByOrderFormId(oldEmployeeOrderForm.getId());
+            // 原公积金申报实体
+            ProvidentFundDeclare oldProvidentFundDeclare =
+                    getOldProvidentFundDeclareByOrderFormId(oldEmployeeOrderForm.getId());
+
             // 申请人
             nationwideDispatch.setId(oldNationwideDispatch.getId());
             nationwideDispatch.setCreatedTime(oldNationwideDispatch.getCreatedTime());
@@ -2126,6 +2102,7 @@ public class EmployeeMaintainController extends BaseController {
 
             /** 员工档案*/
             EmployeeFiles employeeFiles = getEmployeeFilesByAddEmployee(nationwideDispatch);
+            employeeFiles.setId(oldEmployeeFiles.getId());
             employeeFiles.setName(employeeFiles.getEmployeeName());
             employeeFiles.setReportRecruits(applicant);
             employeeFiles.setEntryNotice(employeeFiles.getEntryNotice());
@@ -2170,18 +2147,12 @@ public class EmployeeMaintainController extends BaseController {
             employeeFiles.setSalesman(salesman);
 
             // 获取当前时间节点,如果是个性化客户，获取个性化设置
-            Map <String, String> personal = employeeMaintainService.getTimeNode(nationwideDispatch.getBusinessCustomerName(),
+            Ccps ccps = employeeMaintainService.getTimeNode(nationwideDispatch.getBusinessCustomerName(),
                     nationwideDispatch.getInvolved());
-            String timeNode = personal.get("time_node");
+            int timeNode = ccps.getTimeNode();
             // 补缴月份
             int sMonthDifference = getMonthDifference(timeNode, new Date(), nationwideDispatch.getSServiceFeeStartDate());
             int gMonthDifference = getMonthDifference(timeNode, new Date(), nationwideDispatch.getGServiceFeeStartDate());
-            if (sMonthDifference > 0) {
-                personal.put("pay_month_s", String.valueOf(sMonthDifference));
-            }
-            if (gMonthDifference > 0) {
-                personal.put("pay_month_g", String.valueOf(gMonthDifference));
-            }
 
             /** 员工订单实体*/
             String providentFundRatio = nationwideDispatch.getProvidentFundRatio();
@@ -2196,7 +2167,7 @@ public class EmployeeMaintainController extends BaseController {
                     nationwideDispatch.getInvolved(), nationwideDispatch.getSServiceFeeStartDate(),
                     nationwideDispatch.getSocialInsuranceAmount(), nationwideDispatch.getInvolved(),
                     nationwideDispatch.getGServiceFeeStartDate(), nationwideDispatch.getProvidentFundAmount(),
-                    companyRatio, employeeRatio, personal);
+                    companyRatio, employeeRatio, sMonthDifference, gMonthDifference, ccps);
             employeeOrderForm.setId(oldEmployeeOrderForm.getId());
             employeeOrderForm.setServiceFee(StringUtils.isBlank(serviceFee) ? 0.0 : Double.parseDouble(serviceFee));
             employeeOrderForm.setTotal(employeeOrderForm.getSum() + employeeOrderForm.getServiceFee());
@@ -2218,7 +2189,7 @@ public class EmployeeMaintainController extends BaseController {
                             weatherPartWorkInjury, socialSecurityOperateLeader, employeeOrderForm.getSocialSecurityDetail());
             socialSecurityDeclare.setId(oldSocialSecurityDeclare.getId());
             socialSecurityDeclare.setName(employeeFiles.getEmployeeName());
-            socialSecurityDeclare.setEmployeeOrderFormId(oldSocialSecurityDeclare.getEmployeeOrderFormId());
+            socialSecurityDeclare.setEmployeeOrderFormId(oldEmployeeOrderForm.getId());
             socialSecurityDeclare.setIsChange("是");
 
             /** 公积金申报实体*/
@@ -2231,7 +2202,7 @@ public class EmployeeMaintainController extends BaseController {
                     providentFundOperateLeader, employeeOrderForm.getProvidentFundDetail());
             providentFundDeclare.setId(oldProvidentFundDeclare.getId());
             providentFundDeclare.setName(employeeFiles.getEmployeeName());
-            providentFundDeclare.setEmployeeOrderFormId(oldProvidentFundDeclare.getEmployeeOrderFormId());
+            providentFundDeclare.setEmployeeOrderFormId(oldEmployeeOrderForm.getId());
             providentFundDeclare.setIsChange("是");
 
             /** 缴存总额*/
@@ -2261,6 +2232,31 @@ public class EmployeeMaintainController extends BaseController {
             providentFundDeclare.setPersonalDeposit(personalDeposit);
             providentFundDeclare.setTotalDeposit(totalDeposit);
 
+            // 不需要生成社保申报，存在历史申报,删除
+            if (socialSecurityDeclare.getStartMonth() == null && StringUtils.isNotBlank(oldSocialSecurityDeclare.getId())) {
+                this.getBizObjectFacade().removeBizObject(this.getUserId(),
+                        Constants.SOCIAL_SECURITY_DECLARE_SCHEMA, oldSocialSecurityDeclare.getId());
+            }
+            // 省内需要生成社保申报，不存在历史申报，创建
+            if (socialSecurityDeclare.getStartMonth() != null && StringUtils.isBlank(oldSocialSecurityDeclare.getId())) {
+                socialSecurityDeclare.setStatus("待办");
+
+                employeeMaintainService.createSocialSecurityDeclare(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
+                        socialSecurityDeclare, customerService);
+            }
+            // 不需要生成公积金申报，存在历史申报,删除
+            if (providentFundDeclare.getStartMonth() == null && StringUtils.isNotBlank(oldProvidentFundDeclare.getId())) {
+                this.getBizObjectFacade().removeBizObject(this.getUserId(),
+                        Constants.PROVIDENT_FUND_DECLARE_SCHEMA, oldProvidentFundDeclare.getId());
+            }
+            // 省内需要生成公积金申报，不存在历史申报，创建
+            if (providentFundDeclare.getStartMonth() != null && StringUtils.isBlank(oldProvidentFundDeclare.getId())) {
+                providentFundDeclare.setStatus("待办");
+
+                employeeMaintainService.createProvidentFundDeclare(this.getBizObjectFacade(), this.getWorkflowInstanceFacade(),
+                        providentFundDeclare, customerService);
+            }
+
             employeeMaintainService.qgAddEmployeeUpdateSubmit(nationwideDispatch, employeeFiles, employeeOrderForm,
                     socialSecurityDeclare, providentFundDeclare);
             return this.getOkResponseResult("success", "操作成功");
@@ -2268,6 +2264,28 @@ public class EmployeeMaintainController extends BaseController {
             log.info(e.getMessage());
             return this.getErrResponseResult("error", 404l, e.getMessage());
         }
+    }
+
+    private SocialSecurityDeclare getOldSocialSecurityDeclareByOrderFormId(String id) throws Exception {
+        SocialSecurityDeclare oldSocialSecurityDeclare = new SocialSecurityDeclare();
+        if (StringUtils.isNotBlank(id)) {
+            oldSocialSecurityDeclare = addEmployeeService.getSocialSecurityDeclareByOrderFormId(id);
+            if (oldSocialSecurityDeclare == null) {
+                oldSocialSecurityDeclare = new SocialSecurityDeclare();
+            }
+        }
+        return oldSocialSecurityDeclare;
+    }
+
+    private ProvidentFundDeclare getOldProvidentFundDeclareByOrderFormId(String id) throws Exception {
+        ProvidentFundDeclare oldProvidentFundDeclare = new ProvidentFundDeclare();
+        if (StringUtils.isNotBlank(id)) {
+            oldProvidentFundDeclare = addEmployeeService.getProvidentFundDeclareByOrderFormId(id);
+            if (oldProvidentFundDeclare == null) {
+                oldProvidentFundDeclare = new ProvidentFundDeclare();
+            }
+        }
+        return oldProvidentFundDeclare;
     }
 
     /**
@@ -2387,5 +2405,82 @@ public class EmployeeMaintainController extends BaseController {
             log.info(e.getMessage());
             return this.getErrResponseResult("error", 404l, e.getMessage());
         }
+    }
+
+    /**
+     * 方法说明：生成批量预派
+     * @param addEmployee 增员客户
+     * @param employeeFiles 员工档案
+     * @param sIsOut 社保是省外
+     * @param gIsOut 公积金是省外
+     * @return void
+     * @author liulei
+     * @Date 2020/4/2 14:15
+     */
+    private void addBatchPreDispatch(AddEmployee addEmployee, EmployeeFiles employeeFiles, boolean sIsOut,
+                                     boolean gIsOut) throws Exception {
+        List<BatchPreDispatch> batchPreDispatches = new ArrayList <>();
+        // 社保省外，公积金省内
+        BatchPreDispatch batchPreDispatch = new BatchPreDispatch();
+        if (sIsOut && gIsOut) {
+            // 社保，公积金都是省外
+            String providentFundRatio =
+                    "" + addEmployee.getCompanyProvidentFundBl() + "+" + addEmployee.getEmployeeProvidentFundBl();
+            batchPreDispatch = new BatchPreDispatch(employeeFiles.getEmployeeName(),
+                    employeeFiles.getIdNo(), employeeFiles.getMobile(), addEmployee.getSocialSecurityBase(),
+                    providentFundRatio, null, addEmployee.getProvidentFundBase(), employeeFiles.getEntryTime(),
+                    employeeFiles.getReportEntryTime(), employeeFiles.getSocialSecurityCity(),
+                    employeeFiles.getProvidentFundCity(), employeeFiles.getEntryDescription());
+            batchPreDispatches.add(batchPreDispatch);
+        } else if (sIsOut && !gIsOut) {
+            // 社保省外，公积金省内
+            batchPreDispatch = new BatchPreDispatch(employeeFiles.getEmployeeName(),
+                    employeeFiles.getIdNo(), employeeFiles.getMobile(), addEmployee.getSocialSecurityBase(),
+                    null, null, null, employeeFiles.getEntryTime(), employeeFiles.getReportEntryTime(),
+                    employeeFiles.getSocialSecurityCity(), null, employeeFiles.getEntryDescription());
+            batchPreDispatches.add(batchPreDispatch);
+        } else if (!sIsOut && gIsOut) {
+            // 社保省内，公积金省外
+            String providentFundRatio =
+                    "" + addEmployee.getCompanyProvidentFundBl() + "+" + addEmployee.getEmployeeProvidentFundBl();
+            batchPreDispatch = new BatchPreDispatch(employeeFiles.getEmployeeName(), employeeFiles.getIdNo(),
+                    employeeFiles.getMobile(), null, providentFundRatio, null, addEmployee.getProvidentFundBase(),
+                    employeeFiles.getEntryTime(), employeeFiles.getReportEntryTime(), null,
+                    employeeFiles.getProvidentFundCity(), employeeFiles.getEntryDescription());
+            batchPreDispatches.add(batchPreDispatch);
+
+        }
+        // 生成批量预派
+        batchPreDispatchService.addBatchPreDispatchs(getUserId(), this.getOrganizationFacade(),
+                batchPreDispatches);
+    }
+
+    private OperateLeader getOperateLeader(EmployeeFiles employeeFiles) throws Exception{
+        OperateLeader operateLeader = new OperateLeader();
+        // 社保运行负责人
+        OperateLeader sLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                employeeFiles.getSocialSecurityCity(), employeeFiles.getSocialSecurityArea());
+        // 公积金运行负责人
+        OperateLeader gLeader = employeeMaintainService.getOperateLeaderByCityAndWelfareHandler(
+                employeeFiles.getProvidentFundCity(), employeeFiles.getProvidentFundArea());
+
+        operateLeader.setSocialSecurityLeader(sLeader != null ? sLeader.getSocialSecurityLeader() : null);
+        operateLeader.setProvidentFundLeader(gLeader != null ? gLeader.getProvidentFundLeader() : null);
+        return operateLeader;
+    }
+
+    private boolean checkHaveEntryNotice(List <CollectionRuleDetails> details, int month, String type) {
+        if (details != null && details.size() > 0) {
+            for (int i = 0; i < details.size(); i++) {
+                String insuranceName = details.get(i).getInsuranceName();
+                int payBackMinMonth = details.get(i).getPayBackMinMonth();
+                if (StringUtils.isNotBlank(insuranceName) && insuranceName.indexOf(type) >= 0) {
+                    if (month >= payBackMinMonth) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

@@ -190,4 +190,18 @@ public interface EmployeeFilesService {
      * @return 薪资收费账单
      */
     PayrollBill getPayrollBill(String billYear, String idNo);
+
+    /**
+     * 更新员工档案
+     *
+     * @param employeeFilesDto
+     */
+    void updateEmployee(List<EmployeeFilesDto> employeeFilesDto);
+
+    /**
+     * 创建账单明细
+     *
+     * @param bills
+     */
+    void insertBills(List<Bill> bills);
 }

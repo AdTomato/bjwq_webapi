@@ -47,7 +47,7 @@ public class ExcelFileUtils {
             }
             Map<String, String> tableColumnComment = readExcelFile.getTableColumnComment(readExcelFile.getTableName());
             Map<Integer, String> cellMapRelationship = readExcelFile.getDefineMapRelationship(sheet.getRow(0), tableColumnComment);
-            List<Map<String, Object>> models = new ArrayList<>();
+            List<Map<String, Object>> models;
             List<String> ids = new ArrayList<>();
             UserModel user = organizationFacade.getUser(userId);
             DepartmentModel department = organizationFacade.getDepartment(user.getDepartmentId());

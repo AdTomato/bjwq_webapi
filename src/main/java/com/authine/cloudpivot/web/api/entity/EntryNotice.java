@@ -19,7 +19,6 @@ public class EntryNotice extends BaseEntity {
     String area;
     String clientName;
     String operateSignatory;
-    String recordOfEmployment;
     String socialSecurity;
     String providentFund;
     String submissionMethod;

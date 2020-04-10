@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.PolicyCollectPayMapper">
+
+    <resultMap id="policyCollectPay" type="com.authine.cloudpivot.web.api.entity.PolicyCollectPay">
+        <id column="id" property="id"></id>
+        <collection property="productBaseNums"
+                    select="com.authine.cloudpivot.web.api.mapper.PolicyCollectPayMapper.getProductBaseNumsByParentId"
+                    column="id"></collection>
+    </resultMap>
+    <select id="getPolicyCollectPaysByCity" resultMap="policyCollectPay">
+        select pay.*,(select max(pay_month) from i080j_collection_rule where policy_collect_pay = pay.id) pay_month
+        from i080j_policy_collect_pay pay
+        WHERE pay.city = #{city}
+    </select>
+
+    <select id="getProductBaseNumsByParentId"
+            resultType="com.authine.cloudpivot.web.api.entity.ProductBaseNum">
+        SELECT *
+        FROM i080j_product_base_num
+        WHERE parentId = #{id}
+    </select>
+</mapper>

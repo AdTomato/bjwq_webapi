@@ -1,5 +1,6 @@
 package com.authine.cloudpivot.web.api.service;
 
+import com.authine.cloudpivot.web.api.entity.Attachment;
 import com.authine.cloudpivot.web.api.entity.StartCollect;
 
 import java.util.List;
@@ -35,6 +36,15 @@ public interface BaseCollectionService {
     String findAttachment(String bizObjectId);
 
     /**
+     * 通过bizObjectId 以及 bizPropertyCode 查询附件表中的附件数据
+     *
+     * @param bizObjectId
+     * @param bizPropertyCode
+     * @return
+     */
+    Attachment findAttachmentById(String bizObjectId, String bizPropertyCode);
+
+    /**
      * 插入附件表
      * @param map
      */
@@ -54,4 +64,8 @@ public interface BaseCollectionService {
     void updateFileSize(String attachment, long length);
 
     StartCollect getStartCollectById(String bizObjectId);
+
+    String findCompanyName(String clientName);
+
+    String findSalesman(String clientName);
 }

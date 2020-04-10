@@ -6,8 +6,11 @@
 
     <resultMap id="enquiryReceivableDto" type="com.authine.cloudpivot.web.api.dto.EnquiryReceivableDto">
         <id column="id" property="id"></id>
-        <collection property="bills" select="com.authine.cloudpivot.web.api.mapper.EnquiryReceivableMapper.getBillsByEnquirtReceivableId" column="id"></collection>
+        <collection property="bills"
+                    select="com.authine.cloudpivot.web.api.mapper.EnquiryReceivableMapper.getBillsByEnquirtReceivableId"
+                    column="id"></collection>
     </resultMap>
+
     <select id="getEnquiryReceivableDtoByIds"
             parameterType="java.lang.String" resultMap="enquiryReceivableDto">
         SELECT * FROM i4fvb_enquiry_receivable
@@ -16,9 +19,130 @@
             #{item}
         </foreach>
         )
+	   order by bill_year desc
     </select>
     <select id="getBillsByEnquirtReceivableId" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.Bill">
         SELECT * FROM i4fvb_bill_details WHERE relation_enquiry_receivable = #{id}
     </select>
+
+    <select id="getEnquiryReceivable" resultType="com.authine.cloudpivot.web.api.entity.EnquiryReceivable">
+        SELECT * FROM i4fvb_enquiry_receivable WHERE bill_year = #{billYear} AND business_customer_name = #{customerName} AND business_type = #{employeeNature}
+    </select>
+
+    <update id="updateEnquiryReceivable" parameterType="com.authine.cloudpivot.web.api.entity.EnquiryReceivable">
+        UPDATE i4fvb_enquiry_receivable
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="social_security_total = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.socialSecurityTotal != null">
+                        WHEN id = #{item.id} THEN #{item.socialSecurityTotal}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="accumulation_fund_total = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.accumulationFundTotal != null">
+                        WHEN id = #{item.id} THEN #{item.accumulationFundTotal}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="real_wages_total = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.realWagesTotal != null">
+                        WHEN id = #{item.id} THEN #{item.realWagesTotal}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="personal_tax_total = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.personalTaxTotal != null">
+                        WHEN id = #{item.id} THEN #{item.personalTaxTotal}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="welfare_products_total = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.welfareProductsTotal != null">
+                        WHEN id = #{item.id} THEN #{item.welfareProductsTotal}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="service_charge = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.serviceCharge != null">
+                        WHEN id = #{item.id} THEN #{item.serviceCharge}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="value_added_tax_total = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.valueAddedTaxTotal != null">
+                        WHEN id = #{item.id} THEN #{item.valueAddedTaxTotal}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="risk_management_fee = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.riskManagementFee != null">
+                        WHEN id = #{item.id} THEN #{item.riskManagementFee}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="outsourcing_manage_fee = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.outsourcingManage_fee != null">
+                        WHEN id = #{item.id} THEN #{item.outsourcingManage_fee}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="business_taxes_fees = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.businessTaxesFees != null">
+                        WHEN id = #{item.id} THEN #{item.businessTaxesFees}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="receivable_total = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.receivableTotal != null">
+                        WHEN id = #{item.id} THEN #{item.receivableTotal}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        WHERE
+        id IN (
+          <foreach collection="list" item="item" index="index" separator=",">
+              #{item.id}
+          </foreach>
+        )
+    </update>
+
+    <insert id="createEnquiryReceivable" parameterType="com.authine.cloudpivot.web.api.entity.EnquiryReceivable">
+        INSERT INTO i4fvb_enquiry_receivable
+        (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode,
+        bill_year, entrusted_unit, salesman, business_dept, business_type,
+        social_security_total, accumulation_fund_total, real_wages_total,
+        personal_tax_total, welfare_products_total, value_added_tax_total,
+        risk_management_fee, service_charge, receivable_total, business_customer_name,
+        outsourcing_manage_fee, business_taxes_fees, agreed_payment_date,
+        system_generation_date, bill_modify, bill_modify_date, bill_wether_define,
+        bill_define, is_lock)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId},
+            #{item.owner},#{item.ownerDeptId},
+            #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId},
+            #{item.sequenceNo}, #{item.sequenceStatus}, #{item.ownerDeptQueryCode},
+            #{item.billYear}, #{item.entrustedUnit}, #{item.salesman}, #{item.businessDept}, #{item.businessType},
+            #{item.socialSecurityTotal}, #{item.accumulationFundTotal}, #{item.realWagesTotal},
+            #{item.personalTaxTotal}, #{item.welfareProductsTotal}, #{item.valueAddedTaxTotal},
+            #{item.riskManagementFee}, #{item.serviceCharge}, #{item.receivableTotal}, #{item.businessCustomerName},
+            #{item.outsourcingManageFee}, #{item.businessTaxesFees}, #{item.agreedPaymentDate},
+            #{item.systemGenerationDate}, #{item.billModify}, #{item.billModifyDate}, #{item.billWetherDefine},
+            #{item.billDefine}, #{item.isLock})
+        </foreach>
+    </insert>
 </mapper>

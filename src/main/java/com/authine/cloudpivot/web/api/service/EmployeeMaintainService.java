@@ -121,7 +121,9 @@ public interface EmployeeMaintainService {
      * @param providentFundBase 公积金基数
      * @param companyRatio 公司比例
      * @param employeeRatio 员工比例
-     * @param personal 个性化设置数据
+     * @param sMonth 社保补缴月份
+     * @param gMonth 公积金补缴月份
+     * @param ccps 个性化设置数据
      * @return com.authine.cloudpivot.web.api.entity.EmployeeOrderForm
      * @author liulei
      * @Date 2020/2/26 14:18
@@ -129,7 +131,8 @@ public interface EmployeeMaintainService {
     EmployeeOrderForm getEmployeeOrderForm(String socialSecurityCity, Date socialSecurityStartTime,
                                            Double socialSecurityBase, String providentFundCity,
                                            Date providentFundStartTime, Double providentFundBase,
-                                           Double companyRatio, Double employeeRatio, Map<String, String> personal) throws Exception;
+                                           Double companyRatio, Double employeeRatio, int sMonth, int gMonth,
+                                           Ccps ccps) throws Exception;
 
     /**
      * 方法说明：获取当前时间节点,如果是个性化客户，获取个性化设置
@@ -139,7 +142,7 @@ public interface EmployeeMaintainService {
      * @author liulei
      * @Date 2020/2/26 11:06
      */
-    Map<String, String> getTimeNode(String clientName, String city) throws Exception;
+    Ccps getTimeNode(String clientName, String city) throws Exception;
 
     /**
      * 方法说明：获取入职通知清单数据

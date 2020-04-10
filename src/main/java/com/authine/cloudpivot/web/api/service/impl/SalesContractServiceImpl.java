@@ -35,15 +35,14 @@ public class SalesContractServiceImpl implements SalesContractService {
 
     /**
      * @param startDate: 开始时间
-     * @param endDate:   结束时间
      * @Author: wangyong
      * @Date: 2020/3/24 22:24
      * @return: java.util.List<com.authine.cloudpivot.web.api.dto.SalesContractDto>
      * @Description: 根据账单生成时间在startDate和endDate之间的销售合同
      */
     @Override
-    public List<SalesContractDto> getSalesContractByGenerateBillDate(Date startDate, Date endDate) {
-        return salesContractMapper.getSalesContractByGenerateBillDate(startDate, endDate);
+    public List<SalesContractDto> getSalesContractByGenerateBillDate(Date startDate) {
+        return salesContractMapper.getSalesContractByGenerateBillDate(startDate);
     }
 
     /**

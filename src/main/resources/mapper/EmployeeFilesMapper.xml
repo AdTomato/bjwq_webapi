@@ -4,6 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper">
+
     <!-- 根据员工身份证，客户名称获取员工档案 -->
     <select id="getEmployeeFilesByIdNoOrClientName" resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
         SELECT * FROM i4fvb_employee_files
@@ -306,14 +307,20 @@
         </foreach>
     </insert>
 
+
     <resultMap id="employeeFilesDto" type="com.authine.cloudpivot.web.api.dto.EmployeeFilesDto">
         <id column="id" property="id"></id>
         <collection property="employeeOrderFormDto"
                     select="com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper.getEmployeeOrderFormByEmployeeFilesId"
                     column="id"></collection>
+        <!--<collection property="clientName" select="com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper.getClientNameById" column="client_name"></collection>-->
     </resultMap>
     <select id="getEmployeeFilesCanGenerateBillByClientName" resultMap="employeeFilesDto">
         SELECT * FROM i4fvb_employee_files WHERE client_name = #{clientName} AND stop_generate_bill = 0 AND employee_nature = #{employeeNature} AND social_security_city REGEXP "合肥|巢湖|芜湖|蚌埠|淮南|马鞍山|铜陵|安庆|黄山|滁州|阜阳|宿州|六安|亳州|池州|宣城"
+    </select>
+
+    <select id="getClientNameById" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT company_name AS clientName FROM id34a_first_level_client WHERE id = #{client_name} LIMIT 0, 1
     </select>
 
     <resultMap id="employeeOrderFormDto" type="com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto">
@@ -339,5 +346,109 @@
     <select id="getPayrollBills" resultType="com.authine.cloudpivot.web.api.entity.PayrollBill">
         SELECT * FROM i4fvb_payroll_bill WHERE bill_year = #{billYear} AND id_no = #{idNo} ORDER BY createdTime DESC
     </select>
+
+    <!-- 更新员工档案 -->
+    <update id="updateEmployee" parameterType="com.authine.cloudpivot.web.api.dto.EmployeeFilesDto">
+        UPDATE i4fvb_employee_files
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="is_old_employee = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.isOldEmployee != null">
+                        WHEN id = #{item.id} THEN #{item.isOldEmployee}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="stop_generate_bill = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.stopGenerateBill != null">
+                        WHEN id = #{item.id} THEN #{item.stopGenerateBill}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        WHERE
+        id IN (
+        <foreach collection="list" item="item" index="index" separator=",">
+            #{item.id}
+        </foreach>
+        )
+    </update>
+
+    <insert id="insertBills" parameterType="com.authine.cloudpivot.web.api.entity.Bill">
+        INSERT INTO i4fvb_bill_details
+        (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime,
+        workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode,
+        supplier, business_year, client_name, employee_name, id_no, unique_num, delegated_area,
+        pension_enterprise_base, pension_enterprise_ratio, pension_enterprise_attach, pension_enterprise_pay,
+        pension_personal_base, pension_personal_ratio, pension_personal_attach, pension_personal_pay,
+        pension_subtotal, pension_payment_method, medical_enterprise_base, medical_enterprise_ratio,
+        medical_enterprise_attach, medical_enterprise_pay, medical_personal_base, medical_personal_ratio,
+        medical_personal_attach, medical_personal_pay, medical_subtotal, medical_payment_method,
+        unemp_enterprise_base, unemp_enterprise_ratio, unemp_enterprise_attach, unemp_enterprise_pay,
+        unemp_personal_base, unemp_personal_ratio, unemp_personal_attach, unemp_personal_pay,
+        unemp_subtotal, unemp_payment_method, injury_enterprise_base, injury_enterprise_ratio,
+        injury_enterprise_attach, injury_enterprise_pay, injury_subtotal, injury_payment_method,
+        fertility_enterprise_base, fertility_enterprise_ratio, fertility_enterprise_attach,
+        fertility_enterprise_pay, fertility_subtotal, fertility_payment_method, d_medical_enterprise_base,
+        d_medical_enterprise_ratio, d_medical_enterprise_attach, d_medical_enterprise_pay,
+        d_medical_personal_base, d_medical_personal_ratio, d_medical_personal_attach, d_medical_personal_pay,
+        d_medical_subtotal, d_medical_payment_method, complex_enterprise_base, complex_enterprise_ratio,
+        complex_enterprise_attach, complex_enterprise_pay, complex_personal_base, complex_personal_ratio,
+        complex_personal_attach, complex_personal_pay, complex_subtotal, complex_payment_method,
+        b_injury_enterprise_base, b_injury_enterprise_ratio, b_injury_enterprise_attach,
+        b_injury_enterprise_pay, b_injury_subtotal, b_injury_payment_method, social_security_enterprise,
+        social_security_personal, social_security_total, provident_enterprise_base, provident_enterprise_ratio,
+        provident_enterprise_pay, provident_personal_base, provident_personal_ratio, provident_personal_pay,
+        provident_subtotal, provident_payment_method, b_provident_enterprise_base, b_provident_enterprise_ratio,
+        b_provident_enterprise_pay, b_provident_personal_base, b_provident_personal_ratio,
+        b_provident_personal_pay, b_provident_subtotal, b_provident_payment_method, provident_enterprise,
+        provident_personal, provident_total, y_toll_total, y_toll_remark, y_social_enterprise_d,
+        y_social_personal_d, y_social_total_d, y_provident_enterprise_d, y_provident_personal_d,
+        y_provident_total_d, y_social_enterprise_t, y_social_personal_t, y_social_total_t,
+        y_provident_enterprise_t, y_provident_personal_t, y_provident_total_t, social_provident_total,
+        total_charge, vat_tax, total_welfare_products, risk_manage_fee, outsourcing_manage_fee, business_tax,
+        relation_enquiry_receivable, is_lock, whether_compare, bill_year, whether_define,
+        relation_employee_files, whether_difference_data, service_fee, salesman, business_unit, employee_nature,
+        business_type, tax, paid_wages, charge_type, enterprise_payment, individual_payment)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId},
+            #{item.owner},#{item.ownerDeptId},
+            #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId},
+            #{item.sequenceNo}, #{item.sequenceStatus}, #{item.ownerDeptQueryCode},
+            #{item.supplier}, #{item.businessYear}, #{item.clientName}, #{item.employeeName}, #{item.idNo}, #{item.uniqueNum}, #{item.delegatedArea},
+            #{item.pensionEnterpriseBase}, #{item.pensionEnterpriseRatio}, #{item.pensionEnterpriseAttach}, #{item.pensionEnterprisePay},
+            #{item.pensionPersonalBase}, #{item.pensionPersonalRatio}, #{item.pensionPersonalAttach}, #{item.pensionPersonalPay},
+            #{item.pensionSubtotal}, #{item.pensionPaymentMethod}, #{item.medicalEnterpriseBase}, #{item.medicalEnterpriseRatio},
+            #{item.medicalEnterpriseAttach}, #{item.medicalEnterprisePay}, #{item.medicalPersonalBase}, #{item.medicalPersonalRatio},
+            #{item.medicalPersonalAttach}, #{item.medicalPersonalPay}, #{item.medicalSubtotal}, #{item.medicalPaymentMethod},
+            #{item.unempEnterpriseBase}, #{item.unempEnterpriseRatio}, #{item.unempEnterpriseAttach}, #{item.unempEnterprisePay},
+            #{item.unempPersonalBase}, #{item.unempPersonalRatio}, #{item.unempPersonalAttach}, #{item.unempPersonalPay},
+            #{item.unempSubtotal}, #{item.unempPaymentMethod}, #{item.injuryEnterpriseBase}, #{item.injuryEnterpriseRatio},
+            #{item.injuryEnterpriseAttach}, #{item.injuryEnterprisePay}, #{item.injurySubtotal}, #{item.injuryPaymentMethod},
+            #{item.fertilityEnterpriseBase}, #{item.fertilityEnterpriseRatio}, #{item.fertilityEnterpriseAttach},
+            #{item.fertilityEnterprisePay}, #{item.fertilitySubtotal}, #{item.fertilityPaymentMethod}, #{item.dMedicalEnterpriseBase},
+            #{item.dMedicalEnterpriseRatio}, #{item.dMedicalEnterpriseAttach}, #{item.dMedicalEnterprisePay},
+            #{item.dMedicalPersonalBase}, #{item.dMedicalPersonalRatio}, #{item.dMedicalPersonalAttach}, #{item.dMedicalPersonalPay},
+            #{item.dMedicalSubtotal}, #{item.dMedicalPaymentMethod}, #{item.complexEnterpriseBase}, #{item.complexEnterpriseRatio},
+            #{item.complexEnterpriseAttach}, #{item.complexEnterprisePay}, #{item.complexPersonalBase}, #{item.complexPersonalRatio},
+            #{item.complexPersonalAttach}, #{item.complexPersonalPay}, #{item.complexSubtotal}, #{item.complexPaymentMethod},
+            #{item.bInjuryEnterpriseBase}, #{item.bInjuryEnterpriseRatio}, #{item.bInjuryEnterpriseAttach},
+            #{item.bInjuryEnterprisePay}, #{item.bInjurySubtotal}, #{item.bInjuryPaymentMethod}, #{item.socialSecurityEnterprise},
+            #{item.socialSecurityPersonal}, #{item.socialSecurityTotal}, #{item.providentEnterpriseBase}, #{item.providentEnterpriseRatio},
+            #{item.providentEnterprisePay}, #{item.providentPersonalBase}, #{item.providentPersonalRatio}, #{item.providentPersonalPay},
+            #{item.providentSubtotal}, #{item.providentPaymentMethod}, #{item.bProvidentEnterpriseBase}, #{item.bProvidentEnterpriseRatio},
+            #{item.bProvidentEnterprisePay}, #{item.bProvidentPersonalBase}, #{item.bProvidentPersonalRatio},
+            #{item.bProvidentPersonalPay}, #{item.bProvidentSubtotal}, #{item.bProvidentPaymentMethod}, #{item.providentEnterprise},
+            #{item.providentPersonal}, #{item.providentTotal}, #{item.yTollTotal}, #{item.yTollRemark}, #{item.ySocialEnterpriseD},
+            #{item.ySocialPersonalD}, #{item.ySocialTotalD}, #{item.yProvidentEnterpriseD}, #{item.yProvidentPersonalD},
+            #{item.yProvidentTotalD}, #{item.ySocialEnterpriseT}, #{item.ySocialPersonalT}, #{item.ySocialTotalT},
+            #{item.yProvidentEnterpriseT}, #{item.yProvidentPersonalT}, #{item.yProvidentTotalT}, #{item.socialProvidentTotal},
+            #{item.totalCharge}, #{item.vatTax}, #{item.totalWelfareProducts}, #{item.riskManageFee}, #{item.outsourcingManageFee}, #{item.businessTax},
+            #{item.relationEnquiryReceivable}, #{item.isLock}, #{item.whetherCompare}, #{item.billYear}, #{item.whetherDefine},
+            #{item.relationEmployeeFiles}, #{item.whetherDifferenceData}, #{item.serviceFee}, #{item.salesman}, #{item.businessUnit}, #{item.employeeNature},
+            #{item.businessType}, #{item.tax}, #{item.paidWages}, #{item.chargeType}, #{item.enterprisePayment}, #{item.individualPayment})
+        </foreach>
+    </insert>
 
 </mapper>

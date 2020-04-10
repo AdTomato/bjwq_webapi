@@ -202,4 +202,22 @@ public class EmployeeFilesServiceImpl implements EmployeeFilesService {
         List<PayrollBill> payrollBills = employeeFilesMapper.getPayrollBills(billYear, idNo);
         return payrollBills == null || payrollBills.size() == 0 ? null : payrollBills.get(0);
     }
+
+    /**
+     * @param employeeFilesDto:
+     * @Author: wangyong
+     * @Date: 2020/4/8 11:26
+     * @return: void
+     * @Description: 更新员工档案
+     */
+    @Override
+    public void updateEmployee(List<EmployeeFilesDto> employeeFilesDto) {
+        employeeFilesMapper.updateEmployee(employeeFilesDto);
+    }
+
+    @Override
+    public void insertBills(List<Bill> bills) {
+        if (bills != null && bills.size() > 0)
+            employeeFilesMapper.insertBills(bills);
+    }
 }

@@ -64,4 +64,13 @@ public interface SystemManageMapper {
      * @Date 2020/3/20 16:24
      */
     Supplier getSupplierById(String id);
+
+    /**
+     * 方法说明：获取客户个性化设置
+     * @param clientName
+     * @return java.util.List<com.authine.cloudpivot.web.api.entity.Ccps>
+     * @author liulei
+     * @Date 2020/4/2 14:48
+     */
+    List<Ccps> getCcpsByClientName(String clientName);
 }

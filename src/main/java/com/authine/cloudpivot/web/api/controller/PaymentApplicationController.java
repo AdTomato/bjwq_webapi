@@ -123,6 +123,33 @@ public class PaymentApplicationController extends BaseController {
     }
 
     /**
+     * 方法说明：省内导入临时收费数据
+     * @param fileName 文件名称
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @author liulei
+     * @Date 2020/3/30 13:57
+     */
+    @GetMapping("/importTemporaryCharge")
+    @ResponseBody
+    public ResponseResult <String> importTemporaryCharge(String fileName) {
+        if (StringUtils.isBlank(fileName)) {
+            return this.getErrResponseResult("error", 404l, "没有获取上传文件!");
+        }
+        try {
+            // 当前用户
+            UserModel user = this.getOrganizationFacade().getUser(getUserId());
+            DepartmentModel dept = this.getOrganizationFacade().getDepartment(user.getDepartmentId());
+            // 判断文件类型
+            ExcelUtils.checkFileType(fileName);
+            paymentApplicationService.importTemporaryCharge(fileName, user, dept);
+            return this.getOkResponseResult("success", "导入成功!");
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            return this.getErrResponseResult("error", 404l, e.getMessage());
+        }
+    }
+
+    /**
      * 方法说明：导入支付明细，生成支付申请
      * @param fileName 文件名称
      * @param systemType 系统类型（互为系统：mutual_system; 全国系统：national_system）

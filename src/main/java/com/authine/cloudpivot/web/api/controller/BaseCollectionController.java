@@ -48,12 +48,6 @@ public class BaseCollectionController extends BaseController {
     @Autowired
     private AttachmentService attachmentService;
 
-    /**
-     * @Author: lfh
-     * @Date: 2020/3/24 11:32
-     * @return: com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.Object>
-     * @Description:
-     */
     @PostMapping("/getBaseNunInfo")
     public ResponseResult<Object> getBaseNumInfo(@RequestBody BaseControllerGetBaseNunInfo baseControllerGetBaseNunInfo) throws IOException {
         String bizObjectId = baseControllerGetBaseNunInfo.getBizObjectId();
@@ -98,133 +92,160 @@ public class BaseCollectionController extends BaseController {
         log.info("创建基数采集数据");
 
         UserModel userModel = this.getOrganizationFacade().getUserById(UserUtils.getUserId(getUserId()));
-
-        for (String userId : client) {
-            String clientName = this.getOrganizationFacade().getUserById(userId).getName();
-            List<BaseInfoCollection> collectClients = new ArrayList<>();
-            if (baseInfoCollectionList != null && baseInfoCollectionList.size() > 0) {
-                for (BaseInfoCollection baseInfoCollection : baseInfoCollectionList) {
-                    if (clientName.equals(baseInfoCollection.getClientName())) {
-                        collectClients.add(baseInfoCollection);
-                    }
+        Map<String, List<BaseInfoCollection>> baseInfoCollectionMap = new HashMap<>();
+        // for (String userId : client) {
+        //     String clientName = this.getOrganizationFacade().getUserById(userId).getName();
+        //拿到公司名称， 查客户账号表中是否有这个公司账号，如果账号不存在，从客户档案表中查业务员（业务员存在多个）
+        /**
+         *
+         */
+        List<BaseInfoCollection> collectClients = null;
+        if (baseInfoCollectionList != null && baseInfoCollectionList.size() > 0) {
+            for (BaseInfoCollection baseInfoCollection : baseInfoCollectionList) {
+                /*if (clientName.equals(baseInfoCollection.getClientName())) {
+                    collectClients.add(baseInfoCollection);
+                }*/
+                if (baseInfoCollectionMap.containsKey(baseInfoCollection.getClientName())) {
+                    baseInfoCollectionMap.get(baseInfoCollection.getClientName()).add(baseInfoCollection);
+                } else {
+                    collectClients = new ArrayList<>();
+                    collectClients.add(baseInfoCollection);
+                    baseInfoCollectionMap.put(baseInfoCollection.getClientName(), collectClients);
                 }
-                if (collectClients != null && collectClients.size() > 0) {
-                    log.info("将信息采集信息导出到excel中");
-                    //通过发起基数采集的id查询基数采集对应客户的id
-                    String companyName = collectClients.get(0).getClientName();
+                baseInfoCollectionMap.put(baseInfoCollection.getClientName(), collectClients);
+            }
+        }
+        for (String clientName : baseInfoCollectionMap.keySet()) {
 
-                    BizObjectModel model = new BizObjectModel();
-                    model.setSequenceStatus(Constants.COMPLETED_STATUS);
-                    model.setSchemaCode(Constants.SUBMIT_COLLECT_SCHEMA);
-                    Map data = new HashMap();
-                    data.put("title", startCollect.getTitle());
-                    data.put("end_time", startCollect.getEndTime());
+            List<BaseInfoCollection> baseInfoCollections = baseInfoCollectionMap.get(clientName);
+            if (collectClients != null && collectClients.size() > 0) {
+                log.info("将信息采集信息导出到excel中");
+                //通过发起基数采集的id查询基数采集对应客户的id
+                // String companyName = collectClients.get(0).getClientName();
+                String userId = baseCollectionService.findCompanyName(clientName);
+
+                BizObjectModel model = new BizObjectModel();
+                model.setSequenceStatus(Constants.PROCESSING_STATUS);
+                model.setSchemaCode(Constants.SUBMIT_COLLECT_SCHEMA);
+                Map data = new HashMap();
+                data.put("title", startCollect.getTitle());
+                data.put("end_time", startCollect.getEndTime());
+                if (userId != null) {
+                    // 客户
                     Unit unit = new Unit();
                     unit.setId(userId);
                     unit.setType(Constants.USER_TYPE + "");
                     data.put("client", JSON.toJSONString(Arrays.asList(unit)));
-                    data.put("remarks", startCollect.getRemarks());
-                    data.put("start_collect_id", bizObjectId);
+                }else {
+                    //客户在客户表里不存在 查询一级客户表中客户对应的业务员
+                    String salesman =baseCollectionService.findSalesman(clientName);
+                    data.put("client", salesman);
+                }
+                data.put("remarks", startCollect.getRemarks());
+                data.put("start_collect_id", bizObjectId);
 
-                    model.put(data);
-                    log.info("创建基数采集数据，客户名称为：" + companyName);
-                    String clientId = this.getBizObjectFacade().saveBizObjectModel(UserUtils.getUserId(getUserId()), model, "id");
-                    log.info("发起基数采集流程，客户名称为：" + companyName + "数据id：" + clientId);
-                    this.getWorkflowInstanceFacade().startWorkflowInstance(userModel.getDepartmentId(), userModel.getId(), "collect", clientId, true);
+                model.put(data);
+                log.info("创建基数采集数据，客户名称为：" + baseInfoCollections.get(0).getClientName());
 
-//                    String clientId = baseCollectionService.findClientIds(bizObjectId, companyName);
-                    //excel标题
-                    String[] title = {"客户名称", "员工姓名", "证件号码", "福利办理方", "业务员", "原基数(仅供参考)", "新基数", "新比例"};
-                    String header = "社保";
-                    try {
-                        //导出到excel
-                        String id = UUID.randomUUID().toString().replace("-", "");
-                        String pathName = "D:\\upload\\" + id + fileName;
-                        File excelFile = new File(pathName);
-                        if (!excelFile.exists()) {
-                            excelFile.createNewFile();
-                        }
-                        Workbook workbook = null;
-                        if (pathName.endsWith(".xlsx")) {
-                            workbook = new XSSFWorkbook();
-                        }
-                        if (pathName.endsWith(".xls")) {
-                            workbook = new HSSFWorkbook();
-                        }
-                        // ExportExcel.exportExcel(header, title, collectClients, new FileOutputStream(excelFile), "");
-                        Sheet sheet = workbook.createSheet();
-                        Row firstRow = sheet.createRow(0);//第一行表头
-                        for (int i = 0; i < title.length; i++) {
-                            firstRow.createCell(i).setCellValue(title[i]);
-                        }
+                String clientId = this.getBizObjectFacade().saveBizObjectModel(UserUtils.getUserId(getUserId()), model, "id");
+                log.info("创建基数采集数据，客户Id为：");
+                log.info("发起基数采集流程，客户名称为：" + baseInfoCollections.get(0).getClientName() + "数据id：" + clientId);
+                this.getWorkflowInstanceFacade().startWorkflowInstance(userModel.getDepartmentId(), userModel.getId(), "collect", clientId, true);
 
-                        for (BaseInfoCollection baseInfoCollection : collectClients) {
-                            Field[] declaredFields = baseInfoCollection.getClass().getDeclaredFields();
-                            String[] values = new String[declaredFields.length];
-                            try {
-                                Field.setAccessible(declaredFields, true);
-                                for (int i = 0; i < declaredFields.length; i++) {
-                                    values[i] = (String) declaredFields[i].get(baseInfoCollection);
-                                }
-                            } catch (IllegalAccessException e) {
-                                e.printStackTrace();
-                            }
-                            //追加数据的开始行
-                            int start = sheet.getLastRowNum() + 1;
-                            Row row = sheet.createRow(start);
-                            int cluNum = sheet.getRow(0).getLastCellNum();
-                            for (int i = 0; i < cluNum; i++) {
-                                // row.createCell(i).setCellValue(values[i]);
-                                Cell cell = row.createCell(i);
-                                cell.setCellValue(values[i]);
-                                String value = ExcelUtils.getValue(cell);
-                                cell.setCellValue(value);
-                            }
-                        }
+//              String clientId = baseCollectionService.findClientIds(bizObjectId, companyName);
+                //excel标题
+                String[] title = {"客户名称", "员工姓名", "证件号码", "福利办理方", "业务员", "原基数(仅供参考)", "新基数", "新比例"};
+                String header = "社保";
+                try {
+                    //导出到excel
+                    String id = UUID.randomUUID().toString().replace("-", "");
+                    String pathName = "D:\\upload\\" + id + fileName;
+                    File excelFile = new File(pathName);
+                    if (!excelFile.exists()) {
+                        excelFile.createNewFile();
+                    }
+                    Workbook workbook = null;
+                    if (pathName.endsWith(".xlsx")) {
+                        workbook = new XSSFWorkbook();
+                    }
+                    if (pathName.endsWith(".xls")) {
+                        workbook = new HSSFWorkbook();
+                    }
+                    // ExportExcel.exportExcel(header, title, collectClients, new FileOutputStream(excelFile), "");
+                    Sheet sheet = workbook.createSheet();
+                    Row firstRow = sheet.createRow(0);//第一行表头
+                    for (int i = 0; i < title.length; i++) {
+                        firstRow.createCell(i).setCellValue(title[i]);
+                    }
 
-                        OutputStream out = null;
+                    for (BaseInfoCollection baseInfoCollection : baseInfoCollections) {
+                        Field[] declaredFields = baseInfoCollection.getClass().getDeclaredFields();
+                        String[] values = new String[declaredFields.length];
                         try {
-                            out = new FileOutputStream(excelFile);
-                            workbook.write(out);
-                            out.close();
-                        } catch (Exception e) {
+                            Field.setAccessible(declaredFields, true);
+                            for (int i = 0; i < declaredFields.length; i++) {
+                                values[i] = (String) declaredFields[i].get(baseInfoCollection);
+                            }
+                        } catch (IllegalAccessException e) {
                             e.printStackTrace();
                         }
-                        //将生成的excel导入到附件表
-                        //创建数据的引擎类
-                        Map<String, Object> map = new HashMap<>();
-                        map.put("id", UUID.randomUUID().toString().replace("-", ""));
-                        map.put("bizObjectId", clientId);
-                        map.put("bizPropertyCode", "collect_template");
-                        map.put("fileSize", excelFile.length());
-                        if (fileName.endsWith(".xls")) {
-                            map.put("mimeType", "application/xls");
-                        } else {
-                            map.put("mimeType", "application/xlsx");
+                        //追加数据的开始行
+                        int start = sheet.getLastRowNum() + 1;
+                        Row row = sheet.createRow(start);
+                        int cluNum = sheet.getRow(0).getLastCellNum();
+                        for (int i = 0; i < cluNum; i++) {
+                            // row.createCell(i).setCellValue(values[i]);
+                            Cell cell = row.createCell(i);
+                            cell.setCellValue(values[i]);
+                            String value = ExcelUtils.getValue(cell);
+                            cell.setCellValue(value);
                         }
+                    }
 
-                        map.put("creater", userId);
-                        map.put("createdTime", new Date());
-                        map.put("name", fileName);
-                        map.put("refId", id);
-                        map.put("schemaCode", "submit_collect");
-                        //插入附件表
-                        baseCollectionService.insertAttachment(map);
-                    } catch (FileNotFoundException e) {
+                    OutputStream out = null;
+                    try {
+                        out = new FileOutputStream(excelFile);
+                        workbook.write(out);
+                        out.close();
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
+                    //将生成的excel导入到附件表
+                    //创建数据的引擎类
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", UUID.randomUUID().toString().replace("-", ""));
+                    map.put("bizObjectId", clientId);
+                    map.put("bizPropertyCode", "collect_template");
+                    map.put("fileSize", excelFile.length());
+                    if (fileName.endsWith(".xls")) {
+                        map.put("mimeType", "application/xls");
+                    } else {
+                        map.put("mimeType", "application/xlsx");
+                    }
+
+                    map.put("creater", UserUtils.getUserId(getUserId()));
+                    map.put("createdTime", new Date());
+                    map.put("name", fileName);
+                    map.put("refId", id);
+                    map.put("schemaCode", "submit_collect");
+                    //插入附件表
+                    baseCollectionService.insertAttachment(map);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
                 }
-            } else {
+            }else {
                 return this.getOkResponseResult("error", "excel数据为空");
             }
         }
 
+
+        //  }
+
         return this.getOkResponseResult("success", "成功");
 
     }
-
     @PostMapping("/updateBaseNumInfo")
-    public ResponseResult<Object> updateBaseNumInfo(@RequestParam String bizObjectId) throws IOException {
+    public ResponseResult<Object> updateBaseNumInfo(@RequestParam String bizObjectId, @RequestParam String startCollectId) throws IOException {
         log.info("更新汇总基数采集");
         Attachment attachment = attachmentService.getFileName(bizObjectId, "submit_collect", "collect_data");
         log.info("带个更新的附件：" + attachment);
@@ -237,8 +258,15 @@ public class BaseCollectionController extends BaseController {
         if (!ExcelUtils.changeIsExcel(fileName)) {
             return this.getOkResponseResult("error", "上传的文件不必须是excel文件");
         }
+        log.info("fileName" + attachment.getName());
+        log.info("refId:" + attachment.getRefId());
         String pathName = "D:\\upload\\" + attachment.getRefId() + fileName;
         File file = new File(pathName);
+
+        if (!file.exists()) {
+            return this.getErrResponseResult(null, 404L, pathName + "为空");
+        }
+
         List<ExcelHead> excelHeads = new ArrayList<>();
         String[] headName = {"客户名称", "员工姓名", "证件号码", "福利办理方", "业务员", "原基数(仅供参考)", "新基数", "新比例"};
         String[] entityName = {"clientName", "employeeName", "identityNo", "welfareHandler", "salesman", "primaryBaseNum", "nowBaseNum", "newProportion"};
@@ -255,15 +283,17 @@ public class BaseCollectionController extends BaseController {
 
         synchronized (BaseCollectionController.class) {
             //判断附件表是否已经生成数据
-            String attachmentId = baseCollectionService.findAttachment(bizObjectId);
+            Attachment totalAttachment = attachmentService.getFileName(startCollectId, "start_collect", "collect_data");
+//            String attachmentId = baseCollectionService.findAttachment(bizObjectId);
             Workbook workbook = null;
             Sheet sheet = null;
             //第一次加入数据，进行创建excel
             File totalFile = null;
-            String excelName = "基数采集汇总.xls";
-            if (attachmentId == null || attachmentId.length() == 0) {
+            String attachmentId;
+            if (totalAttachment == null) {
+
+                String excelName = "基数采集汇总.xls";
                 String id = UUID.randomUUID().toString().replaceAll("-", "");
-//                excelName = id + excelName;
                 String totalPathName = "D:\\upload\\" + id + excelName;
                 totalFile = new File(totalPathName);
                 totalFile.createNewFile();
@@ -280,8 +310,9 @@ public class BaseCollectionController extends BaseController {
                 //导出到excel
                 //将生成的excel导入到附件表
                 Map<String, Object> map = new HashMap<>();
-                map.put("id", UUID.randomUUID().toString().replace("-", ""));
-                map.put("bizObjectId", bizObjectId);
+                attachmentId = UUID.randomUUID().toString().replace("-", "");
+                map.put("id", attachmentId);
+                map.put("bizObjectId", startCollectId);
                 map.put("bizPropertyCode", "collect_data");
                 map.put("fileSize", totalFile.length());
                 if (excelName.endsWith("xls")) {
@@ -297,9 +328,9 @@ public class BaseCollectionController extends BaseController {
                 baseCollectionService.insertAttachment(map);
             } else {
                 //已经创建附件 ，通过id 查询 文件名 ，对附件进行追加
-                excelName = baseCollectionService.findAttachmentName(attachmentId);
-                excelName = "D:\\upload\\" + excelName;
+                String excelName = "D:\\upload\\" + totalAttachment.getRefId() + totalAttachment.getName();
                 totalFile = new File(excelName);
+                attachmentId = totalAttachment.getId();
                 try {
                     workbook = new XSSFWorkbook(new FileInputStream(totalFile));
                 } catch (Exception e) {
@@ -338,6 +369,7 @@ public class BaseCollectionController extends BaseController {
                 out = new FileOutputStream(totalFile);
                 workbook.write(out);
                 out.close();
+
                 if (attachmentId != null && attachmentId.length() > 0) {
                     //更新附件表文件大小
                     baseCollectionService.updateFileSize(attachmentId, totalFile.length());

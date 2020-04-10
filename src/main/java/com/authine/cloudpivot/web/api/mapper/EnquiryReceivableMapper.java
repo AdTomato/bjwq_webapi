@@ -2,6 +2,7 @@ package com.authine.cloudpivot.web.api.mapper;
 
 import com.authine.cloudpivot.web.api.dto.EnquiryReceivableDto;
 import com.authine.cloudpivot.web.api.entity.Bill;
+import com.authine.cloudpivot.web.api.entity.EnquiryReceivable;
 
 import java.util.List;
 
@@ -27,4 +28,26 @@ public interface EnquiryReceivableMapper {
      * @return 账单明细
      */
     List<Bill> getBillsByEnquirtReceivableId(String id);
+
+    /**
+     * 获取账单明细
+     *
+     * @param billYear
+     * @param customerName
+     * @param employeeNature
+     * @return 账单明细
+     */
+    EnquiryReceivable getEnquiryReceivable(String billYear, String customerName, String employeeNature);
+
+    /**
+     * 更新查询账单
+     * @param updateEnquiry
+     */
+    void updateEnquiryReceivable(List<EnquiryReceivable> updateEnquiry);
+
+    /**
+     * 创建查询账单
+     * @param createEnquiry
+     */
+    void createEnquiryReceivable(List<EnquiryReceivable> createEnquiry);
 }
