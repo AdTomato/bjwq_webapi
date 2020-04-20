@@ -147,6 +147,8 @@ public class ResourceConfig extends ResourceServerConfigurerAdapter {
                     .antMatchers("/controller/baseCollection/**").permitAll()
                     // 支付管理
                     .antMatchers("/controller/paymentApplication/**").permitAll()
+                    // 公告
+                    .antMatchers("/controller/announcementController/**").permitAll()
                     // 测试类
                     .antMatchers("/controller/test/**").permitAll()
                     //test

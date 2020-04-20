@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriTemplateHandler;
 
 import java.io.IOException;
 
@@ -52,6 +53,9 @@ public class TestController extends BaseController {
 
     @Autowired
     SalesContractService salesContractService;
+
+//    @Autowired
+//    UriTemplateHandler uriTemplateHandler;
 
     @Autowired
     EnquiryReceivableService enquiryReceivableService;
@@ -94,6 +98,8 @@ public class TestController extends BaseController {
     @GetMapping("/getEmployeeFiles")
     public Object getEmployeeFiles(String clientName, String employeeNature) {
         List<EmployeeFilesDto> employeeFilesDto = employeeFilesService.getEmployeeFilesCanGenerateBillByClientName(clientName, employeeNature);
+//        uriTemplateHandler.
+//        restTemplate.setUriTemplateHandler();
         return employeeFilesDto;
     }
 
@@ -305,10 +311,10 @@ public class TestController extends BaseController {
         calendar.setTime(new Date());
         // 账单起始月
         calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1);
-        String billYear = getYearAndMonth(calendar); // 账单年月
+        String billYear = getYearAndMonth(calendar) + "-"; // 账单年月
 
         // 账单结束月
-        calendar.add(Calendar.MONTH, monthNum);
+        calendar.add(Calendar.MONTH, monthNum - 1);
         billYear += getYearAndMonth(calendar);
         List<Bill> result = new ArrayList<>();
         for (EmployeeFilesDto employeeFilesDto : employeeFilesDtos) {
@@ -337,7 +343,7 @@ public class TestController extends BaseController {
                     }
                     if (socialSecurityChargeNum > 0 || providentFundChargeNum > 0) {
                         // 需要生成之前没有生成的数据
-                        result.addAll(createOldBillData(user, department, employeeFilesDto, salesContractDto, socialSecurityChargeNum, providentFundChargeNum, billYear, "预收", 0, payrollBill, serviceChargeUnitPrice));
+                        result.addAll(createOldBillData(user, department, employeeFilesDto, salesContractDto, socialSecurityChargeNum, providentFundChargeNum, billYear, "预收", 1, payrollBill, serviceChargeUnitPrice));
                     }
                 }
             }
@@ -357,6 +363,7 @@ public class TestController extends BaseController {
                 setBillBasicData(bill, employeeFilesDto, salesContractDto, billYear, businessYear, "预收", 0, 0, 0, 0);
                 setBillOtherData(bill, employeeFilesDto, salesContractDto, calendar);
                 setServiceChargeData(bill, serviceChargeUnitPrice, payrollBill);
+                calendar.setTime(new Date());
                 calendar.add(Calendar.MONTH, i);
                 SystemDataSetUtils.dataSet(user, department, employeeFilesDto.getEmployeeName(), Constants.COMPLETED_STATUS, bill);
                 result.add(bill);
@@ -1251,9 +1258,10 @@ public class TestController extends BaseController {
             return null;
         }
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        for (int i = start; i < maxNum; i++) {
+        for (int i = start; i <= maxNum; i++) {
             num++;
+            calendar.setTime(new Date());
+            calendar.add(Calendar.MONTH, -i);
             Bill bill = new Bill();
             bill.setChargeType("新增费用");
             SystemDataSetUtils.dataSet(user, departmentModel, employeeFilesDto.getEmployeeName(), Constants.COMPLETED_STATUS, bill);
@@ -1273,7 +1281,7 @@ public class TestController extends BaseController {
             }
             setServiceChargeData(bill, serviceChargeUnitPrice, payrollBill);
             result.add(bill);
-            calendar.add(Calendar.MONTH, -1);
+
         }
         return result;
     }

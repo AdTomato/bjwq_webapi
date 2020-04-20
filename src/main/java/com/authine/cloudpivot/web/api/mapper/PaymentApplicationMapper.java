@@ -4,6 +4,7 @@ import com.authine.cloudpivot.web.api.dto.EmployeeFilesDto;
 import com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto;
 import com.authine.cloudpivot.web.api.entity.PaymentApplication;
 import com.authine.cloudpivot.web.api.entity.PaymentClientDetails;
+import com.authine.cloudpivot.web.api.entity.PaymentDetails;
 import com.authine.cloudpivot.web.api.entity.SocialSecurityFundDetail;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.security.core.parameters.P;

@@ -473,6 +473,8 @@ public class DataModifyController extends BaseController {
             }
         } else {
             // 旧值为空
+            before = ((List<Unit>) JSON.parse(beforeModify)).get(0);
+            next = ((List<Unit>) JSON.parse(nextModify)).get(0);
             if (type == 1) {
                 // 部门
                 DepartmentModel oldDepartment = organizationFacade.getDepartment(before.getId());
@@ -555,7 +557,7 @@ public class DataModifyController extends BaseController {
                 data.add(getChangeData(field, time, null, parentId));
             }
         } else {
-            if (beforeModify.getYear() != nextModify.getYear() || beforeModify.getMonth() != nextModify.getMonth() || beforeModify.getDay() != nextModify.getDay()) {
+            if (beforeModify.getYear() != nextModify.getYear() || beforeModify.getMonth() != nextModify.getMonth() || beforeModify.getDate() != nextModify.getDate()) {
                 calendar.setTime(beforeModify);
                 String time1 = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH) + 1) + "-" + calendar.get(Calendar.DATE);
                 calendar.setTime(nextModify);

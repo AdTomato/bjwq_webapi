@@ -7,6 +7,8 @@ import com.authine.cloudpivot.web.api.service.SystemManageService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: wangyong
@@ -53,5 +55,18 @@ public class SystemManageServiceImpl implements SystemManageService {
     @Override
     public SmsHistory getSmsHistoryById(String id) {
         return systemManageMapper.getSmsHistoryById(id);
+    }
+
+    /**
+     * @param mobile: 手机号码
+     * @Author: wangyong
+     * @Date: 2020/4/16 17:02
+     * @return: java.util.List<java.util.Map < java.lang.String, java.lang.String>>
+     * @Description: 根据手机号码获取这个手机号码所对应的客户名称以及用户名
+     */
+    @Override
+    public List<Map<String, String>> getNameAndUserNameByMobile(String mobile) {
+
+        return systemManageMapper.getNameAndUserNameByMobile(mobile);
     }
 }

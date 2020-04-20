@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.AnnouncementMapper">
+    <select id="getAnnouncementContent" resultType="java.lang.String">
+        SELECT announcement_content FROM id34a_announcement_setting WHERE is_close = 0 ORDER BY createdTime DESC
+    </select>
+</mapper>

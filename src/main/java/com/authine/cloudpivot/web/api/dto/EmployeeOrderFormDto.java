@@ -5,7 +5,6 @@ import com.authine.cloudpivot.web.api.entity.SocialSecurityFundDetail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import net.bytebuddy.agent.builder.AgentBuilder;
 
 import java.util.List;
 

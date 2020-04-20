@@ -34,4 +34,11 @@
     <select id="getCcpsByClientName" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.Ccps">
         SELECT * FROM id34a_ccps WHERE client = #{clientName}
     </select>
+    <resultMap id="nameAndUserName" type="java.util.Map">
+        <id property="name" column="name"></id>
+        <id property="username" column="username"></id>
+    </resultMap>
+    <select id="getNameAndUserNameByMobile" resultMap="nameAndUserName">
+        SELECT name, username FROM h_org_user WHERE mobile = #{mobile}
+    </select>
 </mapper>

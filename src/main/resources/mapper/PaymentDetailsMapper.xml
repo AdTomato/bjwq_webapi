@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.PaymentDetailsMapper">
+
+    <select id="getNeedComparePaymentDetails" resultType="com.authine.cloudpivot.web.api.entity.PaymentDetails">
+        SELECT *
+        FROM i4fvb_payment_details
+        WHERE client_name = #{clientName}
+          AND id_no = #{idNo}
+          AND entrust_unit = #{entrustUnit}
+          AND insured_area = #{insuredArea}
+          AND data_type = #{dataType}
+          AND bill_year &lt; #{billYear}
+          AND whether_compare = 0
+          AND whether_difference_data = 0
+    </select>
+
+    <!--公积金查询 start -->
+    <resultMap id="gjjEmployeeOrderFormDto" type="com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto">
+        <id column="id" property="id"></id>
+        <collection property="socialSecurityFundDetails" column="id"
+                    select="com.authine.cloudpivot.web.api.mapper.PaymentDetailsMapper.getFundDetailByParentId"></collection>
+    </resultMap>
+    <select id="getGjjEmployeeOrderFormDto" resultMap="gjjEmployeeOrderFormDto">
+        SELECT *
+        FROM i4fvb_employee_order_form
+        WHERE employee_files_id = #{id}
+          AND provident_fund_status = '在缴'
+          AND DATE_FORMAT(start_time, '%Y%m') <![CDATA[<=]]> #{billYear}
+          AND (end_time IS NULL OR DATE_FORMAT(end_time, '%Y%m') <![CDATA[>=]]> #{billYear})
+        ORDER BY creater DESC
+    </select>
+
+    <select id="getFundDetailByParentId" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityFundDetail">
+        SELECT * FROM i4fvb_social_security_fund_detail WHERE parentId = #{id} AND name_hide LIKE '%公积金%'
+    </select>
+    <!--公积金查询 end -->
+
+    <!--社保查询 start -->
+    <resultMap id="sbEmployeeOrderFormDto" type="com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto">
+        <id column="id" property="id"></id>
+        <collection property="socialSecurityFundDetails" column="id"
+                    select="com.authine.cloudpivot.web.api.mapper.PaymentDetailsMapper.getSocialSecurityDetailByParentId"></collection>
+    </resultMap>
+    <select id="getSbEmployeeOrderFormDto" resultMap="sbEmployeeOrderFormDto">
+        SELECT *
+        FROM i4fvb_employee_order_form
+        WHERE employee_files_id = #{id}
+          AND social_security_status = '在缴'
+          AND DATE_FORMAT(start_time, '%Y%m') <![CDATA[<=]]> #{billYear}
+          AND (end_time IS NULL OR DATE_FORMAT(end_time, '%Y%m') <![CDATA[>=]]> #{billYear})
+        ORDER BY creater DESC
+    </select>
+
+    <select id="getSocialSecurityDetailByParentId" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityFundDetail">
+        SELECT * FROM i4fvb_social_security_fund_detail WHERE parentId = #{id} AND name_hide NOT LIKE '%公积金%'
+    </select>
+    <!--社保查询 end -->
+
+    <update id="changeWhetherCompareToYes" parameterType="java.util.List">
+        UPDATE i4fvb_payment_details SET whether_compare = 1 WHERE id IN
+        <foreach item="item" collection="list" index="index" open="(" close=")" separator=",">
+            #{item.id}
+        </foreach>
+    </update>
+</mapper>

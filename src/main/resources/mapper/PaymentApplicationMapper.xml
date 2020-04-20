@@ -204,7 +204,7 @@
         b_provident_enterprise_base, b_provident_enterprise_ratio, b_provident_enterprise_add,
         b_provident_enterprise_pay, b_provident_personal_base, b_provident_personal_ratio, b_provident_personal_attach,
         b_provident_personal_pay, b_provident_subtotal, b_provident_payment_method, payment_application_id, is_lock,
-        whether_compare, source_id, data_type)
+        whether_compare, source_id, data_type, whether_difference_data)
         VALUES
         <foreach collection="paymentDetails" item="item" index="index" separator=",">
             (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner}, #{item.ownerDeptId},
@@ -257,7 +257,8 @@
             #{item.b_provident_enterprise_add}, #{item.b_provident_enterprise_pay}, #{item.b_provident_personal_base},
             #{item.b_provident_personal_ratio}, #{item.b_provident_personal_attach}, #{item.b_provident_personal_pay},
             #{item.b_provident_subtotal}, #{item.b_provident_payment_method}, #{item.payment_application_id},
-            #{item.is_lock}, #{item.whether_compare}, #{item.source_id}, #{item.data_type})
+            #{item.is_lock}, #{item.whether_compare}, #{item.source_id}, #{item.data_type},
+            #{item.whether_difference_data})
         </foreach>
     </insert>
 
@@ -266,6 +267,7 @@
         JOIN i4fvb_payment_details_temp temp ON detail.client_name = temp.client_name
         AND detail.id_no = temp.id_no
         AND detail.bill_year = temp.bill_year
+        AND detail.business_year = temp.business_year
         AND detail.data_type = temp.data_type
         AND (detail.source_id is null or detail.source_id = '' or detail.source_id <![CDATA[ <> ]]> temp.source_id)
         SET	detail.entrust_unit = temp.entrust_unit,
@@ -429,7 +431,7 @@
          provident_payment_method, b_provident_enterprise_base, b_provident_enterprise_ratio,
          b_provident_enterprise_add, b_provident_enterprise_pay, b_provident_personal_base, b_provident_personal_ratio,
          b_provident_personal_attach, b_provident_personal_pay, b_provident_subtotal, b_provident_payment_method,
-         payment_application_id, is_lock, whether_compare, source_id, data_type)
+         payment_application_id, is_lock, whether_compare, source_id, data_type, whether_difference_data)
         SELECT
             id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId,
             sequenceNo, sequenceStatus, ownerDeptQueryCode, bill_year, salesman, unique_num, employee_name, id_no,
@@ -467,7 +469,7 @@
             provident_payment_method, b_provident_enterprise_base, b_provident_enterprise_ratio,
             b_provident_enterprise_add, b_provident_enterprise_pay, b_provident_personal_base, b_provident_personal_ratio,
             b_provident_personal_attach, b_provident_personal_pay, b_provident_subtotal, b_provident_payment_method,
-            payment_application_id, is_lock, whether_compare, source_id, data_type
+            payment_application_id, is_lock, whether_compare, source_id, data_type, whether_difference_data
         FROM i4fvb_payment_details_temp temp
         WHERE source_id = #{sourceId}
           AND (SELECT COUNT(1)
@@ -476,6 +478,7 @@
                  AND
                    detail.id_no = temp.id_no
                  AND detail.bill_year = temp.bill_year
+                 AND detail.business_year = temp.business_year
                  AND IFNULL(detail.insured_area, '') = IFNULL(temp.insured_area, '')
                  AND IFNULL(detail.entrust_unit, '') = IFNULL(temp.entrust_unit, '')
                  AND detail.data_type = temp.data_type) = 0
@@ -613,14 +616,16 @@
         FROM
             i4fvb_payment_application a
                 LEFT JOIN (select id yId,entrust_unit,insured_area,source_id,bill_year,data_type,sequenceStatus
-                           from i4fvb_payment_application) b ON IFNULL(a.entrust_unit, '') = IFNULL(b.entrust_unit, '')
+                           from i4fvb_payment_application
+                           WHERE sequenceStatus = 'DRAFT'
+                             AND payment_type = '一对一') b ON IFNULL(a.entrust_unit, '') = IFNULL(b.entrust_unit, '')
                 AND IFNULL(a.insured_area, '') = IFNULL(b.insured_area, '')
                 AND IFNULL(a.source_id, '') <![CDATA[ <> ]]> IFNULL(b.source_id, '')
-                AND a.bill_year = a.bill_year
+                AND a.bill_year = b.bill_year
                 AND a.data_type = b.data_type
+                AND a.id <![CDATA[ <> ]]> b.yId
         WHERE
             a.source_id = #{sourceId}
-          AND b.sequenceStatus = 'DRAFT'
     </select>
 
     <delete id="deletePaymentDetailsTempBySourceId" parameterType="java.lang.String">

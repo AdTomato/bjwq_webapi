@@ -46,10 +46,11 @@ public class BaseInfoCollection {
      */
     private String nowBaseNum;
 
+
     /**
-     * 新比例
+     * 备注
      */
-    private String newProportion;
+    private String remark;
 
 
 }

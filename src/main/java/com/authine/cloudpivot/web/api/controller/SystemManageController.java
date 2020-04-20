@@ -1,6 +1,5 @@
 package com.authine.cloudpivot.web.api.controller;
 
-import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
 import com.authine.cloudpivot.engine.api.model.organization.UserModel;
 import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
 import com.authine.cloudpivot.engine.enums.ErrCode;
@@ -13,16 +12,13 @@ import com.authine.cloudpivot.web.api.utils.SendSmsUtils;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.client.OkHttp3ClientHttpRequestFactory;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.web.bind.annotation.*;
+import org.w3c.dom.ls.LSInput;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.lang.reflect.MalformedParameterizedTypeException;
+import java.util.*;
 
 /**
  * @Author: wangyong
@@ -55,7 +51,7 @@ public class SystemManageController extends BaseController {
      * @Description: 发送短信验证码
      */
     @PostMapping("/sendSmsCode")
-    public ResponseResult<Object> sendSmsCode(@RequestParam String mobile){
+    public ResponseResult<Object> sendSmsCode(@RequestParam String mobile) {
         log.info("发送验证码，手机号码为：" + mobile);
         OrgUser user = systemManageService.getOrgUserByMobile(mobile);
         if (null == user) {
@@ -86,6 +82,20 @@ public class SystemManageController extends BaseController {
             e.printStackTrace();
             return this.getErrResponseResult(null, 405L, "短信验证码发送失败");
         }
+    }
+
+    @GetMapping("/getUserName")
+    public ResponseResult<List<Map<String, String>>> getUserNameByMobile(@RequestParam String mobile) {
+        List<Map<String, String>> userName = new ArrayList<>();
+        Map<String, String> map1 = new HashMap<>();
+        map1.put("name", "安徽霍迹寻踪科技有限公司");
+        map1.put("username", "admin");
+        userName.add(map1);
+        Map<String, String> map2 = new HashMap<>();
+        map2.put("name", "北京外企人力资源服务安徽有限公司");
+        map2.put("username", "xuer");
+        userName.add(map2);
+        return this.getErrResponseResult(userName, ErrCode.OK.getErrCode(), ErrCode.OK.getErrMsg());
     }
 
     /**
@@ -131,6 +141,19 @@ public class SystemManageController extends BaseController {
             // 不在有效期内
             return getErrResponseResult(null, 405L, "短信验证码失效");
         }
+    }
+
+    /**
+     * @param mobile: 手机号码
+     * @Author: wangyong
+     * @Date: 2020/4/16 17:04
+     * @return: com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.Object>
+     * @Description: 获取该手机号码对应的客户名称，用户名
+     */
+    @GetMapping("/getNameAndUserName")
+    public ResponseResult<Object> getNameAndUserNameByMobile(@RequestParam String mobile) {
+        List<Map<String, String>> result = systemManageService.getNameAndUserNameByMobile(mobile);
+        return this.getErrResponseResult(result, ErrCode.OK.getErrCode(), ErrCode.OK.getErrMsg());
     }
 
     /**

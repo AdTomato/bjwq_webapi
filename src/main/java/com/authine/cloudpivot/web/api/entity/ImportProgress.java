@@ -1,5 +1,6 @@
-package com.authine.cloudpivot.web.api.excel;
+package com.authine.cloudpivot.web.api.entity;
 
+import com.github.javafaker.Bool;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,7 +38,7 @@ public class ImportProgress {
     /**
      * 是否结束
      */
-    public boolean isOver;
+    public Boolean isOver;
 
 
 }

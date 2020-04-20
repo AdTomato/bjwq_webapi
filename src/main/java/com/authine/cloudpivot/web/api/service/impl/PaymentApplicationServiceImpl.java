@@ -6,8 +6,10 @@ import com.authine.cloudpivot.engine.api.model.organization.DepartmentModel;
 import com.authine.cloudpivot.engine.api.model.organization.UserModel;
 import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.dto.EmployeeFilesDto;
+import com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto;
 import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.mapper.PaymentApplicationMapper;
+import com.authine.cloudpivot.web.api.mapper.PaymentDetailsMapper;
 import com.authine.cloudpivot.web.api.mapper.SystemManageMapper;
 import com.authine.cloudpivot.web.api.service.PaymentApplicationService;
 import com.authine.cloudpivot.web.api.utils.CommonUtils;
@@ -33,6 +35,9 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
 
     @Resource
     private SystemManageMapper systemManageMapper;
+
+    @Resource
+    private PaymentDetailsMapper paymentDetailsMapper;
 
     @Override
     public void mergeData(List <String> ids, String supplierId, UserModel user, DepartmentModel dept,
@@ -231,8 +236,13 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
             data.put("data_type", dataType);
             data = setSystemField(data, UUID.randomUUID().toString().replaceAll("-", ""), user, dept,
                     Constants.COMPLETED_STATUS);
-            data.put("name", data.get("bill_year") == null ? "" : data.get("bill_year").toString() + data.get(
-                    "employee_name") == null ? "" : data.get("employee_name").toString());
+            String name = data.get("employee_name") == null ? "" : data.get("employee_name").toString() + data.get(
+                    "bill_year") == null ? "" : data.get("bill_year").toString();
+            data.put("name", name);
+            data.put("whether_difference_data", 0);
+            data.put("whether_compare", 1);
+            data.put("whether_define", 0);
+            data.put("is_lock", 0);
             dataList.add(data);
         }
         // 生成临时表数据
@@ -286,9 +296,10 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
             if ("社保".equals(dataType)) {
                 // 判断之前是否存在一次性收费数据,存在则更新数据
                 paymentApplicationMapper.updatePaymentDetailsByTemp(sourceId);
+                // 生成新增的数据
+                paymentApplicationMapper.insertPaymentDetailsByTemp(sourceId);
             }
-            // 生成新增的数据
-            paymentApplicationMapper.insertPaymentDetailsByTemp(sourceId);
+
             // 生成支付客户明细表数据(此时parentId设为null)
             paymentApplicationMapper.insertPaymentClientDetailsBySourceId(sourceId);
             // 给支付客户明细数据客户代码等赋值
@@ -335,6 +346,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                         }
                         if (StringUtils.isBlank(yId)) {
                             notMerges.add(id);
+                            continue;
                         }
 
                         List <String> merge = new ArrayList <>();
@@ -425,6 +437,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                                 String sourceId, String processType) throws Exception {
         List <Map <String, Object>> paymentDetails = new ArrayList <>();
         List<String> employeeFilesIds = new ArrayList <>();
+        List<PaymentDetails> changeWhetherCompares = new ArrayList <>();
         for (int i = 0; i < list.size(); i ++) {
             EmployeeFilesDto filesDto = list.get(i);
             if (filesDto.getEmployeeOrderFormDto() == null) {
@@ -443,11 +456,29 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
             map.put("source_id", sourceId);
             String id = UUID.randomUUID().toString().replaceAll("-", "");
             map = setSystemField(map, id, user, dept, Constants.COMPLETED_STATUS);
-            map.put("name", billYear + filesDto.getEmployeeName());
+            map.put("whether_difference_data", 0);
+            map.put("whether_compare", 1);
+            map.put("whether_define", 0);
+            map.put("is_lock", 0);
+            map.put("name", filesDto.getEmployeeName() + billYear);
 
             paymentDetails.add(map);
 
             employeeFilesIds.add(filesDto.getId());
+
+            // 查询是否需要比对
+            List <PaymentDetails> needCompareList =
+                    paymentDetailsMapper.getNeedComparePaymentDetails(filesDto.getClientName(), filesDto.getIdNo(),
+                            filesDto.getEntrustedUnit(), "社保".equals(processType) ? filesDto.getSocialSecurityCity()
+                                    : filesDto.getProvidentFundCity(), processType, billYear);
+            if (needCompareList != null && needCompareList.size() > 0) {
+                List <Map <String, Object>> compareDetails = comparePaymentDetails(needCompareList, filesDto,
+                        billYear, user, dept, sourceId);
+                changeWhetherCompares.addAll(needCompareList);
+                if (compareDetails != null && compareDetails.size() > 0) {
+                    paymentDetails.addAll(compareDetails);
+                }
+            }
         }
 
         if (paymentDetails != null && paymentDetails.size() > 0) {
@@ -457,6 +488,357 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
             // 更新员工档案的支付申请标记
             paymentApplicationMapper.updateEmployeeFilesPaymentApplication(employeeFilesIds, processType, billYear);
         }
+        if (changeWhetherCompares != null && changeWhetherCompares.size() > 0) {
+            // 更新比对状态为是（value = 1）
+            paymentDetailsMapper.changeWhetherCompareToYes(changeWhetherCompares);
+        }
+    }
+
+    /**
+     * 方法说明：比较数据，产生差异
+     * @param needCompareList 需要比较差异的数据
+     * @param filesDto 员工档案
+     * @param billYear 账单年月
+     * @param user
+     * @param dept
+     * @param sourceId
+     * @return java.util.List<java.util.Map<java.lang.String,java.lang.Object>>
+     * @author liulei
+     * @Date 2020/4/10 17:09
+     */
+    private List <Map <String, Object>> comparePaymentDetails(List <PaymentDetails> needCompareList,
+                                                              EmployeeFilesDto filesDto, String billYear,
+                                                              UserModel user, DepartmentModel dept, String sourceId) throws Exception {
+        List<Map<String, Object>> details = new ArrayList <>();
+        for(int i = 0; i  < needCompareList.size(); i++) {
+            PaymentDetails paymentDetails = needCompareList.get(i);
+            // 获取需要比对数据的账单年月对应的订单数据
+            List <EmployeeOrderFormDto> orderFormDtoList = new ArrayList <>();
+            if ("社保".equals(paymentDetails.getDataType())) {
+                orderFormDtoList = paymentDetailsMapper.getSbEmployeeOrderFormDto(filesDto.getId(),
+                        paymentDetails.getBillYear());
+            } else if ("公积金".equals(paymentDetails.getDataType())) {
+                orderFormDtoList = paymentDetailsMapper.getGjjEmployeeOrderFormDto(filesDto.getId(),
+                        paymentDetails.getBillYear());
+            }
+            if (orderFormDtoList != null && orderFormDtoList.size() > 0) {
+                EmployeeOrderFormDto orderFormDto = orderFormDtoList.get(0);
+                Map<String, Object> detail = compareData(paymentDetails, filesDto, orderFormDto);
+                if (detail != null) {
+                    // 账单年月
+                    detail.put("bill_year", billYear);
+                    // 业务年月
+                    detail.put("business_year", paymentDetails.getBillYear());
+                    detail.put("data_type", paymentDetails.getDataType());
+                    detail.put("source_id", sourceId);
+                    detail = setSystemField(detail, UUID.randomUUID().toString().replaceAll("-", ""), user, dept,
+                            Constants.COMPLETED_STATUS);
+                    detail.put("whether_difference_data", 1);
+                    detail.put("whether_compare", 1);
+                    detail.put("whether_define", 0);
+                    detail.put("is_lock", 0);
+                    detail.put("name", filesDto.getEmployeeName() + billYear);
+
+                    details.add(detail);
+                }
+            }
+        }
+
+        return details;
+    }
+
+    /**
+     * 方法说明：比较数据
+     * @param paymentDetails 需要比对的数据
+     * @param orderFormDto 比对账单年月对应的订单
+     * @return java.util.Map<java.lang.String,java.lang.Object>
+     * @author liulei
+     * @Date 2020/4/13 8:51
+     */
+    private Map <String, Object> compareData(PaymentDetails paymentDetails, EmployeeFilesDto filesDto,
+                                             EmployeeOrderFormDto orderFormDto) throws Exception{
+        Map<String, Object> map = new HashMap <>();
+        // 委托单位
+        map.put("entrust_unit", filesDto.getEntrustedUnit());
+        // 业务客户名称
+        map.put("client_name", filesDto.getClientName());
+        // 雇员姓名
+        map.put("employee_name", filesDto.getEmployeeName());
+        // 身份证
+        map.put("id_no", filesDto.getIdNo());
+        // 业务员
+        map.put("salesman", filesDto.getSalesman());
+
+        // 支付方式
+        String paymentMethod = null;
+        String welfareHandler = "公积金".equals(paymentDetails.getDataType()) ? filesDto.getProvidentFundArea() : filesDto.getSocialSecurityArea();
+        if (StringUtils.isNotBlank(welfareHandler)) {
+            if (welfareHandler.indexOf("大库") >= 0) {
+                paymentMethod = "代收代付";
+            } else if (welfareHandler.indexOf("单立户") >= 0) {
+                paymentMethod = "托收";
+            }
+        } else {
+            paymentMethod = null;
+        }
+
+        List<SocialSecurityFundDetail> details = orderFormDto.getSocialSecurityFundDetails();
+        if ("公积金".equals(paymentDetails.getDataType())) {
+            map.put("insured_area", filesDto.getProvidentFundCity());
+            map = compareGjjDetailData(map, details, paymentMethod, paymentDetails);
+        } else if ("社保".equals(paymentDetails.getDataType())) {
+            // 社保数据 服务费放到社保里面
+            map.put("service_fee_total", filesDto.getEmployeeOrderFormDto().getServiceFee());
+            // 投保地
+            map.put("insured_area", filesDto.getSocialSecurityCity());
+            map = compareSbDetailData(map, details, paymentMethod, paymentDetails);
+        }
+        return map;
+    }
+
+    private Map <String, Object> compareSbDetailData(Map <String, Object> map,
+                                                     List <SocialSecurityFundDetail> details, String paymentMethod,
+                                                     PaymentDetails paymentDetails) throws Exception{
+        if (details == null || details.size() == 0) {
+            return null;
+        }
+        boolean haveChange = false;
+        // 社保实付缴纳额,公积金个人缴纳合计
+        Double sPayment = 0.0,gPayment= 0.0,enterpriseTotal = 0.0, personalTotal = 0.0, socialProvidentTotal = 0.0;
+        Double enterpriseChange = 0d, personalChange = 0d, sumChange = 0d;
+        for (int i = 0; i < details.size(); i++) {
+            SocialSecurityFundDetail detail = details.get(i);
+            String productName = detail.getNameHide();
+            if (StringUtils.isBlank(productName)) {
+                continue;
+            }
+
+            if (productName.indexOf("养老") >= 0) {
+                enterpriseChange = detail.getCompanyMoney() - paymentDetails.getPensionEnterprisePay();
+                personalChange = detail.getEmployeeMoney() - paymentDetails.getPensionPersonalPay();
+                sumChange = detail.getSum() - paymentDetails.getPensionSubtotal();
+
+                map.put("pension_enterprise_base", detail.getBaseNum());
+                map.put("pension_enterprise_ratio", detail.getCompanyRatio());
+                map.put("pension_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("pension_personal_base", detail.getBaseNum());
+                map.put("pension_personal_ratio", detail.getEmployeeRatio());
+                map.put("pension_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("pension_payment_method", paymentMethod);
+
+
+                map.put("pension_enterprise_pay", enterpriseChange);
+                map.put("pension_personal_pay", personalChange);
+                map.put("pension_subtotal", sumChange);
+            } else if (productName.indexOf("大病") >= 0) {
+                enterpriseChange = detail.getCompanyMoney() - paymentDetails.getDMedicalEnterprisePay();
+                personalChange = detail.getEmployeeMoney() - paymentDetails.getDMedicalPersonalPay();
+                sumChange = detail.getSum() - paymentDetails.getDMedicalSubtotal();
+
+                map.put("d_medical_enterprise_base", detail.getBaseNum());
+                map.put("d_medical_enterprise_ratio", detail.getCompanyRatio());
+                map.put("d_medical_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("d_medical_personal_base", detail.getBaseNum());
+                map.put("d_medical_personal_ratio", detail.getEmployeeRatio());
+                map.put("d_medical_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("d_medical_payment_method", paymentMethod);
+
+                map.put("d_medical_enterprise_pay", enterpriseChange);
+                map.put("d_medical_personal_pay", personalChange);
+                map.put("d_medical_subtotal", sumChange);
+            } else if (productName.indexOf("医疗") >= 0) {
+                enterpriseChange = detail.getCompanyMoney() - paymentDetails.getMedicalEnterprisePay();
+                personalChange = detail.getEmployeeMoney() - paymentDetails.getMedicalPersonalPay();
+                sumChange = detail.getSum() - paymentDetails.getMedicalSubtotal();
+
+                map.put("medical_enterprise_base", detail.getBaseNum());
+                map.put("medical_enterprise_ratio", detail.getCompanyRatio());
+                map.put("medical_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("medical_personal_base", detail.getBaseNum());
+                map.put("medical_personal_ratio", detail.getEmployeeRatio());
+                map.put("medical_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("medical_payment_method", paymentMethod);
+
+                map.put("medical_enterprise_pay", enterpriseChange);
+                map.put("medical_personal_pay", personalChange);
+                map.put("medical_subtotal", sumChange);
+            } else if (productName.indexOf("失业") >= 0) {
+                enterpriseChange = detail.getCompanyMoney() - paymentDetails.getUnempEnterprisePay();
+                personalChange = detail.getEmployeeMoney() - paymentDetails.getUnempPersonalPay();
+                sumChange = detail.getSum() - paymentDetails.getUnempSubtotal();
+
+                map.put("unemp_enterprise_base", detail.getBaseNum());
+                map.put("unemp_enterprise_ratio", detail.getCompanyRatio());
+                map.put("unemp_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("unemp_personal_base", detail.getBaseNum());
+                map.put("unemp_personal_ratio", detail.getEmployeeRatio());
+                map.put("unemp_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("unemp_payment_method", paymentMethod);
+
+                map.put("unemp_enterprise_pay", enterpriseChange);
+                map.put("unemp_personal_pay", personalChange);
+                map.put("unemp_subtotal", sumChange);
+            } else if (productName.indexOf("补充") >= 0) {
+                enterpriseChange = detail.getCompanyMoney() - paymentDetails.getBInjuryEnterprisePay();
+                personalChange = detail.getEmployeeMoney() - paymentDetails.getBInjuryPersonalPay();
+                sumChange = detail.getSum() - paymentDetails.getBInjurySubtotal();
+
+                map.put("b_injury_enterprise_base", detail.getBaseNum());
+                map.put("b_injury_enterprise_ratio", detail.getCompanyRatio());
+                map.put("b_injury_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("b_injury_personal_base", detail.getBaseNum());
+                map.put("b_injury_personal_ratio", detail.getEmployeeRatio());
+                map.put("b_injury_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("b_injury_payment_method", paymentMethod);
+
+                map.put("b_injury_enterprise_pay", enterpriseChange);
+                map.put("b_injury_personal_pay", personalChange);
+                map.put("b_injury_subtotal", sumChange);
+            } else if (productName.indexOf("工伤") >= 0) {
+                enterpriseChange = detail.getCompanyMoney() - paymentDetails.getInjuryEnterprisePay();
+                personalChange = detail.getEmployeeMoney() - paymentDetails.getInjuryPersonalPay();
+                sumChange = detail.getSum() - paymentDetails.getInjurySubtotal();
+
+                map.put("injury_enterprise_base", detail.getBaseNum());
+                map.put("injury_enterprise_ratio", detail.getCompanyRatio());
+                map.put("injury_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("injury_personal_base", detail.getBaseNum());
+                map.put("injury_personal_ratio", detail.getEmployeeRatio());
+                map.put("injury_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("injury_payment_method", paymentMethod);
+
+                map.put("injury_enterprise_pay", enterpriseChange);
+                map.put("injury_personal_pay", personalChange);
+                map.put("injury_subtotal", sumChange);
+            } else if (productName.indexOf("生育") >= 0) {
+                enterpriseChange = detail.getCompanyMoney() - paymentDetails.getFertilityEnterprisePay();
+                personalChange = detail.getEmployeeMoney() - paymentDetails.getFertilityPersonalPay();
+                sumChange = detail.getSum() - paymentDetails.getFertilitySubtotal();
+
+                map.put("fertility_enterprise_base", detail.getBaseNum());
+                map.put("fertility_enterprise_ratio", detail.getCompanyRatio());
+                map.put("fertility_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("fertility_personal_base", detail.getBaseNum());
+                map.put("fertility_personal_ratio", detail.getEmployeeRatio());
+                map.put("fertility_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("fertility_payment_method", paymentMethod);
+
+                map.put("fertility_enterprise_pay", enterpriseChange);
+                map.put("fertility_personal_pay", personalChange);
+                map.put("fertility_subtotal", sumChange);
+            } else if (productName.indexOf("综合") >= 0) {
+                enterpriseChange = detail.getCompanyMoney() - paymentDetails.getComplexEnterprisePay();
+                personalChange = detail.getEmployeeMoney() - paymentDetails.getComplexPersonalPay();
+                sumChange = detail.getSum() - paymentDetails.getComplexSubtotal();
+
+                map.put("complex_enterprise_base", detail.getBaseNum());
+                map.put("complex_enterprise_ratio", detail.getCompanyRatio());
+                map.put("complex_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("complex_personal_base", detail.getBaseNum());
+                map.put("complex_personal_ratio", detail.getEmployeeRatio());
+                map.put("complex_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("complex_payment_method", paymentMethod);
+
+                map.put("complex_enterprise_pay", enterpriseChange);
+                map.put("complex_personal_pay", personalChange);
+                map.put("complex_subtotal", sumChange);
+            } else {
+                continue;
+            }
+            if (!"托收".equals(paymentMethod)) {
+                sPayment += sumChange;
+            }
+            if (sumChange != 0 || enterpriseChange != 0 || personalChange != 0) {
+                haveChange = true;
+            }
+            enterpriseTotal += enterpriseChange;
+            personalTotal += personalChange;
+            socialProvidentTotal += sumChange;
+        }
+        if (!haveChange) {
+            return null;
+        }
+        map.put("provident_payment", gPayment);
+        map.put("social_security_payment", sPayment);
+        map.put("social_provident_payment", gPayment + sPayment);
+        map.put("enterprise_total", enterpriseTotal);
+        map.put("personal_total", personalTotal);
+        map.put("social_provident_total", socialProvidentTotal);
+        return map;
+    }
+
+    private Map <String, Object> compareGjjDetailData(Map <String, Object> map,
+                                                      List <SocialSecurityFundDetail> details, String paymentMethod,
+                                                      PaymentDetails paymentDetails) throws Exception{
+        if (details == null || details.size() == 0) {
+            return null;
+        }
+        boolean haveChange = false;
+        // 社保实付缴纳额,公积金个人缴纳合计
+        Double sPayment = 0.0,gPayment= 0.0,enterpriseTotal = 0.0, personalTotal = 0.0, socialProvidentTotal = 0.0;
+        Double enterpriseChange = 0d, personalChange = 0d, sumChange = 0d;
+        for (int i = 0; i < details.size(); i++) {
+            SocialSecurityFundDetail detail = details.get(i);
+            String productName = detail.getNameHide();
+            if (StringUtils.isBlank(productName)) {
+                continue;
+            }
+
+            if (productName.indexOf("补充") >= 0) {
+                enterpriseChange = detail.getCompanyMoney() - paymentDetails.getBProvidentEnterprisePay();
+                personalChange = detail.getEmployeeMoney() - paymentDetails.getBProvidentPersonalPay();
+                sumChange = detail.getSum() - paymentDetails.getBProvidentSubtotal();
+
+                map.put("b_provident_enterprise_base", detail.getBaseNum());
+                map.put("b_provident_enterprise_ratio", detail.getCompanyRatio());
+                map.put("b_provident_enterprise_add", detail.getCompanySurchargeValue());
+                map.put("b_provident_personal_base", detail.getBaseNum());
+                map.put("b_provident_personal_ratio", detail.getEmployeeRatio());
+                map.put("b_provident_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("b_provident_payment_method", paymentMethod);
+
+                map.put("b_provident_enterprise_pay", enterpriseChange);
+                map.put("b_provident_personal_pay", personalChange);
+                map.put("b_provident_subtotal", sumChange);
+            } else if (productName.indexOf("公积金") >= 0){
+                enterpriseChange = detail.getCompanyMoney() - paymentDetails.getProvidentEnterprisePay();
+                personalChange = detail.getEmployeeMoney() - paymentDetails.getProvidentPersonalPay();
+                sumChange = detail.getSum() - paymentDetails.getProvidentSubtotal();
+
+                map.put("provident_enterprise_base", detail.getBaseNum());
+                map.put("provident_enterprise_ratio", detail.getCompanyRatio());
+                map.put("provident_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("provident_personal_base", detail.getBaseNum());
+                map.put("provident_personal_ratio", detail.getEmployeeRatio());
+                map.put("provident_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("provident_payment_method", paymentMethod);
+
+                map.put("provident_enterprise_pay", enterpriseChange);
+                map.put("provident_personal_pay", personalChange);
+                map.put("provident_subtotal", sumChange);
+            } else {
+                continue;
+            }
+            if (!"托收".equals(paymentMethod)) {
+                gPayment += sumChange;
+            }
+            if (sumChange != 0 || enterpriseChange != 0 || personalChange != 0) {
+                haveChange = true;
+            }
+            enterpriseTotal += enterpriseChange;
+            personalTotal += personalChange;
+            socialProvidentTotal += sumChange;
+        }
+        if (!haveChange) {
+            return null;
+        }
+        map.put("provident_payment", gPayment);
+        map.put("social_security_payment", sPayment);
+        map.put("social_provident_payment", gPayment + sPayment);
+        map.put("enterprise_total", enterpriseTotal);
+        map.put("personal_total", personalTotal);
+        map.put("social_provident_total", socialProvidentTotal);
+        return map;
     }
 
     /**
@@ -521,158 +903,199 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
         }
 
         List<SocialSecurityFundDetail> details = filesDto.getEmployeeOrderFormDto().getSocialSecurityFundDetails();
-        // 社保实付缴纳额,公积金个人缴纳合计
-        Double sPayment = 0.0,gPayment= 0.0,enterpriseTotal = 0.0, personalTotal = 0.0, socialProvidentTotal = 0.0;
         if ("公积金".equals(type)) {
             map.put("insured_area", filesDto.getProvidentFundCity());
-            for (int i = 0; i < details.size(); i++) {
-                SocialSecurityFundDetail detail = details.get(i);
-                String productName = detail.getNameHide();
-                if (StringUtils.isBlank(productName)) {
-                    continue;
-                }
-                if (productName.indexOf("补充") >= 0) {
-                    map.put("b_provident_enterprise_base", detail.getBaseNum());
-                    map.put("b_provident_enterprise_ratio", detail.getCompanyRatio());
-                    map.put("b_provident_enterprise_add", detail.getCompanySurchargeValue());
-                    map.put("b_provident_enterprise_pay", detail.getCompanyMoney());
-
-                    map.put("b_provident_personal_base", detail.getBaseNum());
-                    map.put("b_provident_personal_ratio", detail.getEmployeeRatio());
-                    map.put("b_provident_personal_attach", detail.getEmployeeSurchargeValue());
-                    map.put("b_provident_personal_pay", detail.getEmployeeMoney());
-
-                    map.put("b_provident_subtotal", detail.getSum());
-                    map.put("b_provident_payment_method", paymentMethod);
-                } else if (productName.indexOf("公积金") >= 0){
-                    map.put("provident_enterprise_base", detail.getBaseNum());
-                    map.put("provident_enterprise_ratio", detail.getCompanyRatio());
-                    map.put("provident_enterprise_attach", detail.getCompanySurchargeValue());
-                    map.put("provident_enterprise_pay", detail.getCompanyMoney());
-
-                    map.put("provident_personal_base", detail.getBaseNum());
-                    map.put("provident_personal_ratio", detail.getEmployeeRatio());
-                    map.put("provident_personal_attach", detail.getEmployeeSurchargeValue());
-                    map.put("provident_personal_pay", detail.getEmployeeMoney());
-
-                    map.put("provident_subtotal", detail.getSum());
-                    map.put("provident_payment_method", paymentMethod);
-                }
-                if (!"托收".equals(paymentMethod)) {
-                    gPayment += (detail.getSum() == null ? 0.0 : detail.getSum());
-                }
-                enterpriseTotal += (detail.getCompanyMoney() == null ? 0.0 : detail.getCompanyMoney());
-                personalTotal += (detail.getEmployeeMoney() == null ? 0.0 : detail.getEmployeeMoney());
-                socialProvidentTotal += (detail.getSum() == null ? 0.0 : detail.getSum());
-            }
+            map = getGjjDetailData(map, details, paymentMethod);
         } else if ("社保".equals(type)) {
-            // 社保数据
-            // 服务费放到社保里面
+            // 社保数据 服务费放到社保里面
             map.put("service_fee_total", filesDto.getEmployeeOrderFormDto().getServiceFee());
             // 投保地
             map.put("insured_area", filesDto.getSocialSecurityCity());
-            for (int i = 0; i < details.size(); i++) {
-                SocialSecurityFundDetail detail = details.get(i);
-                String productName = detail.getNameHide();
-                if (StringUtils.isBlank(productName)) {
-                    continue;
-                }
-                if (productName.indexOf("养老") >= 0) {
-                    map.put("pension_enterprise_base", detail.getBaseNum());
-                    map.put("pension_enterprise_ratio", detail.getCompanyRatio());
-                    map.put("pension_enterprise_attach", detail.getCompanySurchargeValue());
-                    map.put("pension_enterprise_pay", detail.getCompanyMoney());
-                    map.put("pension_personal_base", detail.getBaseNum());
-                    map.put("pension_personal_ratio", detail.getEmployeeRatio());
-                    map.put("pension_personal_attach", detail.getEmployeeSurchargeValue());
-                    map.put("pension_personal_pay", detail.getEmployeeMoney());
-                    map.put("pension_subtotal", detail.getSum());
-                    map.put("pension_payment_method", paymentMethod);
-                } else if (productName.indexOf("大病") >= 0) {
-                    map.put("d_medical_enterprise_base", detail.getBaseNum());
-                    map.put("d_medical_enterprise_ratio", detail.getCompanyRatio());
-                    map.put("d_medical_enterprise_attach", detail.getCompanySurchargeValue());
-                    map.put("d_medical_enterprise_pay", detail.getCompanyMoney());
-                    map.put("d_medical_personal_base", detail.getBaseNum());
-                    map.put("d_medical_personal_ratio", detail.getEmployeeRatio());
-                    map.put("d_medical_personal_attach", detail.getEmployeeSurchargeValue());
-                    map.put("d_medical_personal_pay", detail.getEmployeeMoney());
-                    map.put("d_medical_subtotal", detail.getSum());
-                    map.put("d_medical_payment_method", paymentMethod);
-                } else if (productName.indexOf("医疗") >= 0) {
-                    map.put("medical_enterprise_base", detail.getBaseNum());
-                    map.put("medical_enterprise_ratio", detail.getCompanyRatio());
-                    map.put("medical_enterprise_attach", detail.getCompanySurchargeValue());
-                    map.put("medical_enterprise_pay", detail.getCompanyMoney());
-                    map.put("medical_personal_base", detail.getBaseNum());
-                    map.put("medical_personal_ratio", detail.getEmployeeRatio());
-                    map.put("medical_personal_attach", detail.getEmployeeSurchargeValue());
-                    map.put("medical_personal_pay", detail.getEmployeeMoney());
-                    map.put("medical_subtotal", detail.getSum());
-                    map.put("medical_payment_method", paymentMethod);
-                } else if (productName.indexOf("失业") >= 0) {
-                    map.put("unemp_enterprise_base", detail.getBaseNum());
-                    map.put("unemp_enterprise_ratio", detail.getCompanyRatio());
-                    map.put("unemp_enterprise_attach", detail.getCompanySurchargeValue());
-                    map.put("unemp_enterprise_pay", detail.getCompanyMoney());
-                    map.put("unemp_personal_base", detail.getBaseNum());
-                    map.put("unemp_personal_ratio", detail.getEmployeeRatio());
-                    map.put("unemp_personal_attach", detail.getEmployeeSurchargeValue());
-                    map.put("unemp_personal_pay", detail.getEmployeeMoney());
-                    map.put("unemp_subtotal", detail.getSum());
-                    map.put("unemp_payment_method", paymentMethod);
-                } else if (productName.indexOf("补充") >= 0) {
-                    map.put("b_injury_enterprise_base", detail.getBaseNum());
-                    map.put("b_injury_enterprise_ratio", detail.getCompanyRatio());
-                    map.put("b_injury_enterprise_attach", detail.getCompanySurchargeValue());
-                    map.put("b_injury_enterprise_pay", detail.getCompanyMoney());
-                    map.put("b_injury_personal_base", detail.getBaseNum());
-                    map.put("b_injury_personal_ratio", detail.getEmployeeRatio());
-                    map.put("b_injury_personal_attach", detail.getEmployeeSurchargeValue());
-                    map.put("b_injury_personal_pay", detail.getEmployeeMoney());
-                    map.put("b_injury_subtotal", detail.getSum());
-                    map.put("b_injury_payment_method", paymentMethod);
-                } else if (productName.indexOf("工伤") >= 0) {
-                    map.put("injury_enterprise_base", detail.getBaseNum());
-                    map.put("injury_enterprise_ratio", detail.getCompanyRatio());
-                    map.put("injury_enterprise_attach", detail.getCompanySurchargeValue());
-                    map.put("injury_enterprise_pay", detail.getCompanyMoney());
-                    map.put("injury_personal_base", detail.getBaseNum());
-                    map.put("injury_personal_ratio", detail.getEmployeeRatio());
-                    map.put("injury_personal_attach", detail.getEmployeeSurchargeValue());
-                    map.put("injury_personal_pay", detail.getEmployeeMoney());
-                    map.put("injury_subtotal", detail.getSum());
-                    map.put("injury_payment_method", paymentMethod);
-                } else if (productName.indexOf("生育") >= 0) {
-                    map.put("fertility_enterprise_base", detail.getBaseNum());
-                    map.put("fertility_enterprise_ratio", detail.getCompanyRatio());
-                    map.put("fertility_enterprise_attach", detail.getCompanySurchargeValue());
-                    map.put("fertility_enterprise_pay", detail.getCompanyMoney());
-                    map.put("fertility_personal_base", detail.getBaseNum());
-                    map.put("fertility_personal_ratio", detail.getEmployeeRatio());
-                    map.put("fertility_personal_attach", detail.getEmployeeSurchargeValue());
-                    map.put("fertility_personal_pay", detail.getEmployeeMoney());
-                    map.put("fertility_subtotal", detail.getSum());
-                    map.put("fertility_payment_method", paymentMethod);
-                } else if (productName.indexOf("综合") >= 0) {
-                    map.put("complex_enterprise_base", detail.getBaseNum());
-                    map.put("complex_enterprise_ratio", detail.getCompanyRatio());
-                    map.put("complex_enterprise_attach", detail.getCompanySurchargeValue());
-                    map.put("complex_enterprise_pay", detail.getCompanyMoney());
-                    map.put("complex_personal_base", detail.getBaseNum());
-                    map.put("complex_personal_ratio", detail.getEmployeeRatio());
-                    map.put("complex_personal_attach", detail.getEmployeeSurchargeValue());
-                    map.put("complex_personal_pay", detail.getEmployeeMoney());
-                    map.put("complex_subtotal", detail.getSum());
-                    map.put("complex_payment_method", paymentMethod);
-                }
-                if (!"托收".equals(paymentMethod)) {
-                    sPayment += (detail.getSum() == null ? 0.0 : detail.getSum());
-                }
-                enterpriseTotal += (detail.getCompanyMoney() == null ? 0.0 : detail.getCompanyMoney());
-                personalTotal += (detail.getEmployeeMoney() == null ? 0.0 : detail.getEmployeeMoney());
-                socialProvidentTotal += (detail.getSum() == null ? 0.0 : detail.getSum());
+            map = getSbDetailData(map, details, paymentMethod);
+        }
+        return map;
+    }
+
+    /**
+     * 方法说明：获取社保数据
+     * @param map 返回的社保信息
+     * @param details 订单的社保数据
+     * @param paymentMethod 支付方式
+     * @return java.util.Map<java.lang.String,java.lang.Object>
+     * @author liulei
+     * @Date 2020/4/13 9:10
+     */
+    private Map <String, Object> getSbDetailData(Map <String, Object> map, List <SocialSecurityFundDetail> details,
+                                                 String paymentMethod) throws Exception {
+        // 社保实付缴纳额,公积金个人缴纳合计
+        Double sPayment = 0.0,gPayment= 0.0,enterpriseTotal = 0.0, personalTotal = 0.0, socialProvidentTotal = 0.0;
+        for (int i = 0; i < details.size(); i++) {
+            SocialSecurityFundDetail detail = details.get(i);
+            String productName = detail.getNameHide();
+            if (StringUtils.isBlank(productName)) {
+                continue;
             }
+            if (productName.indexOf("养老") >= 0) {
+                map.put("pension_enterprise_base", detail.getBaseNum());
+                map.put("pension_enterprise_ratio", detail.getCompanyRatio());
+                map.put("pension_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("pension_enterprise_pay", detail.getCompanyMoney());
+                map.put("pension_personal_base", detail.getBaseNum());
+                map.put("pension_personal_ratio", detail.getEmployeeRatio());
+                map.put("pension_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("pension_personal_pay", detail.getEmployeeMoney());
+                map.put("pension_subtotal", detail.getSum());
+                map.put("pension_payment_method", paymentMethod);
+            } else if (productName.indexOf("大病") >= 0) {
+                map.put("d_medical_enterprise_base", detail.getBaseNum());
+                map.put("d_medical_enterprise_ratio", detail.getCompanyRatio());
+                map.put("d_medical_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("d_medical_enterprise_pay", detail.getCompanyMoney());
+                map.put("d_medical_personal_base", detail.getBaseNum());
+                map.put("d_medical_personal_ratio", detail.getEmployeeRatio());
+                map.put("d_medical_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("d_medical_personal_pay", detail.getEmployeeMoney());
+                map.put("d_medical_subtotal", detail.getSum());
+                map.put("d_medical_payment_method", paymentMethod);
+            } else if (productName.indexOf("医疗") >= 0) {
+                map.put("medical_enterprise_base", detail.getBaseNum());
+                map.put("medical_enterprise_ratio", detail.getCompanyRatio());
+                map.put("medical_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("medical_enterprise_pay", detail.getCompanyMoney());
+                map.put("medical_personal_base", detail.getBaseNum());
+                map.put("medical_personal_ratio", detail.getEmployeeRatio());
+                map.put("medical_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("medical_personal_pay", detail.getEmployeeMoney());
+                map.put("medical_subtotal", detail.getSum());
+                map.put("medical_payment_method", paymentMethod);
+            } else if (productName.indexOf("失业") >= 0) {
+                map.put("unemp_enterprise_base", detail.getBaseNum());
+                map.put("unemp_enterprise_ratio", detail.getCompanyRatio());
+                map.put("unemp_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("unemp_enterprise_pay", detail.getCompanyMoney());
+                map.put("unemp_personal_base", detail.getBaseNum());
+                map.put("unemp_personal_ratio", detail.getEmployeeRatio());
+                map.put("unemp_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("unemp_personal_pay", detail.getEmployeeMoney());
+                map.put("unemp_subtotal", detail.getSum());
+                map.put("unemp_payment_method", paymentMethod);
+            } else if (productName.indexOf("补充") >= 0) {
+                map.put("b_injury_enterprise_base", detail.getBaseNum());
+                map.put("b_injury_enterprise_ratio", detail.getCompanyRatio());
+                map.put("b_injury_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("b_injury_enterprise_pay", detail.getCompanyMoney());
+                map.put("b_injury_personal_base", detail.getBaseNum());
+                map.put("b_injury_personal_ratio", detail.getEmployeeRatio());
+                map.put("b_injury_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("b_injury_personal_pay", detail.getEmployeeMoney());
+                map.put("b_injury_subtotal", detail.getSum());
+                map.put("b_injury_payment_method", paymentMethod);
+            } else if (productName.indexOf("工伤") >= 0) {
+                map.put("injury_enterprise_base", detail.getBaseNum());
+                map.put("injury_enterprise_ratio", detail.getCompanyRatio());
+                map.put("injury_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("injury_enterprise_pay", detail.getCompanyMoney());
+                map.put("injury_personal_base", detail.getBaseNum());
+                map.put("injury_personal_ratio", detail.getEmployeeRatio());
+                map.put("injury_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("injury_personal_pay", detail.getEmployeeMoney());
+                map.put("injury_subtotal", detail.getSum());
+                map.put("injury_payment_method", paymentMethod);
+            } else if (productName.indexOf("生育") >= 0) {
+                map.put("fertility_enterprise_base", detail.getBaseNum());
+                map.put("fertility_enterprise_ratio", detail.getCompanyRatio());
+                map.put("fertility_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("fertility_enterprise_pay", detail.getCompanyMoney());
+                map.put("fertility_personal_base", detail.getBaseNum());
+                map.put("fertility_personal_ratio", detail.getEmployeeRatio());
+                map.put("fertility_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("fertility_personal_pay", detail.getEmployeeMoney());
+                map.put("fertility_subtotal", detail.getSum());
+                map.put("fertility_payment_method", paymentMethod);
+            } else if (productName.indexOf("综合") >= 0) {
+                map.put("complex_enterprise_base", detail.getBaseNum());
+                map.put("complex_enterprise_ratio", detail.getCompanyRatio());
+                map.put("complex_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("complex_enterprise_pay", detail.getCompanyMoney());
+                map.put("complex_personal_base", detail.getBaseNum());
+                map.put("complex_personal_ratio", detail.getEmployeeRatio());
+                map.put("complex_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("complex_personal_pay", detail.getEmployeeMoney());
+                map.put("complex_subtotal", detail.getSum());
+                map.put("complex_payment_method", paymentMethod);
+            } else {
+                continue;
+            }
+            if (!"托收".equals(paymentMethod)) {
+                sPayment += (detail.getSum() == null ? 0.0 : detail.getSum());
+            }
+            enterpriseTotal += (detail.getCompanyMoney() == null ? 0.0 : detail.getCompanyMoney());
+            personalTotal += (detail.getEmployeeMoney() == null ? 0.0 : detail.getEmployeeMoney());
+            socialProvidentTotal += (detail.getSum() == null ? 0.0 : detail.getSum());
+        }
+        map.put("provident_payment", gPayment);
+        map.put("social_security_payment", sPayment);
+        map.put("social_provident_payment", gPayment + sPayment);
+        map.put("enterprise_total", enterpriseTotal);
+        map.put("personal_total", personalTotal);
+        map.put("social_provident_total", socialProvidentTotal);
+        return map;
+    }
+
+    /**
+     * 方法说明：获取公积金数据
+     * @param map 返回的公积金信息
+     * @param details 订单的公积金数据
+     * @param paymentMethod 支付方式
+     * @return java.util.Map<java.lang.String,java.lang.Object>
+     * @author liulei
+     * @Date 2020/4/13 9:10
+     */
+    private Map<String, Object> getGjjDetailData(Map <String, Object> map, List <SocialSecurityFundDetail> details,
+                                                 String paymentMethod) throws Exception {
+        // 社保实付缴纳额,公积金个人缴纳合计
+        Double sPayment = 0.0,gPayment= 0.0,enterpriseTotal = 0.0, personalTotal = 0.0, socialProvidentTotal = 0.0;
+        for (int i = 0; i < details.size(); i++) {
+            SocialSecurityFundDetail detail = details.get(i);
+            String productName = detail.getNameHide();
+            if (StringUtils.isBlank(productName)) {
+                continue;
+            }
+            if (productName.indexOf("补充") >= 0) {
+                map.put("b_provident_enterprise_base", detail.getBaseNum());
+                map.put("b_provident_enterprise_ratio", detail.getCompanyRatio());
+                map.put("b_provident_enterprise_add", detail.getCompanySurchargeValue());
+                map.put("b_provident_enterprise_pay", detail.getCompanyMoney());
+
+                map.put("b_provident_personal_base", detail.getBaseNum());
+                map.put("b_provident_personal_ratio", detail.getEmployeeRatio());
+                map.put("b_provident_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("b_provident_personal_pay", detail.getEmployeeMoney());
+
+                map.put("b_provident_subtotal", detail.getSum());
+                map.put("b_provident_payment_method", paymentMethod);
+            } else if (productName.indexOf("公积金") >= 0){
+                map.put("provident_enterprise_base", detail.getBaseNum());
+                map.put("provident_enterprise_ratio", detail.getCompanyRatio());
+                map.put("provident_enterprise_attach", detail.getCompanySurchargeValue());
+                map.put("provident_enterprise_pay", detail.getCompanyMoney());
+
+                map.put("provident_personal_base", detail.getBaseNum());
+                map.put("provident_personal_ratio", detail.getEmployeeRatio());
+                map.put("provident_personal_attach", detail.getEmployeeSurchargeValue());
+                map.put("provident_personal_pay", detail.getEmployeeMoney());
+
+                map.put("provident_subtotal", detail.getSum());
+                map.put("provident_payment_method", paymentMethod);
+            }else {
+                continue;
+            }
+            if (!"托收".equals(paymentMethod)) {
+                gPayment += (detail.getSum() == null ? 0.0 : detail.getSum());
+            }
+            enterpriseTotal += (detail.getCompanyMoney() == null ? 0.0 : detail.getCompanyMoney());
+            personalTotal += (detail.getEmployeeMoney() == null ? 0.0 : detail.getEmployeeMoney());
+            socialProvidentTotal += (detail.getSum() == null ? 0.0 : detail.getSum());
         }
         map.put("provident_payment", gPayment);
         map.put("social_security_payment", sPayment);

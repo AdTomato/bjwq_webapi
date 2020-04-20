@@ -51,8 +51,8 @@ public class BaseCollectionController extends BaseController {
     @PostMapping("/getBaseNunInfo")
     public ResponseResult<Object> getBaseNumInfo(@RequestBody BaseControllerGetBaseNunInfo baseControllerGetBaseNunInfo) throws IOException {
         String bizObjectId = baseControllerGetBaseNunInfo.getBizObjectId();
-        List<String> client = baseControllerGetBaseNunInfo.getClient();
-
+//        List<String> client = baseControllerGetBaseNunInfo.getClient();
+        String welfareOperator = baseControllerGetBaseNunInfo.getWelfareOperator();
         Attachment attachment = attachmentService.getFileName(bizObjectId, "start_collect", "collect_template");
         if (attachment != null && StringUtils.isBlank(attachment.getName())) {
             return this.getOkResponseResult("error", "上传文件名为空");
@@ -130,6 +130,7 @@ public class BaseCollectionController extends BaseController {
                 Map data = new HashMap();
                 data.put("title", startCollect.getTitle());
                 data.put("end_time", startCollect.getEndTime());
+                String salesman =baseCollectionService.findSalesman(clientName);
                 if (userId != null) {
                     // 客户
                     Unit unit = new Unit();
@@ -138,9 +139,10 @@ public class BaseCollectionController extends BaseController {
                     data.put("client", JSON.toJSONString(Arrays.asList(unit)));
                 }else {
                     //客户在客户表里不存在 查询一级客户表中客户对应的业务员
-                    String salesman =baseCollectionService.findSalesman(clientName);
                     data.put("client", salesman);
                 }
+                data.put("welfare_operator", welfareOperator);
+                data.put("salesman", salesman);
                 data.put("remarks", startCollect.getRemarks());
                 data.put("start_collect_id", bizObjectId);
 
@@ -154,7 +156,7 @@ public class BaseCollectionController extends BaseController {
 
 //              String clientId = baseCollectionService.findClientIds(bizObjectId, companyName);
                 //excel标题
-                String[] title = {"客户名称", "员工姓名", "证件号码", "福利办理方", "业务员", "原基数(仅供参考)", "新基数", "新比例"};
+                String[] title = {"客户名称", "员工姓名", "证件号码", "福利办理方", "业务员", "原基数(仅供参考)", "新基数", "备注"};
                 String header = "社保";
                 try {
                     //导出到excel
@@ -268,8 +270,8 @@ public class BaseCollectionController extends BaseController {
         }
 
         List<ExcelHead> excelHeads = new ArrayList<>();
-        String[] headName = {"客户名称", "员工姓名", "证件号码", "福利办理方", "业务员", "原基数(仅供参考)", "新基数", "新比例"};
-        String[] entityName = {"clientName", "employeeName", "identityNo", "welfareHandler", "salesman", "primaryBaseNum", "nowBaseNum", "newProportion"};
+        String[] headName = {"客户名称", "员工姓名", "证件号码", "福利办理方", "业务员", "原基数(仅供参考)", "新基数", "备注"};
+        String[] entityName = {"clientName", "employeeName", "identityNo", "welfareHandler", "salesman", "primaryBaseNum", "nowBaseNum", "remark"};
         for (int i = 0; i < headName.length; i++) {
             ExcelHead excelHead = new ExcelHead(headName[i], entityName[i]);
             excelHeads.add(excelHead);
@@ -300,7 +302,7 @@ public class BaseCollectionController extends BaseController {
                 workbook = new HSSFWorkbook();
 
                 //excel标题
-                String[] title = {"客户名称", "员工姓名", "证件号码", "福利办理方", "业务员", "原基数(仅供参考)", "新基数", "新比例"};
+                String[] title = {"客户名称", "员工姓名", "证件号码", "福利办理方", "业务员", "原基数(仅供参考)", "新基数", "备注"};
                 sheet = workbook.createSheet();
                 Row firstRow = sheet.createRow(0);//第一行表头
                 for (int i = 0; i < title.length; i++) {
