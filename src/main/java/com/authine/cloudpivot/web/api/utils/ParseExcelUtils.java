@@ -7,6 +7,7 @@ import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.FileInputStream;
 import java.math.BigInteger;
 
 
@@ -346,6 +347,38 @@ public class ParseExcelUtils {
             }
         }
         return wb;
+    }
+
+    /**
+     * @Author lfh
+     * @Description 动态获取表头信息
+     * @Date 2020/4/20 9:26
+     * @throws
+     * @param fileName 文件名
+     * @param fis  文件输入流
+     * @return {@link java.util.List<java.lang.String>}
+     **/
+    public static List<String> getHeadName(String fileName, FileInputStream fis) throws IOException {
+        Workbook workBook = null;
+        try {
+            workBook = getWorkBook(fis, fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            fis.close();
+        }
+        Sheet sheet = workBook.getSheetAt(0);
+        List<String> headList = new ArrayList<>();
+        int firstRowNum = sheet.getFirstRowNum();
+        Row row = sheet.getRow(firstRowNum);
+        short firstCellNum = row.getFirstCellNum();
+        short lastCellNum = row.getLastCellNum();
+        for (int i = firstCellNum; i < lastCellNum; i++) {
+            String stringCellValue = row.getCell(i).getStringCellValue();
+            headList.add(stringCellValue);
+
+        }
+        return headList;
     }
 
 

@@ -38,20 +38,22 @@
         select id from h_biz_attachment where bizObjectId = #{bizObjectId} and bizPropertyCode ='collect_data'
     </select>
 
-    <select id="findAttachmentById" resultType="com.authine.cloudpivot.web.api.entity.Attachment">
-        SELECT * FROM h_biz_attachment WHERE bizObjectId = #{bizObjectId} AND bizPropertyCode = #{bizPropertyCode}
-    </select>
-
     <select id="findAttachmentName" resultType="java.lang.String">
         select name from h_biz_attachment where id = #{attachmentId}
     </select>
     <select id="getStartCollectById" resultType="com.authine.cloudpivot.web.api.entity.StartCollect">
         SELECT * FROM i080j_start_collect WHERE id = #{bizObjectId}
     </select>
-    <select id="findCompanyName" resultType="java.lang.String" parameterType="java.lang.String">
-        select user_id from id34a_client_management where client_name = #{companyName}
+    <select id="findCompanyName" resultType="java.lang.String">
+        select  user_id from ibkct_client_management where first_level_client_name = #{companyName}
     </select>
-    <select id="findSalesman" resultType="java.lang.String" parameterType="java.lang.String">
+    <select id="findSalesman" resultType="java.lang.String">
         select salesman from id34a_first_level_client where company_name = #{clientName}
+    </select>
+    <select id="findSecondCompanyName" resultType="java.lang.String">
+        select  user_id from ibkct_client_management where second_level_client_name = #{companyName}
+    </select>
+    <select id="findSalesmanFromSecondClient" resultType="java.lang.String">
+        select salesman from id34a_second_level_client where company_name = #{clientName};
     </select>
 </mapper>

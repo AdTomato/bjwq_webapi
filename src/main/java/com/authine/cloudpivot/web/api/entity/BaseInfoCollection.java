@@ -2,6 +2,8 @@ package com.authine.cloudpivot.web.api.entity;
 
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * @ClassName BaseInfoCollection
  * @Author:lfh
@@ -10,6 +12,16 @@ import lombok.Data;
  **/
 @Data
 public class BaseInfoCollection {
+
+    /**
+     * 序号
+     */
+    private Integer serialNum;
+
+    /**
+     * 委托方
+     */
+    private String entrustedUnit;
 
     /**
      * 客户名称
@@ -46,11 +58,13 @@ public class BaseInfoCollection {
      */
     private String nowBaseNum;
 
+    /**
+     * 公积金比例
+     */
+    private String providentFundProportion;
 
     /**
      * 备注
      */
-    private String remark;
-
-
+    private String remarks;
 }

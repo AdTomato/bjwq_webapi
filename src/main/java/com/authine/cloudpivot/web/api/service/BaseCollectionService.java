@@ -1,14 +1,13 @@
 package com.authine.cloudpivot.web.api.service;
 
-import com.authine.cloudpivot.web.api.entity.Attachment;
 import com.authine.cloudpivot.web.api.entity.StartCollect;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * @ClassName BaseCollectionService
- * @Author:lfh
+ * @className BaseCollectionService
+ * @author: lfh
  * @Date:2020/3/17 10:09
  * @Description: 基数采集服务层
  **/
@@ -36,15 +35,6 @@ public interface BaseCollectionService {
     String findAttachment(String bizObjectId);
 
     /**
-     * 通过bizObjectId 以及 bizPropertyCode 查询附件表中的附件数据
-     *
-     * @param bizObjectId
-     * @param bizPropertyCode
-     * @return
-     */
-    Attachment findAttachmentById(String bizObjectId, String bizPropertyCode);
-
-    /**
      * 插入附件表
      * @param map
      */
@@ -65,7 +55,12 @@ public interface BaseCollectionService {
 
     StartCollect getStartCollectById(String bizObjectId);
 
-    String findCompanyName(String clientName);
+    String findCompanyName(String companyName);
 
     String findSalesman(String clientName);
+
+    String findSecondCompanyName(String clientName);
+
+    String findSalesmanFromSecondClient(String clientName);
+
 }

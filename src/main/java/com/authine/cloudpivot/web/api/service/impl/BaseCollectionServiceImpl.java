@@ -1,6 +1,5 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
-import com.authine.cloudpivot.web.api.entity.Attachment;
 import com.authine.cloudpivot.web.api.entity.StartCollect;
 import com.authine.cloudpivot.web.api.mapper.BaseCollectionMapper;
 import com.authine.cloudpivot.web.api.service.BaseCollectionService;
@@ -24,24 +23,22 @@ public class BaseCollectionServiceImpl implements BaseCollectionService {
 
     /**
      * 通过发起基数采集的id查询基数采集客户的id
-     *
-     * @param bizObjectId 发起基数采集的id
-     * @param clientName  客户名称
+     * @param bizObjectId   发起基数采集的id
+     * @param clientName 客户名称
      * @return 匹配的基数采集客户id集合
      */
     @Override
-    public String findClientIds(String bizObjectId, String clientName) {
-        return baseCollectionMapper.findClientIds(bizObjectId, clientName);
+    public String  findClientIds(String bizObjectId,String clientName) {
+        return baseCollectionMapper.findClientIds(bizObjectId,clientName);
     }
 
     @Override
-    public List<Map<String, String>> findClientName(List<String> client) {
+    public List<Map<String,String>> findClientName(List<String> client) {
         return baseCollectionMapper.findClientName(client);
     }
 
     /**
      * 通过bizObjectId 查询附件表中是否已经生成附件信息
-     *
      * @param bizObjectId
      * @return
      */
@@ -51,21 +48,7 @@ public class BaseCollectionServiceImpl implements BaseCollectionService {
     }
 
     /**
-     * @param bizObjectId:     附件表id
-     * @param bizPropertyCode: 附件所属控件编码
-     * @Author: wangyong
-     * @Date: 2020/4/7 11:01
-     * @return: com.authine.cloudpivot.web.api.entity.Attachment
-     * @Description: 根据附件表id以及附件所属控件编码获取附件
-     */
-    @Override
-    public Attachment findAttachmentById(String bizObjectId, String bizPropertyCode) {
-        return baseCollectionMapper.findAttachmentById(bizObjectId, bizPropertyCode);
-    }
-
-    /**
      * 插入附件表
-     *
      * @param map
      */
     @Override
@@ -75,7 +58,6 @@ public class BaseCollectionServiceImpl implements BaseCollectionService {
 
     /**
      * 通过附件表的id查询附件表的表名
-     *
      * @param attachmentId
      * @return 附件表名
      */
@@ -86,7 +68,7 @@ public class BaseCollectionServiceImpl implements BaseCollectionService {
 
     @Override
     public void updateFileSize(String attachmentId, long length) {
-        baseCollectionMapper.updateFileSize(attachmentId, length);
+        baseCollectionMapper.updateFileSize(attachmentId,length);
     }
 
     @Override
@@ -95,13 +77,29 @@ public class BaseCollectionServiceImpl implements BaseCollectionService {
     }
 
     @Override
-    public String findCompanyName(String clientName) {
-        return baseCollectionMapper.findCompanyName(clientName);
+    public String findCompanyName(String companyName) {
+       return baseCollectionMapper.findCompanyName(companyName);
+
     }
 
     @Override
     public String findSalesman(String clientName) {
         return baseCollectionMapper.findSalesman(clientName);
+    }
+
+    /**
+     * 查询二级客户
+     * @param clientName
+     * @return
+     */
+    @Override
+    public String findSecondCompanyName(String clientName) {
+        return baseCollectionMapper.findSecondCompanyName(clientName);
+    }
+
+    @Override
+    public String findSalesmanFromSecondClient(String clientName) {
+        return baseCollectionMapper.findSalesmanFromSecondClient(clientName);
     }
 
 
