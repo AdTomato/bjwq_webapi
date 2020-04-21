@@ -11,8 +11,8 @@ import java.util.Map;
  */
 public interface SalesmansMaintainService {
 
-    Map<String, String> getSalesmansAndDepartmentS(String firstLevelClientName, String secondLevelClientName, String businessType, String welfareOperator);
+    Map<String, String> getSalesmansAndDepartmentS(String firstLevelClientName, String secondLevelClientName, String businessType, String welfare, String welfareOperator);
 
-    Map<String, Unit> getSalesmansAndDepartmentU(String firstLevelClientName, String secondLevelClientName, String businessType, String welfareOperator);
+    Map<String, Unit> getSalesmansAndDepartmentU(String firstLevelClientName, String secondLevelClientName, String businessType, String welfare, String welfareOperator);
 
 }

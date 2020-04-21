@@ -23,17 +23,17 @@
         and
           JSON_CONTAINS(client , JSON_OBJECT('id',(select user_id from  id34a_client_management where client_name = #{clientName})))
     </select>
-    <select id="findClientName" parameterType="java.util.List" resultType="java.util.Map">
-        select
-        user_id as userId ,client_name as clientName from id34a_client_management
-        where
-        user_id in
-        <trim prefix="(" suffix=")">
-            <foreach collection="list" index="index" item="id" separator=",">
-                #{id}
-            </foreach>
-        </trim>
-    </select>
+<!--    <select id="findClientName" parameterType="java.util.List" resultType="java.util.Map">-->
+<!--        select-->
+<!--        user_id as userId ,client_name as clientName from id34a_client_management-->
+<!--        where-->
+<!--        user_id in-->
+<!--        <trim prefix="(" suffix=")">-->
+<!--            <foreach collection="list" index="index" item="id" separator=",">-->
+<!--                #{id}-->
+<!--            </foreach>-->
+<!--        </trim>-->
+<!--    </select>-->
     <select id="findAttachment" resultType="java.lang.String">
         select id from h_biz_attachment where bizObjectId = #{bizObjectId} and bizPropertyCode ='collect_data'
     </select>
@@ -44,16 +44,20 @@
     <select id="getStartCollectById" resultType="com.authine.cloudpivot.web.api.entity.StartCollect">
         SELECT * FROM i080j_start_collect WHERE id = #{bizObjectId}
     </select>
+    <!--从客户维护表通过公司名查user_id    -->
     <select id="findCompanyName" resultType="java.lang.String">
-        select  user_id from ibkct_client_management where first_level_client_name = #{companyName}
+        select  user_id from id34a_client_management where first_level_client_name = #{companyName}
     </select>
+    <!--从一级客户查业务员    -->
     <select id="findSalesman" resultType="java.lang.String">
         select salesman from id34a_first_level_client where company_name = #{clientName}
     </select>
+    <!--从客户维护表中查一级客户的id    -->
     <select id="findSecondCompanyName" resultType="java.lang.String">
-        select  user_id from ibkct_client_management where second_level_client_name = #{companyName}
+        select  user_id from id34a_client_management where second_level_client_name = #{companyName}
     </select>
+    <!--从客户维护表中查二级客户的id    -->
     <select id="findSalesmanFromSecondClient" resultType="java.lang.String">
-        select salesman from id34a_second_level_client where company_name = #{clientName};
+        select salesman from ibkct_second_level_client where company_name = #{clientName};
     </select>
 </mapper>

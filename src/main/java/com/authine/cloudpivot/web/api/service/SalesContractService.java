@@ -47,4 +47,14 @@ public interface SalesContractService {
      */
     ServiceChargeUnitPrice getServiceChargeUnitPricesById(String id);
 
+    /**
+     * 获取销售合同中的服务费
+     *
+     * @param clientName  客户名称
+     * @param staffNature 员工性质
+     * @param area        地区
+     * @return 服务费
+     */
+    Double getFee(String clientName, String staffNature, String area);
+
 }

@@ -32,10 +32,10 @@ public class BaseCollectionServiceImpl implements BaseCollectionService {
         return baseCollectionMapper.findClientIds(bizObjectId,clientName);
     }
 
-    @Override
-    public List<Map<String,String>> findClientName(List<String> client) {
-        return baseCollectionMapper.findClientName(client);
-    }
+//    @Override
+//    public List<Map<String,String>> findClientName(List<String> client) {
+//        return baseCollectionMapper.findClientName(client);
+//    }
 
     /**
      * 通过bizObjectId 查询附件表中是否已经生成附件信息

@@ -20,7 +20,7 @@ public interface BaseCollectionMapper {
      */
     String findClientIds(String bizObjectId, String clientName);
 
-    List<Map<String,String>> findClientName(List<String> client);
+//    List<Map<String,String>> findClientName(List<String> client);
 
     /**
      * 通过bizObjectId 查询附件表中是否已经生成附件信息
