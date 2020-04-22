@@ -58,7 +58,12 @@ public class SocialSecurityDeclare extends BaseEntity {
     String dispatchUnit;
 
     /** 客户名称*/
-    String clientName;
+    String firstLevelClientName;
+
+    /**
+     * 二级客户名称
+     */
+    String secondLevelClientName;
 
     /** 客服*/
     String customerService;
@@ -128,7 +133,7 @@ public class SocialSecurityDeclare extends BaseEntity {
         this.identityNoType = identityNoType;
         this.identityNo = identityNo;
         this.dispatchUnit = dispatchUnit;
-        this.clientName = clientName;
+        this.firstLevelClientName = clientName;
         this.customerService = customerService;
         this.customerServices = customerServices;
         this.welfareHandler = welfareHandler;
@@ -162,7 +167,7 @@ public class SocialSecurityDeclare extends BaseEntity {
         this.identityNoType = identityNoType;
         this.identityNo = identityNo;
         this.dispatchUnit = dispatchUnit;
-        this.clientName = clientName;
+        this.firstLevelClientName = clientName;
         this.customerService = customerService;
         this.customerServices = customerServices;
         this.welfareHandler = welfareHandler;

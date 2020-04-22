@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.AdjustBaseAndRatioMapper">
+    <update id="updateBillDetailsWhetherCompareToNo">
+        UPDATE i4fvb_bill_details
+        SET whether_compare = 0
+        WHERE whether_difference_data = 0
+          AND bill_year >= #{billYear}
+          <foreach collection="list" item="item" separator="OR" index="index" open="AND (" close=")">
+              (client_name = #{item.clientName} AND id_no = #{item.idNo})
+          </foreach>
+    </update>
+
+    <update id="updatePaymentDetailsWhetherCompareToNo">
+        UPDATE i4fvb_payment_details
+        SET whether_compare = 0
+        WHERE whether_difference_data = 0
+        AND bill_year >= #{billYear}
+        <foreach collection="list" item="item" separator="OR" index="index" open="AND (" close=")">
+            (client_name = #{item.clientName} AND id_no = #{item.idNo})
+        </foreach>
+    </update>
+</mapper>
