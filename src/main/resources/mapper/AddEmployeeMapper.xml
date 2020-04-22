@@ -35,105 +35,108 @@
 
     <update id="updateEmployeeFiles" parameterType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
         update i4fvb_employee_files
-        SET name = #{name},
-            entrusted_unit = #{entrustedUnit},
-            client_name = #{clientName},
-            salesman = #{salesman},
-            employee_name = #{employeeName},
-            id_type = #{idType},
-            id_no = #{idNo},
-            gender = #{gender},
-            birth_date = #{birthDate},
-            employee_nature = #{employeeNature},
-            household_register_nature = #{householdRegisterNature},
-            mobile = #{mobile},
-            labour_contract_start_time = #{labourContractStartTime},
-            labour_contract_end_time = #{labourContractEndTime},
-            salary = #{salary},
-            probation_start_time = #{probationStartTime},
-            probation_end_time = #{probationEndTime},
-            probation_salary = #{probationSalary},
-            social_security_city = #{socialSecurityCity},
-            provident_fund_city = #{providentFundCity},
-            report_entry_time = #{reportEntryTime},
-            report_recruits = #{reportRecruits},
-            entry_time = #{entryTime},
-            social_security_charge_start = #{socialSecurityChargeStart},
-            provident_fund_charge_start = #{providentFundChargeStart},
-            social_security_area = #{socialSecurityArea},
-            provident_fund_area = #{providentFundArea},
-            entry_description = #{entryDescription},
-            report_quit_date = #{reportQuitDate},
-            report_severance_officer = #{reportSeveranceOfficer},
-            quit_date = #{quitDate},
-            social_security_charge_end = #{socialSecurityChargeEnd},
-            provident_fund_charge_end = #{providentFundChargeEnd},
-            quit_reason = #{quitReason},
-            quit_remark = #{quitRemark},
-            entry_notice = #{entryNotice},
-            health_check = #{healthCheck},
-            whether_pay = #{whetherPay},
-            bank_account_number = #{bankAccountNumber},
-            bank_area = #{bankArea},
-            position = #{position},
-            email = #{email},
-            employee_labels = #{employeeLabels},
-            bank_name = #{bankName}
+        SET name=#{employeeName},
+            employee_name=#{employeeName},
+            id_type=#{idType},
+            id_no=#{idNo},
+            gender=#{gender},
+            birth_date=#{birthDate},
+            employee_nature=#{employeeNature},
+            household_register_nature=#{householdRegisterNature},
+            mobile=#{mobile},
+            social_security_city=#{socialSecurityCity},
+            provident_fund_city=#{providentFundCity},
+            report_entry_time=#{reportEntryTime},
+            report_recruits=#{reportRecruits},
+            entry_time=#{entryTime},
+            social_security_charge_start=#{socialSecurityChargeStart},
+            provident_fund_charge_start=#{providentFundChargeStart},
+            entry_description=#{entryDescription},
+            report_quit_date=#{reportQuitDate},
+            report_severance_officer=#{reportSeveranceOfficer},
+            quit_date=#{quitDate},
+            social_security_charge_end=#{socialSecurityChargeEnd},
+            provident_fund_charge_end=#{providentFundChargeEnd},
+            quit_reason=#{quitReason},
+            quit_remark=#{quitRemark},
+            entry_notice=#{entryNotice},
+            health_check=#{healthCheck},
+            whether_pay=#{whetherPay},
+            position=#{position},
+            email=#{email},
+            employee_labels=#{employeeLabels},
+            stop_generate_bill=#{stopGenerateBill},
+            is_old_employee=#{isOldEmployee},
+            social_security_num=#{socialSecurityNum},
+            provident_fund_num=#{providentFundNum},
+            s_payment_application=#{sPaymentApplication},
+            g_payment_application=#{gPaymentApplication},
+            subordinate_department=#{subordinateDepartment},
+            first_level_client_name=#{firstLevelClientName},
+            second_level_client_name=#{secondLevelClientName},
+            household_register_remarks=#{householdRegisterRemarks},
+            social_security_base=#{socialSecurityBase},
+            provident_fund_base=#{providentFundBase},
+            s_welfare_handler=#{sWelfareHandler},
+            g_welfare_handler=#{gWelfareHandler},
+            is_retired_soldier=#{isRetiredSoldier},
+            is_poor_archivists=#{isPoorArchivists},
+            is_disabled=#{isDisabled}
         WHERE id = #{id}
     </update>
 
     <update id="updateSocialSecurityDeclare" parameterType="com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare">
         update i4fvb_social_security_declare
-        SET name = #{name},
-            start_month = #{startMonth},
-            employee_name = #{employeeName},
-            gender = #{gender},
-            identityNo = #{identityNo},
-            dispatch_unit = #{dispatchUnit},
-            client_name = #{clientName},
-            customer_service = #{customerService},
-            customer_services = #{customerServices},
-            applicant = #{applicant},
-            application_date = #{applicationDate},
-            contract_signing_date = #{contractSigningDate},
-            contract_deadline = #{contractDeadline},
-            positive_salary = #{positiveSalary},
-            base_pay = #{basePay},
-            mobile = #{mobile},
-            weather_part_work_injury = #{weatherPartWorkInjury},
-            welfare_handler = #{welfareHandler},
-            birthday = #{birthday},
-            identityNo_type = #{identityNoType},
-            return_reason_already = #{returnReasonAlready},
-            operate_leader = #{operateLeader},
-            employee_order_form_id = #{employeeOrderFormId},
-            is_change = #{isChange}
+        SET name=#{employeeName},
+            start_month=#{startMonth},
+            employee_name=#{employeeName},
+            gender=#{gender},
+            identityNo=#{identityNo},
+            contract_signing_date=#{contractSigningDate},
+            contract_deadline=#{contractDeadline},
+            positive_salary=#{positiveSalary},
+            base_pay=#{basePay},
+            mobile=#{mobile},
+            welfare_handler=#{welfareHandler},
+            birthday=#{birthday},
+            identityNo_type=#{identityNoType},
+            return_reason_already=#{returnReasonAlready},
+            operate_leader=#{operateLeader},
+            employee_order_form_id=#{employeeOrderFormId},
+            is_change=#{isChange},
+            status=#{status},
+            first_level_client_name=#{firstLevelClientName},
+            second_level_client_name=#{secondLevelClientName},
+            subordinate_department=#{subordinateDepartment},
+            city=#{city},
+            bill_year=#{billYear},
+            remark=#{remark}
         WHERE id = #{id}
     </update>
 
     <update id="updateProvidentFundDeclare" parameterType="com.authine.cloudpivot.web.api.entity.ProvidentFundDeclare">
         update i4fvb_provident_fund_declare
-        SET name = #{name},
-            employee_name = #{employeeName},
-            gender = #{gender},
-            identityNo = #{identityNo},
-            dispatch_unit = #{dispatchUnit},
-            client_name = #{clientName},
-            customer_service = #{customerService},
-            applicant = #{applicant},
-            application_date = #{applicationDate},
-            start_month = #{startMonth},
-            provident_fund_base = #{providentFundBase},
-            corporate_payment = #{corporatePayment},
-            personal_deposit = #{personalDeposit},
-            total_deposit = #{totalDeposit},
-            welfare_handler = #{welfareHandler},
-            birthday = #{birthday},
-            customer_services = #{customerServices},
-            identityNo_type = #{identityNoType},
-            operate_leader = #{operateLeader},
-            employee_order_form_id = #{employeeOrderFormId},
-            is_change = #{isChange}
+        SET name=#{name},
+            employee_name=#{employeeName},
+            gender=#{gender},
+            identityNo=#{identityNo},
+            start_month=#{startMonth},
+            provident_fund_base=#{providentFundBase},
+            corporate_payment=#{corporatePayment},
+            personal_deposit=#{personalDeposit},
+            total_deposit=#{totalDeposit},
+            welfare_handler=#{welfareHandler},
+            birthday=#{birthday},
+            identityNo_type=#{identityNoType},
+            operate_leader=#{operateLeader},
+            employee_order_form_id=#{employeeOrderFormId},
+            is_change=#{isChange},
+            status=#{status},
+            return_reason_already=#{returnReasonAlready},
+            first_level_client_name=#{firstLevelClientName},
+            second_level_client_name=#{secondLevelClientName},
+            subordinate_department=#{subordinateDepartment},
+            city=#{city}
         WHERE id = #{id}
     </update>
 
@@ -187,7 +190,7 @@
                           from i4fvb_social_security_fund_detail
                           where parentId = #{id}
                             AND start_charge_time IS NOT NULL),
-            end_time   = (SELECT MIN(end_charge_time)
+            end_time   = (SELECT MAX(end_charge_time)
                           from i4fvb_social_security_fund_detail
                           where parentId = #{id}
                             AND end_charge_time IS NOT NULL),
@@ -196,5 +199,145 @@
                              ELSE CONCAT(date_format(start_time, '%Y-%m-%d'), '~',
                                          date_format(end_time, '%Y-%m-%d')) END
         WHERE id = #{id}
+    </update>
+
+    <select id="getSocialSecurityCloseByOrderFormId" parameterType="java.lang.String">
+        SELECT * FROM i4fvb_social_security_close WHERE employee_order_form_id =#{id}
+    </select>
+
+    <select id="getProvidentFundCloseByOrderFormId" parameterType="java.lang.String">
+        SELECT * FROM i4fvb_provident_fund_close WHERE employee_order_form_id =#{id}
+    </select>
+
+    <update id="updateSocialSecurityClose" parameterType="com.authine.cloudpivot.web.api.entity.SocialSecurityClose">
+        update i4fvb_social_security_close
+        SET name=#{employeeName},
+            employee_order_form_id=#{employeeOrderFormId},
+            employee_name=#{employeeName},
+            gender=#{gender},
+            birthday=#{birthday},
+            identityNo=#{identityNo},
+            identityNo_type=#{identityNoType},
+            welfare_handler=#{welfareHandler},
+            start_month=#{startMonth},
+            charge_end_month=#{chargeEndMonth},
+            social_security_base=#{socialSecurityBase},
+            resignation_remarks=#{resignationRemarks},
+            operate_leader=#{operateLeader},
+            status=#{status},
+            first_level_client_name=#{firstLevelClientName},
+            second_level_client_name=#{secondLevelClientName},
+            subordinate_department=#{subordinateDepartment},
+            city=#{city}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateProvidentFundClose" parameterType="com.authine.cloudpivot.web.api.entity.ProvidentFundClose">
+        update i4fvb_provident_fund_close
+        SET name=#{employeeName},
+            employee_order_form_id=#{employeeOrderFormId},
+            employee_name=#{employeeName},
+            gender=#{gender},
+            birthday=#{birthday},
+            identityNo=#{identityNo},
+            identityNo_type=#{identityNoType},
+            first_level_client_name=#{firstLevelClientName},
+            second_level_client_name=#{secondLevelClientName},
+            welfare_handler=#{welfareHandler},
+            start_month=#{startMonth},
+            charge_end_month=#{chargeEndMonth},
+            provident_fund_base=#{providentFundBase},
+            enterprise_deposit=#{enterpriseDeposit},
+            personal_deposit=#{personalDeposit},
+            total_deposit=#{totalDeposit},
+            operate_leader=#{operateLeader},
+            status=#{status},
+            subordinate_department=#{subordinateDepartment},
+            city=#{city}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="addEmployeeImportData" parameterType="java.util.List">
+        INSERT INTO i4fvb_add_employee(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier,
+        modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode, employee_name, identityNo,
+        mobile, email, family_register_nature, employee_nature, entry_time, contract_start_time, contract_end_time,
+        contract_salary, social_security_start_time, remark, social_security_city, social_security_base,
+        provident_fund_city, provident_fund_start_time, provident_fund_base, identityNo_type, company_provident_fund_bl,
+        employee_provident_fund_bl, first_level_client_name, second_level_client_name, subordinate_department,
+        household_register_remarks, gender, birthday, workplace, is_retired_soldier, is_poor_archivists, is_disabled,
+        s_welfare_handler, g_welfare_handler) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner}, #{item.ownerDeptId},
+            #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId}, #{item.sequenceNo},
+            #{item.sequenceStatus}, #{item.ownerDeptQueryCode}, #{item.employee_name}, #{item.identityNo},
+            #{item.mobile}, #{item.email}, #{item.family_register_nature}, #{item.employee_nature}, #{item.entry_time},
+            #{item.contract_start_time}, #{item.contract_end_time}, #{item.contract_salary},
+            #{item.social_security_start_time}, #{item.remark}, #{item.social_security_city},
+            #{item.social_security_base}, #{item.provident_fund_city}, #{item.provident_fund_start_time},
+            #{item.provident_fund_base}, #{item.identityNo_type}, #{item.company_provident_fund_bl},
+            #{item.employee_provident_fund_bl}, #{item.first_level_client_name}, #{item.second_level_client_name},
+            #{item.subordinate_department}, #{item.household_register_remarks}, #{item.gender}, #{item.birthday},
+            #{item.workplace}, #{item.is_retired_soldier}, #{item.is_poor_archivists}, #{item.is_disabled},
+            #{item.s_welfare_handler}, #{item.g_welfare_handler})
+        </foreach>
+    </insert>
+
+    <insert id="deleteEmployeeImportData" parameterType="java.util.List">
+        INSERT INTO i4fvb_delete_employee(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier,
+        modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode, employee_name, identityNo,
+        leave_reason, leave_time, social_security_end_time, remark, identityNo_type, provident_fund_end_time,
+        first_level_client_name, second_level_client_name, social_security_city, provident_fund_city, s_welfare_handler,
+        g_welfare_handler, subordinate_department, gender, birthday) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner}, #{item.ownerDeptId},
+            #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId}, #{item.sequenceNo},
+            #{item.sequenceStatus}, #{item.ownerDeptQueryCode}, #{item.employee_name}, #{item.identityNo},
+            #{item.leave_reason}, #{item.leave_time}, #{item.social_security_end_time}, #{item.remark},
+            #{item.identityNo_type}, #{item.provident_fund_end_time}, #{item.first_level_client_name},
+            #{item.second_level_client_name}, #{item.social_security_city}, #{item.provident_fund_city},
+            #{item.s_welfare_handler}, #{item.g_welfare_handler}, #{item.subordinate_department}, #{item.gender},
+            #{item.birthday})
+        </foreach>
+    </insert>
+
+    <update id="updateAddEmployeeOwner" parameterType="java.util.List">
+        UPDATE i4fvb_add_employee a
+        JOIN ibkct_salesmans_maintain s ON a.first_level_client_name = s.first_level_client_name
+        AND a.second_level_client_name = s.second_level_client_name
+        AND a.employee_nature = s.business_type
+        AND ( CASE WHEN a.s_welfare_handler IS NULL OR a.s_welfare_handler = '' THEN a.g_welfare_handler ELSE
+        a.s_welfare_handler END ) = s.welfare_operator
+        JOIN h_org_user org ON INSTR( s.salesman, org.id )
+        JOIN h_org_department dept ON INSTR( s.department, dept.id )
+        SET a.owner = org.id,
+        a.ownerDeptId = dept.id,
+        a.subordinate_department = s.department
+        WHERE
+        a.id IN
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item.id}
+        </foreach>
+    </update>
+
+    <update id="updateDeleteEmployeeOwner" parameterType="java.util.List">
+        UPDATE i4fvb_delete_employee a
+        JOIN i4fvb_employee_files f ON a.first_level_client_name = f.first_level_client_name
+        AND a.second_level_client_name = f.second_level_client_name
+        AND a.identityNo = f.id_no
+        JOIN ibkct_salesmans_maintain s ON a.first_level_client_name = s.first_level_client_name
+        AND a.second_level_client_name = s.second_level_client_name
+        AND f.employee_nature = s.business_type
+        AND ( CASE WHEN a.s_welfare_handler IS NULL OR a.s_welfare_handler = '' THEN a.g_welfare_handler ELSE
+        a.s_welfare_handler END ) = s.welfare_operator
+        JOIN h_org_user org ON INSTR( s.salesman, org.id )
+        JOIN h_org_department dept ON INSTR( s.department, dept.id )
+        SET a.OWNER = org.id,
+        a.ownerDeptId = dept.id,
+        a.subordinate_department = s.department
+        WHERE
+        a.id IN
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item.id}
+        </foreach>
     </update>
 </mapper>

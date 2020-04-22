@@ -451,4 +451,19 @@
         </foreach>
     </insert>
 
+    <select id="getEmployeeFilesByIdNoAndClientName" resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
+        SELECT * FROM i4fvb_employee_files
+        <where>
+            <if test="identityNo != null">
+                AND id_no = #{identityNo}
+            </if>
+            <if test="firstLevelClientName != null">
+                AND first_level_client_name = #{firstLevelClientName}
+            </if>
+            <if test="secondLevelClientName != null">
+                AND second_level_client_name = #{secondLevelClientName}
+            </if>
+        </where>
+        ORDER BY createdTime desc
+    </select>
 </mapper>
