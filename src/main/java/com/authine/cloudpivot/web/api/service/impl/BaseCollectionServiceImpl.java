@@ -1,11 +1,13 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
+import com.authine.cloudpivot.web.api.entity.BaseInfoCollection;
 import com.authine.cloudpivot.web.api.entity.StartCollect;
 import com.authine.cloudpivot.web.api.mapper.BaseCollectionMapper;
 import com.authine.cloudpivot.web.api.service.BaseCollectionService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,10 +34,10 @@ public class BaseCollectionServiceImpl implements BaseCollectionService {
         return baseCollectionMapper.findClientIds(bizObjectId,clientName);
     }
 
-//    @Override
-//    public List<Map<String,String>> findClientName(List<String> client) {
-//        return baseCollectionMapper.findClientName(client);
-//    }
+    @Override
+    public List<Map<String,String>> findClientName(List<String> client) {
+        return baseCollectionMapper.findClientName(client);
+    }
 
     /**
      * 通过bizObjectId 查询附件表中是否已经生成附件信息
@@ -100,6 +102,25 @@ public class BaseCollectionServiceImpl implements BaseCollectionService {
     @Override
     public String findSalesmanFromSecondClient(String clientName) {
         return baseCollectionMapper.findSalesmanFromSecondClient(clientName);
+    }
+
+    @Override
+    public void insertCollectInfo(List<BaseInfoCollection> clientBaseNumInfo) {
+        baseCollectionMapper.insertCollectInfo(clientBaseNumInfo);
+    }
+
+    @Override
+    public List<BaseInfoCollection> findBaseCollectInfoFromTotalInfo(List<BaseInfoCollection> baseInfoCollections,String start_collect_id) {
+        Map<String,Object> map = new HashMap<>();
+        map.put("list", baseInfoCollections);
+        map.put("start_collect_id",start_collect_id);
+        // return baseCollectionMapper.findBaseCollectInfoFromTotalInfo(baseInfoCollections,start_collect_id);
+        return baseCollectionMapper.findBaseCollectInfoFromTotalInfo(map);
+    }
+
+    @Override
+    public void deleteFoundCollectInfo(List<BaseInfoCollection> collectInTotalInfo) {
+        baseCollectionMapper.deleteFoundCollectInfo(collectInTotalInfo);
     }
 
 

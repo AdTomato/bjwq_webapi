@@ -1,7 +1,9 @@
 package com.authine.cloudpivot.web.api.mapper;
 
+import com.authine.cloudpivot.web.api.entity.BaseInfoCollection;
 import com.authine.cloudpivot.web.api.entity.StartCollect;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +22,7 @@ public interface BaseCollectionMapper {
      */
     String findClientIds(String bizObjectId, String clientName);
 
-//    List<Map<String,String>> findClientName(List<String> client);
+    List<Map<String,String>> findClientName(List<String> client);
 
     /**
      * 通过bizObjectId 查询附件表中是否已经生成附件信息
@@ -53,4 +55,12 @@ public interface BaseCollectionMapper {
     String findSecondCompanyName(String clientName);
 
     String findSalesmanFromSecondClient(String clientName);
+
+    void insertCollectInfo(List<BaseInfoCollection> clientBaseNumInfo);
+
+    // List<BaseInfoCollection> findBaseCollectInfoFromTotalInfo(List<BaseInfoCollection> baseInfoCollections,String start_collect_id);
+    List<BaseInfoCollection> findBaseCollectInfoFromTotalInfo(Map<String,Object> map);
+
+    void deleteFoundCollectInfo(List<BaseInfoCollection> collectInTotalInfo);
+
 }

@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
  * @Description: 基数采集 excel对应的实体类
  **/
 @Data
-public class BaseInfoCollection {
+public class BaseInfoCollection extends BaseEntity{
 
     /**
      * 序号
@@ -67,4 +67,9 @@ public class BaseInfoCollection {
      * 备注
      */
     private String remarks;
+
+    /**
+     * 发起基数采集id
+     */
+    private String start_collect_id;
 }

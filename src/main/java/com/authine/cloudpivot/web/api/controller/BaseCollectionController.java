@@ -10,6 +10,7 @@ import com.authine.cloudpivot.web.api.entity.BaseInfoCollection;
 import com.authine.cloudpivot.web.api.entity.StartCollect;
 import com.authine.cloudpivot.web.api.entity.Unit;
 import com.authine.cloudpivot.web.api.params.BaseControllerGetBaseNunInfo;
+import com.authine.cloudpivot.web.api.params.CollectParams;
 import com.authine.cloudpivot.web.api.service.AttachmentService;
 import com.authine.cloudpivot.web.api.service.BaseCollectionService;
 import com.authine.cloudpivot.web.api.utils.*;
@@ -253,15 +254,20 @@ public class BaseCollectionController extends BaseController {
 
     /**
      * 更新汇总标表
-     * @param bizObjectId 基数采集的id
-     * @param startCollectId 发起基数采集的id
+     * @param collectParams 封装前段传参
      * @return
      * @throws IOException
      */
     @PostMapping("/updateBaseNumInfo")
-    public ResponseResult<Object> updateBaseNumInfo(@RequestParam String bizObjectId, @RequestParam String startCollectId) throws IOException {
+    public ResponseResult<Object> updateBaseNumInfo(@RequestBody CollectParams collectParams) throws IOException {
         log.info("更新汇总基数采集");
-        Attachment attachment = attachmentService.getFileName(bizObjectId, "submit_collect", "collect_data");
+        Attachment attachment = null;
+        if (collectParams.getFormType().equals("基数采集")) {
+            attachment = attachmentService.getFileName(collectParams.getSubmit_collect(), "submit_collect", "collect_data");
+        }
+        if (collectParams.getFormType().equals("基数采集信息修改")) {
+            attachment = attachmentService.getFileName(collectParams.getId(), "collect_update", "update_collect");
+        }
         log.info("带个更新的附件：" + attachment);
         if (attachment == null || StringUtils.isBlank(attachment.getName())) {
             return this.getOkResponseResult("error", "上传文件名为空");
@@ -305,83 +311,38 @@ public class BaseCollectionController extends BaseController {
         } finally {
             is.close();
         }
-        synchronized (BaseCollectionController.class) {
-            //判断附件表是否已经生成数据
-            Attachment totalAttachment = attachmentService.getFileName(startCollectId, "start_collect", "collect_data");
-            Workbook workbook = null;
-            Sheet sheet = null;
-            //第一次加入数据，进行创建excel
-            String attachmentId;
-            File totalFile = null;
-            if (totalAttachment == null) {
-                String excelName = "基数采集汇总.xls";
-                String id = UUID.randomUUID().toString().replaceAll("-", "");
-                String totalPathName = "D:\\upload\\" + id + excelName;
-                totalFile = new File(totalPathName);
-                totalFile.createNewFile();
-                workbook = new HSSFWorkbook();
-                sheet = workbook.createSheet();
-                Row firstRow = sheet.createRow(0);//第一行表头
-                for (int i = 0; i < headName.length; i++) {
-                    Cell cell = firstRow.createCell(i);
-                    cell.setCellValue(headName[i]);
-                    cell.setCellStyle(ExportExcel.createHeadCellStyle(workbook));
-                }
-                //导出到excel
-                //将生成的excel导入到附件表
-                Map<String, Object> map = new HashMap<>();
-                attachmentId = UUID.randomUUID().toString().replace("-", "");
-                map.put("id", attachmentId);
-                map.put("bizObjectId", startCollectId);
-                map.put("bizPropertyCode", "collect_data");
-                map.put("fileSize", totalFile.length());
-                if (excelName.endsWith("xls")) {
-                    map.put("mimeType", "application/xls");
-                } else {
-                    map.put("mimeType", "application/xlsx");
-                }
-                map.put("creater", UserUtils.getUserId(getUserId()));
-                map.put("createdTime", new Date());
-                map.put("name", excelName);
-                map.put("refId", id);
-                map.put("schemaCode", "start_collect");
-                baseCollectionService.insertAttachment(map);
-            } else {
-                //已经创建附件 ，通过id 查询 文件名 ，对附件进行追加
-                //已经创建附件 ，通过id 查询 文件名 ，对附件进行追加
-                String excelName = "D:\\upload\\" + totalAttachment.getRefId() + totalAttachment.getName();
-                totalFile = new File(excelName);
-                attachmentId = totalAttachment.getId();
-                try {
-                    workbook = new XSSFWorkbook(new FileInputStream(totalFile));
-                } catch (Exception e) {
-                    workbook = new HSSFWorkbook(new FileInputStream(totalFile));
-                }
-                sheet = workbook.getSheetAt(0);
-            }
-
-            int lastRowNum = sheet.getLastRowNum();
-            for (BaseInfoCollection baseInfoCollection : clientBaseNumInfo) {
-                baseInfoCollection.setSerialNum(++lastRowNum);
-                fillExcelDate(baseInfoCollection, sheet, workbook, 0);
-            }
-            ExportExcel.setSizeColumn(sheet, sheet.getLastRowNum());
-            sheet.setColumnWidth(1, (int) (40.33 + 0.71) * 256);
-            sheet.setColumnWidth(2, (int) (31.44 + 0.71) * 256);
-            sheet.setColumnWidth(4, (int) (24.33 + 0.71) * 256);
-            OutputStream out = null;
-            try {
-                out = new FileOutputStream(totalFile);
-                workbook.write(out);
-                out.close();
-                if (attachmentId != null && attachmentId.length() > 0) {
-                    //更新附件表文件大小
-                    baseCollectionService.updateFileSize(attachmentId, totalFile.length());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        if (clientBaseNumInfo.isEmpty() || clientBaseNumInfo == null){
+            return this.getOkResponseResult("error", "excel映射的对象集合为空");
         }
+        for (BaseInfoCollection baseInfoCollection : clientBaseNumInfo) {
+            baseInfoCollection.setId(UUID.randomUUID().toString().replace("-", ""));
+            baseInfoCollection.setStart_collect_id(collectParams.getStart_collect_id());
+        }
+        //基数采集执行
+        if (collectParams.getFormType().equals("submit_collect")) {
+            log.info("将excel中导入信息添加到数据库中");
+            //将excel信息添加到数据库中
+            baseCollectionService.insertCollectInfo(clientBaseNumInfo);
+            log.info("excel中信息添加完成");
+        }
+        //基数采集信息修改执行
+        if (collectParams.getFormType().equals("collect_update")) {
+            //通过身份证号查汇总表的数据
+            log.info("开始通过身份证号查询汇总表中的数据");
+            List<BaseInfoCollection> collectInTotalInfo = baseCollectionService.findBaseCollectInfoFromTotalInfo(clientBaseNumInfo, collectParams.getStart_collect_id());
+            log.info("查询的结果为" + collectInTotalInfo);
+            log.info("开始删除在汇总表中查询的数据");
+            //删除在汇总表中查到的数据
+            if (collectInTotalInfo != null && collectInTotalInfo.size() > 0) {
+                baseCollectionService.deleteFoundCollectInfo(collectInTotalInfo);
+            }
+            log.info("删除成功");
+            //将修改信息批量插入到汇总表
+            log.info("开始插入需要修改的数据，数据为" + clientBaseNumInfo);
+            baseCollectionService.insertCollectInfo(clientBaseNumInfo);
+            return this.getOkResponseResult("success", "更新成功");
+        }
+
         return this.getOkResponseResult("success", "成功");
     }
 
