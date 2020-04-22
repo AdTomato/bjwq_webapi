@@ -18,11 +18,13 @@ import com.authine.cloudpivot.web.api.view.ResponseResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.ws.rs.POST;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -55,7 +57,7 @@ public class BaseCollectionController extends BaseController {
     @PostMapping("/getBaseNunInfo")
     public ResponseResult<Object> getBaseNumInfo(@RequestBody BaseControllerGetBaseNunInfo baseControllerGetBaseNunInfo) throws IOException {
         String bizObjectId = baseControllerGetBaseNunInfo.getBizObjectId();
-        String welfareOperator = baseControllerGetBaseNunInfo.getWelfareOperator();
+        String welfareOperator = baseControllerGetBaseNunInfo.getWelfare_operator();
 
         Attachment attachment = attachmentService.getFileName(bizObjectId, "start_collect", "collect_template");
 
@@ -183,22 +185,13 @@ public class BaseCollectionController extends BaseController {
                         }
                         Sheet sheet = workbook.createSheet();
                         Row firstRow = sheet.createRow(0);//第一行表头
-                        //获取对象属性有10个 则是社保申报
-                        if (baseInfoCollections.get(0).getClass().getDeclaredFields().length == 10) {
-                            for (int i = 0; i < headName.length; i++) {
-                                Cell cell = firstRow.createCell(i);
-                                cell.setCellValue(headName[i]);
-                                cell.setCellStyle(ExportExcel.createHeadCellStyle(workbook));
-                            }
+
+                        for (int i = 0; i < headName.length; i++) {
+                            Cell cell = firstRow.createCell(i);
+                            cell.setCellValue(headName[i]);
+                            cell.setCellStyle(ExportExcel.createHeadCellStyle(workbook));
                         }
-                        //对象属性有11个，则是公积金申报
-                        if (baseInfoCollections.get(0).getClass().getDeclaredFields().length == 11) {
-                            for (int i = 0; i < headName.length; i++) {
-                                Cell cell = firstRow.createCell(i);
-                                cell.setCellValue(headName[i]);
-                                cell.setCellStyle(ExportExcel.createHeadCellStyle(workbook));
-                            }
-                        }
+
                         //设置表头行高度
                         firstRow.setHeight((short) ((22.22 * 20)));
                         Integer serialNum = 1;
@@ -254,6 +247,7 @@ public class BaseCollectionController extends BaseController {
 
     /**
      * 更新汇总标表
+     *
      * @param collectParams 封装前段传参
      * @return
      * @throws IOException
@@ -262,10 +256,10 @@ public class BaseCollectionController extends BaseController {
     public ResponseResult<Object> updateBaseNumInfo(@RequestBody CollectParams collectParams) throws IOException {
         log.info("更新汇总基数采集");
         Attachment attachment = null;
-        if (collectParams.getFormType().equals("基数采集")) {
+        if (collectParams.getFormType().equals("submit_collect")) {
             attachment = attachmentService.getFileName(collectParams.getSubmit_collect(), "submit_collect", "collect_data");
         }
-        if (collectParams.getFormType().equals("基数采集信息修改")) {
+        if (collectParams.getFormType().equals("collect_update")) {
             attachment = attachmentService.getFileName(collectParams.getId(), "collect_update", "update_collect");
         }
         log.info("带个更新的附件：" + attachment);
@@ -311,7 +305,7 @@ public class BaseCollectionController extends BaseController {
         } finally {
             is.close();
         }
-        if (clientBaseNumInfo.isEmpty() || clientBaseNumInfo == null){
+        if (clientBaseNumInfo.isEmpty() || clientBaseNumInfo == null) {
             return this.getOkResponseResult("error", "excel映射的对象集合为空");
         }
         for (BaseInfoCollection baseInfoCollection : clientBaseNumInfo) {
@@ -346,6 +340,81 @@ public class BaseCollectionController extends BaseController {
         return this.getOkResponseResult("success", "成功");
     }
 
+    // /* *//**
+    //   * @Author lfh
+    //   * @Description 修改后更新基数采集的汇总数据
+    //   * @Date 2020/4/21 14:29
+    //   * @throws
+    //   * @param collectParams
+    //   * @return {@link com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.Object>}
+    //   **//*
+    /*@PostMapping("/updateBaseCollection")
+    public ResponseResult<Object> updateBaseCollectionInfo(@RequestBody CollectParams   collectParams) throws IOException {
+        Attachment updateAttachment = attachmentService.getFileName(collectParams.getId(),"collect_update","update_collect");
+        log.info("修改上传的附件为"+updateAttachment);
+        if (updateAttachment == null || StringUtils.isBlank(updateAttachment.getName())) {
+            return this.getOkResponseResult("error", "上传文件名为空");
+        }
+        log.info("fileName" + updateAttachment.getName());
+        log.info("refId:" + updateAttachment.getRefId());
+        String fileName = updateAttachment.getName();
+        if (!ExcelUtils.changeIsExcel(fileName)) {
+            return this.getOkResponseResult("error", "上传的文件不必须是excel文件");
+        }
+        String pathName = new StringBuilder().append("D:\\upload\\").append(updateAttachment.getRefId()).append(fileName).toString();
+        File file = new File(pathName);
+        if (!file.exists()){
+            return this.getErrResponseResult(null,404L,pathName+"为空");
+        }
+        FileInputStream fis = new FileInputStream(file);
+        List<ExcelHead> excelHeads = new ArrayList<>();
+        String[] entityNameGjj = {"serialNum", "entrustedUnit", "clientName", "employeeName", "identityNo", "welfareHandler", "salesman", "primaryBaseNum", "nowBaseNum", "remarks"};
+        String[] entityNameSb = {"serialNum", "entrustedUnit", "clientName", "employeeName", "identityNo", "welfareHandler", "salesman", "primaryBaseNum", "nowBaseNum", "providentFundProportion", "remarks"};
+        //动态获取表头信息
+        List<String> headNameList = ParseExcelUtils.getHeadName(fileName, fis);
+
+        String[] headName = new String[headNameList.size()];
+        headName = headNameList.toArray(headName);
+        ExcelHead excelHead = null;
+        for (int i = 0; i < headName.length; i++) {
+            if (headName.length == 10) {
+                excelHead = new ExcelHead(headName[i], entityNameGjj[i]);
+            }
+            if (headName.length == 11) {
+                excelHead = new ExcelHead(headName[i], entityNameSb[i]);
+            }
+            excelHeads.add(excelHead);
+        }
+        List<BaseInfoCollection> baseInfoCollections = null;
+        FileInputStream is  = new FileInputStream(file);
+        try {
+            // 获取上传需要修改的数据
+            baseInfoCollections = ParseExcelUtils.readExcelToEntity(BaseInfoCollection.class, is, pathName, excelHeads);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            is.close();
+        }
+        for (BaseInfoCollection baseInfoCollection : baseInfoCollections) {
+            baseInfoCollection.setId(UUID.randomUUID().toString().replace("-", ""));
+            baseInfoCollection.setStart_collect_id(collectParams.getStart_collect_id());
+        }
+        //通过身份证号查汇总表的数据
+        log.info("开始通过身份证号查询汇总表中的数据");
+        List<BaseInfoCollection> collectInTotalInfo =  baseCollectionService.findBaseCollectInfoFromTotalInfo(baseInfoCollections,collectParams.getStart_collect_id());
+        log.info("查询的结果为" + collectInTotalInfo );
+        log.info("开始删除在汇总表中查询的数据");
+        //删除在汇总表中查到的数据
+        if (collectInTotalInfo!=null && collectInTotalInfo.size()>0) {
+            baseCollectionService.deleteFoundCollectInfo(collectInTotalInfo);
+        }
+        log.info("删除成功");
+        //将修改信息批量插入到汇总表
+        log.info("开始插入需要修改的数据，数据为"+ baseInfoCollections);
+        baseCollectionService.insertCollectInfo(baseInfoCollections);
+        return this.getOkResponseResult("success", "更新成功");
+    }
+*/
     public <T> void fillExcelDate(T clazz, Sheet sheet, Workbook workbook, int rowNum) {
         Field[] declaredFields = clazz.getClass().getDeclaredFields();
         String[] values = new String[declaredFields.length];

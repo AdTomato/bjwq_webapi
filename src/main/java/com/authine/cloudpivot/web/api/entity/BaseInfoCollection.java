@@ -22,10 +22,10 @@ public class BaseInfoCollection extends BaseEntity{
      * 委托方
      */
     private String entrustedUnit;
-
     /**
      * 客户名称
      */
+    
     private String clientName;
 
     /**
@@ -57,6 +57,7 @@ public class BaseInfoCollection extends BaseEntity{
      * 新基数
      */
     private String nowBaseNum;
+
 
     /**
      * 公积金比例
