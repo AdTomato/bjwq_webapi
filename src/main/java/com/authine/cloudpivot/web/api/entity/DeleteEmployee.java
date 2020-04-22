@@ -17,53 +17,73 @@ import java.util.Date;
 @NoArgsConstructor
 public class DeleteEmployee extends BaseEntity {
     String deleteEmployeeId;
-
-    /** 客户名称*/
-    String clientName;
-
-    /** 姓名*/
+    /**
+     * 一级客户名称
+     */
+    String firstLevelClientName;
+    /**
+     * 二级客户名称
+     */
+    String secondLevelClientName;
+    /**
+     * 姓名
+     */
     String employeeName;
-
-    /** 证件类型*/
+    /**
+     * 证件类型
+     */
     String identityNoType;
-
-    /** 证件号码*/
+    /**
+     * 证件号码
+     */
     String identityNo;
-
-    /** 地区*/
-    String city;
-
-    /** 离职原因*/
+    /**
+     * 离职原因
+     */
     String leaveReason;
-
-    /** 离职日期*/
+    /**
+     * 离职日期
+     */
     Date leaveTime;
-
-    /** 社保终止时间*/
+    /**
+     * 社保终止时间
+     */
     Date socialSecurityEndTime;
-
-    /** 公积金终止时间*/
+    /**
+     * 公积金终止时间
+     */
     Date providentFundEndTime;
 
-    /** 备注*/
+    /**
+     * 备注
+     */
     String remark;
-
-    public DeleteEmployee(String clientName, String employeeName, String identityNoType, String identityNo,
-                          String city, String leaveReason, Date leaveTime, Date socialSecurityEndTime,
-                          Date providentFundEndTime, String remark, String id, String creater, Date createdTime) {
-        super();
-        this.clientName = clientName;
-        this.employeeName = employeeName;
-        this.identityNoType = identityNoType;
-        this.identityNo = identityNo;
-        this.city = city;
-        this.leaveReason = leaveReason;
-        this.leaveTime = leaveTime;
-        this.socialSecurityEndTime = socialSecurityEndTime;
-        this.providentFundEndTime = providentFundEndTime;
-        this.remark = remark;
-        setId(id);
-        setCreater(creater);
-        setCreatedTime(createdTime);
-    }
+    /**
+     * 社保福利地
+     */
+    String socialSecurityCity;
+    /**
+     * 公积金福利地
+     */
+    String providentFundCity;
+    /**
+     * 社保福利办理方
+     */
+    String sWelfareHandler;
+    /**
+     * 公积金福利办理方
+     */
+    String gWelfareHandler;
+    /**
+     * 所属部门
+     */
+    String subordinateDepartment;
+    /**
+     * 性别
+     */
+    String gender;
+    /**
+     * 生日
+     */
+    Date birthday;
 }

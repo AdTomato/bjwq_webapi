@@ -73,4 +73,16 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
         List <ProvidentFundDeclare> orderFormList = addEmployeeMapper.getProvidentFundDeclareByOrderFormId(id);
         return orderFormList != null && orderFormList.size() > 0 ? orderFormList.get(0) : null;
     }
+
+    @Override
+    public SocialSecurityClose getSocialSecurityCloseByOrderFormId(String id) throws Exception {
+        List <SocialSecurityClose> list = addEmployeeMapper.getSocialSecurityCloseByOrderFormId(id);
+        return list != null && list.size() > 0 ? list.get(0) : null;
+    }
+
+    @Override
+    public ProvidentFundClose getProvidentFundCloseByOrderFormId(String id) throws Exception {
+        List <ProvidentFundClose> list = addEmployeeMapper.getProvidentFundCloseByOrderFormId(id);
+        return list != null && list.size() > 0 ? list.get(0) : null;
+    }
 }

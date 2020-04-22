@@ -62,4 +62,20 @@ public interface AddEmployeeMapper {
     List<ProvidentFundDeclare> getProvidentFundDeclareByOrderFormId(String id);
 
     void updateEmployeeOrderFromTime(String id);
+
+    List<SocialSecurityClose> getSocialSecurityCloseByOrderFormId(String id);
+
+    List<ProvidentFundClose> getProvidentFundCloseByOrderFormId(String id);
+
+    void updateSocialSecurityClose(SocialSecurityClose socialSecurityClose);
+
+    void updateProvidentFundClose(ProvidentFundClose providentFundClose);
+
+    void addEmployeeImportData(List<Map<String, Object>> list);
+
+    void deleteEmployeeImportData(List<Map<String, Object>> list);
+
+    void updateAddEmployeeOwner(List<Map<String, Object>> list);
+
+    void updateDeleteEmployeeOwner(List<Map<String, Object>> list);
 }

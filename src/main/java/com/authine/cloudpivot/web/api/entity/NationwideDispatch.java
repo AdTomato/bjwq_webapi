@@ -170,4 +170,50 @@ public class NationwideDispatch extends BaseEntity{
 
     /** 备注*/
     String remark;
+
+    /**
+     * 一级客户名称
+     */
+    String firstLevelClientName;
+    /**
+     * 二级客户名称
+     */
+    String secondLevelClientName;
+    /**
+     * 所属部门
+     */
+    String subordinateDepartment;
+    /**
+     * 性别
+     */
+    String gender;
+    /**
+     * 出生年月
+     */
+    Date birthday;
+    /**
+     * 退役士兵
+     */
+    String isRetiredSoldier;
+    /**
+     * 贫困建档人员
+     */
+    String isPoorArchivists;
+    /**
+     * 残疾人
+     */
+    String isDisabled;
+    /**
+     * 福利办理方
+     */
+    String welfareHandler;
+    /**
+     * 工作地
+     */
+    String workplace;
+    /**
+     * 户籍备注
+     */
+    String householdRegisterRemarks;
+
 }

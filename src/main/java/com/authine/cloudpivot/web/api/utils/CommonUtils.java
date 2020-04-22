@@ -3,14 +3,15 @@ package com.authine.cloudpivot.web.api.utils;
 import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
 import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
 import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
+import com.authine.cloudpivot.web.api.constants.Constants;
+import com.authine.cloudpivot.web.api.entity.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 
 import java.math.RoundingMode;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author liulei
@@ -165,5 +166,135 @@ public class CommonUtils {
             }
         }
         return locationMap;
+    }
+
+    /**
+     * 方法说明：通过判断福利地对基数四舍五入取整
+     * @param addEmployee
+     * @return com.authine.cloudpivot.web.api.entity.AddEmployee
+     * @author liulei
+     * @Date 2020/4/16 9:12
+     */
+    public static AddEmployee needBaseRounding(AddEmployee addEmployee) throws Exception {
+        // 目前仅六安市需要四舍五入取整
+        if (StringUtils.isNotBlank(addEmployee.getSocialSecurityCity()) && "六安市".indexOf(addEmployee.getSocialSecurityCity()) >= 0) {
+            addEmployee.setSocialSecurityBase(processingData(addEmployee.getSocialSecurityBase(), "四舍五入", "0"));
+        }
+        if (StringUtils.isNotBlank(addEmployee.getProvidentFundCity()) && "六安市".indexOf(addEmployee.getProvidentFundCity()) >= 0) {
+            addEmployee.setProvidentFundBase(processingData(addEmployee.getProvidentFundBase(), "四舍五入", "0"));
+        }
+        return addEmployee;
+    }
+
+    /**
+     * 方法说明：通过判断福利地对基数四舍五入取整
+     * @param shAddEmployee
+     * @return com.authine.cloudpivot.web.api.entity.AddEmployee
+     * @author liulei
+     * @Date 2020/4/16 9:12
+     */
+    public static ShAddEmployee needBaseRounding(ShAddEmployee shAddEmployee) throws Exception{
+        // 目前仅六安市需要四舍五入取整
+        if (StringUtils.isNotBlank(shAddEmployee.getCityName()) && "六安市".indexOf(shAddEmployee.getCityName()) >= 0) {
+            shAddEmployee.setSocialSecurityBase(processingData(shAddEmployee.getSocialSecurityBase(), "四舍五入", "0"));
+            shAddEmployee.setProvidentFundBase(processingData(shAddEmployee.getProvidentFundBase(), "四舍五入", "0"));
+        }
+        return shAddEmployee;
+    }
+
+    /**
+     * 方法说明：通过判断福利地对基数四舍五入取整
+     * @param nationwideDispatch
+     * @return com.authine.cloudpivot.web.api.entity.AddEmployee
+     * @author liulei
+     * @Date 2020/4/16 9:12
+     */
+    public static NationwideDispatch needBaseRounding(NationwideDispatch nationwideDispatch) throws Exception{
+        // 目前仅六安市需要四舍五入取整
+        if (StringUtils.isNotBlank(nationwideDispatch.getInvolved()) && "六安市".indexOf(nationwideDispatch.getInvolved()) >= 0) {
+            nationwideDispatch.setSocialInsuranceAmount(processingData(nationwideDispatch.getSocialInsuranceAmount(),
+                    "四舍五入", "0"));
+            nationwideDispatch.setProvidentFundAmount(processingData(nationwideDispatch.getProvidentFundAmount(),
+                    "四舍五入", "0"));
+        }
+        return nationwideDispatch;
+    }
+
+    /**
+     * 方法说明：增员客户处理身份证号码
+     * @param addEmployee
+     * @return com.authine.cloudpivot.web.api.entity.AddEmployee
+     * @author liulei
+     * @Date 2020/4/17 8:57
+     */
+    public static AddEmployee processingIdentityNo(AddEmployee addEmployee) throws Exception {
+        if(checkIdentityNo(addEmployee.getIdentityNoType(), addEmployee.getIdentityNo())) {
+            ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(addEmployee.getIdentityNo());
+            addEmployee.setGender(processIdentityNo.getGender());
+            addEmployee.setBirthday(processIdentityNo.getBirthday());
+        }
+        return addEmployee;
+    }
+
+    /**
+     * 方法说明：增员上海处理身份证号码
+     * @param shAddEmployee
+     * @return com.authine.cloudpivot.web.api.entity.AddEmployee
+     * @author liulei
+     * @Date 2020/4/17 8:57
+     */
+    public static ShAddEmployee processingIdentityNo(ShAddEmployee shAddEmployee)  throws Exception{
+        if(checkIdentityNo(shAddEmployee.getIdentityNoType(), shAddEmployee.getIdentityNo())) {
+            ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(shAddEmployee.getIdentityNo());
+            shAddEmployee.setGender(processIdentityNo.getGender());
+            shAddEmployee.setBirthday(processIdentityNo.getBirthday());
+        }
+        return shAddEmployee;
+    }
+
+    /**
+     * 方法说明：增员全国处理身份证号码
+     * @param nationwideDispatch
+     * @return com.authine.cloudpivot.web.api.entity.AddEmployee
+     * @author liulei
+     * @Date 2020/4/17 8:57
+     */
+    public static NationwideDispatch processingIdentityNo(NationwideDispatch nationwideDispatch)  throws Exception{
+        if(checkIdentityNo(nationwideDispatch.getIdentityNoType(), nationwideDispatch.getIdentityNo())) {
+            ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(nationwideDispatch.getIdentityNo());
+            nationwideDispatch.setGender(processIdentityNo.getGender());
+            nationwideDispatch.setBirthday(processIdentityNo.getBirthday());
+        }
+        return nationwideDispatch;
+    }
+
+    public static DeleteEmployee processingIdentityNo(DeleteEmployee delEmployee) throws Exception{
+        if(checkIdentityNo(delEmployee.getIdentityNoType(), delEmployee.getIdentityNo())) {
+            ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(delEmployee.getIdentityNo());
+            delEmployee.setGender(processIdentityNo.getGender());
+            delEmployee.setBirthday(processIdentityNo.getBirthday());
+        }
+        return delEmployee;
+    }
+
+    public static ShDeleteEmployee processingIdentityNo(ShDeleteEmployee delEmployee)  throws Exception{
+        if(checkIdentityNo(delEmployee.getIdentityNoType(), delEmployee.getIdentityNo())) {
+            ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(delEmployee.getIdentityNo());
+            delEmployee.setGender(processIdentityNo.getGender());
+            delEmployee.setBirthday(processIdentityNo.getBirthday());
+        }
+        return delEmployee;
+    }
+
+    private static boolean checkIdentityNo(String identityNoType, String identityNo) throws Exception {
+        if ("身份证".equals(identityNoType)) {
+            if (StringUtils.isNotBlank(identityNo) && (identityNo.length() == 18 || identityNo.length() == 15)) {
+                return true;
+            } else {
+                log.error("身份证号码格式不正确。");
+                throw new RuntimeException("身份证号码格式不正确。");
+            }
+        }
+        return false;
     }
 }

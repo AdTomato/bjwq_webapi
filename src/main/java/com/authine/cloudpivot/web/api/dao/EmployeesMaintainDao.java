@@ -13,26 +13,6 @@ import java.util.Map;
  * @Date 2020/2/10 17:17
  **/
 public interface EmployeesMaintainDao {
-    /**
-     * 方法说明：根据员工档案的单据号获取社保公积金信息
-     * @param employeeFilesId
-     * @return java.util.Map<java.lang.String,java.lang.String>
-     * @throws
-     * @author liulei
-     * @Date 2020/2/10 17:34
-     */
-    Map<String, String> getSocialSecurityFundDetail(String employeeFilesId) throws Exception;
-
-    /**
-     * 方法说明：根据补缴月份是，地区获取入职通知信息
-     * @param monthDifference
-     * @param city
-     * @return java.util.Map<java.lang.String,java.lang.String>
-     * @throws
-     * @author liulei
-     * @Date 2020/2/12 13:37
-     */
-    Map<String, String> getEntryNoticeBy(int monthDifference, String city) throws Exception;
 
     /**
      * 方法说明：创建社保公积金子表数据
@@ -45,61 +25,6 @@ public interface EmployeesMaintainDao {
      * @Date 2020/2/12 16:48
      */
     void createSocialSecurityFundDetail(String parentId, List<Map<String, String>> detail, String code) throws Exception;
-
-    /**
-     * 方法说明：根据客户名称获取派出单位
-     * @param clientName
-     * @return java.lang.String
-     * @throws
-     * @author liulei
-     * @Date 2020/2/14 11:05
-     */
-    String getDispatchUnitByClientName(String clientName) throws Exception;
-
-    /**
-     * 方法说明：根据客户名称和地区获取福利办理方
-     * @param clientName
-     * @param city
-     * @return java.lang.String
-     * @throws
-     * @author liulei
-     * @Date 2020/2/14 11:16
-     */
-    String getWelfareHandlerByClientNameAndCity(String clientName, String city) throws Exception;
-
-    /**
-     * 方法说明：获取当前时间节点,如果是个性化客户，获取个性化设置
-     * @param clientName
-     * @param city
-     * @return java.util.Map<java.lang.String,java.lang.String>
-     * @throws
-     * @author liulei
-     * @Date 2020/2/14 14:04
-     */
-    Map<String, String> getTimeNode(String clientName, String city) throws Exception;
-
-    /**
-     * 方法说明：根据id获取员工档案的单据号
-     * @param id
-     * @return java.lang.String
-     * @throws
-     * @author liulei
-     * @Date 2020/2/14 15:27
-     */
-    String getEmployeeFilesSequenceNoById(String id) throws Exception;
-
-    /**
-     * 方法说明：获取征缴产品数据
-     * @param city
-     * @param startMonth
-     * @param type
-     * @return java.util.List<java.util.Map<java.lang.String,java.lang.Object>>
-     * @throws
-     * @author liulei
-     * @Date 2020/2/14 17:03
-     */
-    List <Map <String, Object>> getSocialSecurityFundDetail(String city, Date startMonth, String type,
-                                                            Double setBase) throws Exception;
 
     /**
      * 方法说明：修改员工订单状态
@@ -176,56 +101,6 @@ public interface EmployeesMaintainDao {
      * @Date 2020/2/21 14:15
      */
     String getOperateLeaderByCity(String city) throws Exception;
-
-    /**
-     * 方法说明：减员时修改员工订单数据
-     * @param employeeFiles
-     * @return void
-     * @author liulei
-     * @Date 2020/2/26 16:16
-     */
-    void updateEmployeeFilesWhenDelEmployee(EmployeeFiles employeeFiles) throws Exception;
-
-    /**
-     * 方法说明：根据客户名称，证件号码查询社保停缴数据，更新其收费截止月，离职备注
-     * @param clientName 客户名称
-     * @param identityNo 证件号码
-     * @param chargeEndMonth 收费截止月
-     * @param resignationRemarks 离职备注
-     * @return void
-     * @author liulei
-     * @Date 2020/2/27 13:05
-     */
-    void updateSocialSecurityClose(String clientName, String identityNo, Date chargeEndMonth,
-                                   String resignationRemarks) throws Exception;
-
-    /**
-     * 方法说明：根据客户名称，证件号码查询公积金停缴数据，更新其收费截止月
-     * @param clientName 客户名称
-     * @param identityNo 证件号码
-     * @param chargeEndMonth 收费截止月
-     * @return void
-     * @author liulei
-     * @Date 2020/2/27 13:14
-     */
-    void updateProvidentFundClose(String clientName, String identityNo, Date chargeEndMonth) throws Exception;
-
-    /**
-     * 方法说明：根据客户名称，证件号码查询员工档案数据
-     *      更新其离职日期，社保收费截止，公积金收费截止，离职原因，离职备注
-     * @param clientName 客户名称
-     * @param identityNo 证件号码
-     * @param quitDate 离职日期
-     * @param socialSecurityChargeEnd 社保收费截止
-     * @param providentFundChargeEnd 公积金收费截止
-     * @param quitReason
-     * @param quitRemark
-     * @return void
-     * @author liulei
-     * @Date 2020/2/27 14:57
-     */
-    void updateEmployeeFiles(String clientName, String identityNo, Date quitDate, Date socialSecurityChargeEnd,
-                             Date providentFundChargeEnd, String quitReason, String quitRemark) throws Exception;
 
     /**
      * 方法说明：(2表之间)根据修改后的数据,更新减员_客户数据

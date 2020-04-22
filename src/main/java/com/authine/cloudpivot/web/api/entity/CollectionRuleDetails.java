@@ -25,15 +25,15 @@ public class CollectionRuleDetails {
     /**
      * 补缴月份
      */
-    int payMonth;
+    Integer payMonth;
     /**
      * 补缴月份上限（不包含）
      */
-    int payBackMaxMonth;
+    Integer payBackMaxMonth;
     /**
      * 补缴月份下限（包含）
      */
-    int payBackMinMonth;
+    Integer payBackMinMonth;
     /**
      * 险种名称
      */

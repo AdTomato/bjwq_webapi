@@ -23,91 +23,6 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
 
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-    /**
-     * 方法说明：根据员工档案的单据号获取社保公积金信息
-     * @Param sequenceNo
-     * @return java.util.Map<java.lang.String,java.lang.String>
-     * @throws
-     * @author liulei
-     * @Date 2020/2/10 17:35
-     */
-    @Override
-    public Map <String, String> getSocialSecurityFundDetail(String employeeFilesId) throws Exception {
-        // 根据单据号获取
-        String sql = " select id, date_format(start_time, '%Y-%m-%d') start_time from i4fvb_employee_order_form where employee_files_id = '" +
-                employeeFilesId + "' and is_history = '否'";
-        List <Map <String, Object>> list = ConnectionUtils.executeSelectSql(sql);
-
-        Map <String, String> ssf = new HashMap <>();
-        if (list != null && list.size() > 0) {
-            String id = list.get(0).get("id").toString();
-            ssf.put("employeeOrderFormId", id);
-            ssf.put("startMonth", list.get(0).get("start_time") == null ? "" :
-                    list.get(0).get("start_time").toString());
-            // 获取社保基数
-            String sql1 = "select max(base_num) base_num from i4fvb_social_security_fund_detail " +
-                    " where social_security_group like '%社保%' and parentId = '" + id + "' ";
-            List <Map <String, Object>> list1 = ConnectionUtils.executeSelectSql(sql1);
-            if (list1 != null && list1.size() > 0) {
-                ssf.put("socialSecurityBase", list1.get(0).get("base_num") == null ? "" :
-                        list1.get(0).get("base_num").toString());
-            }
-            // 获取公积金基数
-            String sql2 = "select base_num,company_money,employee_money, IFNULL(company_money,0) + IFNULL" +
-                    "(employee_money,0) total  from i4fvb_social_security_fund_detail detail where social_security_group " +
-                    "like '%公积金%' and parentId = '" + id + "' ";
-            List <Map <String, Object>> list2 = ConnectionUtils.executeSelectSql(sql2);
-            if (list2 != null && list2.size() > 0) {
-                ssf.put("providentFundBase", list2.get(0).get("base_num") == null ? "" :
-                        list2.get(0).get("base_num").toString());
-                ssf.put("enterpriseDeposit", list2.get(0).get("company_money") == null ? "" :
-                        list2.get(0).get("company_money").toString());
-                ssf.put("personalDeposit", list2.get(0).get("employee_money") == null ? "" :
-                        list2.get(0).get("employee_money").toString());
-                ssf.put("totalDeposit", list2.get(0).get("total") == null ? "" :
-                        list2.get(0).get("total").toString());
-            }
-        } else {
-            throw new Exception("没有获取到对应的员工订单。");
-        }
-        return ssf;
-    }
-
-    /**
-     * 方法说明：根据补缴月份是，地区获取入职通知信息
-     * @Param monthDifference
-     * @Param city
-     * @return java.util.Map<java.lang.String,java.lang.String>
-     * @throws
-     * @author liulei
-     * @Date 2020/2/12 13:38
-     */
-    @Override
-    public Map <String, String> getEntryNoticeBy(int monthDifference, String city) throws Exception {
-        StringBuffer sql = new StringBuffer();
-        sql.append(" select list.record_of_employment, list.social_security, list.provident_fund, leader.social_security_leader ");
-        sql.append(" from id34a_provincial_entry_list list");
-        sql.append(" left join id34a_operate_leader leader on list.city = leader.city ");
-        sql.append(" where list.city = '" + city + "'" );
-        sql.append(" and ( pay_back_min_month is null or pay_back_min_month <= " + monthDifference + ")" );
-        sql.append(" and ( pay_back_max_month is null or pay_back_min_month >= " + monthDifference + ")" );
-
-        List <Map <String, Object>> list = ConnectionUtils.executeSelectSql(sql.toString());
-        Map <String, String> entryNotice = new HashMap <>();
-        entryNotice.put("haveEntryNotice", "false");// 没有入职通知
-        if (list != null && list.size() > 0) {
-            entryNotice.put("haveEntryNotice", "true");// 有入职通知
-            entryNotice.put("record_of_employment", list.get(0).get("record_of_employment") == null ? "" :
-                    list.get(0).get("record_of_employment").toString());
-            entryNotice.put("social_security", list.get(0).get("social_security") == null ? "" : list.get(0).get(
-                    "social_security").toString());
-            entryNotice.put("provident_fund", list.get(0).get("provident_fund") == null ? "" : list.get(0).get(
-                    "provident_fund").toString());
-            entryNotice.put("operate_signatory", list.get(0).get("social_security_leader") == null ? "" : list.get(0).get("social_security_leader").toString());
-        }
-        return entryNotice;
-    }
-
     @Override
     public void createSocialSecurityFundDetail(String parentId, List <Map <String, String>> detail, String code) throws Exception {
         if (StringUtils.isBlank(parentId)) {
@@ -200,132 +115,6 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
             String sql = sqlBuffer.toString();
             ConnectionUtils.executeSql(sql.substring(0, sql.length() - 1));
         }
-    }
-
-    /**
-     * 方法说明：根据客户名称获取派出单位
-     * @Param clientName
-     * @return java.lang.String
-     * @throws
-     * @author liulei
-     * @Date 2020/2/14 11:05
-     */
-    @Override
-    public String getDispatchUnitByClientName(String clientName) throws Exception {
-        String sql = "select entrusting_party from id34a_client_management where client_name = '" + clientName + "'";
-        List <Map <String, Object>> list = ConnectionUtils.executeSelectSql(sql);
-        if (list != null && list.size() > 0) {
-            return list.get(0).get("entrusting_party") == null ? "" : list.get(0).get("entrusting_party").toString();
-        }
-        return "";
-    }
-
-    /**
-     * 方法说明：根据客户名称和地区获取福利办理方
-     * @Param clientName
-     * @Param city
-     * @return java.lang.String
-     * @throws
-     * @author liulei
-     * @Date 2020/2/14 11:16
-     */
-    @Override
-    public String getWelfareHandlerByClientNameAndCity(String clientName, String city) throws Exception {
-        String sql = "select welfare_handler from id34a_appointment_sheet where client_name = '" + clientName + "' " +
-                "and city = '" + city + "'";
-        List <Map <String, Object>> list = ConnectionUtils.executeSelectSql(sql);
-        if (list != null && list.size() > 0) {
-            return list.get(0).get("welfare_handler") == null ? "" : list.get(0).get("welfare_handler").toString();
-        }
-        return "";
-    }
-
-    @Override
-    public Map <String, String> getTimeNode(String clientName, String city) throws Exception {
-
-        String sql = "select company_injury_ratio, employee_injury_ratio, company_accumulation_ratio, " +
-                "employee_accumulation_ratio, time_node from id34a_ccps where client = '" + clientName + "'";
-        List <Map <String, Object>> list = ConnectionUtils.executeSelectSql(sql);
-        Map <String, String> map = new HashMap <>();
-        if (list != null && list.size() > 0) {
-            map.put("company_injury_ratio", list.get(0).get("company_injury_ratio") == null ? "" : list.get(0).get(
-                    "company_injury_ratio").toString());
-            map.put("employee_injury_ratio", list.get(0).get("employee_injury_ratio") == null ? "" : list.get(0).get(
-                    "employee_injury_ratio").toString());
-            map.put("company_accumulation_ratio", list.get(0).get("company_accumulation_ratio") == null ? "" :
-                    list.get(0).get("company_accumulation_ratio").toString());
-            map.put("employee_accumulation_ratio", list.get(0).get("employee_accumulation_ratio") == null ? "" :
-                    list.get(0).get("employee_accumulation_ratio").toString());
-            map.put("time_node", list.get(0).get("time_node") == null ? "" : list.get(0).get("time_node").toString());
-        } else {
-            String sql1 = "select time_node from id34a_city_time_node where city = '" + city + "'";
-            List <Map <String, Object>> list1 = ConnectionUtils.executeSelectSql(sql1);
-            if (list1 != null && list1.size() > 0) {
-                map.put("time_node", list1.get(0).get("time_node") == null ? "" :
-                        list1.get(0).get("time_node").toString());
-            } else {
-                throw new Exception("没有获取对应的时间节点。");
-            }
-        }
-        return map;
-    }
-
-    @Override
-    public String getEmployeeFilesSequenceNoById(String id) throws Exception {
-        String sql = "select sequenceNo from i4fvb_employee_files where id = '" + id + "'";
-        List <Map <String, Object>> list = ConnectionUtils.executeSelectSql(sql);
-        if (list != null && list.size() > 0){
-            return list.get(0).get("sequenceNo") == null ? "" : list.get(0).get("sequenceNo").toString();
-        }
-        return "";
-    }
-
-    @Override
-    public List <Map <String, Object>> getSocialSecurityFundDetail(String city, Date startMonth, String type,
-                                                                   Double setBase) throws Exception {
-        List <Map <String, Object>> list = new ArrayList <>();
-        if (StringUtils.isBlank(city) || startMonth == null) {
-            return list;
-        }
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
-        String startTime = sdf.format(startMonth);
-
-        StringBuffer sql = new StringBuffer();
-        sql.append(" SELECT");
-        sql.append("   pay.id,");
-        sql.append("   pay.product_name,");
-        sql.append("   pay.social_security_group,");
-        sql.append("   base.employee_max_base_num max_base,");
-        sql.append("   base.employee_min_base_num min_base,");
-        if (setBase != null) {
-            sql.append(" case");
-            sql.append("  when base.employee_max_base_num <= " + setBase +  " then base.employee_max_base_num");
-            sql.append("  when base.employee_min_base_num >= " + setBase +  " then base.employee_min_base_num");
-            sql.append("  else " + setBase +  " end");
-            sql.append(" base,");
-        }
-        sql.append("   pay.company_ratio,");
-        sql.append("   pay.employee_ratio,");
-        sql.append("   pay.company_rounding_policy,");
-        sql.append("   pay.employee_rounding_policy,");
-        sql.append("   pay.company_precision,");
-        sql.append("   pay.employee_precision,");
-        sql.append("   pay.company_surcharge_value,");
-        sql.append("   pay.employee_surcharge_value,");
-        sql.append("   pay.pay_cycle,");
-        sql.append("   rule.pay_month");
-        sql.append(" FROM");
-        sql.append("   i080j_policy_collect_pay pay");
-        sql.append("   LEFT JOIN i080j_product_base_num base ON pay.id = base.parentId");
-        sql.append("   LEFT JOIN i4fvb_collection_rule_maintain rule ON pay.id = rule.product_name");
-        sql.append(" WHERE");
-        sql.append("   pay.social_security_group LIKE '%" + type + "%'");
-        sql.append("   AND date_format( base.start_time, '%Y-%m' ) <= '" + startTime + "'");
-        sql.append("   AND ( base.end_time IS NULL OR date_format( base.end_time, '%Y-%m' ) >= '" + startTime + "')");
-
-        list = ConnectionUtils.executeSelectSql(sql.toString());
-
-        return list;
     }
 
     @Override
@@ -471,69 +260,11 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
     }
 
     @Override
-    public void updateEmployeeFilesWhenDelEmployee(EmployeeFiles employeeFiles) throws Exception {
-        StringBuffer updateSql = new StringBuffer();
-        updateSql.append(" UPDATE i4fvb_employee_files  SET");
-        updateSql.append(getDateSql("report_quit_date", employeeFiles.getReportQuitDate()) + ",");
-        updateSql.append(getStringSql("report_severance_officer", employeeFiles.getReportSeveranceOfficer()) + ",");
-        updateSql.append(getDateSql("quit_date", employeeFiles.getQuitDate()) + ",");
-        updateSql.append(getDateSql("social_security_charge_end", employeeFiles.getSocialSecurityChargeEnd()) + ",");
-        updateSql.append(getDateSql("provident_fund_charge_end", employeeFiles.getProvidentFundChargeEnd()) + ",");
-        updateSql.append(getStringSql("quit_reason", employeeFiles.getQuitReason()) + ",");
-        updateSql.append(getStringSql("quit_remark", employeeFiles.getQuitRemark()));
-        updateSql.append(" WHERE");
-        updateSql.append(getStringSql("id", employeeFiles.getId()));
-
-        ConnectionUtils.executeSql(updateSql.toString());
-    }
-
-    @Override
-    public void updateSocialSecurityClose(String clientName, String identityNo, Date chargeEndMonth,
-                                          String resignationRemarks) throws Exception {
-        StringBuffer updateSql = new StringBuffer();
-        updateSql.append(" UPDATE i4fvb_social_security_close  SET");
-        updateSql.append(getDateSql("charge_end_month", chargeEndMonth) + ",");
-        updateSql.append(getStringSql("resignation_remarks", resignationRemarks));
-        updateSql.append(" WHERE");
-        updateSql.append(getStringSql("client_name", clientName) + " AND");
-        updateSql.append(getStringSql("identityNo", identityNo));
-
-        ConnectionUtils.executeSql(updateSql.toString());
-    }
-
-    @Override
-    public void updateProvidentFundClose(String clientName, String identityNo, Date chargeEndMonth) throws Exception {
-        StringBuffer updateSql = new StringBuffer();
-        updateSql.append(" UPDATE i4fvb_provident_fund_close  SET");
-        updateSql.append(getDateSql("charge_end_month", chargeEndMonth));
-        updateSql.append(" WHERE");
-        updateSql.append(getStringSql("client_name", clientName) + " AND");
-        updateSql.append(getStringSql("identityNo", identityNo));
-
-        ConnectionUtils.executeSql(updateSql.toString());
-    }
-
-    @Override
-    public void updateEmployeeFiles(String clientName, String identityNo, Date quitDate, Date socialSecurityChargeEnd,
-                                    Date providentFundChargeEnd, String quitReason, String quitRemark) throws Exception {
-        StringBuffer updateSql = new StringBuffer();
-        updateSql.append(" UPDATE i4fvb_employee_files  SET");
-        updateSql.append(getDateSql("quit_date", quitDate) + ",");
-        updateSql.append(getDateSql("social_security_charge_end", socialSecurityChargeEnd) + ",");
-        updateSql.append(getDateSql("provident_fund_charge_end", providentFundChargeEnd) + ",");
-        updateSql.append(getStringSql("quit_reason", quitReason) + ",");
-        updateSql.append(getStringSql("quit_remark", quitRemark));
-        updateSql.append(" WHERE");
-        updateSql.append(getStringSql("client_name", clientName) + " AND");
-        updateSql.append(getStringSql("id_no", identityNo));
-
-        ConnectionUtils.executeSql(updateSql.toString());
-    }
-
-    @Override
     public void updateDeleteEmployeeBetweenTwoTables(String sourceId, String targetId) throws Exception {
-        String[] fieldName = new String[]{"client_name", "employee_name", "identityNo_type", "identityNo", "city",
-                "leave_reason", "leave_time", "social_security_end_time", "provident_fund_end_time", "remark"};
+        String[] fieldName = new String[]{"first_level_client_name", "second_level_client_name", "employee_name",
+                "identityNo_type", "identityNo", "gender", "birthday", "social_security_city", "s_welfare_handler",
+                "provident_fund_city", "g_welfare_handler", "leave_reason", "leave_time", "social_security_end_time",
+                "provident_fund_end_time", "remark"};
         String onnectionCondition = "targetTable.id = sourceTable.delete_employee_id";
         // 获取sql:根据源表修改目标表数据
         String sql = getUpdateSqlByTargetTableAndSourceTableInfo("i4fvb_delete_employee", targetId,
@@ -543,10 +274,10 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
 
     @Override
     public void updateShDeleteEmployeeBetweenTwoTables(String sourceId, String targetId) throws Exception {
-        String[] fieldName = new String[]{"client_name", "identityNo_type", "identityNo", "client_num", "client_name",
-                "client_short_name", "OS_initiated_departure_time", "departure_time", "charge_end_time",
-                "leave_reason", "leave_remark", "provident_fund_transfer_mode", "backtrack", "GE_leave_reason",
-                "customer_num", "weather_leave_E"};
+        String[] fieldName = new String[]{"first_level_client_name", "second_level_client_name", "identityNo_type",
+                "identityNo", "gender", "birthday", "client_num", "client_short_name", "OS_initiated_departure_time",
+                "departure_time", "charge_end_time", "leave_reason", "leave_remark", "provident_fund_transfer_mode",
+                "backtrack", "GE_leave_reason", "customer_num", "weather_leave_E"};
         String onnectionCondition = "targetTable.id = sourceTable.sh_delete_employee_id";
 
         // 获取sql:根据源表修改目标表数据
@@ -557,19 +288,21 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
 
     @Override
     public void updateNationwideDispatchBetweenTwoTables(String sourceId, String targetId, String type) throws Exception {
-        String[] fieldName = new String[]{"unique_num", "employee_name", "contact_number", "identityNo_type",
-                "identityNo", "national_business_wf_flag", "involved", "business_customer_num",
-                "business_customer_name", "business_wf_status", "order_type", "processing_status",
-                "contracting_supplier", "contracting_representative", "contracting_party_department",
-                "into_pending_date", "task_list_update_date", "entry_date", "employee_internal_num", "employee_email",
-                "order_id", "order_start_date", "assignment_date", "entry_procedures_num", "business_tips",
-                "order_end_date", "withdrawal_date", "social_insurance_amount", "provident_fund_amount",
-                "supple_provident_fund_amount", "revocation_reason", "social_security_stop_reason", "departure_date",
-                "departure_remark", "change_details", "change_take_effect_date", "business_unit", "salesman",
-                "social_security_pay_method", "provident_fund_pay_method", "supplier_agreement_name",
-                "provident_fund_ratio", "supple_provident_fund_ratio", "social_security_standard",
-                "s_service_fee_start_date", "s_service_fee_end_date", "g_service_fee_start_date",
-                "g_service_fee_end_date", "remark"};
+        String[] fieldName = new String[]{"name", "unique_num", "employee_name", "contact_number", "identityNo_type",
+                "identityNo", "national_business_wf_flag", "involved", "business_customer_num", "business_wf_status",
+                "order_type", "processing_status", "contracting_supplier", "contracting_representative",
+                "contracting_party_department", "into_pending_date", "task_list_update_date", "entry_date",
+                "employee_email", "order_id", "order_start_date", "assignment_date", "entry_procedures_num",
+                "business_tips", "order_end_date", "withdrawal_date", "social_insurance_amount",
+                "provident_fund_amount", "supple_provident_fund_amount", "revocation_reason",
+                "social_security_stop_reason", "departure_date", "departure_remark", "change_details",
+                "change_take_effect_date", "business_unit", "salesman", "social_security_pay_method",
+                "provident_fund_pay_method", "supplier_agreement_name", "provident_fund_ratio",
+                "supple_provident_fund_ratio", "social_security_standard", "s_service_fee_start_date",
+                "s_service_fee_end_date", "g_service_fee_start_date", "g_service_fee_end_date", "remark",
+                "employee_internal_num", "first_level_client_name", "second_level_client_name",
+                "subordinate_department", "gender", "birthday", "is_retired_soldier", "is_poor_archivists",
+                "is_disabled", "welfare_handler", "workplace", "household_register_remarks"};
         // 根据源表修改目标表数据 targetTable targetId,sourceTable sourceId, String[] fieldName
         String targetTable = "add".equals(type) ? "i4fvb_nationwide_dispatch" : "i4fvb_nationwide_dispatch_delete";
         String sourceTable = "add".equals(type) ? "i4fvb_nationwide_dispatch_update" : "i4fvb_nation_delete_update";
@@ -585,16 +318,17 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
 
     @Override
     public void UpdateEmployeeFilesBetweenTwoTables(String sourceId, String targetId) throws Exception {
-        String[] fieldName = new String[]{"entrusted_unit", "client_name", "salesman", "employee_name", "id_type",
-                "id_no", "gender", "birth_date", "employee_nature", "household_register_nature", "mobile", "position"
-                , "employee_labels", "email", "labour_contract_start_time", "labour_contract_end_time", "salary",
-                "probation_start_time", "probation_end_time", "probation_salary", "social_security_city",
-                "provident_fund_city", /*"report_entry_time", "report_recruits", 报入职时间，报入职人不变*/
-                "entry_time", "social_security_charge_start", "provident_fund_charge_start", "social_security_area",
-                "provident_fund_area", "entry_description", "entry_notice", "health_check", "whether_pay",
-                "report_quit_date", "report_severance_officer", "quit_date", "social_security_charge_end",
-                "provident_fund_charge_end", "quit_reason", "quit_remark", "bank_account_number", "bank_name",
-                "bank_area"};
+        String[] fieldName = new String[]{"employee_name", "id_type", "id_no", "gender", "birth_date",
+                "employee_nature", "household_register_nature", "mobile", "social_security_city",
+                "provident_fund_city", /*"report_entry_time", "report_recruits",*/ "entry_time",
+                "social_security_charge_start", "provident_fund_charge_start", "entry_description", "report_quit_date"
+                , "report_severance_officer", "quit_date", "social_security_charge_end", "provident_fund_charge_end",
+                "quit_reason", "quit_remark", "entry_notice", "health_check", "whether_pay", "position", "email",
+                "employee_labels", "stop_generate_bill", "is_old_employee", "social_security_num",
+                "provident_fund_num", "s_payment_application", "g_payment_application", "subordinate_department",
+                "first_level_client_name", "second_level_client_name", "household_register_remarks",
+                "social_security_base", "provident_fund_base", "s_welfare_handler", "g_welfare_handler",
+                "is_retired_soldier", "is_poor_archivists", "is_disabled"};
         String onnectionCondition = "targetTable.id = sourceTable.employee_files_id";
 
         // 获取sql:根据源表修改目标表数据
@@ -606,11 +340,14 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
 
     @Override
     public void updateAddEmployeeBetweenTwoTables(String sourceId, String targetId) throws Exception {
-        String[] fieldName = new String[]{"client_name", "ERP", "employee_name", "identityNo_type", "identityNo",
-                "mobile", "email", "family_register_nature", "employee_nature", "entry_time", "contract_start_time",
-                "contract_end_time", "contract_salary", "social_security_city", "social_security_start_time",
+        String[] fieldName = new String[]{"name", "employee_name", "identityNo", "mobile", "email",
+                "family_register_nature", "employee_nature", "entry_time", "contract_start_time", "contract_end_time",
+                "contract_salary", "social_security_start_time", "remark", "social_security_city",
                 "social_security_base", "provident_fund_city", "provident_fund_start_time", "provident_fund_base",
-                "company_provident_fund_bl", "employee_provident_fund_bl", "remark"};
+                "identityNo_type", "company_provident_fund_bl", "employee_provident_fund_bl",
+                "first_level_client_name", "second_level_client_name", "subordinate_department",
+                "household_register_remarks", "gender", "birthday", "workplace", "is_retired_soldier",
+                "is_poor_archivists", "is_disabled", "s_welfare_handler", "g_welfare_handler"};
         String onnectionCondition = "targetTable.id = sourceTable.add_employee_id";
 
         // 获取sql:根据源表修改目标表数据
@@ -622,20 +359,22 @@ public class EmployeeMaintainDaoImpl implements EmployeesMaintainDao {
 
     @Override
     public void updateShAddEmployeeBetweenTwoTables(String sourceId, String targetId) throws Exception {
-        String[] fieldName = new String[]{"employee_name", "unique_num", "identityNo", "commission_send",
-                "identityNo_type", "order_code", "quotation_code", "sys_client_num", "client_name",
-                "client_short_name", "project_proposals_name", "provident_fund_pay_direct",
-                "social_security_pay_direct", "service_fee", "with_file", "package_involves_procedures", "entry_time",
-                "benefit_start_time", "mobile", "provident_fund_start_time", "whether_consistent",
-                "social_security_section", "social_security_base", "provident_fund_base",
-                "p_supplement_provident_fund", "u_supplement_provident_fund", "supplement_provident_fund_b", "charge_start_date",
+        String[] fieldName = new String[]{"name", "employee_name", "unique_num", "identityNo", "commission_send",
+                "identityNo_type", "order_code", "quotation_code", "sys_client_num", "client_short_name",
+                "project_proposals_name", "provident_fund_pay_direct", "social_security_pay_direct", "service_fee",
+                "entry_time", "benefit_start_time", "mobile", "provident_fund_start_time", "whether_consistent",
+                "social_security_base", "provident_fund_base", "supplement_provident_fund_b", "charge_start_date",
                 "dispatch_period_start_date", "dispatch_deadline", "start_date_trial", "end_time_trial", "wage_trial"
                 , "start_date_positive", "end_date_positive", "wage_positive", "phone", "employee_customer_side_num",
                 "contact_address", "postal_code", "Hukou_location", "mail", "bank_name", "bank_account",
                 "account_province_name", "account_city_name", "account_name", "bank_category", "city_name",
                 "tax_properties", "job_num", "HRO", "business_unit", "employee_status", "synchronous_CSS",
-                "Induction_remark", "tax_bureau", "employee_attributes", "social_security_standards", "weather_online",
-                "work_system", "weather_Induction_E"};
+                "Induction_remark", "tax_bureau", "employee_attributes", "social_security_standards", "weather_online"
+                , "work_system", "weather_Induction_E", "with_file", "package_involves_procedures",
+                "social_security_section", "u_supplement_provident_fund", "p_supplement_provident_fund",
+                "first_level_client_name", "second_level_client_name", "subordinate_department", "is_retired_soldier"
+                , "is_poor_archivists", "is_disabled", "household_register_remarks", "welfare_handler", "gender",
+                "birthday", "workplace"};
         String onnectionCondition = "targetTable.id = sourceTable.sh_add_employee_id";
 
         // 获取sql:根据源表修改目标表数据

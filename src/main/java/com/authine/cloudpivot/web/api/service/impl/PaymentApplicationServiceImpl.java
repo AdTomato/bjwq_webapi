@@ -468,8 +468,8 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
 
             // 查询是否需要比对
             List <PaymentDetails> needCompareList =
-                    paymentDetailsMapper.getNeedComparePaymentDetails(filesDto.getClientName(), filesDto.getIdNo(),
-                            filesDto.getEntrustedUnit(), "社保".equals(processType) ? filesDto.getSocialSecurityCity()
+                    paymentDetailsMapper.getNeedComparePaymentDetails(filesDto.getSecondLevelClientName(), filesDto.getIdNo(),
+                            filesDto.getFirstLevelClientName(), "社保".equals(processType) ? filesDto.getSocialSecurityCity()
                                     : filesDto.getProvidentFundCity(), processType, billYear);
             if (needCompareList != null && needCompareList.size() > 0) {
                 List <Map <String, Object>> compareDetails = comparePaymentDetails(needCompareList, filesDto,
@@ -559,19 +559,19 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                                              EmployeeOrderFormDto orderFormDto) throws Exception{
         Map<String, Object> map = new HashMap <>();
         // 委托单位
-        map.put("entrust_unit", filesDto.getEntrustedUnit());
+        map.put("entrust_unit", filesDto.getFirstLevelClientName());
         // 业务客户名称
-        map.put("client_name", filesDto.getClientName());
+        map.put("client_name", filesDto.getSecondLevelClientName());
         // 雇员姓名
         map.put("employee_name", filesDto.getEmployeeName());
         // 身份证
         map.put("id_no", filesDto.getIdNo());
         // 业务员
-        map.put("salesman", filesDto.getSalesman());
+        map.put("salesman", filesDto.getOwner());
 
         // 支付方式
         String paymentMethod = null;
-        String welfareHandler = "公积金".equals(paymentDetails.getDataType()) ? filesDto.getProvidentFundArea() : filesDto.getSocialSecurityArea();
+        String welfareHandler = "公积金".equals(paymentDetails.getDataType()) ? filesDto.getProvidentFundCity() : filesDto.getSocialSecurityCity();
         if (StringUtils.isNotBlank(welfareHandler)) {
             if (welfareHandler.indexOf("大库") >= 0) {
                 paymentMethod = "代收代付";
@@ -879,19 +879,19 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
     private Map<String, Object> getPaymentDetailsByEmployeeFilesDto(EmployeeFilesDto filesDto, String type) throws Exception {
         Map<String, Object> map = new HashMap <>();
         // 委托单位
-        map.put("entrust_unit", filesDto.getEntrustedUnit());
+        map.put("entrust_unit", filesDto.getFirstLevelClientName());
         // 业务客户名称
-        map.put("client_name", filesDto.getClientName());
+        map.put("client_name", filesDto.getSecondLevelClientName());
         // 雇员姓名
         map.put("employee_name", filesDto.getEmployeeName());
         // 身份证
         map.put("id_no", filesDto.getIdNo());
         // 业务员
-        map.put("salesman", filesDto.getSalesman());
+        map.put("salesman", filesDto.getOwner());
 
         // 支付方式
         String paymentMethod = null;
-        String welfareHandler = "公积金".equals(type) ? filesDto.getProvidentFundArea() : filesDto.getSocialSecurityArea();
+        String welfareHandler = "公积金".equals(type) ? filesDto.getProvidentFundCity() : filesDto.getSocialSecurityCity();
         if (StringUtils.isNotBlank(welfareHandler)) {
             if (welfareHandler.indexOf("大库") >= 0) {
                 paymentMethod = "代收代付";

@@ -15,4 +15,12 @@ public interface CollectionRuleMapper {
     List<CollectionRule> getCollectionRulesByCity(String city);
 
     List<CollectionRuleDetails> getCollectionRuleDetailsByParentId(String id);
+
+    List<CollectionRule> getSbCollectionRulesByCity(String city);
+
+    List<CollectionRuleDetails> getSbCollectionRuleDetailsByParentId(String id);
+
+    List<CollectionRule> getGjjCollectionRulesByCity(String city);
+
+    List<CollectionRuleDetails> getGjjCollectionRuleDetailsByParentId(String id);
 }

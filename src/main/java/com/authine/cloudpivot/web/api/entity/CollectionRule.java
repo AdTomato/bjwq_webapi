@@ -33,6 +33,10 @@ public class CollectionRule extends BaseEntity{
      */
     int payBackMinMonth;
     /**
+     * 用工备案
+     */
+    String recordOfEmployment;
+    /**
      * 社保
      */
     String socialSecurity;

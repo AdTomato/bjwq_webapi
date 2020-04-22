@@ -14,6 +14,7 @@ public class OperateLeader extends BaseEntity{
     String city;
     /** 福利办理方 */
     String welfareHandler;
+    String secondLevelClientName;
     /** 社保负责人 */
     String socialSecurityLeader;
     /** 公积金负责人 */

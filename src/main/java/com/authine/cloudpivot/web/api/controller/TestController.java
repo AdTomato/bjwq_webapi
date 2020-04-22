@@ -323,7 +323,7 @@ public class TestController extends BaseController {
             calendar.setTime(new Date());
             calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1);
             // 销售合同里面的销售单价列表
-            ServiceChargeUnitPrice serviceChargeUnitPrice = getServiceChargeUnitPrice(salesContractDto, employeeFilesDto.getSocialSecurityArea());
+            ServiceChargeUnitPrice serviceChargeUnitPrice = getServiceChargeUnitPrice(salesContractDto, employeeFilesDto.getSocialSecurityCity());
             // 补缴数据
             if (employeeFilesDto.getIsOldEmployee() == 0) {
                 // 不是老员工，是新员工，需要生成之前没有生成的数据
@@ -516,7 +516,7 @@ public class TestController extends BaseController {
 
 
             PayrollBill payrollBill = employeeFilesService.getPayrollBill(billYear, employeeFilesDto.getIdNo());
-            ServiceChargeUnitPrice serviceChargeUnitPrice = getServiceChargeUnitPrice(salesContractDto, employeeFilesDto.getSocialSecurityArea());
+            ServiceChargeUnitPrice serviceChargeUnitPrice = getServiceChargeUnitPrice(salesContractDto, employeeFilesDto.getSocialSecurityCity());
 
             // 补缴数据
             if (employeeFilesDto.getIsOldEmployee() == 0) {
@@ -641,7 +641,7 @@ public class TestController extends BaseController {
                 }
             }
             setBillOtherData(bill, employeeFilesDto, salesContractDto, null);
-            ServiceChargeUnitPrice serviceChargeUnitPrice = getServiceChargeUnitPrice(salesContractDto, employeeFilesDto.getSocialSecurityArea());
+            ServiceChargeUnitPrice serviceChargeUnitPrice = getServiceChargeUnitPrice(salesContractDto, employeeFilesDto.getSocialSecurityCity());
             setServiceChargeData(bill, serviceChargeUnitPrice, payrollBill);
             bills.add(bill);
         }
@@ -1214,14 +1214,14 @@ public class TestController extends BaseController {
      * @Description: 设置账单基本信息
      */
     private void setBillBasicData(Bill bill, EmployeeFilesDto employeeFilesDto, SalesContractDto salesContractDto, String billYear, String businessYear, String businessType, Integer whetherCompare, Integer whetherDefine, Integer isLock, Integer whetherDifferenceData) {
-        bill.setSupplier(employeeFilesDto.getEntrustedUnit());  // 委托单位
+        bill.setSupplier(employeeFilesDto.getFirstLevelClientName());  // 委托单位
         bill.setBillYear(billYear);  // 账单年月
         bill.setBusinessYear(businessYear);  // 业务年月
-        bill.setClientName(employeeFilesDto.getClientName());  // 客户名称
+        bill.setClientName(employeeFilesDto.getSecondLevelClientName());  // 客户名称
         bill.setEmployeeName(employeeFilesDto.getEmployeeName());  // 雇员姓名
         bill.setIdNo(employeeFilesDto.getIdNo());  // 雇员证件号
         bill.setUniqueNum("");  // 雇员唯一号
-        bill.setDelegatedArea(employeeFilesDto.getSocialSecurityArea());  // 委派地区
+        bill.setDelegatedArea(employeeFilesDto.getSocialSecurityCity());  // 委派地区
         bill.setSalesman(salesContractDto.getSalesman());  // 业务员
         bill.setBusinessUnit(salesContractDto.getBusinessUnit());  // 业务部门
         bill.setEmployeeNature(employeeFilesDto.getEmployeeNature());  // 员工性质

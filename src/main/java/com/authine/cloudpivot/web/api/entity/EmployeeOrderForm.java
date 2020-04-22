@@ -20,7 +20,11 @@ import java.util.Map;
 public class EmployeeOrderForm extends BaseEntity {
     /** 员工档案id*/
     String employeeFilesId;
-
+    String firstLevelClientName;
+    String secondLevelClientName;
+    String businessType;
+    String idType;
+    String identityNo;
     /** 详细*/
     String detail;
 
@@ -33,8 +37,12 @@ public class EmployeeOrderForm extends BaseEntity {
     /** 社保福利地*/
     String socialSecurityCity;
 
+    String sWelfareHandler;
+
     /** 公积金福利地*/
     String providentFundCity;
+
+    String gWelfareHandler;
 
     /** 养老保险*/
     String endowment;
@@ -82,36 +90,4 @@ public class EmployeeOrderForm extends BaseEntity {
     List <Map <String, String>> socialSecurityDetail;
     /**  公积金申报详细*/
     List <Map <String, String>> providentFundDetail;
-
-    public EmployeeOrderForm(String employeeFilesId, String detail, String isHistory, Double total,
-                             String socialSecurityCity, String providentFundCity, String endowment, String medical,
-                             String unemployment, String workRelatedInjury, String childbirth, String criticalIllness
-            , String housingAccumulationFunds, Double serviceFee, Date startTime, Date endTime, Date inputTime,
-                             Double sum, String socialSecurityStatus, String providentFundStatus, List <Map <String,
-            String>> socialSecurityDetail, List <Map <String, String>> providentFundDetail, String id, String creater) {
-        this.employeeFilesId = employeeFilesId;
-        this.detail = detail;
-        this.isHistory = isHistory;
-        this.total = total;
-        this.socialSecurityCity = socialSecurityCity;
-        this.providentFundCity = providentFundCity;
-        this.endowment = endowment;
-        this.medical = medical;
-        this.unemployment = unemployment;
-        this.workRelatedInjury = workRelatedInjury;
-        this.childbirth = childbirth;
-        this.criticalIllness = criticalIllness;
-        this.housingAccumulationFunds = housingAccumulationFunds;
-        this.serviceFee = serviceFee;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.inputTime = inputTime;
-        this.sum = sum;
-        this.socialSecurityStatus = socialSecurityStatus;
-        this.providentFundStatus = providentFundStatus;
-        this.socialSecurityDetail = socialSecurityDetail;
-        this.providentFundDetail = providentFundDetail;
-        setId(id);
-        setCreater(creater);
-    }
 }

@@ -87,4 +87,8 @@ public interface SystemManageMapper {
      * @return
      */
     List<Map<String, String>> getNameAndUserNameByMobile(String mobile);
+
+    List<Ccps> getCcpsByClientNames(String firstLevelClientName, String secondLevelClientName);
+
+    List<OperateLeader> getOperateLeader(String city, String welfareHandler, String secondLevelClientName);
 }

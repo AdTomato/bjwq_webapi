@@ -15,8 +15,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Ccps {
     String clienNumber;
-    int timeNode;
-    String client;
+    Integer timeNode;
+    String firstLevelClientName;
+    String secondLevelClientName;
     Double companyInjuryRatio;
     Double employeeInjuryRatio;
     Double companyAccumulationRatio;

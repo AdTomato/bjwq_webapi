@@ -2,27 +2,23 @@ package com.authine.cloudpivot.web.api.service.impl;
 
 import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
 import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
+import com.authine.cloudpivot.engine.api.model.organization.DepartmentModel;
 import com.authine.cloudpivot.engine.api.model.organization.UserModel;
 import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
 import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.dao.EmployeesMaintainDao;
-import com.authine.cloudpivot.web.api.dao.impl.EmployeeMaintainDaoImpl;
 import com.authine.cloudpivot.web.api.entity.*;
-import com.authine.cloudpivot.web.api.mapper.AddEmployeeMapper;
-import com.authine.cloudpivot.web.api.mapper.PolicyCollectPayMapper;
-import com.authine.cloudpivot.web.api.mapper.ReturnReasonAlreadyMapper;
-import com.authine.cloudpivot.web.api.mapper.SystemManageMapper;
+import com.authine.cloudpivot.web.api.mapper.*;
 import com.authine.cloudpivot.web.api.service.EmployeeMaintainService;
 import com.authine.cloudpivot.web.api.utils.CommonUtils;
 import com.authine.cloudpivot.web.api.utils.ExcelUtils;
+import com.authine.cloudpivot.web.api.utils.GetBizObjectModelUntils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.math.RoundingMode;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -51,67 +47,96 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     @Resource
     private PolicyCollectPayMapper policyCollectPayMapper;
 
+    @Resource
+    private PaymentApplicationMapper paymentApplicationMapper;
+
     // 业务list
     private List <BizObjectModel> models = new ArrayList <>();
 
     @Override
-    public void addEmployee(BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade,
-                            String fileName, String userId, String departmentId) throws Exception {
+    public void addEmployee(WorkflowInstanceFacade workflowInstanceFacade, String fileName, UserModel user,
+                            DepartmentModel dept) throws Exception {
         // 读取文件信息
-        List <String[]> fileList = ExcelUtils.readFile(fileName, 1, 0, 21);
-
-        if (fileList != null && fileList.size() > 0) {
-            models = new ArrayList <>();
-            // 生成BizObjectModel
-            for (int i = 0; i < fileList.size(); i++) {
-                List <String> list = Arrays.asList(fileList.get(i));
-                BizObjectModel model = new BizObjectModel();
-                // 插入模型编码
-                model.setSchemaCode(Constants.ADD_EMPLOYEE_SCHEMA);
-                model.setSequenceStatus("DRAFT");
-
-                Map <String, Object> data = getBizObjectModelData(list, Constants.ADD_EMPLOYEE_SCHEMA);
-                model.put(data);
-                models.add(model);
-            }
-
-            // 批量生成业务数据
-            List<String> modelIds = CommonUtils.addBizObjects(bizObjectFacade, userId, models, "id");
-
-            // 启动流程实例，不结束发起节点
-            CommonUtils.startWorkflowInstance(workflowInstanceFacade, departmentId, userId,
-                    Constants.ADD_EMPLOYEE_SCHEMA_WF, modelIds, false);
+        List <String[]> fileList = ExcelUtils.readFile(fileName);
+        if (fileList != null && fileList.size() > 2) {
+            importData(workflowInstanceFacade, fileList, user.getId(), dept.getId(), dept.getQueryCode(),
+                    Constants.ADD_EMPLOYEE_SCHEMA, Constants.ADD_EMPLOYEE_SCHEMA_WF);
         }
     }
 
     @Override
-    public void deleteEmployee(BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade,
-                               String fileName, String userId, String departmentId) throws Exception {
+    public void deleteEmployee(WorkflowInstanceFacade workflowInstanceFacade, String fileName, UserModel user,
+                               DepartmentModel dept) throws Exception {
         // 读取文件信息
-        List <String[]> fileList = ExcelUtils.readFile(fileName, 1, 0, 9);
+        List <String[]> fileList = ExcelUtils.readFile(fileName);
+        if (fileList != null && fileList.size() > 2) {
+            importData(workflowInstanceFacade, fileList, user.getId(), dept.getId(), dept.getQueryCode(),
+                    Constants.DELETE_EMPLOYEE_SCHEMA, Constants.DELETE_EMPLOYEE_SCHEMA_WF);
+        }
+    }
 
-        if (fileList != null && fileList.size() > 0) {
-            models = new ArrayList <>();
-            // 生成BizObjectModel
-            for (int i = 0; i < fileList.size(); i++) {
-                List <String> list = Arrays.asList(fileList.get(i));
-                BizObjectModel model = new BizObjectModel();
-                // 插入模型编码
-                model.setSchemaCode(Constants.DELETE_EMPLOYEE_SCHEMA);
-                model.setSequenceStatus("DRAFT");
-
-                Map <String, Object> data = getBizObjectModelData(list, Constants.DELETE_EMPLOYEE_SCHEMA);
-                model.put(data);
-
-                models.add(model);
+    /**
+     * 方法说明：插入数据
+     * @param workflowInstanceFacade 流程实例接口
+     * @param fileList 导入的数据
+     * @param userId
+     * @param deptId
+     * @param queryCode
+     * @param schemaCode
+     * @param schemaWfCode
+     * @return void
+     * @author liulei
+     * @Date 2020/4/20 17:06
+     */
+    private void importData(WorkflowInstanceFacade workflowInstanceFacade, List <String[]> fileList, String userId,
+                            String deptId, String queryCode, String schemaCode, String schemaWfCode) throws Exception {
+        List<Map<String, Object>> dataList = new ArrayList <>();
+        List<String> idList = new ArrayList <>();
+        List<String> fields = Arrays.asList(fileList.get(0));
+        for (int i = 2; i < fileList.size(); i++) {
+            List <String> list = Arrays.asList(fileList.get(i));
+            Map<String, Object> data = new HashMap <>();
+            for(int j = 0; j < fields.size(); j++) {
+                data.put(fields.get(j), list.get(j));
             }
+            String id = UUID.randomUUID().toString().replaceAll("-", "");
+            data.put("id", id);
+            data.put("creater", userId);
+            data.put("createdDeptId", deptId);
+            data.put("owner", userId);
+            data.put("ownerDeptId", deptId);
+            data.put("createdTime", new Date());
+            data.put("modifier", userId);
+            data.put("modifiedTime", new Date());
+            data.put("sequenceStatus", "DRAFT");
+            data.put("ownerDeptQueryCode", queryCode);
 
-            // 批量生成业务数据
-            List<String> modelIds = CommonUtils.addBizObjects(bizObjectFacade, userId, models, "id");
+            dataList.add(data);
+            idList.add(id);
+        }
 
+        for (int j = 0; j < dataList.size(); j += 500) {
+            int size = dataList.size();
+            int toPasIndex = 500;
+            if (j + 500 > size) {        //作用为toIndex最后没有500条数据则剩余几条newList中就装几条
+                toPasIndex = size - j;
+            }
+            List <Map<String, Object>> datas = dataList.subList(j, j + toPasIndex);
+            List <String> ids = idList.subList(j, j + toPasIndex);
+            // 新增数据
+            if (Constants.ADD_EMPLOYEE_SCHEMA.equals(schemaCode)){
+                // 客户增员导入
+                addEmployeeMapper.addEmployeeImportData(datas);
+                // 更新拥有者，业务员，等数据
+                addEmployeeMapper.updateAddEmployeeOwner(datas);
+            } else if (Constants.DELETE_EMPLOYEE_SCHEMA.equals(schemaCode)) {
+                // 减员客户导入
+                addEmployeeMapper.deleteEmployeeImportData(datas);
+                // 更新拥有者，业务员，等数据
+                addEmployeeMapper.updateDeleteEmployeeOwner(datas);
+            }
             // 启动流程实例，不结束发起节点
-            CommonUtils.startWorkflowInstance(workflowInstanceFacade, departmentId, userId,
-                    Constants.DELETE_EMPLOYEE_SCHEMA_WF, modelIds, false);
+            CommonUtils.startWorkflowInstance(workflowInstanceFacade, deptId, userId, schemaWfCode, ids, false);
         }
     }
 
@@ -141,6 +166,13 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         Map <String, Object> data = new HashMap <>();
         // 员工档案单据号
         data.put("employee_files_id", employeeOrderForm.getEmployeeFilesId());
+        data.put("first_level_client_name", employeeOrderForm.getFirstLevelClientName());
+        data.put("second_level_client_name", employeeOrderForm.getSecondLevelClientName());
+        data.put("business_type", employeeOrderForm.getBusinessType());
+        data.put("id_type", employeeOrderForm.getIdType());
+        data.put("identityNo", employeeOrderForm.getIdentityNo());
+        data.put("s_welfare_handler", employeeOrderForm.getSWelfareHandler());
+        data.put("g_welfare_handler", employeeOrderForm.getGWelfareHandler());
         // 详细
         data.put("detail", employeeOrderForm.getDetail());
         // 是否历史订单
@@ -187,25 +219,8 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     }
 
     @Override
-    public String getDispatchUnitByClientName(String clientName) throws Exception {
-        return employeesMaintainDao.getDispatchUnitByClientName(clientName);
-    }
-
-    @Override
-    public AppointmentSheet getWelfareHandlerByClientNameAndCity(String clientName, String city) throws Exception {
-        List<AppointmentSheet> list = systemManageMapper.getWelfareHandlerByClientNameAndCity(clientName, city);
-        return (list != null && list.size() > 0) ? list.get(0) : null;
-    }
-
-    @Override
     public String getOperateLeaderByCity(String city) throws Exception {
         return employeesMaintainDao.getOperateLeaderByCity(city);
-    }
-
-    @Override
-    public OperateLeader getOperateLeaderByCityAndWelfareHandler(String city, String welfareHandler) throws Exception {
-        List<OperateLeader> list = systemManageMapper.getOperateLeaderByCityAndWelfareHandler(city, welfareHandler);
-        return (list != null && list.size() > 0) ? list.get(0) : null;
     }
 
     @Override
@@ -214,6 +229,9 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                                                   Date providentFundStartTime, Double providentFundBase,
                                                   Double gcompanyRatio, Double gemployeeRatio, int sMonth, int gMonth,
                                                   Ccps ccps) throws Exception {
+        if (ccps == null) {
+            ccps = new Ccps();
+        }
         EmployeeOrderForm employeeOrderForm = new EmployeeOrderForm();
         employeeOrderForm.setStartTime(socialSecurityStartTime);
 
@@ -285,7 +303,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                             if (curBase < baseMin) {
                                 curBase = baseMin;
                             }
-                            if (policyCollectPay.getProductName().indexOf("工伤") >= 0) {
+                            if (policyCollectPay.getProductName().indexOf("工伤") >= 0 && policyCollectPay.getProductName().indexOf("补充") < 0) {
                                 // 个性化设置
                                 companyRatio = ccps.getCompanyInjuryRatio() == null ||
                                         (ccps.getCompanyInjuryRatio() > -0.0000001 && ccps.getCompanyInjuryRatio() < 0.0000001) ? companyRatio : ccps.getCompanyInjuryRatio();
@@ -318,17 +336,17 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                             map.put("name_hide", productName);
 
                             if (productName.indexOf("养老") >= 0) {
-                                employeeOrderForm.setEndowment(sum + "(" + companyMoney + "+" + employeeMoney + ")");
-                            } else if (productName.indexOf("医疗") >= 0 && productName.indexOf("大病") < 0) {
-                                employeeOrderForm.setMedical(sum + "(" + companyMoney + "+" + employeeMoney + ")");
-                            } else if (productName.indexOf("失业") >= 0) {
-                                employeeOrderForm.setUnemployment(sum + "(" + companyMoney + "+" + employeeMoney + ")");
-                            } else if (productName.indexOf("工伤") >= 0 && productName.indexOf("补充") < 0) {
-                                employeeOrderForm.setWorkRelatedInjury(sum + "(" + companyMoney + "+" + employeeMoney + ")");
-                            } else if (productName.indexOf("生育") >= 0) {
-                                employeeOrderForm.setChildbirth(sum + "(" + companyMoney + "+" + employeeMoney + ")");
+                                employeeOrderForm.setEndowment(sum + "");
                             } else if (productName.indexOf("大病") >= 0) {
-                                employeeOrderForm.setCriticalIllness(sum + "(" + companyMoney + "+" + employeeMoney + ")");
+                                employeeOrderForm.setCriticalIllness(sum + "");
+                            } else if (productName.indexOf("医疗") >= 0) {
+                                employeeOrderForm.setMedical(sum + "");
+                            } else if (productName.indexOf("失业") >= 0) {
+                                employeeOrderForm.setUnemployment(sum + "");
+                            } else if (productName.indexOf("工伤") >= 0 && productName.indexOf("补充") < 0) {
+                                employeeOrderForm.setWorkRelatedInjury(sum + "");
+                            } else if (productName.indexOf("生育") >= 0) {
+                                employeeOrderForm.setChildbirth(sum + "");
                             }
 
                             socialSecurityDetail.add(map);
@@ -425,7 +443,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                             map.put("name_hide", productName);
 
                             if (productName.indexOf("补充") < 0) {
-                                employeeOrderForm.setHousingAccumulationFunds(sum + "(" + companyMoney + "+" + employeeMoney + ")");
+                                employeeOrderForm.setHousingAccumulationFunds(sum + "");
                             }
 
                             providentFundDetail.add(map);
@@ -448,148 +466,9 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     }
 
     @Override
-    public Ccps getTimeNode(String clientName, String city) throws Exception {
-        Ccps ccps = new Ccps();
-        List <Ccps> ccpsList = systemManageMapper.getCcpsByClientName(clientName);
-        if (ccpsList != null && ccpsList.size() > 0) {
-            ccps = ccpsList.get(0);
-        } else {
-            // 获取城市时间节点设置
-            int timeNode = systemManageMapper.getTimeNodeByCity(city);
-            ccps.setTimeNode(timeNode);
-        }
-        return ccps;
-    }
-
-    @Override
-    public Map <String, String> getEntryNoticeInfo(int monthDifference, String city) throws Exception {
-        return employeesMaintainDao.getEntryNoticeBy(monthDifference, city);
-    }
-
-    @Override
-    public Map <String, String> getSocialSecurityFundDetail(String employeeFilesId) throws Exception {
-        return employeesMaintainDao.getSocialSecurityFundDetail(employeeFilesId);
-    }
-
-    @Override
-    public void deleteEmployeeSubmit(BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade,
-                                     SocialSecurityClose socialSecurityClose, ProvidentFundClose providentFundClose,
-                                     EmployeeFiles employeeFiles, UserModel user) throws Exception {
-        if(socialSecurityClose.getChargeEndMonth() != null && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) >= 0) {
-            createSocialSecurityClose(bizObjectFacade, workflowInstanceFacade, socialSecurityClose, user);
-        }
-        if(providentFundClose.getChargeEndMonth() != null && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getProvidentFundCity()) >= 0) {
-            createProvidentFundClose(bizObjectFacade, workflowInstanceFacade, providentFundClose, user);
-        }
-        // 减员时修改员工档案数据
-        employeesMaintainDao.updateEmployeeFilesWhenDelEmployee(employeeFiles);
-    }
-
-    @Override
-    public void deleteEmployeeUpdateSubmit(DeleteEmployee deleteEmployee) throws Exception {
-        // 根据客户名称，证件号码查询社保停缴数据，更新其收费截止月，离职备注
-        employeesMaintainDao.updateSocialSecurityClose(deleteEmployee.getClientName(), deleteEmployee.getIdentityNo(),
-                deleteEmployee.getSocialSecurityEndTime(), deleteEmployee.getLeaveReason());
-
-        // 根据客户名称，证件号码查询公积金停缴数据，更新其收费截止月
-        employeesMaintainDao.updateProvidentFundClose(deleteEmployee.getClientName(), deleteEmployee.getIdentityNo(),
-                deleteEmployee.getProvidentFundEndTime());
-
-        // 根据客户名称，证件号码查询员工档案数据，更新其离职日期，社保收费截止，公积金收费截止，离职原因，离职备注
-        employeesMaintainDao.updateEmployeeFiles(deleteEmployee.getClientName(), deleteEmployee.getIdentityNo(),
-                deleteEmployee.getLeaveTime(), deleteEmployee.getSocialSecurityEndTime(),
-                deleteEmployee.getProvidentFundEndTime(), deleteEmployee.getLeaveReason(), deleteEmployee.getRemark());
-
-        // 根据修改后的数据,更新减员_客户数据
-        employeesMaintainDao.updateDeleteEmployeeBetweenTwoTables(deleteEmployee.getId(),
-                deleteEmployee.getDeleteEmployeeId());
-    }
-
-    @Override
-    public void shDeleteEmployeeUpdateSubmit(ShDeleteEmployee shDeleteEmployee) throws Exception {
-        // 根据客户名称，证件号码查询社保停缴数据，更新其收费截止月，离职备注
-        employeesMaintainDao.updateSocialSecurityClose(shDeleteEmployee.getClientName(), shDeleteEmployee.getIdentityNo(),
-                shDeleteEmployee.getChargeEndTime(), shDeleteEmployee.getLeaveReason());
-
-        // 根据客户名称，证件号码查询公积金停缴数据，更新其收费截止月
-        employeesMaintainDao.updateProvidentFundClose(shDeleteEmployee.getClientName(), shDeleteEmployee.getIdentityNo(),
-                shDeleteEmployee.getChargeEndTime());
-
-        // 根据客户名称，证件号码查询员工档案数据，更新其离职日期，社保收费截止，公积金收费截止，离职原因，离职备注
-        employeesMaintainDao.updateEmployeeFiles(shDeleteEmployee.getClientName(), shDeleteEmployee.getIdentityNo(),
-                shDeleteEmployee.getDepartureTime(), shDeleteEmployee.getChargeEndTime(),
-                shDeleteEmployee.getChargeEndTime(), shDeleteEmployee.getLeaveReason(),
-                shDeleteEmployee.getLeaveRemark());
-
-        // 根据修改后的数据更新减员_上海数据
-        employeesMaintainDao.updateShDeleteEmployeeBetweenTwoTables(shDeleteEmployee.getId(),
-                shDeleteEmployee.getShDeleteEmployeeId());
-    }
-
-    @Override
-    public void qgDeleteEmployeeUpdateSubmit(NationwideDispatch nationwideDispatch) throws Exception {
-        // 根据客户名称，证件号码查询社保停缴数据，更新其收费截止月，离职备注
-        employeesMaintainDao.updateSocialSecurityClose(nationwideDispatch.getBusinessCustomerName(),
-                nationwideDispatch.getIdentityNo(), nationwideDispatch.getSServiceFeeEndDate(),
-                nationwideDispatch.getSocialSecurityStopReason() + nationwideDispatch.getDepartureRemark());
-
-        // 根据客户名称，证件号码查询公积金停缴数据，更新其收费截止月
-        employeesMaintainDao.updateProvidentFundClose(nationwideDispatch.getBusinessCustomerName(),
-                nationwideDispatch.getIdentityNo(), nationwideDispatch.getSServiceFeeEndDate());
-
-        // 根据客户名称，证件号码查询员工档案数据，更新其离职日期，社保收费截止，公积金收费截止，离职原因，离职备注
-        employeesMaintainDao.updateEmployeeFiles(nationwideDispatch.getBusinessCustomerName(),
-                nationwideDispatch.getIdentityNo(), nationwideDispatch.getDepartureDate(),
-                nationwideDispatch.getSServiceFeeEndDate(), nationwideDispatch.getGServiceFeeEndDate(),
-                nationwideDispatch.getSocialSecurityStopReason(), nationwideDispatch.getDepartureRemark());
-
-        // 根据修改后的数据更新减员_全国数据
-        employeesMaintainDao.updateNationwideDispatchBetweenTwoTables(nationwideDispatch.getId(),
-                nationwideDispatch.getNationwideDispatchDelId(), "del");
-    }
-
-    @Override
     public void employeeFilesUpdateSubmit(EmployeeFiles employeeFiles) throws Exception {
         employeesMaintainDao.UpdateEmployeeFilesBetweenTwoTables(employeeFiles.getId(),
                 employeeFiles.getEmployeeFilesId());
-    }
-
-    @Override
-    public void addEmployeeUpdateSubmit(AddEmployee addEmployee, EmployeeFiles employeeFiles,
-                                        EmployeeOrderForm employeeOrderForm,
-                                        SocialSecurityDeclare socialSecurityDeclare,
-                                        ProvidentFundDeclare providentFundDeclare) throws Exception {
-        // 数据变更时修改被影响的数据
-        this.updateImpactDataWhenAddEmployeeUpdate(employeeFiles, employeeOrderForm, socialSecurityDeclare,
-                providentFundDeclare);
-        // 更新增员数据
-        employeesMaintainDao.updateAddEmployeeBetweenTwoTables(addEmployee.getId(), addEmployee.getAddEmployeeId());
-    }
-
-    @Override
-    public void shAddEmployeeUpdateSubmit(ShAddEmployee shAddEmployee, EmployeeFiles employeeFiles,
-                                          EmployeeOrderForm employeeOrderForm,
-                                          SocialSecurityDeclare socialSecurityDeclare,
-                                          ProvidentFundDeclare providentFundDeclare) throws Exception {
-        // 数据变更时修改被影响的数据
-        this.updateImpactDataWhenAddEmployeeUpdate(employeeFiles, employeeOrderForm, socialSecurityDeclare,
-                providentFundDeclare);
-        // 更新增员数据
-        employeesMaintainDao.updateShAddEmployeeBetweenTwoTables(shAddEmployee.getId(),
-                shAddEmployee.getShAddEmployeeId());
-    }
-
-    @Override
-    public void qgAddEmployeeUpdateSubmit(NationwideDispatch nationwideDispatch, EmployeeFiles employeeFiles,
-                                          EmployeeOrderForm employeeOrderForm,
-                                          SocialSecurityDeclare socialSecurityDeclare,
-                                          ProvidentFundDeclare providentFundDeclare) throws Exception {
-        // 数据变更时修改被影响的数据
-        this.updateImpactDataWhenAddEmployeeUpdate(employeeFiles, employeeOrderForm, socialSecurityDeclare,
-                providentFundDeclare);
-        // 更新增员数据
-        employeesMaintainDao.updateNationwideDispatchBetweenTwoTables(nationwideDispatch.getId(),
-                nationwideDispatch.getNationwideDispatchId(), "add");
     }
 
     @Override
@@ -873,192 +752,265 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         }
     }
 
+    @Override
+    public Ccps getCcps(String firstLevelClientName, String secondLevelClientName) throws Exception {
+        List <Ccps> ccpsList = systemManageMapper.getCcpsByClientNames(firstLevelClientName, secondLevelClientName);
+        return ccpsList != null && ccpsList.size() > 0 ? ccpsList.get(0) : null;
+    }
+
+    @Override
+    public int getTimeNode(String city) throws Exception {
+        return systemManageMapper.getTimeNodeByCity(city);
+    }
+
+    @Override
+    public BizObjectModel getEntryNotice(AddEmployee addEmployee, int sMonth, int gMonth,
+                                      CollectionRule collectionRule) throws Exception {
+        String socialSecurity = null,providentFund = null, recordOfEmployment = null;
+        boolean haveEntryNotice =
+                "是".equals(addEmployee.getIsDisabled()) || "是".equals(addEmployee.getIsPoorArchivists()) || "是".equals(addEmployee.getIsRetiredSoldier()) ? true : false;
+        EntryNotice entryNotice = getEntryNotice(sMonth, gMonth, collectionRule);
+        if (entryNotice != null) {
+            haveEntryNotice = true;
+            socialSecurity = entryNotice.getSocialSecurity();
+            providentFund = entryNotice.getProvidentFund();
+            recordOfEmployment = entryNotice.getRecordOfEmployment();
+        }
+        if (haveEntryNotice) {
+            BizObjectModel model = GetBizObjectModelUntils.getEntryNotice("PROCESSING", addEmployee.getCreater(),
+                    addEmployee.getCreatedDeptId(), addEmployee.getCreatedTime(), addEmployee.getOwner(),
+                    addEmployee.getOwnerDeptId(), addEmployee.getOwnerDeptQueryCode(), addEmployee.getEmployeeName(),
+                    addEmployee.getIdentityNo(), socialSecurity, providentFund, null, null, null, null, null,
+                    null, addEmployee.getRemark(), "[{\"id\":\"" + addEmployee.getOwnerDeptId() + "\",\"type\":1}]",
+                    addEmployee.getFirstLevelClientName(), addEmployee.getSecondLevelClientName(),
+                    addEmployee.getMobile(), addEmployee.getSocialSecurityCity(), addEmployee.getProvidentFundCity(),
+                    addEmployee.getIsRetiredSoldier(), addEmployee.getIsDisabled(), addEmployee.getIsPoorArchivists(),
+                    recordOfEmployment, null, "通知中");
+            return model;
+        }
+        return null;
+    }
+
+    @Override
+    public BizObjectModel getEntryNotice(ShAddEmployee shAddEmployee, int sMonth, int gMonth,
+                                         CollectionRule collectionRule) throws Exception {
+        String socialSecurity = null,providentFund = null, recordOfEmployment = null;
+        boolean haveEntryNotice =
+                "是".equals(shAddEmployee.getIsDisabled()) || "是".equals(shAddEmployee.getIsPoorArchivists()) || "是".equals(shAddEmployee.getIsRetiredSoldier()) ? true : false;
+        EntryNotice entryNotice = getEntryNotice(sMonth, gMonth, collectionRule);
+        if (entryNotice != null) {
+            haveEntryNotice = true;
+            socialSecurity = entryNotice.getSocialSecurity();
+            providentFund = entryNotice.getProvidentFund();
+            recordOfEmployment = entryNotice.getRecordOfEmployment();
+        }
+        if (haveEntryNotice) {
+            BizObjectModel model = GetBizObjectModelUntils.getEntryNotice("PROCESSING", shAddEmployee.getCreater(),
+                    shAddEmployee.getCreatedDeptId(), shAddEmployee.getCreatedTime(), shAddEmployee.getOwner(),
+                    shAddEmployee.getOwnerDeptId(), shAddEmployee.getOwnerDeptQueryCode(),
+                    shAddEmployee.getEmployeeName(), shAddEmployee.getIdentityNo(), socialSecurity, providentFund,
+                    null, null, null, null, null, null,
+                    shAddEmployee.getInductionRemark(), "[{\"id\":\"" + shAddEmployee.getOwnerDeptId() + "\",\"type\":1}]",
+                    shAddEmployee.getFirstLevelClientName(), shAddEmployee.getSecondLevelClientName(),
+                    shAddEmployee.getMobile(), shAddEmployee.getCityName(), shAddEmployee.getCityName(),
+                    shAddEmployee.getIsRetiredSoldier(), shAddEmployee.getIsDisabled(),
+                    shAddEmployee.getIsPoorArchivists(), recordOfEmployment, null, "通知中");
+            return model;
+        }
+        return null;
+    }
+
+    @Override
+    public BizObjectModel getEntryNotice(NationwideDispatch nationwideDispatch, int sMonth, int gMonth,
+                                         CollectionRule collectionRule) throws Exception {
+        String socialSecurity = null,providentFund = null, recordOfEmployment = null;
+        boolean haveEntryNotice =
+                "是".equals(nationwideDispatch.getIsDisabled()) || "是".equals(nationwideDispatch.getIsPoorArchivists()) || "是".equals(nationwideDispatch.getIsRetiredSoldier()) ? true : false;
+        EntryNotice entryNotice = getEntryNotice(sMonth, gMonth, collectionRule);
+        if (entryNotice != null) {
+            haveEntryNotice = true;
+            socialSecurity = entryNotice.getSocialSecurity();
+            providentFund = entryNotice.getProvidentFund();
+            recordOfEmployment = entryNotice.getRecordOfEmployment();
+        }
+        if (haveEntryNotice) {
+            BizObjectModel model = GetBizObjectModelUntils.getEntryNotice("PROCESSING", nationwideDispatch.getCreater(),
+                    nationwideDispatch.getCreatedDeptId(), nationwideDispatch.getCreatedTime(), nationwideDispatch.getOwner(),
+                    nationwideDispatch.getOwnerDeptId(), nationwideDispatch.getOwnerDeptQueryCode(),
+                    nationwideDispatch.getEmployeeName(), nationwideDispatch.getIdentityNo(), socialSecurity, providentFund,
+                    null, null, null, null, null, null,
+                    nationwideDispatch.getRemark(), "[{\"id\":\"" + nationwideDispatch.getOwnerDeptId() + "\",\"type\":1}]",
+                    nationwideDispatch.getFirstLevelClientName(), nationwideDispatch.getSecondLevelClientName(),
+                    nationwideDispatch.getContactNumber(), nationwideDispatch.getInvolved(), nationwideDispatch.getInvolved(),
+                    nationwideDispatch.getIsRetiredSoldier(), nationwideDispatch.getIsDisabled(),
+                    nationwideDispatch.getIsPoorArchivists(), recordOfEmployment, null, "通知中");
+            return model;
+        }
+        return null;
+    }
+
+    private EntryNotice getEntryNotice(int sMonth, int gMonth, CollectionRule collectionRule) {
+        if (sMonth <= 0 && gMonth <= 0) {
+            return  null;
+        }
+        EntryNotice entryNotice = new EntryNotice();
+        boolean haveEntryNotice = false;
+        // 有补缴月份
+        if (collectionRule != null && StringUtils.isNotBlank(collectionRule.getId())) {
+            List<CollectionRuleDetails> details = collectionRule.getCollectionRuleDetails();
+            if (details != null && details.size() > 0) {
+                for (int i = 0; i < details.size(); i++) {
+                    CollectionRuleDetails detail = details.get(i);
+                    String insuranceName = detail.getInsuranceName();
+                    if (StringUtils.isBlank(insuranceName)) {
+                        continue;
+                    }
+                    int payBackMinMonth = detail.getPayBackMinMonth() == null ? 0 : detail.getPayBackMinMonth();
+                    if (insuranceName.indexOf("社保") >= 0) {
+                        if (sMonth > payBackMinMonth) {
+                            entryNotice.setRecordOfEmployment(collectionRule.getRecordOfEmployment());
+                            entryNotice.setSocialSecurity(collectionRule.getSocialSecurity());
+                            haveEntryNotice = true;
+                        }
+                    } else {
+                        if (gMonth > payBackMinMonth) {
+                            entryNotice.setProvidentFund(collectionRule.getProvidentFund());
+                            haveEntryNotice = true;
+                        }
+                    }
+                }
+            }
+        }
+        if (haveEntryNotice) {
+            return entryNotice;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public OperateLeader getOperateLeader(String city, String welfareHandler,
+                                          String secondLevelClientName) throws Exception {
+        // 先根据二级客户名称查询
+        List<OperateLeader> list = systemManageMapper.getOperateLeader(city, welfareHandler, secondLevelClientName);
+        if (list != null && list.size() > 0) {
+            return  list.get(0);
+        } else {
+            list = systemManageMapper.getOperateLeaderByCityAndWelfareHandler(city, welfareHandler);
+            if (list != null && list.size() > 0) {
+                return  list.get(0);
+            } else {
+                throw new RuntimeException("福利地：" + city + "，福利办理方：" + welfareHandler + " 没有查询到对应的运行负责人！");
+            }
+        }
+    }
+
+    @Override
+    public void createSocialSecurityFundDetail(String id, List <Map <String, String>> socialSecurityDetail,
+                                               String code) throws Exception {
+        employeesMaintainDao.createSocialSecurityFundDetail(id, socialSecurityDetail, code);
+    }
+
     /**
-     * 方法说明：增员数据变更时修改被影响的数据，员工档案，员工订单，社保申报，公积金申报
-     * @param employeeFiles 员工档案修改数据
-     * @param employeeOrderForm 员工订单
-     * @param socialSecurityDeclare 社保申报
-     * @param providentFundDeclare 公积金申报
-     * @return void
+     * 方法说明：更新员工档案数据
      * @author liulei
-     * @Date 2020/3/2 11:27
+     * @Date 2020/4/17 14:56
      */
-    private void updateImpactDataWhenAddEmployeeUpdate(EmployeeFiles employeeFiles,
-                                                       EmployeeOrderForm employeeOrderForm,
-                                                       SocialSecurityDeclare socialSecurityDeclare,
-                                                       ProvidentFundDeclare providentFundDeclare) throws Exception{
+    @Override
+    public void updateEmployeeFiles(EmployeeFiles employeeFiles) throws Exception {
         // 更新员工档案数据
         addEmployeeMapper.updateEmployeeFiles(employeeFiles);
-        // 更新员工订单数据,申报提交会更新订单数据，此时不更新
-        //employeesMaintainDao.updateEmployeeOrderForm(employeeOrderForm);
-        // 更新社保申报数据
-        if (StringUtils.isNotBlank(socialSecurityDeclare.getId()) && socialSecurityDeclare.getStartMonth() != null
-                && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) >= 0) {
-            addEmployeeMapper.updateSocialSecurityDeclare(socialSecurityDeclare);
-            // 删除社保申报中社保数据
-            employeesMaintainDao.deleteChildTableDataByTableNameAndParentId("i4fvb_" + Constants.SOCIAL_SECURITY_DETAIL,
-                    socialSecurityDeclare.getId());
-            if (socialSecurityDeclare.getSocialSecurityDetail() != null) {
-                if (socialSecurityDeclare.getSocialSecurityDetail().size() > 0) {
-                    // 创建公积金子表数据
-                    employeesMaintainDao.createSocialSecurityFundDetail(socialSecurityDeclare.getId(),
-                            socialSecurityDeclare.getSocialSecurityDetail(), Constants.SOCIAL_SECURITY_DETAIL);
-                }
-            }
+    }
+
+    @Override
+    public void updateEmployeeOrderFormIsHistory(String id) throws Exception {
+        employeesMaintainDao.updateEmployeeOrderFormIsHistory(id);
+    }
+
+    @Override
+    public void updateDeclareEmployeeOrderFormId(String oldId, String newId) throws Exception {
+        employeesMaintainDao.updateDeclareEmployeeOrderFormId(oldId, newId);
+    }
+
+    @Override
+    public void updateSocialSecurityDeclare(SocialSecurityDeclare socialSecurityDeclare) throws Exception {
+        addEmployeeMapper.updateSocialSecurityDeclare(socialSecurityDeclare);
+        // 删除社保申报中社保数据
+        employeesMaintainDao.deleteChildTableDataByTableNameAndParentId("i4fvb_" + Constants.SOCIAL_SECURITY_DETAIL,
+                socialSecurityDeclare.getId());
+        if (socialSecurityDeclare.getSocialSecurityDetail() != null && socialSecurityDeclare.getSocialSecurityDetail().size() > 0) {
+            // 创建公积金子表数据
+            employeesMaintainDao.createSocialSecurityFundDetail(socialSecurityDeclare.getId(),
+                    socialSecurityDeclare.getSocialSecurityDetail(), Constants.SOCIAL_SECURITY_DETAIL);
         }
-        // 更新公积金申报数据
-        if (StringUtils.isNotBlank(providentFundDeclare.getId()) && providentFundDeclare.getStartMonth() != null
-                && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getProvidentFundCity()) >= 0) {
-            addEmployeeMapper.updateProvidentFundDeclare(providentFundDeclare);
-            if (socialSecurityDeclare.getSocialSecurityDetail() != null) {
-                // 删除公积金申报中公积金数据
-                employeesMaintainDao.deleteChildTableDataByTableNameAndParentId("i4fvb_" + Constants.PROVIDENT_FUND_DETAIL,
-                        providentFundDeclare.getId());
-                if (socialSecurityDeclare.getSocialSecurityDetail().size() > 0) {
-                    // 创建公积金子表数据
-                    employeesMaintainDao.createSocialSecurityFundDetail(providentFundDeclare.getId(),
-                            providentFundDeclare.getProvidentFundDetail(), Constants.PROVIDENT_FUND_DETAIL);
-                }
+    }
+
+    @Override
+    public void updateProvidentFundDeclare(ProvidentFundDeclare providentFundDeclare) throws Exception {
+        addEmployeeMapper.updateProvidentFundDeclare(providentFundDeclare);
+        if (providentFundDeclare.getProvidentFundDetail() != null) {
+            // 删除公积金申报中公积金数据
+            employeesMaintainDao.deleteChildTableDataByTableNameAndParentId("i4fvb_" + Constants.PROVIDENT_FUND_DETAIL,
+                    providentFundDeclare.getId());
+            if (providentFundDeclare.getProvidentFundDetail().size() > 0) {
+                // 创建公积金子表数据
+                employeesMaintainDao.createSocialSecurityFundDetail(providentFundDeclare.getId(),
+                        providentFundDeclare.getProvidentFundDetail(), Constants.PROVIDENT_FUND_DETAIL);
             }
         }
     }
 
-    /**
-     * 方法说明：创建公积金停缴流程数据
-     * @param bizObjectFacade
-     * @param workflowInstanceFacade
-     * @param providentFundClose
-     * @param user
-     * @return void
-     * @author liulei
-     * @Date 2020/2/26 15:56
-     */
-    private void createProvidentFundClose(BizObjectFacade bizObjectFacade,
-                                          WorkflowInstanceFacade workflowInstanceFacade,
-                                          ProvidentFundClose providentFundClose, UserModel user) throws Exception {
-        BizObjectModel bizObjectModel = new BizObjectModel();
-        bizObjectModel.setSchemaCode(Constants.PROVIDENT_FUND_CLOSE_SCHEMA);
-        bizObjectModel.setSequenceStatus("DRAFT");
-
-        Map<String, Object> data = new HashMap <>();
-        // 姓名
-        data.put("employee_name", providentFundClose.getEmployeeName());
-        // 性别
-        data.put("gender", providentFundClose.getGender());
-        // 证件类型
-        data.put("identityNo_type", providentFundClose.getIdentityNoType());
-        // 身份证号码
-        data.put("identityNo", providentFundClose.getIdentityNo());
-        // 出生日期
-        data.put("birthday", providentFundClose.getBirthday());
-        // 派出单位
-        data.put("dispatch_unit", providentFundClose.getDispatchUnit());
-        // 客户名称
-        data.put("client_name", providentFundClose.getClientName());
-        // 客服
-        data.put("customer_service", providentFundClose.getCustomerService());
-        // 申请人
-        data.put("applicant", providentFundClose.getApplicant());
-        // 申请日期
-        data.put("application_time", providentFundClose.getApplicationTime());
-        // 起始月
-        data.put("start_month", providentFundClose.getStartMonth());
-        // 员工订单
-        data.put("employee_order_form_id", providentFundClose.getEmployeeOrderFormId());
-        // 公积金基数
-        data.put("provident_fund_base", providentFundClose.getProvidentFundBase());
-        //企业缴存额
-        data.put("enterprise_deposit", providentFundClose.getEnterpriseDeposit());
-        //个人缴存额
-        data.put("personal_deposit", providentFundClose.getPersonalDeposit());
-        //缴存总额
-        data.put("total_deposit", providentFundClose.getTotalDeposit());
-        // 收费截止月
-        data.put("charge_end_month", providentFundClose.getChargeEndMonth());
-        // 福利办理方
-        data.put("welfare_handler", providentFundClose.getWelfareHandler());
-        // 运行负责人
-        data.put("operate_leader", providentFundClose.getOperateLeader());
-
-        data.put("status", providentFundClose.getStatus());
-
-        bizObjectModel.put(data);
-
-        // 创建业务对象模型
-        String providentFundId = bizObjectFacade.saveBizObjectModel(user.getId(), bizObjectModel, "id");
-        // 启动流程实例，不结束发起节点
-        // 启动流程，返回流程实例id
-        String providentFundWfId = workflowInstanceFacade.startWorkflowInstance(user.getDepartmentId(),
-                user.getId(), Constants.PROVIDENT_FUND_CLOSE_SCHEMA_WF, providentFundId, false);
-        log.info("启动停缴社保流程:" + providentFundWfId);
+    @Override
+    public void updateAddEmployee(String id, String addEmployeeId) throws Exception {
+        // 更新增员数据
+        employeesMaintainDao.updateAddEmployeeBetweenTwoTables(id, addEmployeeId);
     }
 
-    /**
-     * 方法说明：创建社保停缴流程数据
-     * @param bizObjectFacade
-     * @param workflowInstanceFacade
-     * @param socialSecurityClose
-     * @param user
-     * @return void
-     * @author liulei
-     * @Date 2020/2/26 15:56
-     */
-    private void createSocialSecurityClose(BizObjectFacade bizObjectFacade,
-                                           WorkflowInstanceFacade workflowInstanceFacade,
-                                           SocialSecurityClose socialSecurityClose, UserModel user) throws Exception {
-        BizObjectModel bizObjectModel = new BizObjectModel();
-        bizObjectModel.setSchemaCode(Constants.SOCIAL_SECURITY_CLOSE_SCHEMA);
-        bizObjectModel.setSequenceStatus("DRAFT");
+    @Override
+    public void updateShAddEmployee(String id, String shAddEmployeeId) throws Exception {
+        // 更新数据
+        employeesMaintainDao.updateShAddEmployeeBetweenTwoTables(id, shAddEmployeeId);
+    }
 
-        Map<String, Object> data = new HashMap <>();
-        // 姓名
-        data.put("employee_name", socialSecurityClose.getEmployeeName());
-        // 性别
-        data.put("gender", socialSecurityClose.getGender());
-        // 证件类型
-        data.put("identityNo_type", socialSecurityClose.getIdentityNoType());
-        // 身份证号码
-        data.put("identityNo", socialSecurityClose.getIdentityNo());
-        // 出生日期
-        data.put("birthday", socialSecurityClose.getBirthday());
-        // 派出单位
-        data.put("dispatch_unit", socialSecurityClose.getDispatchUnit());
-        // 客户名称
-        data.put("client_name", socialSecurityClose.getClientName());
-        // 客服
-        data.put("customer_service", socialSecurityClose.getCustomerService());
-        // 申请人
-        data.put("applicant", socialSecurityClose.getApplicant());
-        // 申请日期
-        data.put("application_time", socialSecurityClose.getApplicationTime());
-        // 起始月
-        data.put("start_month", socialSecurityClose.getStartMonth());
-        // 员工订单
-        data.put("employee_order_form_id", socialSecurityClose.getEmployeeOrderFormId());
-        // 离职备注
-        data.put("resignation_remarks", socialSecurityClose.getResignationRemarks());
-        // 社保基数
-        data.put("social_security_base", socialSecurityClose.getSocialSecurityBase());
-        // 收费截止月
-        data.put("charge_end_month", socialSecurityClose.getChargeEndMonth());
-        // 福利办理方
-        data.put("welfare_handler", socialSecurityClose.getWelfareHandler());
-        // 运行负责人
-        data.put("operate_leader", socialSecurityClose.getOperateLeader());
+    @Override
+    public void updateQgAddEmployee(String id, String nationwideDispatchId, String type) throws Exception {
+        employeesMaintainDao.updateNationwideDispatchBetweenTwoTables(id, nationwideDispatchId, "add");
+    }
 
-        data.put("status", socialSecurityClose.getStatus());
+    @Override
+    public SocialSecurityFundDetail getSocialSecurityFundDetail(String id, String productType) throws Exception {
+        List<SocialSecurityFundDetail> details = new ArrayList <>();
+        if ("公积金".equals(productType)) {
+            details = paymentApplicationMapper.getSocialSecurityFundDetailByParentId(id);
+        } else {
+            details = paymentApplicationMapper.getSocialSecurityFundDetailByParentId1(id);
+        }
+        if (details != null && details.size() > 0) {
+            return details.get(0);
+        }
+        return null;
+    }
 
-        bizObjectModel.put(data);
+    @Override
+    public void updateSocialSecurityClose(SocialSecurityClose socialSecurityClose) throws Exception {
+        addEmployeeMapper.updateSocialSecurityClose(socialSecurityClose);
+    }
 
-        // 创建业务对象模型
-        String socialSecurityId = bizObjectFacade.saveBizObjectModel(user.getId(), bizObjectModel, "id");
-        log.info("创建停缴社保模型成功:" + socialSecurityId);
-        // 启动流程实例，不结束发起节点
-        // 启动流程，返回流程实例id
-        String socialSecurityWfId = workflowInstanceFacade.startWorkflowInstance(user.getDepartmentId(),
-                user.getId(), Constants.SOCIAL_SECURITY_CLOSE_SCHEMA_WF, socialSecurityId, false);
-        log.info("启动停缴社保流程:" + socialSecurityWfId);
+    @Override
+    public void updateProvidentFundClose(ProvidentFundClose fundClose) throws Exception {
+        addEmployeeMapper.updateProvidentFundClose(fundClose);
+    }
 
+    @Override
+    public void updateDeleteEmployee(String id, String deleteEmployeeId) throws Exception {
+        // 根据修改后的数据,更新减员_客户数据
+        employeesMaintainDao.updateDeleteEmployeeBetweenTwoTables(id, deleteEmployeeId);
+    }
+
+    @Override
+    public void updateShDeleteEmployee(String id, String shDeleteEmployeeId) throws Exception {
+        // 根据修改后的数据,更新减员_客户数据
+        employeesMaintainDao.updateShDeleteEmployeeBetweenTwoTables(id, shDeleteEmployeeId);
     }
 
     /**
@@ -1094,11 +1046,13 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                         Double.parseDouble(list.get(i).get("employee_money").toString());
 
                 total = total + sum;
-                String str = sum + "(" + companyMoney + "+" + employeeMoney + ")";
+                String str = sum + "";
 
                 if (productName.indexOf("养老") >= 0) {
                     info.put("endowment", str);
-                } else if (productName.indexOf("医疗") >= 0 && productName.indexOf("大病") < 0) {
+                } else if (productName.indexOf("大病") >= 0) {
+                    info.put("critical_illness", str);
+                } else if (productName.indexOf("医疗") >= 0) {
                     info.put("medical", str);
                 } else if (productName.indexOf("失业") >= 0) {
                     info.put("unemployment", str);
@@ -1106,8 +1060,6 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                     info.put("work_related_injury", str);
                 } else if (productName.indexOf("生育") >= 0) {
                     info.put("childbirth", str);
-                } else if (productName.indexOf("大病") >= 0) {
-                    info.put("critical_illness", str);
                 } else if (productName.indexOf("公积金") >= 0 && productName.indexOf("补充") < 0) {
                     info.put("housing_accumulation_funds", str);
                 }
@@ -1125,178 +1077,31 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     }
 
     /**
-     * 方法说明：增员提交:创建公积金申报
-     * @Param bizObjectFacade
-     * @Param workflowInstanceFacade
-     * @Param addEmployeeInfo
-     * @Param customerService
-     * @author liulei
-     * @Date 2020/2/11 16:14
-     */
-    @Override
-    public void createProvidentFundDeclare(BizObjectFacade bizObjectFacade,
-                                           WorkflowInstanceFacade workflowInstanceFacade,
-                                           ProvidentFundDeclare providentFundDeclare, UserModel customerService)
-            throws Exception {
-        // 生成公积金申报BizObjectModel
-        BizObjectModel bizObjectModel = new BizObjectModel();
-        bizObjectModel.setSchemaCode(Constants.PROVIDENT_FUND_DECLARE_SCHEMA);
-        bizObjectModel.setSequenceStatus("DRAFT");
-
-        Map<String, Object> data = new HashMap <>();
-        // 姓名
-        data.put("employee_name", providentFundDeclare.getEmployeeName());
-        // 性别
-        data.put("gender", providentFundDeclare.getGender());
-        // 证件类型
-        data.put("identityNo_type", providentFundDeclare.getIdentityNoType());
-        // 身份证号码
-        data.put("identityNo", providentFundDeclare.getIdentityNo());
-        // 出生日期
-        data.put("birthday", providentFundDeclare.getBirthday());
-        // 派出单位
-        data.put("dispatch_unit", providentFundDeclare.getDispatchUnit());
-        // 客户名称
-        data.put("client_name", providentFundDeclare.getClientName());
-        // 客服
-        data.put("customer_service", providentFundDeclare.getCustomerService());
-        // 客服部门
-        data.put("customer_services", providentFundDeclare.getCustomerServices());
-        // 申请人
-        data.put("applicant", providentFundDeclare.getApplicant());
-        // 申请日期
-        data.put("application_date", providentFundDeclare.getApplicationDate());
-        // 员工订单
-        data.put("employee_order_form_id", providentFundDeclare.getEmployeeOrderFormId());
-        // 起始月
-        data.put("start_month", providentFundDeclare.getStartMonth());
-        // 公积金基数
-        data.put("provident_fund_base", providentFundDeclare.getProvidentFundBase());
-        // 企业缴存额
-        data.put("corporate_payment", providentFundDeclare.getCorporatePayment());
-        // 个人缴存额
-        data.put("personal_deposit", providentFundDeclare.getPersonalDeposit());
-        // 缴存总额
-        data.put("total_deposit", providentFundDeclare.getTotalDeposit());
-        // 福利办理方
-        data.put("welfare_handler", providentFundDeclare.getWelfareHandler());
-        // 运行负责人
-        data.put("operate_leader", providentFundDeclare.getOperateLeader());
-
-        data.put("status", providentFundDeclare.getStatus());
-
-        bizObjectModel.put(data);
-        // 创建业务对象模型
-        String providentFundId = bizObjectFacade.saveBizObjectModel(customerService.getId(), bizObjectModel, "id");
-        log.info(" 创建公积金申报模型:" + providentFundId);
-        // 启动流程实例，不结束发起节点，返回流程实例id
-        String providentFundIdWfId = workflowInstanceFacade.startWorkflowInstance(customerService.getDepartmentId(),
-                customerService.getId(), Constants.PROVIDENT_FUND_DECLARE_SCHEMA_WF, providentFundId, false);
-        log.info("启动公积金申报流程:" + providentFundIdWfId);
-
-        // 创建公积金子表数据
-        employeesMaintainDao.createSocialSecurityFundDetail(providentFundId, providentFundDeclare.getProvidentFundDetail(),
-                Constants.PROVIDENT_FUND_DETAIL);
-    }
-
-    /**
-     * 方法说明：增员提交:创建社保申报
-     * @Param bizObjectFacade
-     * @Param workflowInstanceFacade
-     * @Param addEmployeeInfo
-     * @Param customerService
-     * @author liulei
-     * @Date 2020/2/11 16:14
-     */
-    @Override
-    public void createSocialSecurityDeclare(BizObjectFacade bizObjectFacade,
-                                            WorkflowInstanceFacade workflowInstanceFacade,
-                                            SocialSecurityDeclare socialSecurityDeclare, UserModel customerService)
-            throws Exception {
-        // 生成停缴社保BizObjectModel
-        BizObjectModel bizObjectModel = new BizObjectModel();
-        bizObjectModel.setSchemaCode(Constants.SOCIAL_SECURITY_DECLARE_SCHEMA);
-        bizObjectModel.setSequenceStatus("DRAFT");
-
-        Map<String, Object> data = new HashMap <>();
-        // 姓名
-        data.put("employee_name", socialSecurityDeclare.getEmployeeName());
-        // 性别
-        data.put("gender", socialSecurityDeclare.getGender());
-        // 证件类型
-        data.put("identityNo_type", socialSecurityDeclare.getIdentityNoType());
-        // 身份证号码
-        data.put("identityNo", socialSecurityDeclare.getIdentityNo());
-        // 出生日期
-        data.put("birthday", socialSecurityDeclare.getBirthday());
-        // 派出单位
-        data.put("dispatch_unit", socialSecurityDeclare.getDispatchUnit());
-        // 客户名称
-        data.put("client_name", socialSecurityDeclare.getClientName());
-        // 客服
-        data.put("customer_service", socialSecurityDeclare.getCustomerService());
-        // 客服部门
-        data.put("customer_services", socialSecurityDeclare.getCustomerServices());
-        // 申请人
-        data.put("applicant", socialSecurityDeclare.getApplicant());
-        // 申请日期
-        data.put("application_date", socialSecurityDeclare.getApplicationDate());
-        // 员工订单
-        data.put("employee_order_form_id", socialSecurityDeclare.getEmployeeOrderFormId());
-        // 合同签订日期
-        data.put("contract_signing_date", socialSecurityDeclare.getContractSigningDate());
-        // 合同截止日期
-        data.put("contract_deadline", socialSecurityDeclare.getContractDeadline());
-        // 起始月
-        data.put("start_month", socialSecurityDeclare.getStartMonth());
-        // 转正工资
-        data.put("positive_salary", socialSecurityDeclare.getPositiveSalary());
-        // 缴费基数
-        data.put("base_pay", socialSecurityDeclare.getBasePay());
-        // 手机号码
-        data.put("mobile", socialSecurityDeclare.getMobile());
-        // 福利办理方
-        data.put("welfare_handler", socialSecurityDeclare.getWelfareHandler());
-        // 运行负责人
-        data.put("operate_leader", socialSecurityDeclare.getOperateLeader());
-
-        data.put("status", socialSecurityDeclare.getStatus());
-
-        bizObjectModel.put(data);
-
-        // 创建业务对象模型
-        String socialSecurityId = bizObjectFacade.saveBizObjectModel(customerService.getId(), bizObjectModel, "id");
-        log.info(" 创建社保申报模型:" + socialSecurityId);
-        // 启动流程实例，不结束发起节点，返回流程实例id
-        String socialSecurityWfId = workflowInstanceFacade.startWorkflowInstance(customerService.getDepartmentId(),
-                customerService.getId(), Constants.SOCIAL_SECURITY_DECLARE_SCHEMA_WF, socialSecurityId, false);
-        log.info("启动社保申报流程:" + socialSecurityWfId);
-
-        // 创建公积金子表数据
-        employeesMaintainDao.createSocialSecurityFundDetail(socialSecurityId,
-                socialSecurityDeclare.getSocialSecurityDetail(), Constants.SOCIAL_SECURITY_DETAIL);
-    }
-
-    /**
      * 方法说明：增员提交:创建员工订单
      * @param bizObjectFacade
      * @param employeeOrderForm
-     * @param customerService
+     * @param userId
      * @author liulei
      * @Date 2020/2/21 11:37
      */
     @Override
     public String createEmployeeOrderForm(BizObjectFacade bizObjectFacade, EmployeeOrderForm employeeOrderForm,
-                                          UserModel customerService) throws Exception {
+                                          String userId, String owner, String ownerDeptId, String ownerDeptQueryCode) throws Exception {
         // 生成员工订单BizObjectModel
-        BizObjectModel model = new BizObjectModel();
-        model.setSchemaCode(Constants.EMPLOYEE_ORDER_FORM_SCHEMA);
-        model.setSequenceStatus("COMPLETED");
+        BizObjectModel model = GetBizObjectModelUntils.getBizObjectModel(Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
+                "COMPLETED", owner, ownerDeptId, ownerDeptQueryCode, null, null, null);
 
         Map <String, Object> data = new HashMap <>();
         // 员工档案单据号
         data.put("employee_files_id", employeeOrderForm.getEmployeeFilesId());
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        data.put("first_level_client_name", employeeOrderForm.getFirstLevelClientName());
+        data.put("second_level_client_name", employeeOrderForm.getSecondLevelClientName());
+        data.put("business_type", employeeOrderForm.getBusinessType());
+        data.put("id_type", employeeOrderForm.getIdType());
+        data.put("identityNo", employeeOrderForm.getIdentityNo());
+        data.put("s_welfare_handler", employeeOrderForm.getSWelfareHandler());
+        data.put("g_welfare_handler", employeeOrderForm.getGWelfareHandler());
         // 详细
         data.put("detail", employeeOrderForm.getStartTime() == null ? null :
                 sdf.format(employeeOrderForm.getStartTime()));
@@ -1304,6 +1109,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         data.put("is_history", "否");
         // 总金额
         data.put("total", employeeOrderForm.getTotal());
+        data.put("sum", employeeOrderForm.getSum());
         // 社保福利地
         data.put("social_security_city", employeeOrderForm.getSocialSecurityCity());
         // 公积金福利地
@@ -1337,7 +1143,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
 
         model.put(data);
         // 创建业务对象模型
-        String modelId = bizObjectFacade.saveBizObjectModel(customerService.getId(), model, "id");
+        String modelId = bizObjectFacade.saveBizObjectModel(userId, model, "id");
         log.info("创建员工订单业务对象模型:" + modelId);
         // 创建公积金子表数据
         employeesMaintainDao.createSocialSecurityFundDetail(modelId, employeeOrderForm.getSocialSecurityDetail(),
@@ -1348,132 +1154,6 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         // 更新订单的起始时间为子表中开始时间，结束时间
         addEmployeeMapper.updateEmployeeOrderFromTime(modelId);
         return modelId;
-    }
-
-    /**
-     * 方法说明：增员提交:创建入职通知
-     * @Param bizObjectFacade
-     * @Param workflowInstanceFacade
-     * @Param addEmployeeInfo
-     * @Param customerService
-     * @author liulei
-     * @Date 2020/2/11 16:05
-     */
-    @Override
-    public void createEntryNotice(BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade,
-                                  EntryNotice entryNotice, UserModel customerService) throws Exception {
-        // 生成入职通知BizObjectModel
-        BizObjectModel model = new BizObjectModel();
-        model.setSchemaCode(Constants.ENTRY_NOTICE_SCHEMA);
-        model.setSequenceStatus("DRAFT");
-
-        Map <String, Object> data = new HashMap <>();
-        // 姓名
-        data.put("employee_name", entryNotice.getEmployeeName());
-        // 身份证号码
-        data.put("identityNo", entryNotice.getIdentityNo());
-        // 客户名称
-        data.put("client_name", entryNotice.getClientName());
-        // 运行签收人
-        data.put("operate_signatory", entryNotice.getOperateSignatory());
-        // 社保
-        data.put("social_security", entryNotice.getSocialSecurity());
-        // 公积金
-        data.put("provident_fund", entryNotice.getProvidentFund());
-
-        model.put(data);
-        // 创建业务对象模型
-        String modelId = bizObjectFacade.saveBizObjectModel(customerService.getId(), model, "id");
-        log.info("创建入职通知业务对象模型:" + modelId);
-        // 启动流程实例，不结束发起节点，返回流程实例id
-        String modelWfId = workflowInstanceFacade.startWorkflowInstance(customerService.getDepartmentId(),
-                customerService.getId(), Constants.ENTRY_NOTICE_SCHEMA_WF, modelId, false);
-        log.info("启动入职通知流程:" + modelWfId);
-    }
-
-    /**
-     * 方法说明：增员提交:创建员工档案
-     * @param bizObjectFacade
-     * @param workflowInstanceFacade
-     * @param employeeFiles
-     * @param customerService
-     * @author liulei
-     * @Date 2020/2/11 16:02
-     */
-    @Override
-    public String createEmployeeInfoModel(BizObjectFacade bizObjectFacade,
-                                          WorkflowInstanceFacade workflowInstanceFacade,
-                                          EmployeeFiles employeeFiles, UserModel customerService) throws Exception {
-        // 生成员工档案BizObjectModel
-        BizObjectModel model = new BizObjectModel();
-        model.setSchemaCode(Constants.EMPLOYEE_FILES_SCHEMA);
-        model.setSequenceStatus("COMPLETED");
-
-        Map<String, Object> data = new HashMap <>();
-        //委托单位
-        data.put("entrusted_unit", employeeFiles.getEntrustedUnit());
-        //客户名称
-        data.put("client_name", employeeFiles.getClientName());
-        //业务员
-        data.put("salesman", employeeFiles.getSalesman());
-        //员工姓名
-        data.put("employee_name", employeeFiles.getEmployeeName());
-        //证件类型
-        data.put("id_type", employeeFiles.getIdType());
-        //证件号码
-        data.put("id_no", employeeFiles.getIdNo());
-        //性别
-        data.put("gender", employeeFiles.getGender());
-        //出生年月
-        data.put("birth_date", employeeFiles.getBirthDate());
-        //员工性质
-        data.put("employee_nature", employeeFiles.getEmployeeNature());
-        //户籍性质
-        data.put("household_register_nature", employeeFiles.getHouseholdRegisterNature());
-        //联系电话
-        data.put("mobile", employeeFiles.getMobile());
-        //邮箱
-        data.put("email", employeeFiles.getEmail());
-        //合同开始日期
-        data.put("labour_contract_start_time", employeeFiles.getLabourContractStartTime());
-        //合同结束日期
-        data.put("labour_contract_end_time", employeeFiles.getLabourContractEndTime());
-        //合同工资
-        data.put("salary", employeeFiles.getSalary());
-        //社保福利地
-        data.put("social_security_city", employeeFiles.getSocialSecurityCity());
-        //公积金福利地
-        data.put("provident_fund_city", employeeFiles.getProvidentFundCity());
-        //报入职时间
-        data.put("report_entry_time", employeeFiles.getReportEntryTime());
-        //报入职人
-        data.put("report_recruits", employeeFiles.getReportRecruits());
-        //入职日期
-        data.put("entry_time", employeeFiles.getEntryTime());
-        //社保收费开始
-        data.put("social_security_charge_start", employeeFiles.getSocialSecurityChargeStart());
-        //公积金收费开始
-        data.put("provident_fund_charge_start", employeeFiles.getProvidentFundChargeStart());
-        //社保福利办理方
-        data.put("social_security_area", employeeFiles.getSocialSecurityArea());
-        //公积金福利办理方
-        data.put("provident_fund_area", employeeFiles.getProvidentFundArea());
-        //入职备注
-        data.put("entry_description", employeeFiles.getEntryDescription());
-        //是否入职通知
-        data.put("entry_notice", employeeFiles.getEntryNotice());
-
-        data.put("stop_generate_bill", "否");
-        data.put("is_old_employee", "否");
-
-        model.put(data);
-        // 创建业务对象模型
-        String id = bizObjectFacade.saveBizObjectModel(customerService.getId(), model, "id");
-        log.info("创建员工档案模型:" + id);
-
-        //  根据id查询单据号
-        //String sequenceNo = employeesMaintainDao.getEmployeeFilesSequenceNoById(id);
-        return id;
     }
 
     /**

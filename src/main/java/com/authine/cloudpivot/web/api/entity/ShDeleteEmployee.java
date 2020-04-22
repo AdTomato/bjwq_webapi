@@ -17,6 +17,7 @@ import java.util.Date;
 @NoArgsConstructor
 public class ShDeleteEmployee extends BaseEntity {
     String shDeleteEmployeeId;
+
     /** 姓名*/
     String employeeName;
 
@@ -30,7 +31,11 @@ public class ShDeleteEmployee extends BaseEntity {
     String clientNum;
 
     /** 客户名称*/
-    String clientName;
+    String firstLevelClientName;
+    String secondLevelClientName;
+    String subordinateDepartment;
+    String gender;
+    Date birthday;
 
     /** 客户简称*/
     String clientShortName;
@@ -64,30 +69,4 @@ public class ShDeleteEmployee extends BaseEntity {
 
     /** 是否离职E化*/
     String weatherLeaveE;
-
-    public ShDeleteEmployee(String employeeName, String identityNoType, String identityNo, String clientNum,
-                            String clientName, String clientShortName, Date osInitiatedDepartureTime,
-                            Date departureTime, Date chargeEndTime, String leaveReason, String leaveRemark,
-                            String providentFundTransferMode, String backtrack, String geLeaveReason,
-                            String customerNum, String weatherLeaveE, String id, String creater) {
-        super();
-        this.employeeName = employeeName;
-        this.identityNoType = identityNoType;
-        this.identityNo = identityNo;
-        this.clientNum = clientNum;
-        this.clientName = clientName;
-        this.clientShortName = clientShortName;
-        this.osInitiatedDepartureTime = osInitiatedDepartureTime;
-        this.departureTime = departureTime;
-        this.chargeEndTime = chargeEndTime;
-        this.leaveReason = leaveReason;
-        this.leaveRemark = leaveRemark;
-        this.providentFundTransferMode = providentFundTransferMode;
-        this.backtrack = backtrack;
-        this.geLeaveReason = geLeaveReason;
-        this.customerNum = customerNum;
-        this.weatherLeaveE = weatherLeaveE;
-        setId(id);
-        setCreater(creater);
-    }
 }

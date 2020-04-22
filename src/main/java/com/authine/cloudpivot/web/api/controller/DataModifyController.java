@@ -107,9 +107,9 @@ public class DataModifyController extends BaseController {
         EmployeeFiles employeeFiles = employeeFilesService.getEmployeeFilesData(sourceId);
         EmployeeFiles employeeFilesUpdate = employeeFilesService.getEmployeeFilesUpdateData(id);
         List<ChangeValue> data = new ArrayList<>();
-        checkString(employeeFiles.getEntrustedUnit(), employeeFilesUpdate.getEntrustedUnit(), "委托单位", id, data);
-        checkString(employeeFiles.getClientName(), employeeFilesUpdate.getClientName(), "客户名称", id, data);
-        checkUnit(employeeFiles.getSalesman(), employeeFilesUpdate.getSalesman(), "客户名称", id, 1, data);
+//        checkString(employeeFiles.getEntrustedUnit(), employeeFilesUpdate.getEntrustedUnit(), "委托单位", id, data);
+//        checkString(employeeFiles.getClientName(), employeeFilesUpdate.getClientName(), "客户名称", id, data);
+//        checkUnit(employeeFiles.getSalesman(), employeeFilesUpdate.getSalesman(), "客户名称", id, 1, data);
         checkString(employeeFiles.getEmployeeName(), employeeFilesUpdate.getEmployeeName(), "员工姓名", id, data);
         checkString(employeeFiles.getIdType(), employeeFilesUpdate.getIdType(), "证件类型", id, data);
         checkString(employeeFiles.getIdNo(), employeeFilesUpdate.getIdNo(), "证件号码", id, data);
@@ -121,12 +121,12 @@ public class DataModifyController extends BaseController {
         checkString(employeeFiles.getPosition(), employeeFilesUpdate.getPosition(), "职位", id, data);
         checkString(employeeFiles.getEmployeeLabels(), employeeFilesUpdate.getEmployeeLabels(), "员工标签", id, data);
         checkString(employeeFiles.getEmail(), employeeFilesUpdate.getEmail(), "邮箱", id, data);
-        checkDate(employeeFiles.getLabourContractStartTime(), employeeFilesUpdate.getLabourContractStartTime(), "合同开始日期", id, data);
-        checkDate(employeeFiles.getLabourContractEndTime(), employeeFilesUpdate.getLabourContractEndTime(), "合同结束日期", id, data);
-        checkDouble(employeeFiles.getSalary(), employeeFilesUpdate.getSalary(), "合同工资", id, data);
-        checkDate(employeeFiles.getProbationStartTime(), employeeFilesUpdate.getProbationStartTime(), "试用期起始时间", id, data);
-        checkDate(employeeFiles.getProbationEndTime(), employeeFilesUpdate.getProbationEndTime(), "试用期结束时间", id, data);
-        checkDouble(employeeFiles.getProbationSalary(), employeeFilesUpdate.getProbationSalary(), "试用期工资", id, data);
+//        checkDate(employeeFiles.getLabourContractStartTime(), employeeFilesUpdate.getLabourContractStartTime(), "合同开始日期", id, data);
+//        checkDate(employeeFiles.getLabourContractEndTime(), employeeFilesUpdate.getLabourContractEndTime(), "合同结束日期", id, data);
+//        checkDouble(employeeFiles.getSalary(), employeeFilesUpdate.getSalary(), "合同工资", id, data);
+//        checkDate(employeeFiles.getProbationStartTime(), employeeFilesUpdate.getProbationStartTime(), "试用期起始时间", id, data);
+//        checkDate(employeeFiles.getProbationEndTime(), employeeFilesUpdate.getProbationEndTime(), "试用期结束时间", id, data);
+//        checkDouble(employeeFiles.getProbationSalary(), employeeFilesUpdate.getProbationSalary(), "试用期工资", id, data);
         checkString(employeeFiles.getSocialSecurityCity(), employeeFilesUpdate.getSocialSecurityCity(), "社保福利地", id, data);
         checkString(employeeFiles.getProvidentFundCity(), employeeFilesUpdate.getProvidentFundCity(), "公积金福利地", id, data);
         checkDate(employeeFiles.getReportEntryTime(), employeeFilesUpdate.getReportEntryTime(), "报入职时间", id, data);
@@ -134,8 +134,8 @@ public class DataModifyController extends BaseController {
         checkDate(employeeFiles.getEntryTime(), employeeFilesUpdate.getEntryTime(), "入职日期", id, data);
         checkDate(employeeFiles.getSocialSecurityChargeStart(), employeeFilesUpdate.getSocialSecurityChargeStart(), "社保收费开始", id, data);
         checkDate(employeeFiles.getProvidentFundChargeStart(), employeeFilesUpdate.getProvidentFundChargeStart(), "公积金收费开始", id, data);
-        checkString(employeeFiles.getSocialSecurityArea(), employeeFilesUpdate.getSocialSecurityArea(), "社保福利办理方", id, data);
-        checkString(employeeFiles.getProvidentFundArea(), employeeFilesUpdate.getProvidentFundArea(), "公积金福利办理方", id, data);
+//        checkString(employeeFiles.getSocialSecurityArea(), employeeFilesUpdate.getSocialSecurityArea(), "社保福利办理方", id, data);
+//        checkString(employeeFiles.getProvidentFundArea(), employeeFilesUpdate.getProvidentFundArea(), "公积金福利办理方", id, data);
         checkString(employeeFiles.getEntryDescription(), employeeFilesUpdate.getEntryDescription(), "入职备注", id, data);
         checkString(employeeFiles.getEntryNotice(), employeeFilesUpdate.getEntryNotice(), "是否入职通知", id, data);
         checkString(employeeFiles.getHealthCheck(), employeeFilesUpdate.getHealthCheck(), "是否体检", id, data);
@@ -147,9 +147,9 @@ public class DataModifyController extends BaseController {
         checkDate(employeeFiles.getProvidentFundChargeEnd(), employeeFilesUpdate.getProvidentFundChargeEnd(), "公积金收费截止", id, data);
         checkString(employeeFiles.getQuitReason(), employeeFilesUpdate.getQuitReason(), "离职原因", id, data);
         checkString(employeeFiles.getQuitRemark(), employeeFilesUpdate.getQuitRemark(), "离职备注", id, data);
-        checkString(employeeFiles.getBankAccountNumber(), employeeFilesUpdate.getBankAccountNumber(), "银行卡账号", id, data);
-        checkString(employeeFiles.getBankName(), employeeFilesUpdate.getBankName(), "开户行", id, data);
-        checkString(employeeFiles.getBankArea(), employeeFilesUpdate.getBankArea(), "开户地", id, data);
+//        checkString(employeeFiles.getBankAccountNumber(), employeeFilesUpdate.getBankAccountNumber(), "银行卡账号", id, data);
+//        checkString(employeeFiles.getBankName(), employeeFilesUpdate.getBankName(), "开户行", id, data);
+//        checkString(employeeFiles.getBankArea(), employeeFilesUpdate.getBankArea(), "开户地", id, data);
         if (data.size() != 0) {
             employeeFilesService.employeeFilesUpdateDetail(data);
         }
@@ -188,7 +188,7 @@ public class DataModifyController extends BaseController {
         checkString(shDeleteEmployee.getIdentityNoType(), shDeleteEmployeeUpdate.getIdentityNoType(), "证件类型", id, data);
         checkString(shDeleteEmployee.getIdentityNo(), shDeleteEmployeeUpdate.getIdentityNo(), "身份证号码", id, data);
         checkString(shDeleteEmployee.getClientNum(), shDeleteEmployeeUpdate.getClientNum(), "客户编号", id, data);
-        checkString(shDeleteEmployee.getClientName(), shDeleteEmployeeUpdate.getClientName(), "客户名称", id, data);
+//        checkString(shDeleteEmployee.getClientName(), shDeleteEmployeeUpdate.getClientName(), "客户名称", id, data);
         checkString(shDeleteEmployee.getClientShortName(), shDeleteEmployeeUpdate.getClientShortName(), "客户简称", id, data);
         checkDate(shDeleteEmployee.getOsInitiatedDepartureTime(), shDeleteEmployeeUpdate.getOsInitiatedDepartureTime(), "OS发起离职时间", id, data);
         checkDate(shDeleteEmployee.getDepartureTime(), shDeleteEmployeeUpdate.getDepartureTime(), "离职日期", id, data);
@@ -217,11 +217,11 @@ public class DataModifyController extends BaseController {
         DeleteEmployee deleteEmployee = employeeFilesService.getDeleteEmployeeData(sourceId);
         DeleteEmployee deleteEmployeeUpdate = employeeFilesService.getDeleteEmployeeUpdateData(id);
         List<ChangeValue> data = new ArrayList<>();
-        checkString(deleteEmployee.getClientName(), deleteEmployeeUpdate.getClientName(), "客户名称", id, data);
+//        checkString(deleteEmployee.getClientName(), deleteEmployeeUpdate.getClientName(), "客户名称", id, data);
         checkString(deleteEmployee.getEmployeeName(), deleteEmployeeUpdate.getEmployeeName(), "姓名", id, data);
         checkString(deleteEmployee.getIdentityNoType(), deleteEmployeeUpdate.getIdentityNoType(), "证件类型", id, data);
         checkString(deleteEmployee.getIdentityNo(), deleteEmployeeUpdate.getIdentityNo(), "证件号码", id, data);
-        checkString(deleteEmployee.getCity(), deleteEmployeeUpdate.getCity(), "地区", id, data);
+//        checkString(deleteEmployee.getCity(), deleteEmployeeUpdate.getCity(), "地区", id, data);
         checkString(deleteEmployee.getLeaveReason(), deleteEmployeeUpdate.getLeaveReason(), "离职原因", id, data);
         checkDate(deleteEmployee.getLeaveTime(), deleteEmployeeUpdate.getLeaveTime(), "离职日期", id, data);
         checkDate(deleteEmployee.getSocialSecurityEndTime(), deleteEmployeeUpdate.getSocialSecurityEndTime(), "社保终止时间", id, data);
@@ -341,8 +341,8 @@ public class DataModifyController extends BaseController {
         AddEmployee addEmployee = employeeFilesService.getAddEmployeeData(sourceId);
         AddEmployee addEmployeeUpdate = employeeFilesService.getAddEmployeeUpdateData(id);
         List<ChangeValue> data = new ArrayList<>();
-        checkString(addEmployee.getClientName(), addEmployeeUpdate.getClientName(), "客户名称", id, data);
-        checkString(addEmployee.getErp(), addEmployeeUpdate.getErp(), "ERP", id, data);
+//        checkString(addEmployee.getClientName(), addEmployeeUpdate.getClientName(), "客户名称", id, data);
+//        checkString(addEmployee.getErp(), addEmployeeUpdate.getErp(), "ERP", id, data);
         checkString(addEmployee.getEmployeeName(), addEmployeeUpdate.getEmployeeName(), "姓名", id, data);
         checkString(addEmployee.getIdentityNo(), addEmployeeUpdate.getIdentityNo(), "证件号码", id, data);
         checkString(addEmployee.getIdentityNoType(), addEmployeeUpdate.getIdentityNoType(), "证件类型", id, data);

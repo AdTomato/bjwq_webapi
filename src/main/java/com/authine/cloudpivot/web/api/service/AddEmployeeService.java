@@ -69,4 +69,8 @@ public interface AddEmployeeService {
     SocialSecurityDeclare getSocialSecurityDeclareByOrderFormId(String id) throws Exception;
 
     ProvidentFundDeclare getProvidentFundDeclareByOrderFormId(String id) throws Exception;
+
+    SocialSecurityClose getSocialSecurityCloseByOrderFormId(String id) throws Exception;
+
+    ProvidentFundClose getProvidentFundCloseByOrderFormId(String id) throws Exception;
 }

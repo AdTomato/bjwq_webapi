@@ -6,6 +6,7 @@ import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper;
 import com.authine.cloudpivot.web.api.service.EmployeeFilesService;
 import com.sun.istack.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -17,6 +18,7 @@ import java.util.List;
  * @Description: 员工档案service
  */
 @Service
+@Slf4j
 public class EmployeeFilesServiceImpl implements EmployeeFilesService {
 
     @Resource
@@ -219,5 +221,18 @@ public class EmployeeFilesServiceImpl implements EmployeeFilesService {
     public void insertBills(List<Bill> bills) {
         if (bills != null && bills.size() > 0)
             employeeFilesMapper.insertBills(bills);
+    }
+
+    @Override
+    public EmployeeFiles getEmployeeFilesByIdNoAndClientName(String identityNo, String firstLevelClientName,
+                                                             String secondLevelClientName) throws Exception {
+        List <EmployeeFiles> list = employeeFilesMapper.getEmployeeFilesByIdNoAndClientName(identityNo,
+                firstLevelClientName, secondLevelClientName);
+        if (list != null && list.size() > 0) {
+            return list.get(0);
+        } else {
+            log.error("没有获取到员工档案数据！");
+            throw new RuntimeException("没有获取到员工档案数据！");
+        }
     }
 }
