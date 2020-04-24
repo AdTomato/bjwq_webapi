@@ -5,7 +5,9 @@ import com.authine.cloudpivot.engine.api.model.organization.UserModel;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
 import com.authine.cloudpivot.web.api.dto.EnquiryReceivableDto;
 import com.authine.cloudpivot.web.api.entity.Bill;
+import com.authine.cloudpivot.web.api.params.EnquiryReceivableGetExcel;
 import com.authine.cloudpivot.web.api.service.EnquiryReceivableService;
+import lombok.extern.slf4j.Slf4j;
 import net.sf.json.JSONArray;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -14,6 +16,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,6 +31,7 @@ import java.util.*;
  * @Description: 导出外企账单
  */
 @RestController
+@Slf4j
 @RequestMapping("/controller/getEnquiryExcel")
 public class EnquiryReceivableEcxelController  extends BaseController {
 
@@ -37,9 +41,11 @@ public class EnquiryReceivableEcxelController  extends BaseController {
 
     //导出付款通知书和账单明细
     @GetMapping("/getExcel")
-    public void getExcel(HttpServletResponse response) throws IOException {
+    public void getExcel(HttpServletResponse response, @RequestBody EnquiryReceivableGetExcel enquiryReceivableGetExcel) throws IOException {
         List<String> idss = Arrays.asList("ad8a699cfc6d457db03a96dce1d1d92a","ad8a699cfc6d457db03a96dce1d1d92b",
                 "ad8a699cfc6d457db03a96dce1d1d92c","ad8a699cfc6d457db03a96dce1d1d92d");
+        idss = enquiryReceivableGetExcel.getIds();
+        log.info("需要导出的ids为：" + idss);
         List<EnquiryReceivableDto> enquiryReceivableDtoByIds = enquiryReceivableService.getEnquiryReceivableDtoByIds(idss);
 
         //付款通知书

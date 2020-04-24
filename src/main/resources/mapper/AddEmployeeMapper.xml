@@ -307,6 +307,8 @@
         AND a.employee_nature = s.business_type
         AND ( CASE WHEN a.s_welfare_handler IS NULL OR a.s_welfare_handler = '' THEN a.g_welfare_handler ELSE
         a.s_welfare_handler END ) = s.welfare_operator
+        AND ( CASE WHEN a.social_security_city IS NULL OR a.social_security_city = '' THEN a.provident_fund_city ELSE
+        a.social_security_city END ) = s.welfare
         JOIN h_org_user org ON INSTR( s.salesman, org.id )
         JOIN h_org_department dept ON INSTR( s.department, dept.id )
         SET a.owner = org.id,
@@ -329,6 +331,8 @@
         AND f.employee_nature = s.business_type
         AND ( CASE WHEN a.s_welfare_handler IS NULL OR a.s_welfare_handler = '' THEN a.g_welfare_handler ELSE
         a.s_welfare_handler END ) = s.welfare_operator
+        AND ( CASE WHEN a.social_security_city IS NULL OR a.social_security_city = '' THEN a.provident_fund_city ELSE
+        a.social_security_city END ) = s.welfare
         JOIN h_org_user org ON INSTR( s.salesman, org.id )
         JOIN h_org_department dept ON INSTR( s.department, dept.id )
         SET a.OWNER = org.id,
