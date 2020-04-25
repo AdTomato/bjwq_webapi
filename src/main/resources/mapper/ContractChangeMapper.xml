@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.ContractChangeMapper">
+    <update id="updateContractChangeDetails" parameterType="list">
+        insert into ibkct_contract_update(update_field,update_before_value,update_after_value,id,parentId)  values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.updateField}, #{item.updateBeforeValue}, #{item.updateAfterValue}, #{item.id}, #{item.parentId})
+        </foreach>
+    </update>
+    <resultMap id="salesContractInfo" type="com.authine.cloudpivot.web.api.entity.SalesContractInfo">
+        <result property="x_sales_person" column="sales_person"/>
+        <result property="x_salesman" column="salesman"/>
+        <result property="x_contract_num" column="contract_num"/>
+        <result property="x_client_name" column="client_name"/>
+        <result property="x_unit_price" column="unit_price"/>
+        <result property="x_quantity" column="quantity"/>
+        <result property="x_business_type" column="business_type"/>
+        <result property="x_product_service" column="product_service"/>
+        <result property="x_total_amount" column="total_amount"/>
+        <result property="x_contract_signing_date" column="contract_signing_date"/>
+        <result property="x_contract_expiry_date" column="contract_expiry_date"/>
+        <result property="x_contract_renewal_date" column="contract_renewal_date"/>
+        <result property="x_renewal_contract_end_date" column="renewal_contract_expiry_date"/>
+        <result property="x_agreed_repayment_date" column="agreed_repayment_date"/>
+        <result property="x_bill_type" column="bill_type"/>
+        <result property="x_bill_cycle" column="bill_cycle"/>
+        <result property="x_bill_day" column="bill_day"/>
+        <result property="x_fees_invoic" column="fees_invoic"/>
+        <result property="x_remark" column="remark"/>
+        <result property="x_whether_end" column="whether_end"/>
+    </resultMap>
+    <select id="findSalesContractInfo" resultMap="salesContractInfo">
+        select * from i8c71_sales_contract where id = #{id}
+    </select>
+
+    <resultMap id="purchaseContractInfo" type="com.authine.cloudpivot.web.api.entity.PurchaseContractInfo">
+        <result property="purchase_contract_id" column="id"/>
+        <result property="buyer" column="buyer"/>
+        <result property="c_contract_num" column="contract_num"/>
+        <result property="c_supplier_name" column="supplier_name"/>
+        <result property="c_business_type" column="business_type"/>
+        <result property="c_product_service" column="product_service"/>
+        <result property="c_business_type" column="business_type"/>
+        <result property="c_product_service" column="product_service"/>
+        <result property="c_unit_price" column="unit_price"/>
+        <result property="c_quantity" column="quantity"/>
+        <result property="c_total_amount" column="total_amount"/>
+        <result property="c_contract_signing_date" column="contract_signing_date"/>
+        <result property="c_contract_expiry_date" column="contract_expiry_date"/>
+        <result property="c_contract_renewal_date" column="contract_renewal_date"/>
+        <result property="c_renewal_contract_end_date" column="renewal_contract_expiry_date"/>
+        <result property="c_remark" column="remark"/>
+        <result property="c_whether_end" column="whether_end"/>
+    </resultMap>
+    <select id="findPurchaseInfo" resultMap="purchaseContractInfo">
+        select * from ibkct_purchase_contract where id = #{id};
+    </select>
+    <select id="findClientName" resultType="java.lang.String">
+        select name from id34a_first_level_client where id = #{x_client_name}
+    </select>
+    <select id="findSupplierName" resultType="java.lang.String">
+        select name from id34a_supplier where id = #{c_supplier_name}
+    </select>
+</mapper>
