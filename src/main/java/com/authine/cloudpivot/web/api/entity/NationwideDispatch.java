@@ -49,7 +49,7 @@ public class NationwideDispatch extends BaseEntity{
     String businessCustomerNum;
 
     /** 业务客户名称*/
-    String businessCustomerName;
+//    String businessCustomerName;
 
     /** 业务流转状态*/
     String businessWfStatus;

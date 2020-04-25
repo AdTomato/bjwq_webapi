@@ -20,6 +20,7 @@ public class AddEmployee extends BaseEntity {
      * 增员_客户变更时对应的增员_客户表id
      */
     String addEmployeeId;
+
     /**
      * 姓名
      */
