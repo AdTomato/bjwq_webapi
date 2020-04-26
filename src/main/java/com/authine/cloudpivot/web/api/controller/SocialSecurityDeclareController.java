@@ -37,7 +37,7 @@ import java.util.*;
 
 /**
  * @ClassName SocialSecurityDeclareController
- * @Author:lfh
+ * @author: lfh
  * @Date:2020/3/24 9:54
  * @Description: 社保申报控制类
  **/

@@ -153,6 +153,14 @@ public class ResourceConfig extends ResourceServerConfigurerAdapter {
                     .antMatchers("/controller/getEnquiryExcel/**").permitAll()
                     // 检查excel表格
                     .antMatchers("/controller/checkExcel/**").permitAll()
+                    // 合同变更
+                    .antMatchers("/controller/contractChange/**").permitAll()
+                    // 公积金申报停缴
+                    .antMatchers("/controller/provident/**").permitAll()
+                    // 社保申报控制类
+                    .antMatchers("/controller/socialSecurityDeclare/**").permitAll()
+                    // 批量预派撤离控制层
+                    .antMatchers("/controller/preSentLeave/**").permitAll()
                     // 测试类
                     .antMatchers("/controller/test/**").permitAll()
                     //test
