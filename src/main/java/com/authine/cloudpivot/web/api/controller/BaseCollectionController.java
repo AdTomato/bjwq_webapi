@@ -151,7 +151,7 @@ public class BaseCollectionController extends BaseController {
                 if (userId != null) {
                     Unit unit = new Unit();
                     unit.setId(userId);
-                    unit.setType(Constants.USER_TYPE + "");
+                    unit.setType(Constants.USER_TYPE);
                     data.put("client", JSON.toJSONString(Arrays.asList(unit)));
                     String salesman = baseCollectionService.findSalesman(clientName);
                     if (salesman == null) {

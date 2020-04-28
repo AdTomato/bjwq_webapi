@@ -34,63 +34,62 @@ public class ContractChangeController extends BaseController {
 
     @Autowired
     private ContractChangeService contractChangeService;
-
     @RequestMapping("/contractUpdate")
-    public ResponseResult<Object> contractUpdate(@RequestParam String parentId, @RequestParam String change_type, @RequestBody   ContractChangeInfo contractChangeInfo ) {
+    public ResponseResult<Object> contractUpdate(@RequestBody   ContractChangeInfo contractChangeInfo ) {
         if (contractChangeInfo == null || "".equals(contractChangeInfo)){
             return this.getOkResponseResult("error", "未传入变更数据");
         }
         List<ChangeValue> data = new ArrayList<>();
-       if ("销售合同".equals(change_type)) {
+       if ("销售合同".equals(contractChangeInfo.getChange_type())) {
              String id = contractChangeInfo.getSales_contract();
             //查询销售合同数据
             SalesContractInfo beforeSalesContractInfo = contractChangeService.findSalesContractInfo(id);
-            checkUnit(beforeSalesContractInfo.getX_sales_person(), contractChangeInfo.getX_sales_person(), "销售人员", parentId,3, data);
-            checkUnit(beforeSalesContractInfo.getX_salesman(), contractChangeInfo.getX_sales_person(), "业务员", parentId, 3,data);
-            checkString(beforeSalesContractInfo.getX_contract_num(), contractChangeInfo.getX_contract_num(), "合同编码", parentId, data);
+            checkUnit(beforeSalesContractInfo.getX_sales_person(), JSON.toJSONString(contractChangeInfo.getX_sales_person()), "销售人员", contractChangeInfo.getParentId(),3, data);
+            checkUnit(beforeSalesContractInfo.getX_salesman(), JSON.toJSONString(contractChangeInfo.getX_sales_person()), "业务员", contractChangeInfo.getParentId(), 3,data);
+            checkString(beforeSalesContractInfo.getX_contract_num(), contractChangeInfo.getX_contract_num(), "合同编码", contractChangeInfo.getParentId(), data);
             //checkUnit(beforeSalesContractInfo.getX_client_name(), contractChangeInfo.getX_client_name(), "客户名称", parentId,1, data);
            if (!beforeSalesContractInfo.getX_client_name().equals(contractChangeInfo.getX_client_name())){
                String beforeClientName = contractChangeService.findClientName(beforeSalesContractInfo.getX_client_name());
                String afterClientName= contractChangeService.findClientName(contractChangeInfo.getX_client_name());
-               data.add(getChangeData("公司名称",beforeClientName ,afterClientName , parentId));
+               data.add(getChangeData("公司名称",beforeClientName ,afterClientName , contractChangeInfo.getParentId()));
            }
-            checkDouble(beforeSalesContractInfo.getX_unit_price(), contractChangeInfo.getX_unit_price(), "单价", parentId, data);
-            checkInteger(beforeSalesContractInfo.getX_quantity(), contractChangeInfo.getX_quantity(), "数量", parentId, data);
-            checkDouble(beforeSalesContractInfo.getX_total_amount(), contractChangeInfo.getX_total_amount(), "金额", parentId, data);
-            checkDate(beforeSalesContractInfo.getX_contract_signing_date(), contractChangeInfo.getX_contract_signing_date(), "合同签订日", parentId, data);
-            checkDate(beforeSalesContractInfo.getX_contract_expiry_date(), contractChangeInfo.getX_contract_expiry_date(), "合同到期日", parentId, data);
-            checkDate(beforeSalesContractInfo.getX_contract_renewal_date(), contractChangeInfo.getX_contract_renewal_date(), "续签合同签订日", parentId, data);
-            checkDate(beforeSalesContractInfo.getX_renewal_contract_end_date(), contractChangeInfo.getX_renewal_contract_end_date(), "续签合同到期日", parentId, data);
-            checkString(beforeSalesContractInfo.getX_agreed_repayment_date(), contractChangeInfo.getX_agreed_repayment_date(), "约定回款日", parentId, data);
-            checkString(beforeSalesContractInfo.getX_bill_type(), contractChangeInfo.getX_bill_type(), "账单类型", parentId, data);
-            checkString(beforeSalesContractInfo.getX_bill_cycle(), contractChangeInfo.getX_bill_cycle(), "账单周期", parentId, data);
-            checkString(beforeSalesContractInfo.getX_bill_day(), contractChangeInfo.getX_bill_day(), "账单日", parentId, data);
-            checkString(beforeSalesContractInfo.getX_fees_invoic(), contractChangeInfo.getX_fees_invoic(), "费用及开票形式", parentId, data);
-            checkString(beforeSalesContractInfo.getX_remark(), contractChangeInfo.getX_remark(), "备注", parentId, data);
-            checkString(beforeSalesContractInfo.getX_whether_end(),contractChangeInfo.getX_whether_end() ,"是否终止" ,parentId , data);
+            checkDouble(beforeSalesContractInfo.getX_unit_price(), contractChangeInfo.getX_unit_price(), "单价", contractChangeInfo.getParentId(), data);
+            checkInteger(beforeSalesContractInfo.getX_quantity(), contractChangeInfo.getX_quantity(), "数量", contractChangeInfo.getParentId(), data);
+            checkDouble(beforeSalesContractInfo.getX_total_amount(), contractChangeInfo.getX_total_amount(), "金额", contractChangeInfo.getParentId(), data);
+            checkDate(beforeSalesContractInfo.getX_contract_signing_date(), contractChangeInfo.getX_contract_signing_date(), "合同签订日", contractChangeInfo.getParentId(), data);
+            checkDate(beforeSalesContractInfo.getX_contract_expiry_date(), contractChangeInfo.getX_contract_expiry_date(), "合同到期日", contractChangeInfo.getParentId(), data);
+            checkDate(beforeSalesContractInfo.getX_contract_renewal_date(), contractChangeInfo.getX_contract_renewal_date(), "续签合同签订日", contractChangeInfo.getParentId(), data);
+            checkDate(beforeSalesContractInfo.getX_renewal_contract_end_date(), contractChangeInfo.getX_renewal_contract_end_date(), "续签合同到期日", contractChangeInfo.getParentId(), data);
+            checkString(beforeSalesContractInfo.getX_agreed_repayment_date(), contractChangeInfo.getX_agreed_repayment_date(), "约定回款日", contractChangeInfo.getParentId(), data);
+            checkString(beforeSalesContractInfo.getX_bill_type(), contractChangeInfo.getX_bill_type(), "账单类型", contractChangeInfo.getParentId(), data);
+            checkString(beforeSalesContractInfo.getX_bill_cycle(), contractChangeInfo.getX_bill_cycle(), "账单周期", contractChangeInfo.getParentId(), data);
+            checkString(beforeSalesContractInfo.getX_bill_day(), contractChangeInfo.getX_bill_day(), "账单日", contractChangeInfo.getParentId(), data);
+            checkString(beforeSalesContractInfo.getX_fees_invoic(), contractChangeInfo.getX_fees_invoic(), "费用及开票形式", contractChangeInfo.getParentId(), data);
+            checkString(beforeSalesContractInfo.getX_remark(), contractChangeInfo.getX_remark(), "备注", contractChangeInfo.getParentId(), data);
+            checkString(beforeSalesContractInfo.getX_whether_end(),contractChangeInfo.getX_whether_end() ,"是否终止" ,contractChangeInfo.getParentId() , data);
         }
-        if ("采购合同".equals(change_type)) {
+        if ("采购合同".equals(contractChangeInfo.getChange_type())) {
             String id = contractChangeInfo.getPurchase_contract();
             PurchaseContractInfo beforePurchaseContractInfo = contractChangeService.findPurchaseInfo(id);
-            checkUnit(beforePurchaseContractInfo.getBuyer() ,contractChangeInfo.getBuyer() ,"采购员" ,parentId,3,data );
-            checkString(beforePurchaseContractInfo.getC_contract_num(), contractChangeInfo.getC_contract_num(), "合同编码", parentId, data);
+            checkUnit(beforePurchaseContractInfo.getBuyer() ,JSON.toJSONString(contractChangeInfo.getBuyer()) ,"采购员" ,contractChangeInfo.getParentId(),3,data );
+            checkString(beforePurchaseContractInfo.getC_contract_num(), contractChangeInfo.getC_contract_num(), "合同编码", contractChangeInfo.getParentId(), data);
             // checkUnit(beforePurchaseContractInfo.getC_supplier_name(),contractChangeInfo.getC_contract_num() ,"供应商名称" , parentId,1,data );
             if (!beforePurchaseContractInfo.getC_supplier_name().equals(contractChangeInfo.getC_supplier_name())){
                 String beforeSupplierName = contractChangeService.findSupplierName(beforePurchaseContractInfo.getC_supplier_name());
                 String afterSupplierName = contractChangeService.findSupplierName(contractChangeInfo.getC_supplier_name());
-                data.add(getChangeData("供应商名称",beforeSupplierName ,afterSupplierName , parentId));
+                data.add(getChangeData("供应商名称",beforeSupplierName ,afterSupplierName , contractChangeInfo.getParentId()));
             }
-            checkString(beforePurchaseContractInfo.getC_business_type(),contractChangeInfo.getC_business_type(), "业务类型",parentId ,data  );
-            checkString(beforePurchaseContractInfo.getC_product_service(),contractChangeInfo.getC_product_service() ,"产品服务",parentId ,data );
-            checkDouble(beforePurchaseContractInfo.getC_unit_price(), contractChangeInfo.getC_unit_price(), "单价", parentId, data);
-            checkInteger(beforePurchaseContractInfo.getC_quantity(), contractChangeInfo.getC_quantity(),"数量" , parentId, data);
-            checkDouble(beforePurchaseContractInfo.getC_total_amount(),contractChangeInfo.getC_total_amount() ,"总额" , parentId,data );
-            checkDate(beforePurchaseContractInfo.getC_contract_signing_date(), contractChangeInfo.getC_contract_signing_date(), "合同签订日",parentId ,data );
-            checkDate(beforePurchaseContractInfo.getC_contract_expiry_date(), contractChangeInfo.getC_contract_expiry_date() ,"合同到期日",parentId ,data );
-            checkDate(beforePurchaseContractInfo.getC_contract_renewal_date(), contractChangeInfo.getC_contract_renewal_date() ,"续签合同签订日" ,parentId ,data );
-            checkDate(beforePurchaseContractInfo.getC_renewal_contract_end_date(), contractChangeInfo.getC_renewal_contract_end_date() ,"续签合同到期日" ,parentId ,data );
-            checkString(beforePurchaseContractInfo.getC_remark(),contractChangeInfo.getC_remark() , "备注",parentId , data);
-            checkString(beforePurchaseContractInfo.getC_whether_end(),contractChangeInfo.getC_whether_end() ,"是否终止" ,parentId ,data );
+            checkString(beforePurchaseContractInfo.getC_business_type(),contractChangeInfo.getC_business_type(), "业务类型",contractChangeInfo.getParentId() ,data  );
+            checkString(beforePurchaseContractInfo.getC_product_service(),contractChangeInfo.getC_product_service() ,"产品服务",contractChangeInfo.getParentId() ,data );
+            checkDouble(beforePurchaseContractInfo.getC_unit_price(), contractChangeInfo.getC_unit_price(), "单价", contractChangeInfo.getParentId(), data);
+            checkInteger(beforePurchaseContractInfo.getC_quantity(), contractChangeInfo.getC_quantity(),"数量" , contractChangeInfo.getParentId(), data);
+            checkDouble(beforePurchaseContractInfo.getC_total_amount(),contractChangeInfo.getC_total_amount() ,"总额" , contractChangeInfo.getParentId(),data );
+            checkDate(beforePurchaseContractInfo.getC_contract_signing_date(), contractChangeInfo.getC_contract_signing_date(), "合同签订日",contractChangeInfo.getParentId() ,data );
+            checkDate(beforePurchaseContractInfo.getC_contract_expiry_date(), contractChangeInfo.getC_contract_expiry_date() ,"合同到期日",contractChangeInfo.getParentId() ,data );
+            checkDate(beforePurchaseContractInfo.getC_contract_renewal_date(), contractChangeInfo.getC_contract_renewal_date() ,"续签合同签订日" ,contractChangeInfo.getParentId() ,data );
+            checkDate(beforePurchaseContractInfo.getC_renewal_contract_end_date(), contractChangeInfo.getC_renewal_contract_end_date() ,"续签合同到期日" ,contractChangeInfo.getParentId() ,data );
+            checkString(beforePurchaseContractInfo.getC_remark(),contractChangeInfo.getC_remark() , "备注",contractChangeInfo.getParentId() , data);
+            checkString(beforePurchaseContractInfo.getC_whether_end(),contractChangeInfo.getC_whether_end() ,"是否终止" ,contractChangeInfo.getParentId() ,data );
 
         }
         if (data.size() > 0) {

@@ -1,14 +1,17 @@
 package com.authine.cloudpivot.web.api.params;
 
+import com.authine.cloudpivot.web.api.entity.Unit;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.Max;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @ClassName ContractChangeInfo
- * @Author:lfh
+ * @author: lfh
  * @Date:2020/4/11 13:54
  * @Description: 合同变更参数
  **/
@@ -18,6 +21,8 @@ import java.util.Date;
 @NoArgsConstructor
 public class ContractChangeInfo {
 
+    private String parentId;
+
     //变更类型
     private String change_type;
     // --- 销售合同 ---
@@ -25,10 +30,10 @@ public class ContractChangeInfo {
     private String sales_contract;
 
     //销售人员
-    private String x_sales_person;
+    private List<Unit> x_sales_person;
 
     // 业务员
-    private String x_salesman;
+    private List<Unit> x_salesman;
 
     // 合同编码
     private String x_contract_num;
@@ -89,7 +94,7 @@ public class ContractChangeInfo {
     private String purchase_contract;
 
     // 采购员
-    private String buyer;
+    private List<Unit> buyer;
 
     //合同编码
     private String c_contract_num;

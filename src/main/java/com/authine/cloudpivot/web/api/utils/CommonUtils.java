@@ -11,6 +11,7 @@ import org.apache.commons.lang3.time.DateUtils;
 
 import java.math.RoundingMode;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -296,5 +297,35 @@ public class CommonUtils {
             }
         }
         return false;
+    }
+
+    /**
+     * 方法说明：根据表头第一行数据，获取每一行数据
+     * @param rowArr 当前行
+     * @param fields 表头信息
+     * @return java.util.Map<java.lang.String,java.lang.Object>
+     * @author liulei
+     * @Date 2020/4/23 14:29
+     */
+    public static Map<String, Object> getExcelRowData(String[] rowArr, List<String> fields) throws Exception{
+        Map<String, Object> data = new HashMap <>();
+        List <String> list = Arrays.asList(rowArr);
+        for(int j = 0; j < fields.size(); j++) {
+            data.put(fields.get(j), list.get(j));
+        }
+        return data;
+    }
+
+    /**
+     * 方法说明：随机生成编码，时间戳+随机数
+     * @return java.lang.String
+     * @author liulei
+     * @Date 2020/4/26 10:47
+     */
+    public static String randomGenerateCode() throws Exception{
+        SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");
+        String temp = sf.format(new Date());
+        int random=(int) (Math.random()*10000);
+        return temp + random;
     }
 }
