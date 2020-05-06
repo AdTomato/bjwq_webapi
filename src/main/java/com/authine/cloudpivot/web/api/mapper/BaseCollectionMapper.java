@@ -1,7 +1,9 @@
 package com.authine.cloudpivot.web.api.mapper;
 
+import com.authine.cloudpivot.web.api.entity.BaseInfoCollection;
 import com.authine.cloudpivot.web.api.entity.StartCollect;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,5 +47,20 @@ public interface BaseCollectionMapper {
     void updateFileSize(String attachmentId, long length);
 
     StartCollect getStartCollectById(String bizObjectId);
+
+    String findCompanyName(String companyName);
+
+    String findSalesman(String clientName);
+
+    String findSecondCompanyName(String clientName);
+
+    String findSalesmanFromSecondClient(String clientName);
+
+    void insertCollectInfo(List<BaseInfoCollection> clientBaseNumInfo);
+
+    // List<BaseInfoCollection> findBaseCollectInfoFromTotalInfo(List<BaseInfoCollection> baseInfoCollections,String start_collect_id);
+    List<BaseInfoCollection> findBaseCollectInfoFromTotalInfo(Map<String,Object> map);
+
+    void deleteFoundCollectInfo(List<BaseInfoCollection> collectInTotalInfo);
 
 }

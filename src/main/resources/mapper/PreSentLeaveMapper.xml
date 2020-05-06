@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.PreSentLeaveMapper">
+    <resultMap id="preSentInfo" type="com.authine.cloudpivot.web.api.entity.PreSentInfo">
+        <result property="employeeName" column="employee_name"/>
+        <result property="identityNo" column="identityNo"/>
+        <result property="mobile" column="mobile"/>
+        <result property="email" column="email"/>
+        <result property="socialInsuranceAmount" column="social_insurance_amount"/>
+        <result property="providentFundAmount" column="provident_fund_amount"/>
+        <result property="entryTime" column="entry_date"/>
+    </resultMap>
+    <select id="findBatchSent" resultMap="preSentInfo">
+        select* from i4fvb_batch_pre_dispatch where createdTime between #{param1} and #{param2}
+    </select>
+    <select id="findEmployeeInfo" resultType="com.authine.cloudpivot.web.api.entity.AddEmployee">
+        select * from i4fvb_add_employee where identityNo = #{identityNo}
+    </select>
+    <select id="findSaleman" resultType="java.lang.String">
+<!--     select name from h_org_user where id = JSON_EXTRACT((select owner from i4fvb_employee_files where id_no =#{identityNo}),'$[0].id') -->
+        select name from h_org_user where id = (select owner from  i4fvb_employee_files where id_no = #{identityNo}) limit 1;
+    </select>
+    <resultMap id="leaveInfo" type="com.authine.cloudpivot.web.api.entity.LeaveInfo">
+        <result property="employeeName" column="employee_name"/>
+        <result property="identityNo" column="identityNo"/>
+        <result property="socialSecurityEndTime" column="social_security_end_time"/>
+        <result property="providentFundEndTime" column="provident_fund_end_time"/>
+    </resultMap>
+    <select id="findBatchLeave" resultMap="leaveInfo">
+        select * from i4fvb_batch_evacuation where createdTime between #{param1} and #{param2}
+    </select>
+    <select id="findDelEmployeeInfo" resultType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
+        select * from i4fvb_delete_employee  where identityNo = #{identityNo}
+    </select>
+</mapper>

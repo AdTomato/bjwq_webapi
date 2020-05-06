@@ -42,7 +42,7 @@ import java.util.Date;
  * 开户行		    从薪资档案获取		        从薪资档案获取		        从薪资档案获取
  * 开户地		    从薪资档案获取		        从薪资档案获取		        从薪资档案获取
  * 邮箱		        邮箱		                雇员邮箱		            电子邮件
- *
+ * <p>
  * 减员
  * 字段名称		    减员_客户实体		        减员_上海实体		        减员_全国实体
  * 报离职时间		减员创建时间		        减员创建时间		        减员创建时间
@@ -56,7 +56,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class EmployeeFiles extends BaseEntity{
+public class EmployeeFiles extends BaseEntity {
 
     String employeeFilesId;
 
@@ -280,32 +280,38 @@ public class EmployeeFiles extends BaseEntity{
      */
     private Integer stopGenerateBill;
 
+    /**
+     * 是否老员工
+     */
+    private Integer isOldEmployee;
+
 
     /**
      * 方法说明：增员客户创建员工档案实体
-     * @param entrustedUnit 委托单位
-     * @param clientName 客户名称
-     * @param employeeName 员工姓名
-     * @param idType 证件类型
-     * @param idNo 证件号码
-     * @param gender 性别
-     * @param birthDate 出生年月
-     * @param employeeNature 员工性质
-     * @param householdRegisterNature 户籍性质
-     * @param mobile 联系电话
-     * @param labourContractStartTime 合同开始日期
-     * @param labourContractEndTime 合同结束日期
-     * @param salary 合同工资
-     * @param socialSecurityCity 社保福利地
-     * @param providentFundCity 公积金福利地
-     * @param reportEntryTime 报入职时间
-     * @param entryTime 入职时间
+     *
+     * @param entrustedUnit             委托单位
+     * @param clientName                客户名称
+     * @param employeeName              员工姓名
+     * @param idType                    证件类型
+     * @param idNo                      证件号码
+     * @param gender                    性别
+     * @param birthDate                 出生年月
+     * @param employeeNature            员工性质
+     * @param householdRegisterNature   户籍性质
+     * @param mobile                    联系电话
+     * @param labourContractStartTime   合同开始日期
+     * @param labourContractEndTime     合同结束日期
+     * @param salary                    合同工资
+     * @param socialSecurityCity        社保福利地
+     * @param providentFundCity         公积金福利地
+     * @param reportEntryTime           报入职时间
+     * @param entryTime                 入职时间
      * @param socialSecurityChargeStart 社保收费开始
-     * @param providentFundChargeStart 公积金收费开始
-     * @param socialSecurityArea 社保福利办理方
-     * @param providentFundArea 公积金福利办理方
-     * @param entryDescription 入职备注
-     * @param email 邮箱
+     * @param providentFundChargeStart  公积金收费开始
+     * @param socialSecurityArea        社保福利办理方
+     * @param providentFundArea         公积金福利办理方
+     * @param entryDescription          入职备注
+     * @param email                     邮箱
      * @author liulei
      * @Date 2020/2/26 10:49
      */
@@ -343,25 +349,26 @@ public class EmployeeFiles extends BaseEntity{
 
     /**
      * 方法说明：增员_上海&&增员_全国创建员工档案实体
-     * @param entrustedUnit 委托单位
-     * @param clientName 客户名称
-     * @param employeeName 员工姓名
-     * @param idType 证件类型
-     * @param idNo 证件号码
-     * @param gender 性别
-     * @param birthDate 出生年月
-     * @param employeeNature 员工性质
-     * @param mobile 联系电话
-     * @param socialSecurityCity 社保福利地
-     * @param providentFundCity 公积金福利地
-     * @param reportEntryTime 报入职时间
-     * @param entryTime 入职时间
+     *
+     * @param entrustedUnit             委托单位
+     * @param clientName                客户名称
+     * @param employeeName              员工姓名
+     * @param idType                    证件类型
+     * @param idNo                      证件号码
+     * @param gender                    性别
+     * @param birthDate                 出生年月
+     * @param employeeNature            员工性质
+     * @param mobile                    联系电话
+     * @param socialSecurityCity        社保福利地
+     * @param providentFundCity         公积金福利地
+     * @param reportEntryTime           报入职时间
+     * @param entryTime                 入职时间
      * @param socialSecurityChargeStart 社保收费开始
-     * @param providentFundChargeStart 公积金收费开始
-     * @param socialSecurityArea 社保福利办理方
-     * @param providentFundArea 公积金福利办理方
-     * @param entryDescription 入职备注
-     * @param email 邮箱
+     * @param providentFundChargeStart  公积金收费开始
+     * @param socialSecurityArea        社保福利办理方
+     * @param providentFundArea         公积金福利办理方
+     * @param entryDescription          入职备注
+     * @param email                     邮箱
      * @author liulei
      * @Date 2020/2/26 10:49
      */

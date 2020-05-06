@@ -9,9 +9,24 @@
         values
           (#{id},#{creater}, #{createdTime}, #{bizObjectId},#{bizPropertyCode},#{fileSize},#{mimeType},#{name},#{refId},#{schemaCode})
     </insert>
+    <insert id="insertCollectInfo" parameterType="java.util.List">
+        insert into
+        i4fvb_total_collection_info(id,entrusted_unit,client_name,employee_name,identityNo,welfare_handler,salesman,primary_base_num,now_base_num,provident_fund_proportion,remarks,start_collect_id)
+        values
+        <foreach collection="list" index="i" item="item" separator=",">
+            (#{item.id},#{item.entrustedUnit},#{item.clientName},#{item.employeeName},#{item.identityNo},#{item.welfareHandler},#{item.salesman},
+            #{item.primaryBaseNum},#{item.nowBaseNum},#{item.providentFundProportion},#{item.remarks},#{item.start_collect_id})
+        </foreach>
+    </insert>
     <update id="updateFileSize">
         update h_biz_attachment set fileSize = #{param2} where id = #{param1}
     </update>
+    <delete id="deleteFoundCollectInfo">
+        delete from i4fvb_total_collection_info where id in
+        <foreach collection="list" index="idnex" item="item" separator="," open="(" close=")">
+            #{item.id}
+        </foreach>
+    </delete>
 
     <select id="findClientIds" parameterType="java.lang.String" resultType="java.lang.String">
         select
@@ -23,7 +38,7 @@
         and
           JSON_CONTAINS(client , JSON_OBJECT('id',(select user_id from  id34a_client_management where client_name = #{clientName})))
     </select>
-    <select id="findClientName" parameterType="java.util.List" resultType="java.util.Map">
+    <!--<select id="findClientName" parameterType="java.util.List" resultType="java.util.Map">
         select
         user_id as userId ,client_name as clientName from id34a_client_management
         where
@@ -33,7 +48,7 @@
                 #{id}
             </foreach>
         </trim>
-    </select>
+    </select>-->
     <select id="findAttachment" resultType="java.lang.String">
         select id from h_biz_attachment where bizObjectId = #{bizObjectId} and bizPropertyCode ='collect_data'
     </select>
@@ -43,5 +58,32 @@
     </select>
     <select id="getStartCollectById" resultType="com.authine.cloudpivot.web.api.entity.StartCollect">
         SELECT * FROM i080j_start_collect WHERE id = #{bizObjectId}
+    </select>
+    <!--从客户维护表通过公司名查user_id    -->
+    <select id="findCompanyName" resultType="java.lang.String">
+        select  user_id from id34a_client_management where first_level_client_name = #{companyName}
+    </select>
+    <!--从一级客户查业务员    -->
+    <select id="findSalesman" resultType="java.lang.String">
+        select salesman from id34a_first_level_client where company_name = #{clientName}
+    </select>
+    <!--从客户维护表中查一级客户的id    -->
+    <select id="findSecondCompanyName" resultType="java.lang.String">
+        select  user_id from id34a_client_management where second_level_client_name = #{companyName}
+    </select>
+    <!--从客户维护表中查二级客户的id    -->
+    <select id="findSalesmanFromSecondClient" resultType="java.lang.String">
+        select salesman from ibkct_second_level_client where company_name = #{clientName};
+    </select>
+    <select id="findBaseCollectInfoFromTotalInfo" resultType="com.authine.cloudpivot.web.api.entity.BaseInfoCollection">
+        select * from i4fvb_total_collection_info
+        where identityNo in
+        <foreach collection="list" item="item" index="index" separator="," open="(" close=")">
+            #{item.identityNo}
+        </foreach>
+        and start_collect_id = #{start_collect_id}
+        <!--<foreach collection="list" item="item" index="index" separator="">
+            #{item.start_collect_id}
+        </foreach>-->
     </select>
 </mapper>

@@ -10,11 +10,13 @@ import com.authine.cloudpivot.web.api.controller.base.BaseController;
 import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.service.EmployeeFilesService;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
+import com.dingtalk.api.response.OapiNewretailQueryorginfoResponse;
 import jodd.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -30,8 +32,6 @@ public class DataModifyController extends BaseController {
 
     @Autowired
     EmployeeFilesService employeeFilesService;
-
-    private static OrganizationFacade organizationFacade;
 
     @GetMapping("/getData")
     public ResponseResult<Object> getData(@RequestParam(required = true) String id, @RequestParam(required = true) String schemaCode) {
@@ -217,11 +217,11 @@ public class DataModifyController extends BaseController {
         DeleteEmployee deleteEmployee = employeeFilesService.getDeleteEmployeeData(sourceId);
         DeleteEmployee deleteEmployeeUpdate = employeeFilesService.getDeleteEmployeeUpdateData(id);
         List<ChangeValue> data = new ArrayList<>();
-        checkString(deleteEmployee.getClientName(), deleteEmployeeUpdate.getClientName(), "客户名称", id, data);
+        checkString(deleteEmployee.getSecondLevelClientName(), deleteEmployeeUpdate.getSecondLevelClientName(), "客户名称", id, data);
         checkString(deleteEmployee.getEmployeeName(), deleteEmployeeUpdate.getEmployeeName(), "姓名", id, data);
         checkString(deleteEmployee.getIdentityNoType(), deleteEmployeeUpdate.getIdentityNoType(), "证件类型", id, data);
         checkString(deleteEmployee.getIdentityNo(), deleteEmployeeUpdate.getIdentityNo(), "证件号码", id, data);
-        checkString(deleteEmployee.getCity(), deleteEmployeeUpdate.getCity(), "地区", id, data);
+        checkString(deleteEmployee.getProvidentFundCity(), deleteEmployeeUpdate.getProvidentFundCity(), "地区", id, data);
         checkString(deleteEmployee.getLeaveReason(), deleteEmployeeUpdate.getLeaveReason(), "离职原因", id, data);
         checkDate(deleteEmployee.getLeaveTime(), deleteEmployeeUpdate.getLeaveTime(), "离职日期", id, data);
         checkDate(deleteEmployee.getSocialSecurityEndTime(), deleteEmployeeUpdate.getSocialSecurityEndTime(), "社保终止时间", id, data);
@@ -341,8 +341,8 @@ public class DataModifyController extends BaseController {
         AddEmployee addEmployee = employeeFilesService.getAddEmployeeData(sourceId);
         AddEmployee addEmployeeUpdate = employeeFilesService.getAddEmployeeUpdateData(id);
         List<ChangeValue> data = new ArrayList<>();
-        checkString(addEmployee.getClientName(), addEmployeeUpdate.getClientName(), "客户名称", id, data);
-        checkString(addEmployee.getErp(), addEmployeeUpdate.getErp(), "ERP", id, data);
+        checkString(addEmployee.getSecondLevelClientName(), addEmployeeUpdate.getSecondLevelClientName(), "客户名称", id, data);
+        // checkString(addEmployee.get(), addEmployeeUpdate.getErp(), "ERP", id, data);
         checkString(addEmployee.getEmployeeName(), addEmployeeUpdate.getEmployeeName(), "姓名", id, data);
         checkString(addEmployee.getIdentityNo(), addEmployeeUpdate.getIdentityNo(), "证件号码", id, data);
         checkString(addEmployee.getIdentityNoType(), addEmployeeUpdate.getIdentityNoType(), "证件类型", id, data);
@@ -434,7 +434,7 @@ public class DataModifyController extends BaseController {
     private void checkUnit(String beforeModify, String nextModify, String field, String parentId, Integer type, List<ChangeValue> data) {
         Unit before = null;
         Unit next = null;
-
+        OrganizationFacade organizationFacade = this.getOrganizationFacade();
         if (beforeModify == nextModify) {
             // 无变化
             return;

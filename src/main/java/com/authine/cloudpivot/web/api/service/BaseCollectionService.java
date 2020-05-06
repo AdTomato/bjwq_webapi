@@ -1,5 +1,6 @@
 package com.authine.cloudpivot.web.api.service;
 
+import com.authine.cloudpivot.web.api.entity.BaseInfoCollection;
 import com.authine.cloudpivot.web.api.entity.StartCollect;
 
 import java.util.List;
@@ -54,4 +55,43 @@ public interface BaseCollectionService {
     void updateFileSize(String attachment, long length);
 
     StartCollect getStartCollectById(String bizObjectId);
+
+    String findCompanyName(String companyName);
+
+    String findSalesman(String clientName);
+
+    String findSecondCompanyName(String clientName);
+
+    String findSalesmanFromSecondClient(String clientName);
+
+    /**
+     * @Author lfh
+     * @Description 将excel数据添加到汇总表汇总
+     * @Date 2020/4/21 9:22
+     * @throws
+     * @param clientBaseNumInfo excel对应实体类
+     * @return
+     **/
+    void insertCollectInfo(List<BaseInfoCollection> clientBaseNumInfo);
+
+    /**
+     * @Author lfh
+     * @Description 通过身份证号查询汇总表中数据
+     * @Date 2020/4/21 13:38
+     * @throws
+     * @param baseInfoCollections  excel导出映射的实体类
+     * @param start_collect_id 发起基数采集的id
+     * @return {@link java.util.List<com.authine.cloudpivot.web.api.entity.BaseInfoCollection>}
+     **/
+    List<BaseInfoCollection> findBaseCollectInfoFromTotalInfo(List<BaseInfoCollection> baseInfoCollections,String start_collect_id);
+
+    /**
+     * @Author lfh
+     * @Description 删除在汇总表中查到的数据
+     * @Date 2020/4/21 14:15
+     * @throws
+     * @param collectInTotalInfo 在汇总表中查到的符合条件的数据
+     * @return
+     **/
+    void deleteFoundCollectInfo(List<BaseInfoCollection> collectInTotalInfo);
 }

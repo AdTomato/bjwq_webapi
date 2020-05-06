@@ -47,7 +47,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
         }
 
         // 合并多条数据
-        mergeMultipleData(ids, supplier, user, dept, workflowInstanceFacade, bizObjectFacade);
+        mergeMultipleData(ids, supplier, user, dept, workflowInstanceFacade, bizObjectFacade, "多对一");
 
     }
 
@@ -65,24 +65,21 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
      */
     private void mergeMultipleData(List <String> ids, Supplier supplier, UserModel user,
                                    DepartmentModel dept, WorkflowInstanceFacade workflowInstanceFacade,
-                                   BizObjectFacade bizObjectFacade) throws Exception{
+                                   BizObjectFacade bizObjectFacade, String paymentType) throws Exception{
         // 查询支付申请信息
         List<PaymentApplication> paymentApplications = paymentApplicationMapper.getPaymentApplicationByIds(ids);
         if (paymentApplications != null && paymentApplications.size() == ids.size()) {
             // 创建合并后的支付申请
-            PaymentApplication paymentApplication = new PaymentApplication(paymentApplications, supplier, user, dept);
+            PaymentApplication paymentApplication = new PaymentApplication(paymentApplications, supplier, user, dept, paymentType);
             this.insertPaymentApplication(paymentApplication, user.getId(), dept.getId(), workflowInstanceFacade);
 
             // 查询原有的支付客户明细
             List <PaymentClientDetails> details = paymentApplicationMapper.getPaymentClientDetailsByParentIds(ids);
             if (details != null && details.size() > 0) {
                 // 生成支付客户明细
-                paymentApplicationMapper.insertPaymentClientDetails(details, paymentApplication.getId(),
-                        paymentApplication.getDataType());
+                paymentApplicationMapper.insertPaymentClientDetails(details, paymentApplication.getId());
             }
 
-            // TODO: 2020/3/25   社保和公积金合并时，支付明细是不是需要合并？
-            
             //支付明细账单关联修改为新的id
             paymentApplicationMapper.updatePaymentDetailsPaymentApplicationId(paymentApplication.getId(), ids);
             // 删除原支付客户明细数据
@@ -204,7 +201,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
                         for (int i = 0; i < merges.size(); i++) {
                             // 合并数据
                             mergeMultipleData(merges.get(i), new Supplier(), user, dept, workflowInstanceFacade,
-                                    bizObjectFacade);
+                                    bizObjectFacade, "一对一");
                         }
                     }
                     if (notMerges != null && notMerges.size() > 0) {
@@ -350,6 +347,8 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
         map.put("id_no", filesDto.getIdNo());
 
         if ("公积金".equals(type)) {
+            // 支付方式
+            String paymentMethod = null;
             // 公积金企业缴纳合计,公积金个人缴纳合计,公积金缴纳合计
             Double providentEnterprise = 0.0,providentPersonal= 0.0,providentTotal = 0.0;
             map.put("delegated_area", filesDto.getProvidentFundCity());

@@ -8,7 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author liulei
@@ -146,5 +148,22 @@ public class CommonUtils {
         }
 
         return returnValue;
+    }
+
+    /**
+     * 方法说明：通过第一行获取导入数据的位置
+     * @param list
+     * @return java.util.Map<java.lang.String,java.lang.Integer>
+     * @author liulei
+     * @Date 2020/3/27 13:15
+     */
+    public static Map<String, Integer> getImportLocation(List<String> list) {
+        Map<String, Integer> locationMap = new HashMap <>();
+        if (list != null && list.size() > 0) {
+            for (int i = 0; i < list.size(); i++) {
+                locationMap.put(list.get(i), i + 1);
+            }
+        }
+        return locationMap;
     }
 }

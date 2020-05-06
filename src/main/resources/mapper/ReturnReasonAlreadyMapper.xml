@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.ReturnReasonAlreadyMapper">
+    <insert id="insertReturnReasonAlready" parameterType="java.util.List">
+        INSERT INTO import_return_reason_already_temp (id,source_id,sequenceNo,return_reason_already)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.sourceId}, #{item.sequenceNo}, #{item.returnReasonAlready})
+        </foreach>
+    </insert>
+
+    <update id="updateReturnReasonAlready">
+        UPDATE ${tableName} de
+          JOIN  import_return_reason_already_temp temp ON de.sequenceNo = temp.sequenceNo
+        SET de.return_reason_already = CONCAT(IFNULL(de.return_reason_already, ''), IFNULL(temp.return_reason_already, ''))
+        WHERE temp.source_id = #{sourceId}
+    </update>
+
+    <select id="getWorkItemInfo" resultType="java.util.HashMap">
+        SELECT de.employee_order_form_id,
+               workitem.id,
+               workitem.sourceId,
+               de.sequenceStatus,
+               de.workflowInstanceId,
+               de.sequenceNo
+        FROM ${tableName} de
+                 LEFT JOIN biz_workflow_instance instance ON instance.bizObjectId = de.id
+                 LEFT JOIN biz_workitem workitem ON workitem.instanceId = instance.id
+        WHERE de.sequenceNo IN (SELECT sequenceNo FROM import_return_reason_already_temp WHERE source_id = #{sourceId})
+    </select>
+
+    <update id="updateEmployeeOrderFormStatus">
+        UPDATE i4fvb_employee_order_form SET ${field} = #{status} WHERE id IN
+        <foreach collection="ids" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <update id="updateDeclareStatus">
+        UPDATE ${tableName} SET status = #{status} WHERE sequenceNo IN
+        <foreach collection="sequenceNos" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <delete id="deleteTempDataBySourceId" parameterType="java.lang.String">
+        DELETE FROM import_return_reason_already_temp WHERE source_id = #{sourceId}
+    </delete>
+</mapper>

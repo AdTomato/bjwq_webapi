@@ -22,7 +22,7 @@ import javax.annotation.Resource;
 @RestController
 @RequestMapping("/controller/collectController")
 @Slf4j
-public class CollectController extends BaseController {
+public class    CollectController extends BaseController {
 
     @Resource
     private CollectService collectService;

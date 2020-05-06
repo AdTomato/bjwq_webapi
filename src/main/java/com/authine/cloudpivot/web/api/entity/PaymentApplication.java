@@ -127,7 +127,7 @@ public class PaymentApplication extends BaseEntity {
     String sourceId;
 
     public PaymentApplication(List <PaymentApplication> pas, Supplier supplier, UserModel user,
-                              DepartmentModel dept) {
+                              DepartmentModel dept, String paymentType) {
         /*==================== 基础数据:start ====================*/
         this.id = UUID.randomUUID().toString().replaceAll("-", "");
         this.name = user.getName();
@@ -189,8 +189,10 @@ public class PaymentApplication extends BaseEntity {
         /*========================================== 金额数据:end ===========================================*/
 
         /*=================== 表单其他信息:start ==================*/
-        this.paymentType = "多对一";
-        if (StringUtils.isNotBlank(pas.get(0).getEntrustUnit())) {
+        this.paymentType = paymentType;
+        if ("多对一".equals(paymentType)) {
+            this.entrustUnit = paymentType;
+        } else if (StringUtils.isNotBlank(pas.get(0).getEntrustUnit())) {
             // 委托单位不为空，此时均是省外数据，委托单位一致
             this.entrustUnit = pas.get(0).getEntrustUnit();
         }

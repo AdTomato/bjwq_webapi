@@ -18,6 +18,6 @@ public class BaseControllerGetBaseNunInfo {
 
     private String fileName;
     private String bizObjectId;
-    private List<String> client;
+    private String welfare_operator;
 
 }

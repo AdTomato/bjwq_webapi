@@ -7,6 +7,8 @@ import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.math.BigInteger;
 
 
@@ -86,8 +88,8 @@ public class ParseExcelUtils {
      */
     public static Workbook getWorkBook(InputStream in, String fileName) throws IOException {
         if (fileName.endsWith(".xlsx")) {
-            // return WorkbookFactory.create(in);
-            return new XSSFWorkbook(in);
+            return WorkbookFactory.create(in);
+            // return new XSSFWorkbook(in);
         } else {
             return WorkbookFactory.create(in);
         }
@@ -173,7 +175,8 @@ public class ParseExcelUtils {
 
                                 }
                                 if (StringUtils.isEmpty(value)) {
-                                    volidateValueRequired(eHead, sheetName, rowIndex);
+                                    // volidateValueRequired(eHead, sheetName, rowIndex);
+                                    value ="";
                                     break;
                                 }
                                 method.invoke(instance, convertType(field.getType(), value.trim()));
@@ -204,7 +207,7 @@ public class ParseExcelUtils {
      * @param excelHead
      * @throws Exception
      */
-    private static void volidateValueRequired(ExcelHead excelHead, String sheetName, int rowIndex) throws Exception {
+    public static void volidateValueRequired(ExcelHead excelHead, String sheetName, int rowIndex) throws Exception {
         if (excelHead != null && excelHead.isRequired()) {
             throw new Exception("《" + sheetName + "》第" + (rowIndex + 1) + "行:\"" + excelHead.getExcelName() + "\"不能为空！");
         }
@@ -347,6 +350,77 @@ public class ParseExcelUtils {
         }
         return wb;
     }
+   
+    /**
+     * @Author lfh
+     * @Description 动态获取表头信息
+     * @Date 2020/4/20 9:26
+     * @throws
+     * @param fileName 文件名
+     * @param fis  文件输入流
+     * @return {@link java.util.List<java.lang.String>}
+     **/
+    public static List<String> getHeadName(String fileName, FileInputStream fis) throws IOException {
+        Workbook workBook = null;
+        try {
+            workBook = getWorkBook(fis, fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            fis.close();
+        }
+        Sheet sheet = workBook.getSheetAt(0);
+        List<String> headList = new ArrayList<>();
+        int firstRowNum = sheet.getFirstRowNum();
+        Row row = sheet.getRow(firstRowNum);
+        short firstCellNum = row.getFirstCellNum();
+        short lastCellNum = row.getLastCellNum();
+        for (int i = firstCellNum; i < lastCellNum; i++) {
+            String stringCellValue = row.getCell(i).getStringCellValue();
+            headList.add(stringCellValue);
 
+        }
+        return headList;
+    }
+    /**
+     * 用于判断number是否为空或者是否为数字
+     *
+     * @param cell cell单元格
+     * @return true 是数字且不为空 false 不是数字或者为空
+     * @author wangyong
+     */
+    public static boolean checkIsNumber(Cell cell) {
+        boolean result = true;
+
+        if (cell.getCellType() == CellType.NUMERIC) {
+            // 本身为数字
+            Double numericCellValue = cell.getNumericCellValue();
+            if (numericCellValue == null) {
+                // 不存在值
+                result = false;
+            } else if (HSSFDateUtil.isCellDateFormatted(cell)) {
+                // 为时间
+                result = false;
+            }
+        }
+
+        if (cell.getCellType() == CellType.STRING) {
+            // 本身为字符串
+            String value = cell.getStringCellValue();
+            if (org.apache.commons.lang3.StringUtils.isEmpty(value)) {
+                // 为空，校验失败
+                result = false;
+            } else {
+                try {
+                    Double d = Double.parseDouble(value);
+                } catch (Exception e) {
+                    // 类型转换异常，证明不是数字
+                    result = false;
+                }
+            }
+        }
+
+        return result;
+    }
 
 }

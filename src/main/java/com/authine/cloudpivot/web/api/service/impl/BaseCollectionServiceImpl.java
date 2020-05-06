@@ -1,11 +1,13 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
+import com.authine.cloudpivot.web.api.entity.BaseInfoCollection;
 import com.authine.cloudpivot.web.api.entity.StartCollect;
 import com.authine.cloudpivot.web.api.mapper.BaseCollectionMapper;
 import com.authine.cloudpivot.web.api.service.BaseCollectionService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -74,6 +76,51 @@ public class BaseCollectionServiceImpl implements BaseCollectionService {
     @Override
     public StartCollect getStartCollectById(String bizObjectId) {
         return baseCollectionMapper.getStartCollectById(bizObjectId);
+    }
+
+    @Override
+    public String findCompanyName(String companyName) {
+       return baseCollectionMapper.findCompanyName(companyName);
+
+    }
+
+    @Override
+    public String findSalesman(String clientName) {
+        return baseCollectionMapper.findSalesman(clientName);
+    }
+
+    /**
+     * 查询二级客户
+     * @param clientName
+     * @return
+     */
+    @Override
+    public String findSecondCompanyName(String clientName) {
+        return baseCollectionMapper.findSecondCompanyName(clientName);
+    }
+
+    @Override
+    public String findSalesmanFromSecondClient(String clientName) {
+        return baseCollectionMapper.findSalesmanFromSecondClient(clientName);
+    }
+
+    @Override
+    public void insertCollectInfo(List<BaseInfoCollection> clientBaseNumInfo) {
+        baseCollectionMapper.insertCollectInfo(clientBaseNumInfo);
+    }
+
+    @Override
+    public List<BaseInfoCollection> findBaseCollectInfoFromTotalInfo(List<BaseInfoCollection> baseInfoCollections,String start_collect_id) {
+        Map<String,Object> map = new HashMap<>();
+        map.put("list", baseInfoCollections);
+        map.put("start_collect_id",start_collect_id);
+        // return baseCollectionMapper.findBaseCollectInfoFromTotalInfo(baseInfoCollections,start_collect_id);
+        return baseCollectionMapper.findBaseCollectInfoFromTotalInfo(map);
+    }
+
+    @Override
+    public void deleteFoundCollectInfo(List<BaseInfoCollection> collectInTotalInfo) {
+        baseCollectionMapper.deleteFoundCollectInfo(collectInTotalInfo);
     }
 
 

@@ -142,6 +142,7 @@ public class TestController extends BaseController {
      * @Description: 生成员工账单
      */
     private void generateBill(String billType, List<EmployeeFilesDto> employeeFilesDto, SalesContractDto salesContractDto) {
+
         switch (billType) {
             case "预收":
                 generateAdvanceReceiptBillData(employeeFilesDto, salesContractDto);
@@ -196,38 +197,11 @@ public class TestController extends BaseController {
 
         // 生成五险一金的明细数据
         for (SocialSecurityFundDetail socialSecurityFundDetail : socialSecurityFundDetails) {
-            String productName = socialSecurityFundDetail.getNameHide();
-            if (productName.contains("养老")) {
-                // 生成养老保险数据
-                generatePension(bill, socialSecurityFundDetail, calendar);
-            } else if (productName.contains("医疗") && !productName.contains("大病")) {
-                // 生成医疗保险数据
-                generateMedical(bill, socialSecurityFundDetail, calendar);
-            } else if (productName.contains("失业")) {
-                // 生成失业保险数据
-                generateUnemp(bill, socialSecurityFundDetail, calendar);
-            } else if (productName.contains("工伤") && !productName.contains("补充")) {
-                // 生成工伤保险数据
-                generateInjury(bill, socialSecurityFundDetail, calendar);
-            } else if (productName.contains("生育")) {
-                // 生成生育保险数据
-                generateFertility(bill, socialSecurityFundDetail, calendar);
-            } else if (productName.contains("医疗") && productName.contains("大病")) {
-                // 生成大病医疗保险数据
-                generateDMedical(bill, socialSecurityFundDetail, calendar);
-            } else if (productName.contains("综合")) {
-                // 生成综合保险数据
-                generateComplex(bill, socialSecurityFundDetail, calendar);
-            } else if (productName.contains("工伤") && productName.contains("补充")) {
-                // 生成补充工伤保险数据
-                generateBInjury(bill, socialSecurityFundDetail, calendar);
-            } else if (productName.contains("公积金") && !productName.contains("补充")) {
-                // 生成公积金数据
-                generateProvident(bill, socialSecurityFundDetail, calendar);
-            } else if (productName.contains("公积金") && productName.contains("补充")) {
-                // 生成补充公积金数据
-                generateBProvident(bill, socialSecurityFundDetail, calendar);
-            }
+            // 生成社保数据
+            generateSocialSecurityData(socialSecurityFundDetail, bill, calendar);
+
+            // 生成公积金数据
+            generateProvidentFund(socialSecurityFundDetail, bill, calendar);
         }
         generateOtherData(bill);
     }
@@ -444,14 +418,7 @@ public class TestController extends BaseController {
      * @Description: 生成养老保险数据
      */
     private void generatePension(Bill bill, SocialSecurityFundDetail socialSecurityFundDetail, Calendar startTime) {
-//        Date end = socialSecurityFundDetail.getEndChargeTime();
-//        Calendar endTime = Calendar.getInstance();
-//        endTime.setTime(end);
-//        endTime.set(endTime.get(Calendar.YEAR), endTime.get(Calendar.MONTH), 1);
-//        if (null != endTime && !canGenerateData(startTime, endTime)) {
-//            // 无需判断
-//            return 1;
-//        }
+
         bill.setPensionEnterpriseBase(socialSecurityFundDetail.getBaseNum());  // 养老企业基数
         bill.setPensionEnterpriseRatio(socialSecurityFundDetail.getCompanyRatio());  // 养老企业比例
         bill.setPensionEnterpriseAttach(socialSecurityFundDetail.getCompanySurchargeValue());  // 养老企业附加
@@ -527,21 +494,132 @@ public class TestController extends BaseController {
         calendar.setTime(new Date());
         calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1);
         String billYear = getYearAndMonth(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1); // 账单年月
-
+        List<Bill> result = new ArrayList<>();
         for (EmployeeFilesDto employeeFilesDto : employeeFilesDtos) {
             calendar.setTime(new Date());
             calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), 1);
+            if (employeeFilesDto.getIsOldEmployee() == 0) {
+                // 不是老员工，是新员工，需要生成之前没有生成的数据
+                if (employeeFilesDto.getSocialSecurityChargeStart() != null || employeeFilesDto.getProvidentFundChargeStart() != null) {
+                    // 社保起缴时间或公积金起缴时间不为空
+                    Calendar socialSecurityChargeStart = Calendar.getInstance();
+                    int socialSecurityChargeNum = 0;
+                    Calendar providentFundChargeStart = Calendar.getInstance();
+                    int providentFundChargeNum = 0;
+                    if (employeeFilesDto.getSocialSecurityChargeStart() != null) {
+                        socialSecurityChargeStart.setTime(employeeFilesDto.getSocialSecurityChargeStart());
+                        socialSecurityChargeNum = calendar.get(Calendar.MONTH) - socialSecurityChargeStart.get(Calendar.MONTH);
+                    }
+                    if (employeeFilesDto.getProvidentFundChargeStart() != null) {
+                        providentFundChargeStart.setTime(employeeFilesDto.getProvidentFundChargeStart());
+                        providentFundChargeNum = calendar.get(Calendar.MONTH) - providentFundChargeStart.get(Calendar.MONTH);
+                    }
+                    if (socialSecurityChargeNum > 0 || providentFundChargeNum > 0) {
+                        // 需要生成之前没有生成的数据
+                        result.addAll(createOldBillData(employeeFilesDto, socialSecurityChargeNum, providentFundChargeNum, billYear));
+                    }
+                }
+            }
             for (int i = 1; i <= monthNum; i++) {
                 String businessYear = getYearAndMonth(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + i);  // 业务年月
                 Bill bill = new Bill();
                 setBillBasicData(bill, employeeFilesDto, billYear, businessYear);
                 setBillOtherData(bill, employeeFilesDto, salesContractDto, calendar);
                 calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + i, 1);
+                result.add(bill);
             }
         }
 
 
     }
+
+    private Collection<? extends Bill> createOldBillData(EmployeeFilesDto employeeFilesDto, int socialSecurityChargeNum, int providentFundChargeNum, String billYear) {
+        List<Bill> result = new ArrayList<>();
+
+        int num = 0;
+        int maxNum = Math.max(socialSecurityChargeNum, providentFundChargeNum);
+        List<SocialSecurityFundDetail> socialSecurityFundDetails = employeeFilesDto.getEmployeeOrderFormDto().getSocialSecurityFundDetails();
+        if (socialSecurityFundDetails.isEmpty()) {
+            // 为空
+            return null;
+        }
+        for (int i = 1; i <= maxNum; i++) {
+            num++;
+            for (SocialSecurityFundDetail socialSecurityFundDetail : socialSecurityFundDetails) {
+                Bill bill = new Bill();
+                if (num <= socialSecurityChargeNum) {
+                    // 生成社保数据
+                    generateSocialSecurityData(socialSecurityFundDetail, bill, null);
+                }
+                if (num <= providentFundChargeNum) {
+                    // 生成公积金数据
+                }
+            }
+
+        }
+
+        return result;
+    }
+
+    /**
+     * @param socialSecurityFundDetail:
+     * @param bill:
+     * @param calendar:
+     * @Author: wangyong
+     * @Date: 2020/3/31 13:13
+     * @return: void
+     * @Description: 生成社保数据
+     */
+    private void generateSocialSecurityData(SocialSecurityFundDetail socialSecurityFundDetail, Bill bill, Calendar calendar) {
+
+        String productName = socialSecurityFundDetail.getNameHide();
+        if (productName.contains("养老")) {
+            // 生成养老保险数据
+            generatePension(bill, socialSecurityFundDetail, calendar);
+        } else if (productName.contains("医疗") && !productName.contains("大病")) {
+            // 生成医疗保险数据
+            generateMedical(bill, socialSecurityFundDetail, calendar);
+        } else if (productName.contains("失业")) {
+            // 生成失业保险数据
+            generateUnemp(bill, socialSecurityFundDetail, calendar);
+        } else if (productName.contains("工伤") && !productName.contains("补充")) {
+            // 生成工伤保险数据
+            generateInjury(bill, socialSecurityFundDetail, calendar);
+        } else if (productName.contains("生育")) {
+            // 生成生育保险数据
+            generateFertility(bill, socialSecurityFundDetail, calendar);
+        } else if (productName.contains("医疗") && productName.contains("大病")) {
+            // 生成大病医疗保险数据
+            generateDMedical(bill, socialSecurityFundDetail, calendar);
+        } else if (productName.contains("综合")) {
+            // 生成综合保险数据
+            generateComplex(bill, socialSecurityFundDetail, calendar);
+        } else if (productName.contains("工伤") && productName.contains("补充")) {
+            // 生成补充工伤保险数据
+            generateBInjury(bill, socialSecurityFundDetail, calendar);
+        }
+    }
+
+    /**
+     * @param socialSecurityFundDetail:
+     * @param bill:
+     * @param calendar:
+     * @Author: wangyong
+     * @Date: 2020/3/31 13:14
+     * @return: void
+     * @Description: 生成公积金数据
+     */
+    private void generateProvidentFund(SocialSecurityFundDetail socialSecurityFundDetail, Bill bill, Calendar calendar) {
+        String productName = socialSecurityFundDetail.getNameHide();
+        if (productName.contains("公积金") && !productName.contains("补充")) {
+            // 生成公积金数据
+            generateProvident(bill, socialSecurityFundDetail, calendar);
+        } else if (productName.contains("公积金") && productName.contains("补充")) {
+            // 生成补充公积金数据
+            generateBProvident(bill, socialSecurityFundDetail, calendar);
+        }
+    }
+
 
     /**
      * @param billCycle: 账单周期

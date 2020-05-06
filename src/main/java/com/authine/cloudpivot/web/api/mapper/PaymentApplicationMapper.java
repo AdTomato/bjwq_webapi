@@ -56,7 +56,7 @@ public interface PaymentApplicationMapper {
      * @Date 2020/3/23 13:45
      */
     void insertPaymentClientDetails(@Param("details") List<PaymentClientDetails> details,
-                                    @Param("parentId") String parentId, @Param("dataType") String dataType);
+                                    @Param("parentId") String parentId);
 
     /**
      * 方法说明：根据parentId删除客户明细数据

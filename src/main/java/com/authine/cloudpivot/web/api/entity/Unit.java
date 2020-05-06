@@ -19,5 +19,5 @@ public class Unit {
     /**
      * 类型
      */
-    String type;
+    Integer type;
 }
