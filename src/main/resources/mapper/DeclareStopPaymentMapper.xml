@@ -6,40 +6,32 @@
 
     <resultMap id="openAccountInfo" type="com.authine.cloudpivot.web.api.entity.OpenAccountInfo">
         <result property="employee_name" column="employee_name"/>
-        <result property="identityNo_type" column="identityNo_type"/>
         <result property="identityNo" column="identityNo"/>
-        <result property="salaryCount" column="provident_fund_base"/>
         <result property="personalSaveBase" column="provident_fund_base"/>
-        <!--单位缴存比例-->
-        <result property="unitSaveProportion" column="company_ratio"/>
+        <result property="start_month" column="start_month"/>
         <!--个人缴存比例-->
         <result property="personalSaveProportion" column="employee_ratio"/>
 
     </resultMap>
 
     <select id="findOpenAccountInfo" resultMap="openAccountInfo">
-        select pfd.*,
-               pfdd.employee_ratio employee_ratio,
-               pfdd.company_ratio  company_ratio
-        from i4fvb_provident_fund_detail pfdd,
-             i4fvb_provident_fund_declare pfd
-        where pfd.id = pfdd.parentId
-          and createdTime between #{param1} and #{param2}
+        select
+          pfd.* ,pfdd.employee_ratio employee_ratio ,pfdd.company_ratio company_ratio
+        from
+          i4fvb_provident_fund_detail pfdd,i4fvb_provident_fund_declare pfd
+        where
+           pfd.id = pfdd.parentId and createdTime between #{param1} and #{param2}
 
     </select>
     <select id="findProportion" resultType="java.util.Map">
-        select employee_ratio, company_ratio
-        from i4fvb_provident_fund_detail
-        where parentId = #{id}
-        limit 1;
+      select   employee_ratio,company_ratio from i4fvb_provident_fund_detail where parentId = ( select id from i4fvb_provident_fund_declare where identityNo = #{identityNo} limit 1)
     </select>
 
     <resultMap id="unsealInfos" type="com.authine.cloudpivot.web.api.entity.UnsealAndSealInfos">
         <result property="employee_name" column="employee_name"/>
         <result property="identityNo" column="identityNo"/>
-        <result property="personalSaveBase" column="provident_fund_base"/>
-        <!--   <result property="unitSaveProportion" column="company_ratio"/>
-           <result property="personalSaveProportion" column="employee_ratio"/>-->
+     <!--   <result property="unitSaveProportion" column="company_ratio"/>
+        <result property="personalSaveProportion" column="employee_ratio"/>-->
         <!--<result property="unitMonthSaveAccount" column=""/>
         <result property="personalMonthSaveCount" column=""/>-->
     </resultMap>
@@ -53,16 +45,17 @@
     </select>-->
 
     <select id="findUnsealInfo" resultMap="unsealInfos">
-        select *
-        from i4fvb_provident_fund_declare pfd
-        where pfd.createdTime between #{param1} and #{param2}
+        select  * from i4fvb_provident_fund_declare pfd where pfd.createdTime between #{param1} and #{param2}
     </select>
+
 
 
     <resultMap id="sealInfos" type="com.authine.cloudpivot.web.api.entity.UnsealAndSealInfos">
         <result property="employee_name" column="employee_name"/>
         <result property="identityNo" column="identityNo"/>
-        <result property="personalSaveBase" column="provident_fund_base"/>
+        <result property="identityNo_type" column="identityNo_type"/>
+        <result property="charge_end_month" column="charge_end_month"/>
+<!--        <result property="personalSaveBase" column="provident_fund_base"/>-->
         <!--<result property="unitSaveProportion" column="company_ratio"/>
         <result property="personalSaveProportion" column="employee_ratio"/>-->
     </resultMap>
@@ -76,15 +69,13 @@
     </select>-->
 
     <select id="findSealInfo" resultMap="sealInfos">
-        select pfc.*
-        from i4fvb_provident_fund_close pfc
-        where pfc.createdTime between #{param1} and #{param2}
+        select pfc.* from  i4fvb_provident_fund_close pfc
+        where
+          pfc.createdTime between #{param1} and #{param2}
     </select>
 
     <select id="findAccountNum" resultType="java.lang.String">
-        select id_no
-        from i4fvb_employee_files
-        where id_no = #{identityNo}
+        select id_no from i4fvb_employee_files where id_no = #{identityNo}
     </select>
 
 </mapper>

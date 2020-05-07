@@ -18,19 +18,10 @@ public class UnsealAndSealInfos  extends BaseEntity{
     private int serialNumber;
 
     /**
-     * 业务月度
-     */
-    private String businessMonth;
-
-    /**
-     * 个人账号
-     */
-    private String personalAccountNum;
-
-    /**
      * 姓名
      */
     private String employee_name;
+
     /**
      * 证件类型
      */
@@ -39,37 +30,28 @@ public class UnsealAndSealInfos  extends BaseEntity{
      * 证件号码
      */
     private String identityNo;
+
     /**
-     * 变更类型
+     * 个人账号
      */
-    private String changeType;
-    /**
-     * 个人缴存基数
-     */
-    private Double personalSaveBase;
-    /**
-     * 单位缴存比例
-     */
-    private Double unitSaveProportion;
-    /**
-     * 个人缴存比例
-     */
-    private Double personalSaveProportion;
-    /**
-     * 月缴存总额
-     */
-    private Double monthSaveAccount;
-    /**
-     * 单位月缴存总额
-     */
-    private Double unitMonthSaveAccount;
-    /**
-     * 个人月缴存总额
-     */
-    private Double  personalMonthSaveCount;
+    private String personalAccountNum;
 
     /**
      * 变更原因
      */
     private String changeReason;
+
+
+
+    /**
+     * 个人缴存比例
+     */
+    private Double personalSaveProportion;
+
+
+    /**
+     * 截止月
+     */
+    private String charge_end_month;
+
 }

@@ -52,7 +52,7 @@
         select base_pay, employee_name, gender,identityNo from  i4fvb_social_security_declare where createdTime between #{param1} and #{param2}
     </select>
     <select id="findEmployeeContractInfo" resultType="java.util.Map">
-        select labour_contract_start_time, labour_contract_end_time from i4fvb_employee_files where id_no = #{identityNo}
+        select social_security_charge_start, social_security_charge_end from i4fvb_employee_files where id_no = #{identityNo}
     </select>
 
     <resultMap id="registerDeclareSheetInfoFromStopPayment" type="com.authine.cloudpivot.web.api.entity.RegisterDeclareSheetInfo">

@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,7 +31,7 @@ import java.util.*;
 
 /**
  * @ClassName PreSentLeaveController
- * @author: lfh
+ * @Author:lfh
  * @Date:2020/4/8 14:39
  * @Description: 批量预派撤离控制层
  **/
@@ -43,16 +45,16 @@ public class PreSentLeaveController extends BaseController {
 
     //批量预派
     @GetMapping("/batchPreSent")
-    public ResponseResult<Object> batchPreSent(@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")Date startTime,@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime) throws IOException, ParseException {
+    public void batchPreSent(@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")Date startTime, @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime, HttpServletResponse response) throws IOException, ParseException {
         if (startTime == null || endTime == null) {
-            return this.getOkResponseResult("error", "未传入开始时间和结束时间");
+            throw new RuntimeException("开始或结束时间为空");
         }
         List<PreSentInfo> preSentInfos = null;
         log.info("开始查询批量派遣数据");
         //查询批量派遣信息
         preSentInfos = preSentLeaveService.findBatchPreSent(startTime, endTime);
         if (preSentInfos.isEmpty()) {
-            return this.getOkResponseResult("error", "未查到批量派遣人员信息");
+            throw new RuntimeException("未查到批量派遣人员信息");
         }
         Integer serialNum = 1;
         List<PreSentInfo> copyPrenSentList= new ArrayList<>();
@@ -143,19 +145,20 @@ public class PreSentLeaveController extends BaseController {
         }
         workbook.write(fos);
         fos.close();
-        return this.getOkResponseResult("success", "批量预派导出成功");
+        ExportExcel.outputToWeb(realPath,response, workbook);
+
     }
 
     @GetMapping("/batchLeave")
-    public ResponseResult<Object> batchLeave(@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")Date startTime,@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime) throws IOException {
+    public void batchLeave(@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")Date startTime,@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,HttpServletResponse response) throws IOException {
         if (startTime == null || endTime == null) {
-            return this.getOkResponseResult("error", "未传入开始时间和结束时间");
+            throw new RuntimeException( "未传入开始时间和结束时间");
         }
         List<LeaveInfo> leaveInfos = null;
         log.info("开始查询批量撤离数据");
         leaveInfos =preSentLeaveService.findBatchLeave(startTime,endTime);
         if (leaveInfos.isEmpty()){
-            return this.getOkResponseResult("error","为查到批量撤离人员信息" );
+            throw new RuntimeException("未查到批量撤离人员信息" );
         }
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Integer serialNum = 1;
@@ -167,7 +170,7 @@ public class PreSentLeaveController extends BaseController {
             //查询员工对应的业务员
             String saleman = preSentLeaveService.findSaleman(leaveInfo.getIdentityNo());
             leaveInfo.setSalesman(saleman);
-            leaveInfo.setWelfarePlaces(deleteEmployee.getSocialSecurityCity());
+            leaveInfo.setWelfarePlaces(deleteEmployee.getSWelfareHandler());
             leaveInfo.setClientName(deleteEmployee.getSecondLevelClientName());
             leaveInfo.setDepartureDate(sdf.format(deleteEmployee.getLeaveTime()));
             leaveInfo.setDepartureReason(deleteEmployee.getLeaveReason());
@@ -212,7 +215,6 @@ public class PreSentLeaveController extends BaseController {
         sheet.setColumnWidth(10, (int)(16.67+0.71)*256);
         workbook.write(fos);
         fos.close();
-
-        return this.getOkResponseResult("success", "批量撤离导出成功");
+        ExportExcel.outputToWeb(realPath,response, workbook);
     }
 }

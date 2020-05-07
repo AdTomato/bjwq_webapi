@@ -1,6 +1,9 @@
 package com.authine.cloudpivot.web.api.entity;
 
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.util.Date;
 
 /**
  * @ClassName OpenAccountInfo
@@ -20,10 +23,7 @@ public class OpenAccountInfo  extends BaseEntity{
      */
     private String employee_name;
 
-    /**
-     * 证件类型
-     */
-    private String identityNo_type;
+
 
     /**
      * 证件号码
@@ -31,57 +31,22 @@ public class OpenAccountInfo  extends BaseEntity{
     private String identityNo;
 
 
-    /**
-     * 工资总额
-     */
-    private Double salaryCount;
+
 
     /**
      * 个人缴存基数
      */
     private Double personalSaveBase;
-    /**
-     * 单位缴存比例
-     */
-    private Double unitSaveProportion;
+
     /**
      * 个人缴存比例
      */
     private Double personalSaveProportion;
-    /**
-     * 月缴存总额
-     */
-    private Double monthSaveAccount;
-    /**
-     * 单位月缴存总额
-     */
-    private Double unitMonthSaveAccount;
-    /**
-     * 个人月缴存总额
-     */
-    private Double personalMonthSaveCount;
+
 
     /**
-     * 个人账户状态
-     */
-    private String personalAccountStatus;
-
-    /**
-     * 工资编号(非必输)
-     */
-    private String salaryNo;
-    /**
-     * 姓名简拼(非必输)
-     */
-    private String nameSimpleSpell;
-    /**
-     * 姓名全拼(非必输)
-     */
-    private String nameAllSpell;
-
-    /**
-     * 固定电话号码(非必输)
-     */
-    private String fixedPhone;
+     * 起始月
+      */
+    private String start_month;
 
 }

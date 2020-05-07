@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.lang.model.util.ElementScanner6;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.POST;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,7 +38,7 @@ import java.util.*;
 
 /**
  * @ClassName SocialSecurityDeclareController
- * @author: lfh
+ * @Author:lfh
  * @Date:2020/3/24 9:54
  * @Description: 社保申报控制类
  **/
@@ -52,9 +53,9 @@ public class SocialSecurityDeclareController extends BaseController {
 
     //合同新签导入
     @PostMapping("/importNewContract")
-    public ResponseResult<Object> importNewContract(Date startTime, Date endTime, String welfare_handler) throws IOException {
+    public void importNewContract(Date startTime, Date endTime, String welfare_handler, HttpServletResponse response) throws IOException {
         if (welfare_handler == null) {
-            return this.getOkResponseResult("error", "福利办理方未填写");
+            throw  new RuntimeException("福利办理方未填写");
         }
 
         List<ContractImportInfo> ContractInfos = null;
@@ -76,10 +77,10 @@ public class SocialSecurityDeclareController extends BaseController {
              **/
             ContractInfos = socialSecurityDeclareService.findContractInfo(lastTimeNode, nowTimeNode, welfare_handler);
         }else {
-            return this.getOkResponseResult("error", "开始时间和结束时间存在空值");
+            throw new RuntimeException("开始时间和结束时间存在空值");
         }
         if (ContractInfos.isEmpty()) {
-            return this.getOkResponseResult("error", "未查到新签合同信息");
+            throw new RuntimeException("未查到新签合同信息");
         }
         if (!ContractInfos.isEmpty()) {
             for (ContractImportInfo contractInfo : ContractInfos) {
@@ -125,14 +126,14 @@ public class SocialSecurityDeclareController extends BaseController {
         ExportExcel.getDataValidationList4Col(book.getSheet("sheet1"), 1, 14, book.getSheetAt(0).getLastRowNum(), 14, Arrays.asList(Constants.WORK_TYPE), book);
         book.write(fos);
         fos.close();
-        return this.getOkResponseResult("success", "新签合同导入成功");
+        ExportExcel.outputToWeb(realPath,response, workbook);
     }
 
     //合同解除终止
     @GetMapping("/contractTermination")
-    public ResponseResult<Object> contractTermination(Date startTime, Date endTime, String welfare_handler) throws IOException, ParseException {
+    public void contractTermination(Date startTime, Date endTime, String welfare_handler,HttpServletResponse response) throws IOException, ParseException {
         if (welfare_handler == null) {
-            return this.getOkResponseResult("error", "福利办理方未填写");
+            throw new RuntimeException("福利办理方未填写");
         }
 
         /* * @Author lfh
@@ -155,10 +156,10 @@ public class SocialSecurityDeclareController extends BaseController {
             Date nowTimeNode = lastAndNowTimeNode.get("nowTimeNode");
             contractTerminationInfos = socialSecurityDeclareService.findContractTerminationInfo(lastTimeNode, nowTimeNode, welfare_handler);
         } else {
-            return this.getOkResponseResult("error", "开始时间和结束时间存在空值");
+            throw new RuntimeException("开始时间和结束时间存在空值");
         }
         if (contractTerminationInfos.isEmpty()) {
-            return this.getOkResponseResult("error", "未查到停缴人员信息");
+            throw new RuntimeException("未查到停缴人员信息");
         }
 
         for (ContractTerminationInfo contractTerminationInfo : contractTerminationInfos) {
@@ -190,14 +191,14 @@ public class SocialSecurityDeclareController extends BaseController {
         ExportExcel.getDataValidationList4Col(book.getSheet("sheet1"), 1, 6, book.getSheetAt(0).getLastRowNum(), 6, Arrays.asList(Constants.CONTRACT_TERMINATE_REASON), book);
         book.write(fos);
         fos.close();
-        return this.getOkResponseResult("success", "合同解除终止导入成功");
+        ExportExcel.outputToWeb(realPath,response, workbook);
     }
 
     //登记申请表
     @GetMapping("/registerDeclareSheet")
-    public ResponseResult<Object> registerDeclareSheet(Date startTime, Date endTime, String welfare_handler,String formStatus) throws IOException, ParseException {
+    public void registerDeclareSheet(Date startTime, Date endTime, String welfare_handler,String formStatus,HttpServletResponse response) throws IOException, ParseException {
         if (welfare_handler == null) {
-            return this.getOkResponseResult("error", "福利办理方未填写");
+            throw new RuntimeException("福利办理方未填写");
         }
         String id = UUID.randomUUID().toString().replace("-", "");
         String fileName = id + "合肥市就业失业登记、劳动用工备案、社会保险登记申请表.xls";
@@ -294,10 +295,10 @@ public class SocialSecurityDeclareController extends BaseController {
                 registerDeclareSheetInfos = socialSecurityDeclareService.findRegisterDeclareInfo(lastTimeNode, nowTimeNode, welfare_handler);
             }
         } else {
-            return this.getOkResponseResult("error", "开始时间和结束时间存在空值");
+            throw new RuntimeException("开始时间和结束时间存在空值");
         }
         if (registerDeclareSheetInfos.isEmpty()){
-            return this.getOkResponseResult("error","未查到登记表信息" );
+            throw new RuntimeException("未查到登记表信息" );
         }
         int serialNum = 1;
         for (RegisterDeclareSheetInfo registerDeclareSheetInfo : registerDeclareSheetInfos) {
@@ -311,13 +312,15 @@ public class SocialSecurityDeclareController extends BaseController {
             registerDeclareSheetInfo.setEmployeeForm("全日制用工");
             registerDeclareSheetInfo.setRemarks("");
             //查合同起始日期和合同终止日期 从员工劳动合同查
+
+            //social_security_charge_start, social_security_charge_end
             Map<String, Object> employeeContractInfo = socialSecurityDeclareService.findEmployeeContractInfo(registerDeclareSheetInfo.getIdentityNo());
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-            Date beginDate = (Date) employeeContractInfo.get("labour_contract_start_time");
+            Date beginDate = (Date) employeeContractInfo.get("social_security_charge_start");
             String beginDateString  = sdf.format(beginDate);
             registerDeclareSheetInfo.setContractBeginDate(beginDateString);
 
-            Date endDate = (Date) employeeContractInfo.get("labour_contract_end_time");
+            Date endDate = (Date) employeeContractInfo.get("social_security_charge_end");
             String endDateString = sdf.format(endDate);
             registerDeclareSheetInfo.setContractEndDate(endDateString);
             int result = 0;
@@ -406,7 +409,7 @@ public class SocialSecurityDeclareController extends BaseController {
         }
         workbook.write(fos);
         fos.close();
-        return this.getOkResponseResult("success", "合肥市就业失业登记、劳动用工备案、社会保险登记申请表导出成功");
+        ExportExcel.outputToWeb(realPath,response, workbook);
     }
 
 

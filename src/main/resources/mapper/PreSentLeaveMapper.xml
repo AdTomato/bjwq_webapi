@@ -19,7 +19,7 @@
         select * from i4fvb_add_employee where identityNo = #{identityNo}
     </select>
     <select id="findSaleman" resultType="java.lang.String">
-        select name from h_org_user where id = JSON_EXTRACT((select salesman from i4fvb_employee_files where id_no =#{identityNo}),'$[0].id')
+        select name from h_org_user where id = (select owner from  i4fvb_employee_files where id_no = #{identityNo}) limit 1;
     </select>
     <resultMap id="leaveInfo" type="com.authine.cloudpivot.web.api.entity.LeaveInfo">
         <result property="employeeName" column="employee_name"/>

@@ -11,6 +11,8 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,7 +30,7 @@ import java.util.regex.Pattern;
 
 /**
  * @ClassName ExportExcel
- * @Author:lfh
+ * @author lfh
  * @Date:2020/3/13 16:16
  * @Description: 导出excel
  **/
@@ -45,6 +47,16 @@ public class ExportExcel {
     public static <T>void exportExcel(String[] headers, Collection<T> dataset, OutputStream out, String pattern) {
         exportExcel("POI导出EXCEL文档", headers, dataset, out, pattern);
     }
+
+    public static void outputToWeb(String realPath, HttpServletResponse response, Workbook workbook) throws IOException {
+        response.addHeader("Content-Disposition", "attachment;filename=" + new String(realPath.getBytes("gbk"), "iso8859-1"));
+        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(response.getOutputStream());
+        response.setContentType("application/vnd.ms-excel;charset=gb2312");
+        workbook.write(bufferedOutputStream);
+        bufferedOutputStream.flush();
+        bufferedOutputStream.close();
+    }
+
     /**
      * 这是一个通用的方法，利用了JAVA的反射机制，可以将放置在JAVA集合中并且符号一定条件的数据以EXCEL 的形式输出到指定IO设备上
      *

@@ -23,5 +23,5 @@ public interface DeclareStopPaymentService {
 
     String findAccountNum(String identityNo);
 
-    Map<String,BigDecimal> findProportion(String id);
+    Map<String,BigDecimal> findProportion(String identityNo);
 }

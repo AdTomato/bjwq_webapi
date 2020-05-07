@@ -44,7 +44,7 @@ public class DeclareStopPaymentServiceImpl implements DeclareStopPaymentService 
     }
 
     @Override
-    public Map<String, BigDecimal> findProportion(String id) {
-        return declareStopPaymentMapper.findProportion(id);
+    public Map<String, BigDecimal> findProportion(String identityNo) {
+        return declareStopPaymentMapper.findProportion(identityNo);
     }
 }
