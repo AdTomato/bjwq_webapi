@@ -12,6 +12,7 @@ import com.authine.cloudpivot.web.api.utils.ExcelUtils;
 import com.authine.cloudpivot.web.api.utils.ExportExcel;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.*;
@@ -36,7 +37,7 @@ import java.util.*;
 
 /**
  * @ClassName ProvidentFundDeclareStopPaymentController
- * @author: lfh
+ * @Author:lfh
  * @Date:2020/3/28 14:04
  * @Description: 公积金申报停缴
  **/
@@ -86,11 +87,10 @@ public class ProvidentFundDeclareStopPaymentController extends BaseController {
             double personalMonthSaveCount = Double.parseDouble(String.valueOf(openAccountInfo.getPersonalSaveBase() * openAccountInfo.getPersonalSaveProportion()));
             openAccountInfo.setPersonalMonthSaveCount(personalMonthSaveCount);
             openAccountInfo.setMonthSaveAccount(personalMonthSaveCount + unitMonthAccount);
-            openAccountInfo.setPersonalAccountStatus("01");
             serialNum++;
         }
         String id = UUID.randomUUID().toString().replace("-", "");
-        String fileName = id + "开户.xls";
+        String fileName = id + "公积金增员.xls";
         StringBuilder stringBuilder = new StringBuilder();
         String realPath = stringBuilder.append("D://upload//").append(fileName).toString();
         File file = new File(realPath);
@@ -101,15 +101,15 @@ public class ProvidentFundDeclareStopPaymentController extends BaseController {
         FileOutputStream fos = new FileOutputStream(file);
         /*SimpleDateFormat sdf = new SimpleDateFormat("yyyyMM");
         String date = sdf.format(openAccountInfos.get(0).getCreatedTime());*/
-        String[] title = {"个人开户批量导入","","","","","","","","","","","","单位账号","","业务季度","" };
+        // String[] title = {"个人开户批量导入","","","","","","","","","","","","单位账号","","业务季度","" };
         // String title = "个人开户批量导入";
         workbook = new HSSFWorkbook();
         Sheet sheet = workbook.createSheet("sheet1");
         int rowNum = 0;
         // 创建第一页的第一行，索引从0开始
-        Row row0 = sheet.createRow(rowNum++);
+        // Row row0 = sheet.createRow(rowNum++);
         // String title1[] = {"单位账号", "", "业务季度", date};
-        for (int i = 0; i < title.length; i++) {
+        /*for (int i = 0; i < title.length; i++) {
             // row0.createCell(row0.getLastCellNum()+ 1).setCellValue(title[i]);
             // row0.setHeight((short) 600);// 设置行高
             Cell cell = row0.createCell(i);
@@ -131,10 +131,10 @@ public class ProvidentFundDeclareStopPaymentController extends BaseController {
                 cs.setBorderTop(BorderStyle.THIN); //上边框
                 cell.setCellStyle(cs);
             }
-        }
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 11));
+        }*/
+        // sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 11));
         //第二行表头
-        String[] header1 = {"序号", "个人姓名", "证件类型", "证件号码","工资总额", "个人缴存基数", "单位缴存比例", "个人缴存比例", "月缴存总额", "单位月缴存额", "个人月缴存额", "个人账户状态", "工资编号(非必填)", "姓名简拼(非必填)", "姓名全拼(非必填)", "固定电话号码(非必填)"};
+        String[] header1 = {"序号", "姓名", "证件类型", "证件号码", "个人缴存基数", "单位缴存比例", "个人缴存比例", "月缴存总额", "单位月缴存额", "月缴存额"};
         // CellStyle headerStyle = ExportExcel.createHeadCellStyle(workbook, 12);
         //第三行
         Row row2 = sheet.createRow(rowNum++);
@@ -158,36 +158,15 @@ public class ProvidentFundDeclareStopPaymentController extends BaseController {
             tempCell.setCellStyle(cellStyle);
         }
         for (OpenAccountInfo openAccountInfo : openAccountInfos) {
-            fillExcelDate(openAccountInfo, sheet, workbook);
-           /* Field[] declaredFields = openAccountInfo.getClass().getDeclaredFields();
-            String[] values = new String[declaredFields.length];
-            try {
-                Field.setAccessible(declaredFields, true);
-                for (int i = 0; i < declaredFields.length; i++) {
-                    if (null == declaredFields[i].get(openAccountInfo)){
-                        declaredFields[i].set(openAccountInfo, "");
-                    }
-                    values[i] = declaredFields[i].get(openAccountInfo).toString();
-                }
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-            //追加数据的开始行
-            int start = sheet.getLastRowNum() + 1;
-            Row row = sheet.createRow(start);
-            int cluNum = sheet.getRow(1).getLastCellNum();
-            for (int i = 0; i < cluNum; i++) {
-                Cell cell = row.createCell(i);
-                cell.setCellValue(values[i]);
-                String value = ExcelUtils.getValue(cell);
-                cell.setCellValue(value);
-                CellStyle contentCellStyle = ExportExcel.createContentCellStyle(workbook);
-                cell.setCellStyle(contentCellStyle);
-            }*/
+            fillExcelDate(openAccountInfo, sheet, workbook,0);
         }
+        //设置自适应宽度，有些问题
+        ExportExcel.setSizeColumn(sheet, sheet.getLastRowNum());
+        //设置具体列的宽度
+        sheet.setColumnWidth(3, (int) (20 + 0.71) * 256);
         workbook.write(fos);
         fos.close();
-        return this.getOkResponseResult("success", "开户导出成功");
+        return this.getOkResponseResult("success", "公积金增员导出成功");
     }
 
     //启封封存导出
@@ -198,23 +177,23 @@ public class ProvidentFundDeclareStopPaymentController extends BaseController {
         }
         List<UnsealAndSealInfos> unsealAndSealInfos = null;
         if (startTime !=null && endTime != null){
-            if (formStatus.equals("申报")) {
+           /* if (formStatus.equals("申报")) {
                 unsealAndSealInfos = declareStopPaymentService.findUnsealInfo(startTime, endTime, welfare_handler);
-            }
-            if (formStatus.equals("停缴")){
+            }*/
+            // if (formStatus.equals("停缴")){
                 unsealAndSealInfos = declareStopPaymentService.findSealInfo(startTime,endTime,welfare_handler);
-            }
+            // }
         }else if (startTime == null && endTime == null){
             int timeNode = socialSecurityDeclareService.findTimeNode(welfare_handler);
             Map<String, Date> lastAndNowTimeNode = DateUtils.getLastAndNowTimeNode(timeNode);
             Date lastTimeNode = lastAndNowTimeNode.get("lastTimeNode");
             Date nowTimeNode = lastAndNowTimeNode.get("nowTimeNode");
-            if (formStatus.equals("申报")) {
+            /*if (formStatus.equals("申报")) {
                 unsealAndSealInfos = declareStopPaymentService.findUnsealInfo(lastTimeNode, nowTimeNode, welfare_handler);
-            }
-            if (formStatus.equals("停缴")){
+            }*/
+            // if (formStatus.equals("停缴")){
                 unsealAndSealInfos = declareStopPaymentService.findSealInfo(lastTimeNode,nowTimeNode,welfare_handler);
-            }
+            // }
         }else {
             return this.getOkResponseResult("error", "开始时间和结束时间存在空值");
         }
@@ -232,15 +211,18 @@ public class ProvidentFundDeclareStopPaymentController extends BaseController {
                 accountNum = "";
             }
             unsealAndSealInfo.setPersonalAccountNum(accountNum);
-            if (formStatus.equals("申报")){
+          /*  if (formStatus.equals("申报")){
                 unsealAndSealInfo.setChangeType("01");
-            }
-            if (formStatus.equals("停缴")){
+            }*/
+            // if (formStatus.equals("停缴")){
                 unsealAndSealInfo.setChangeType("02");
-            }
+            // }
             unsealAndSealInfo.setIdentityNo_type("01");
             DecimalFormat df = new DecimalFormat("#.00");
             Map<String,BigDecimal> proportion = declareStopPaymentService.findProportion(unsealAndSealInfo.getId());
+            if (proportion == null || proportion.size() == 0){
+                return this.getOkResponseResult("error", "比例为空");
+            }
             BigDecimal employee_ratio = proportion.get("employee_ratio");
             BigDecimal company_ratio = proportion.get("company_ratio");
             unsealAndSealInfo.setPersonalSaveProportion(Double.parseDouble(df.format(employee_ratio)));
@@ -262,23 +244,23 @@ public class ProvidentFundDeclareStopPaymentController extends BaseController {
             //月缴存额
             monthSaveCount = Double.parseDouble(df.format(monthSaveCount));
             unsealAndSealInfo.setMonthSaveAccount(monthSaveCount);
-            if (formStatus.equals("申报")){
+          /*  if (formStatus.equals("申报")){
                 unsealAndSealInfo.setChangeReason("9");
             }
-            if (formStatus.equals("停缴")){
+            if (formStatus.equals("停缴")){*/
                 unsealAndSealInfo.setChangeReason("1");
-            }
+            // }
             serialNum++;
 
         }
         String id = UUID.randomUUID().toString().replace("-","" );
         String fileName= "";
-        if (formStatus.equals("申报")) {
+        /*if (formStatus.equals("申报")) {
             fileName = id + "启封.xls";
-        }
-        if (formStatus.equals("停缴")){
+        }*/
+        // if (formStatus.equals("停缴")){
             fileName = id + "停缴.xls";
-        }
+        // }
         String realPath = new StringBuilder().append("D://upload//").append(fileName).toString();
         File file = new File(realPath);
         if (!file.exists()){
@@ -306,14 +288,14 @@ public class ProvidentFundDeclareStopPaymentController extends BaseController {
             cell.setCellStyle(ExportExcel.createHeadCellStyle(workbook, 10));
         }
         for (UnsealAndSealInfos unsealAndSealInfo : unsealAndSealInfos) {
-            fillExcelDate(unsealAndSealInfo,sheet,workbook);
+            fillExcelDate(unsealAndSealInfo,sheet,workbook,1);
         }
         workbook.write(fos);
         fos.close();
         return this.getOkResponseResult("success", "启封封存成功");
 
     }
-    public <T> void fillExcelDate(T clazz,Sheet sheet,Workbook workbook){
+    public <T> void fillExcelDate(T clazz,Sheet sheet,Workbook workbook,int beginRow){
         Field[] declaredFields = clazz.getClass().getDeclaredFields();
         String[] values = new String[declaredFields.length];
         try {
@@ -330,7 +312,7 @@ public class ProvidentFundDeclareStopPaymentController extends BaseController {
         //追加数据的开始行
         int start = sheet.getLastRowNum() + 1;
         Row row = sheet.createRow(start);
-        int cluNum = sheet.getRow(1).getLastCellNum();
+        int cluNum = sheet.getRow(beginRow).getLastCellNum();
         for (int i = 0; i < cluNum; i++) {
             Cell cell = row.createCell(i);
             cell.setCellValue(values[i]);

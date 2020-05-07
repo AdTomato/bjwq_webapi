@@ -19,6 +19,7 @@ import net.sf.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -35,7 +36,7 @@ public class ContractChangeController extends BaseController {
     @Autowired
     private ContractChangeService contractChangeService;
     @RequestMapping("/contractUpdate")
-    public ResponseResult<Object> contractUpdate(@RequestBody   ContractChangeInfo contractChangeInfo ) {
+    public ResponseResult<Object> contractUpdate(@RequestBody   ContractChangeInfo contractChangeInfo ) throws IllegalAccessException {
         if (contractChangeInfo == null || "".equals(contractChangeInfo)){
             return this.getOkResponseResult("error", "未传入变更数据");
         }
@@ -44,6 +45,15 @@ public class ContractChangeController extends BaseController {
              String id = contractChangeInfo.getSales_contract();
             //查询销售合同数据
             SalesContractInfo beforeSalesContractInfo = contractChangeService.findSalesContractInfo(id);
+           if (beforeSalesContractInfo.getX_quantity() == null){
+               beforeSalesContractInfo.setX_quantity(0);
+           }
+           if (beforeSalesContractInfo.getX_unit_price() == null){
+               beforeSalesContractInfo.setX_unit_price(0D);
+           }
+           if (beforeSalesContractInfo.getX_total_amount() == null){
+               beforeSalesContractInfo.setX_total_amount(0D);
+           }
             checkUnit(beforeSalesContractInfo.getX_sales_person(), JSON.toJSONString(contractChangeInfo.getX_sales_person()), "销售人员", contractChangeInfo.getParentId(),3, data);
             checkUnit(beforeSalesContractInfo.getX_salesman(), JSON.toJSONString(contractChangeInfo.getX_sales_person()), "业务员", contractChangeInfo.getParentId(), 3,data);
             checkString(beforeSalesContractInfo.getX_contract_num(), contractChangeInfo.getX_contract_num(), "合同编码", contractChangeInfo.getParentId(), data);
@@ -51,7 +61,7 @@ public class ContractChangeController extends BaseController {
            if (!beforeSalesContractInfo.getX_client_name().equals(contractChangeInfo.getX_client_name())){
                String beforeClientName = contractChangeService.findClientName(beforeSalesContractInfo.getX_client_name());
                String afterClientName= contractChangeService.findClientName(contractChangeInfo.getX_client_name());
-               data.add(getChangeData("公司名称",beforeClientName ,afterClientName , contractChangeInfo.getParentId()));
+               data.add(getChangeData("客户名称",beforeClientName ,afterClientName , contractChangeInfo.getParentId()));
            }
             checkDouble(beforeSalesContractInfo.getX_unit_price(), contractChangeInfo.getX_unit_price(), "单价", contractChangeInfo.getParentId(), data);
             checkInteger(beforeSalesContractInfo.getX_quantity(), contractChangeInfo.getX_quantity(), "数量", contractChangeInfo.getParentId(), data);
@@ -71,6 +81,16 @@ public class ContractChangeController extends BaseController {
         if ("采购合同".equals(contractChangeInfo.getChange_type())) {
             String id = contractChangeInfo.getPurchase_contract();
             PurchaseContractInfo beforePurchaseContractInfo = contractChangeService.findPurchaseInfo(id);
+
+            if (beforePurchaseContractInfo.getC_quantity() == null){
+                beforePurchaseContractInfo.setC_quantity(0);
+            }
+            if (beforePurchaseContractInfo.getC_unit_price() == null){
+                beforePurchaseContractInfo.setC_unit_price(0D);
+            }
+            if (beforePurchaseContractInfo.getC_total_amount() == null){
+                beforePurchaseContractInfo.setC_total_amount(0D);
+            }
             checkUnit(beforePurchaseContractInfo.getBuyer() ,JSON.toJSONString(contractChangeInfo.getBuyer()) ,"采购员" ,contractChangeInfo.getParentId(),3,data );
             checkString(beforePurchaseContractInfo.getC_contract_num(), contractChangeInfo.getC_contract_num(), "合同编码", contractChangeInfo.getParentId(), data);
             // checkUnit(beforePurchaseContractInfo.getC_supplier_name(),contractChangeInfo.getC_contract_num() ,"供应商名称" , parentId,1,data );
