@@ -2,6 +2,7 @@ package com.authine.cloudpivot.web.api.mapper;
 
 import com.authine.cloudpivot.web.api.entity.OpenAccountInfo;
 import com.authine.cloudpivot.web.api.entity.UnsealAndSealInfos;
+import com.authine.cloudpivot.web.api.params.ImportCondition;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -15,14 +16,16 @@ import java.util.Map;
  * @Description:
  **/
 public interface DeclareStopPaymentMapper {
-    List<OpenAccountInfo> findOpenAccountInfo(Date startTime, Date endTime, String welfare_handler);
+    List<OpenAccountInfo> findOpenAccountInfo(ImportCondition importCondition);
 
     List<UnsealAndSealInfos> findUnsealInfo(Date startTime, Date endTime, String welfare_handler);
 
-    List<UnsealAndSealInfos> findSealInfo(Date startTime, Date endTime, String welfare_handler);
+    List<UnsealAndSealInfos> findSealInfo(ImportCondition importCondition);
 
     String findAccountNum(String identityNo);
 
 
-    Map<String,BigDecimal> findProportion(String id);
+    Map<String,BigDecimal> findProportion(String identityNo);
+
+    String findOwnerById(String owner);
 }

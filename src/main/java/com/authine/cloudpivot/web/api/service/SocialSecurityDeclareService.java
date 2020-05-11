@@ -3,6 +3,7 @@ package com.authine.cloudpivot.web.api.service;
 import com.authine.cloudpivot.web.api.entity.ContractImportInfo;
 import com.authine.cloudpivot.web.api.entity.ContractTerminationInfo;
 import com.authine.cloudpivot.web.api.entity.RegisterDeclareSheetInfo;
+import com.authine.cloudpivot.web.api.params.ImportCondition;
 
 import java.util.Date;
 import java.util.List;
@@ -23,7 +24,7 @@ public interface SocialSecurityDeclareService {
      * @Param [ids]  用户id数组
      * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.Object>
      **/
-    List<ContractImportInfo> findContractInfo(Date startTime, Date endTime, String welfare_handler);
+    List<ContractImportInfo> findContractInfo(ImportCondition importCondition);
 
     /* * @Author lfh
      * @Description //获取用户选中的停缴信息
@@ -31,7 +32,7 @@ public interface SocialSecurityDeclareService {
      * @Param [ids]
      * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.Object>
      **/
-    List<ContractTerminationInfo> findContractTerminationInfo(Date startTime, Date endTime, String welfare_handler);
+    List<ContractTerminationInfo> findContractTerminationInfo(ImportCondition importCondition);
 
     /* * @Author lfh
      * @Description 查询提交减员时的时间
@@ -43,10 +44,10 @@ public interface SocialSecurityDeclareService {
 
     Integer findTimeNode(String welfare_handler);
 
-    List<RegisterDeclareSheetInfo> findRegisterDeclareInfo(Date lastTimeNodeDate, Date nowTimeNodeDate, String welfare_handler);
+    List<RegisterDeclareSheetInfo> findRegisterDeclareInfo(ImportCondition importCondition);
 
     Map<String,Object> findEmployeeContractInfo(String identityNo);
 
-    List<RegisterDeclareSheetInfo> findRegisterDeclareInfoFromStopPayment(Date startTime, Date endTime, String welfare_handler);
+    List<RegisterDeclareSheetInfo> findRegisterDeclareInfoFromStopPayment(ImportCondition importCondition);
 
 }

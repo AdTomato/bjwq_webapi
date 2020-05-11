@@ -530,7 +530,19 @@ public class ExportExcel {
             Field.setAccessible(declaredFields, true);
             for (int i = 0; i < declaredFields.length; i++) {
                 if (null == declaredFields[i].get(clazz)){
-                    declaredFields[i].set(clazz, "");
+                    try {
+                        declaredFields[i].set(clazz, "");
+                    }catch (Exception e){
+                        if (declaredFields[i].getType() == Integer.class){
+                            declaredFields[i].set(clazz, 0);
+                        }
+                        if (declaredFields[i].getType() == Double.class){
+                            declaredFields[i].set(clazz, 0D);
+                        }
+
+
+                    }
+
                 }
                 values[i] = declaredFields[i].get(clazz).toString();
             }

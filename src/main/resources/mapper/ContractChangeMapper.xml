@@ -10,6 +10,7 @@
         </foreach>
     </update>
     <resultMap id="salesContractInfo" type="com.authine.cloudpivot.web.api.entity.SalesContractInfo">
+        <result property="sales_contract_id" column="id"/>
         <result property="x_sales_person" column="sales_person"/>
         <result property="x_salesman" column="salesman"/>
         <result property="x_contract_num" column="contract_num"/>

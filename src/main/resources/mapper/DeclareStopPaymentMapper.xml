@@ -5,80 +5,113 @@
 <mapper namespace="com.authine.cloudpivot.web.api.mapper.DeclareStopPaymentMapper">
 
     <resultMap id="openAccountInfo" type="com.authine.cloudpivot.web.api.entity.OpenAccountInfo">
+        <result property="welfare_handler" column="welfare_handler"/>
+        <result property="city" column="city"/>
+        <result property="first_level_client_name" column="first_level_client_name"/>
+        <result property="second_level_client_name" column="second_level_client_name"/>
+        <result property="owner" column="owner"/>
+
         <result property="employee_name" column="employee_name"/>
-<!--        <result property="identityNo_type" column="identityNo_type"/>-->
         <result property="identityNo" column="identityNo"/>
-<!--        <result property="salaryCount" column="provident_fund_base"/>-->
-        <result property="personalSaveBase" column="provident_fund_base"/>
+        <result property="provident_fund_base" column="provident_fund_base"/>
         <result property="start_month" column="start_month"/>
-        <!--单位缴存比例-->
-<!--        <result property="unitSaveProportion" column="company_ratio"/>-->
         <!--个人缴存比例-->
-        <result property="personalSaveProportion" column="employee_ratio"/>
+        <result property="employee_ratio" column="employee_ratio"/>
+        <!--单位存缴比例        -->
+        <result property="company_ratio" column="company_ratio"/>
+        <!--        单位缴存额-->
+        <result property="corporate_payment" column="corporate_payment"/>
+        <!--        个人缴存额-->
+        <result property="personal_deposit" column="personal_deposit"/>
+        <result property="phone" column="phone"/>
+        <result property="current_address" column="current_address"/>
 
     </resultMap>
 
-    <select id="findOpenAccountInfo" resultMap="openAccountInfo">
+    <select id="findOpenAccountInfo" parameterType="com.authine.cloudpivot.web.api.params.ImportCondition" resultMap="openAccountInfo">
         select
-          pfd.* ,pfdd.employee_ratio employee_ratio ,pfdd.company_ratio company_ratio
+        pfd.* ,pfdd.employee_ratio employee_ratio ,pfdd.company_ratio company_ratio,lci.phone,lci.current_address
         from
-          i4fvb_provident_fund_detail pfdd,i4fvb_provident_fund_declare pfd
+        i4fvb_provident_fund_detail pfdd,i4fvb_provident_fund_declare pfd,ibkct_labor_contract_info lci
         where
-           pfd.id = pfdd.parentId and createdTime between #{param1} and #{param2}
+        pfd.id = pfdd.parentId and lci.idnumber = pfd.identityNo
+        <if test="welfare_handler!=null and welfare_handler!='' ">
+            and welfare_handler=#{welfare_handler}
+        </if>
+        <if test="city!=null and city!=''">
+            and city=#{city}
+        </if>
+        <if test="second_level_client_name!=null and second_level_client_name!=''">
+            and second_level_client_name = #{second_level_client_name}
+        </if>
+
+        <if test="startTime !=null and endTime !=null ">
+            and pfd.createdTime between #{startTime} and #{endTime}
+        </if>
+        <if test="beginPaymentStartTime !=null and beginPaymentEndTime !=null">
+            and pfd.start_month between #{beginPaymentStartTime} and #{beginPaymentEndTime}
+        </if>
+
 
     </select>
     <select id="findProportion" resultType="java.util.Map">
-        select employee_ratio,company_ratio from i4fvb_provident_fund_detail where parentId = #{id} limit 1;
+      select   employee_ratio,company_ratio from i4fvb_provident_fund_detail where parentId = ( select id from i4fvb_provident_fund_declare where identityNo = #{identityNo} limit 1)
     </select>
-
-    <resultMap id="unsealInfos" type="com.authine.cloudpivot.web.api.entity.UnsealAndSealInfos">
-        <result property="employee_name" column="employee_name"/>
-        <result property="identityNo" column="identityNo"/>
-        <result property="personalSaveBase" column="provident_fund_base"/>
-     <!--   <result property="unitSaveProportion" column="company_ratio"/>
-        <result property="personalSaveProportion" column="employee_ratio"/>-->
-        <!--<result property="unitMonthSaveAccount" column=""/>
-        <result property="personalMonthSaveCount" column=""/>-->
-    </resultMap>
-    <!--<select id="findUnsealInfo" resultMap="unsealInfos">
-        select
-          pfd.*,pfdd.employee_ratio ,pfdd.company_ratio
-        from
-          i4fvb_provident_fund_declare pfd,i4fvb_provident_fund_detail pfdd
-        where
-          pfd.id = pfdd.parentId and pfd.createdTime between #{param1} and #{param2}
-    </select>-->
-
-    <select id="findUnsealInfo" resultMap="unsealInfos">
-        select  * from i4fvb_provident_fund_declare pfd where pfd.createdTime between #{param1} and #{param2}
-    </select>
-
-
 
     <resultMap id="sealInfos" type="com.authine.cloudpivot.web.api.entity.UnsealAndSealInfos">
+
+        <result property="welfare_handler" column="welfare_handler"/>
+        <result property="city" column="city"/>
+        <result property="first_level_client_name" column="first_level_client_name"/>
+        <result property="second_level_client_name" column="second_level_client_name"/>
+        <result property="owner" column="owner"/>
         <result property="employee_name" column="employee_name"/>
         <result property="identityNo" column="identityNo"/>
-        <result property="personalSaveBase" column="provident_fund_base"/>
-        <!--<result property="unitSaveProportion" column="company_ratio"/>
-        <result property="personalSaveProportion" column="employee_ratio"/>-->
+        <result property="provident_fund_base" column="provident_fund_base"/>
+        <result property="charge_end_month" column="charge_end_month"/>
+        <!--个人缴存比例-->
+        <result property="employee_ratio" column="employee_ratio"/>
+        <!--单位存缴比例        -->
+        <result property="company_ratio" column="company_ratio"/>
+        <!--        单位缴存额-->
+        <result property="corporate_payment" column="corporate_payment"/>
+        <!--        个人缴存额-->
+        <result property="personal_deposit" column="personal_deposit"/>
+        <result property="phone" column="phone"/>
+        <result property="current_address" column="current_address"/>
     </resultMap>
-    <!--<select id="findSealInfo" resultMap="sealInfos">
-       select
-		pfc.*, pfdd.employee_ratio as employee_ratio ,pfdd.company_ratio as company_ratio
-      from
-		i4fvb_provident_fund_detail pfdd, i4fvb_provident_fund_close pfc,i4fvb_provident_fund_declare pfd
-      where
-		pfd.identityNo = pfc.identityNo and pfd.id = pfdd.parentId and pfd.createdTime between #{param1} and #{param2}
-    </select>-->
 
-    <select id="findSealInfo" resultMap="sealInfos">
-        select pfc.* from  i4fvb_provident_fund_close pfc
+    <select id="findSealInfo"   parameterType="com.authine.cloudpivot.web.api.params.ImportCondition"  resultMap="sealInfos">
+        select
+        pfc.*, pfdd.employee_ratio employee_ratio ,pfdd.company_ratio company_ratio,lci.phone,lci.current_address
+        from
+        i4fvb_provident_fund_detail pfdd, i4fvb_provident_fund_close pfc,i4fvb_provident_fund_declare
+        pfd,ibkct_labor_contract_info lci
         where
-          pfc.createdTime between #{param1} and #{param2}
+        pfd.identityNo = pfc.identityNo and pfd.id = pfdd.parentId and lci.idnumber = pfd.identityNo
+        <if test="welfare_handler!=null and welfare_handler!='' ">
+            and pfc.welfare_handler=#{welfare_handler}
+        </if>
+        <if test="city!=null and city!=''">
+            and city=#{city}
+        </if>
+        <if test="second_level_client_name!=null and second_level_client_name!=''">
+            and second_level_client_name = #{second_level_client_name}
+        </if>
+        <if test="startTime !=null and endTime !=null ">
+            and pfd.createdTime between #{startTime} and #{endTime}
+        </if>
+        <if test="stopPaymentStartTime !=null and stopPaymentEndTime !=null">
+            and pfc.charge_end_month between #{beginPaymentStartTime} and #{beginPaymentEndTime}
+        </if>
     </select>
+
 
     <select id="findAccountNum" resultType="java.lang.String">
         select id_no from i4fvb_employee_files where id_no = #{identityNo}
+    </select>
+    <select id="findOwnerById" resultType="java.lang.String">
+        select name from h_org_user where id = #{owner}
     </select>
 
 </mapper>

@@ -1,6 +1,7 @@
 package com.authine.cloudpivot.web.api.entity;
 
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
@@ -13,41 +14,43 @@ import java.util.Date;
 @Data
 public class ContractTerminationInfo  extends BaseEntity{
 
-    /**
-     * id
-     */
-    // private String id;
-    /**
-     * 单位管理码
-     */
-    private String unitManagementId;
-    /**
-     * 姓名
-     */
+    //福利办理方
+    private String welfare_handler;
+    //福利地
+    private String city;
+    //一级库户名称
+    private String first_level_client_name;
+    //二级库户名称
+    private String second_level_client_name;
+    // 业务员
+    private String owner;
+    //姓名
     private String employee_name;
-
-    /**
-     *身份证号码
-     */
+    //性别
+    private String gender;
+    //证件号码
     private String identityNo;
+    //劳动合同起始时间
+    @DateTimeFormat(pattern = "yyyyMMdd")
+    private String contract_start_time;
+    //劳动合同终止时间
+    @DateTimeFormat(pattern = "yyyyMMdd")
+    private String contract_end_time;
+    //离职时间
+    @DateTimeFormat(pattern = "yyyyMMdd")
+    private String quit_date;
+    //社保终止时间
+    @DateTimeFormat(pattern = "yyyyMMdd")
+    private String charge_end_month;
+    //社保基数
+    private String base_pay;
+    //用工形式
+    private String employment_forms;
+    //社保账号
+    private String social_security_num;
+    //离职原因
+    private String quit_reason;
+    //联系电话
+    private String phone;
 
-    /**
-     * 合同解除时间
-     */
-    private Date contractTerminationDate;
-
-    /**
-     * 合同变更状态 默认解除
-     */
-    private String contractStatus;
-
-    /**
-     * 合同终止原因
-     */
-    private String contractStopReason;
-
-    /**
-     * 合同解除原因
-     */
-    private String contractTerminateReason;
 }

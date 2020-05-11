@@ -19,49 +19,43 @@ import java.util.Date;
 @Data
 public class ContractImportInfo extends BaseEntity {
 
-    private String unitManagementId;
-
+    //福利办理方
+    private String welfare_handler;
+    //福利地
+    private String city;
+    //一级库户名称
+    private String first_level_client_name;
+    //二级库户名称
+    private String second_level_client_name;
+    // 业务员
+    private String owner;
+    //姓名
     private String employee_name;
-
+    //性别
     private String gender;
-
-    private String nation;
-
-    private Date birthday;
-
+    //民族
+    private String national;
+    //出生日期
+    private String birthday;
+    //证件号码
     private String identityNo;
-
-    private String accountCharacter;
-
-    private String domicilePlace;
-
-    private String registeredResidence;
-
-    private String residentialArea;
-
-    private String placeOfResidence;
-
-    private String phoneNumber;
-
-    private String personCategory;
-
-    private String educationDegree;
-
-    private String workType;
-
-    private Date contract_signing_date;
-
-    private Date contract_deadline;
-
-    private String contractTermType;
-
-    private Double positive_salary;
-
-    private String workForm;
-
-    private Date employmentRegistrationTime;
-
-    //就业起始时间对应合同里面的 劳动合同起始时间
-    private Date unitImploymentStartTime;
+    //户籍性质 -员工档案
+    private String household_register_nature;
+    //学历
+    private String education;
+    //劳动合同起始时间
+    private String contract_start_time;
+    //劳动合同终止时间
+    private String contract_end_time;
+    //社保起做时间
+    private String start_month;
+    //社保基数
+    private String base_pay;
+    //用工形式
+    private String employment_forms;
+    //联系电话
+    private String phone;
+    //现住址
+    private String current_address;
 
 }

@@ -4,19 +4,44 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.authine.cloudpivot.web.api.mapper.SocialSecurityDeclareMapper">
     <resultMap id="contractImportInfo" type="com.authine.cloudpivot.web.api.entity.ContractImportInfo">
+        <result property="welfare_handler" column="welfare_handler"/>
+        <result property="city" column="city"/>
+        <result property="first_level_client_name" column="first_level_client_name"/>
+        <result property="second_level_client_name" column="second_level_client_name"/>
+        <result property="owner" column="owner"/>
         <result property="employee_name" column="employee_name"/>
+        <result property="identityNo" column="identityNo"/>
         <result property="birthday" column="birthday"/>
         <result property="gender" column="gender"/>
-        <result property="identityNo" column="identityNo"/>
-        <result property="contract_signing_date" column="contract_signing_date"/>
-        <result property="contract_deadline" column="contract_deadline"/>
-        <result property="positive_salary" column="positive_salary"/>
+        <result property="household_register_nature" column="household_register_nature"/>
+        <result property="education" column="education"/>
+        <result property="contract_start_time" column="contract_start_time"/>
+        <result property="contract_end_time" column="contract_end_time"/>
+        <result property="start_month" column="start_month"/>
+        <result property="base_pay" column="base_pay"/>
+        <result property="employment_forms" column="employment_forms"/>
+        <result property="phone" column="phone"/>
+        <result property="current_address" column="current_address"/>
     </resultMap>
 
     <resultMap id="contractTerminationInfo" type="com.authine.cloudpivot.web.api.entity.ContractTerminationInfo">
+        <result property="welfare_handler" column="welfare_handler"/>
+        <result property="city" column="city"/>
+        <result property="first_level_client_name" column="first_level_client_name"/>
+        <result property="second_level_client_name" column="second_level_client_name"/>
+        <result property="owner" column="owner"/>
         <result property="employee_name" column="employee_name"/>
         <result property="identityNo" column="identityNo"/>
-        <!--<result property="id" column="id"/>-->
+        <result property="gender" column="gender"/>
+        <result property="contract_start_time" column="contract_start_time"/>
+        <result property="contract_end_time" column="contract_end_time"/>
+        <result property="quit_date" column="quit_date"/>
+        <result property="charge_end_month" column="charge_end_month"/>
+        <result property="base_pay" column="base_pay"/>
+        <result property="employment_forms" column="employment_forms"/>
+        <result property="social_security_num" column="social_security_num"/>
+        <result property="quit_reason" column="quit_reason"/>
+        <result property="phone" column="phone"/>
     </resultMap>
 
     <resultMap id="registerDeclareSheetInfo" type="com.authine.cloudpivot.web.api.entity.RegisterDeclareSheetInfo">
@@ -24,23 +49,57 @@
         <result property="gender" column="gender"></result>
         <result property="identityNo" column="identityNo"></result>
         <result property="contract_salary" column="base_pay"/>
+        <result property="contractBeginDate" column="contract_start_time"/>
+        <result property="contractEndDate" column="contract_end_time"/>
+        <result property="employeeForm" column="employment_forms"/>
+        <result property="domicileLocation" column="domicile_place"/>
     </resultMap>
-    <!--//查询获取用户选选中的公积金申报信息-->
-    <select id="findContractInfo" resultMap="contractImportInfo">
+    <!--//查询获取用户选选中的社保申报信息-->
+    <select id="findContractInfo" parameterType="com.authine.cloudpivot.web.api.params.ImportCondition" resultMap="contractImportInfo">
         select
-          employee_name,birthday,gender,identityNo,contract_signing_date,contract_deadline,positive_salary
+            ssd.*,household_register_nature,education,contract_start_time,contract_end_time,employment_forms,phone,current_address
         from
-          i4fvb_social_security_declare
-        where
-          createdTime between #{param1} and #{param2}
+          i4fvb_social_security_declare ssd,ibkct_labor_contract_info ibc,i4fvb_employee_files ef
+        where ssd.identityNo = ef.id_no and ssd.identityNo = ibc.idnumber
+        <if test="welfare_handler!=null and welfare_handler!='' ">
+            and welfare_handler=#{welfare_handler}
+        </if>
+        <if test="city!=null and city!=''">
+            and city=#{city}
+        </if>
+        <if test="second_level_client_name!=null and second_level_client_name!=''">
+            and second_level_client_name = #{second_level_client_name}
+        </if>
+
+        <if test="startTime !=null and endTime !=null ">
+            and ssd.createdTime between #{startTime} and #{endTime}
+        </if>
+        <if test="beginPaymentStartTime !=null and beginPaymentEndTime !=null">
+            and ssd.start_month between #{beginPaymentStartTime} and #{beginPaymentEndTime}
+        </if>
     </select>
-    <select id="findContractTerminationInfo" resultMap="contractTerminationInfo">
+    <select id="findContractTerminationInfo" parameterType="com.authine.cloudpivot.web.api.params.ImportCondition" resultMap="contractTerminationInfo">
         select
-          employee_name,identityNo
+        ssc.*,contract_start_time,contract_end_time,employment_forms,phone,quit_reason,social_security_num,quit_date
         from
-          i4fvb_social_security_close
-        where
-          createdTime between #{param1} and #{param2}
+        i4fvb_social_security_close ssc,ibkct_labor_contract_info ibc,i4fvb_employee_files ef
+        where ssc.identityNo = ef.id_no and ssc.identityNo = ibc.idnumber
+        <if test="welfare_handler!=null and welfare_handler!='' ">
+            and welfare_handler=#{welfare_handler}
+        </if>
+        <if test="city!=null and city!=''">
+            and city=#{city}
+        </if>
+        <if test="second_level_client_name!=null and second_level_client_name!=''">
+            and second_level_client_name = #{second_level_client_name}
+        </if>
+
+        <if test="startTime !=null and endTime !=null ">
+            and ssc.createdTime between #{startTime} and #{endTime}
+        </if>
+        <if test="stopPaymentStartTime !=null and stopPaymentEndTime !=null">
+            and ssc.charge_end_month between #{stopPaymentStartTime} and #{stopPaymentEndTime}
+        </if>
     </select>
     <select id="findDeleteEmployeeDate" resultType="java.util.Date">
         select createdTime from i4fvb_delete_employee where identityNo  = #{identityNo}
@@ -48,11 +107,32 @@
     <select id="findTimeNode" resultType="java.lang.Integer">
       select time_node from id34a_city_time_node where city =#{welfare_handler}  order by createdTime desc limit 0,1;
     </select>
-    <select id="findRegisterDeclareInfo" resultMap="registerDeclareSheetInfo">
-        select base_pay, employee_name, gender,identityNo from  i4fvb_social_security_declare where createdTime between #{param1} and #{param2}
+    <select id="findRegisterDeclareInfo"  parameterType="com.authine.cloudpivot.web.api.params.ImportCondition" resultMap="registerDeclareSheetInfo">
+        select
+            ssd.base_pay, ssd.employee_name, ssd.gender,ssd.identityNo,contract_start_time,contract_end_time,employment_forms,domicile_place
+        from
+            i4fvb_social_security_declare ssd,ibkct_labor_contract_info ibc
+        where
+            ssd.identityNo = ibc.idnumber
+        <if test="welfare_handler!=null and welfare_handler!='' ">
+            and welfare_handler=#{welfare_handler}
+        </if>
+        <if test="city!=null and city!=''">
+            and city=#{city}
+        </if>
+        <if test="second_level_client_name!=null and second_level_client_name!=''">
+            and second_level_client_name = #{second_level_client_name}
+        </if>
+
+        <if test="startTime !=null and endTime !=null ">
+            and ssd.createdTime between #{startTime} and #{endTime}
+        </if>
+        <if test="beginPaymentStartTime !=null and beginPaymentEndTime !=null">
+            and ssd.start_month between #{beginPaymentStartTime} and #{beginPaymentEndTime}
+        </if>
     </select>
     <select id="findEmployeeContractInfo" resultType="java.util.Map">
-        select labour_contract_start_time, labour_contract_end_time from i4fvb_employee_files where id_no = #{identityNo}
+        select social_security_charge_start, social_security_charge_end from i4fvb_employee_files where id_no = #{identityNo}
     </select>
 
     <resultMap id="registerDeclareSheetInfoFromStopPayment" type="com.authine.cloudpivot.web.api.entity.RegisterDeclareSheetInfo">
@@ -60,9 +140,34 @@
         <result property="employee_name" column="employee_name"/>
         <result property="gender" column="gender"/>
         <result property="identityNo" column="identityNo"/>
+        <result property="contractBeginDate" column="contract_start_time"></result>
+        <result property="contractEndDate" column="contract_end_time"/>
+        <result property="employeeForm" column="employment_forms"/>
+        <result property="domicileLocation" column="domicile_place"/>
     </resultMap>
     <select id="findRegisterDeclareInfoFromStopPayment" resultMap="registerDeclareSheetInfoFromStopPayment">
-              select social_security_base, employee_name, gender,identityNo from  i4fvb_social_security_close where createdTime between #{param1} and #{param2}
+        select
+            ssc.social_security_base, ssc.employee_name, ssc.gender,ssc.identityNo,contract_start_time,contract_end_time,employment_forms,domicile_place
+        from
+            i4fvb_social_security_close ssc,ibkct_labor_contract_info ibc
+        where
+            ssc.identityNo = ibc.idnumber
+        <if test="welfare_handler!=null and welfare_handler!='' ">
+            and welfare_handler=#{welfare_handler}
+        </if>
+        <if test="city!=null and city!=''">
+            and city=#{city}
+        </if>
+        <if test="second_level_client_name!=null and second_level_client_name!=''">
+            and second_level_client_name = #{second_level_client_name}
+        </if>
+
+        <if test="startTime !=null and endTime !=null ">
+            and ssc.createdTime between #{startTime} and #{endTime}
+        </if>
+        <if test="stopPaymentStartTime !=null and stopPaymentEndTime !=null">
+            and ssc.charge_end_month between #{stopPaymentStartTime} and #{stopPaymentEndTime}
+        </if>
     </select>
 
 </mapper>

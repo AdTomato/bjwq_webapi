@@ -118,7 +118,20 @@ public class ContractChangeController extends BaseController {
         return this.getOkResponseResult("success", "变更合同信息成功");
     }
 
-
+    @GetMapping("/buyOrSaleContractInfo")
+    public ResponseResult<Object> buyOrSaleContractInfo(@RequestParam("id") String id,@RequestParam("formStatus") String formStatus){
+        if (id == null){
+            return this.getOkResponseResult("error", "请选择变更合同");
+        }
+        if (formStatus.equals("buy")){
+            PurchaseContractInfo purchaseInfo = contractChangeService.findPurchaseInfo(id);
+            return this.getOkResponseResult(purchaseInfo, "返回采购合同信息");
+        } else if (formStatus.equals("sale")) {
+            SalesContractInfo salesContractInfo = contractChangeService.findSalesContractInfo(id);
+            return this.getOkResponseResult(salesContractInfo, "返回销售合同信息");
+        }
+        return this.getErrResponseResult("error",404L,"无合同信息");
+    }
 
     /**
      * 检查用户，部门是否修改
@@ -192,6 +205,7 @@ public class ContractChangeController extends BaseController {
             }
         }
     }
+
     /**
      * 检查字符串是否修改
      *
@@ -211,7 +225,6 @@ public class ContractChangeController extends BaseController {
             data.add(getChangeData(field, beforeModify, nextModify, parentId));
         }
     }
-
     /**
      * 检查数字是否改变
      *

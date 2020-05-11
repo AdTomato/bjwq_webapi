@@ -4,6 +4,7 @@ import com.authine.cloudpivot.web.api.entity.ContractImportInfo;
 import com.authine.cloudpivot.web.api.entity.ContractTerminationInfo;
 import com.authine.cloudpivot.web.api.entity.RegisterDeclareSheetInfo;
 import com.authine.cloudpivot.web.api.mapper.SocialSecurityDeclareMapper;
+import com.authine.cloudpivot.web.api.params.ImportCondition;
 import com.authine.cloudpivot.web.api.service.SocialSecurityDeclareService;
 import org.springframework.stereotype.Service;
 
@@ -31,8 +32,8 @@ public class SocialSecurityDeclareServiceImpl implements SocialSecurityDeclareSe
      * @Param [ids]  用户id数组
      * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.Object>
      **/
-    public List<ContractImportInfo> findContractInfo(Date startTime,Date endTime,String welfare_handler) {
-        return socialSecurityDeclareMapper.findContractInfo(startTime,endTime,welfare_handler);
+    public List<ContractImportInfo> findContractInfo(ImportCondition importCondition) {
+        return socialSecurityDeclareMapper.findContractInfo(importCondition);
     }
 
     /* * @Author lfh
@@ -42,8 +43,8 @@ public class SocialSecurityDeclareServiceImpl implements SocialSecurityDeclareSe
      * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.Object>
      **/
     @Override
-    public List<ContractTerminationInfo> findContractTerminationInfo(Date startTime,Date endTime,String welfare_handler) {
-        return socialSecurityDeclareMapper.findContractTerminationInfo(startTime,endTime,welfare_handler);
+    public List<ContractTerminationInfo> findContractTerminationInfo(ImportCondition importCondition) {
+        return socialSecurityDeclareMapper.findContractTerminationInfo(importCondition);
     }
 
     /* * @Author lfh
@@ -64,8 +65,8 @@ public class SocialSecurityDeclareServiceImpl implements SocialSecurityDeclareSe
     }
 
     @Override
-    public List<RegisterDeclareSheetInfo> findRegisterDeclareInfo(Date lastTimeNodeDate, Date nowTimeNodeDate, String welfare_handler) {
-        return socialSecurityDeclareMapper.findRegisterDeclareInfo(lastTimeNodeDate,nowTimeNodeDate,welfare_handler);
+    public List<RegisterDeclareSheetInfo> findRegisterDeclareInfo(ImportCondition importCondition) {
+        return socialSecurityDeclareMapper.findRegisterDeclareInfo(importCondition);
     }
 
     @Override
@@ -74,7 +75,7 @@ public class SocialSecurityDeclareServiceImpl implements SocialSecurityDeclareSe
     }
 
     @Override
-    public List<RegisterDeclareSheetInfo> findRegisterDeclareInfoFromStopPayment(Date startTime, Date endTime, String welfare_handler) {
-        return socialSecurityDeclareMapper.findRegisterDeclareInfoFromStopPayment(startTime,endTime,welfare_handler);
+    public List<RegisterDeclareSheetInfo> findRegisterDeclareInfoFromStopPayment(ImportCondition importCondition) {
+        return socialSecurityDeclareMapper.findRegisterDeclareInfoFromStopPayment(importCondition);
     }
 }

@@ -90,7 +90,7 @@ public class RegisterDeclareSheetInfo{
     /**
      * 户籍所在地
      */
-    private String DomicileLocation;
+    private String domicileLocation;
 
     /**
      * 备注

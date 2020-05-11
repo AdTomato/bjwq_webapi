@@ -3,6 +3,7 @@ package com.authine.cloudpivot.web.api.service.impl;
 import com.authine.cloudpivot.web.api.entity.OpenAccountInfo;
 import com.authine.cloudpivot.web.api.entity.UnsealAndSealInfos;
 import com.authine.cloudpivot.web.api.mapper.DeclareStopPaymentMapper;
+import com.authine.cloudpivot.web.api.params.ImportCondition;
 import com.authine.cloudpivot.web.api.service.DeclareStopPaymentService;
 import org.springframework.stereotype.Service;
 
@@ -24,27 +25,24 @@ public class DeclareStopPaymentServiceImpl implements DeclareStopPaymentService 
     private DeclareStopPaymentMapper declareStopPaymentMapper;
 
     @Override
-    public List<OpenAccountInfo> findOpenAccountInfo(Date startTime, Date endTime, String welfare_handler) {
-        return declareStopPaymentMapper.findOpenAccountInfo(startTime,endTime,welfare_handler);
+    public List<OpenAccountInfo> findOpenAccountInfo(ImportCondition importCondition) {
+        return declareStopPaymentMapper.findOpenAccountInfo(importCondition);
+    }
+
+
+
+    @Override
+    public List<UnsealAndSealInfos> findSealInfo(ImportCondition importCondition) {
+        return declareStopPaymentMapper.findSealInfo(importCondition);
     }
 
     @Override
-    public List<UnsealAndSealInfos> findUnsealInfo(Date startTime, Date endTime, String welfare_handler) {
-        return declareStopPaymentMapper.findUnsealInfo(startTime,endTime,welfare_handler);
+    public Map<String, BigDecimal> findProportion(String identityNo) {
+        return declareStopPaymentMapper.findProportion(identityNo);
     }
 
     @Override
-    public List<UnsealAndSealInfos> findSealInfo(Date startTime, Date endTime, String welfare_handler) {
-        return declareStopPaymentMapper.findSealInfo(startTime,endTime,welfare_handler);
-    }
-
-    @Override
-    public String findAccountNum(String identityNo) {
-        return declareStopPaymentMapper.findAccountNum(identityNo);
-    }
-
-    @Override
-    public Map<String, BigDecimal> findProportion(String id) {
-        return declareStopPaymentMapper.findProportion(id);
+    public String findOwnerById(String owner) {
+        return declareStopPaymentMapper.findOwnerById(owner);
     }
 }
