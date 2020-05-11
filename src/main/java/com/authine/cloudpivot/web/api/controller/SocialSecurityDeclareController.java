@@ -60,11 +60,13 @@ public class SocialSecurityDeclareController extends BaseController {
     @PostMapping("/importNewContract")
     public void importNewContract(@RequestBody ImportCondition importCondition, HttpServletResponse response) throws IOException, ParseException {
         List<ContractImportInfo> ContractInfos = null;
+        log.info("开始查询合同信息");
         ContractInfos = socialSecurityDeclareService.findContractInfo(importCondition);
 
         if (ContractInfos.isEmpty()) {
             throw new RuntimeException("未查到新签合同信息");
         }
+        log.info(ContractInfos.toString());
         if (!ContractInfos.isEmpty()) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
             List<String> timeList = new ArrayList<>();
