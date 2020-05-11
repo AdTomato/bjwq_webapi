@@ -3,6 +3,9 @@ package com.authine.cloudpivot.web.api.service;
 import com.authine.cloudpivot.web.api.entity.OrgUser;
 import com.authine.cloudpivot.web.api.entity.SmsHistory;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * @Author: wangyong
  * @Date: 2020-02-07 15:59
@@ -33,4 +36,12 @@ public interface SystemManageService {
      * @return 手机历史验证码数据
      */
     SmsHistory getSmsHistoryById(String id);
+
+    /**
+     * 根据获取名称和用户名
+     *
+     * @param mobile 手机号码
+     * @return
+     */
+    List<Map<String, String>> getNameAndUserNameByMobile(String mobile);
 }

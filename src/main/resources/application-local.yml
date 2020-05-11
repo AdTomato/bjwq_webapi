@@ -45,6 +45,8 @@ dubbo:
     port: 2181          #端口
     timeout: 3000       #超时时间
     check: true
+    username: admin
+    password: WangYong58987464
   consumer:
     check: false
     retries: 0          #重试次数

@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * @ClassName ContractChangeInfo
- * @Author:lfh
+ * @author: lfh
  * @Date:2020/4/11 13:54
  * @Description: 合同变更参数
  **/

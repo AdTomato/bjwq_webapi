@@ -162,7 +162,7 @@ public class PaymentApplication extends BaseEntity {
             // 数据处理
             if (StringUtils.isBlank(dataType)) {
                 dataType = pa.getDataType();
-            } else if (!"社保公积金".equals(dataType) && dataType.equals(pa.getDataType())) {
+            } else if (!"社保公积金".equals(dataType) && dataType.indexOf("system") < 0 && !dataType.equals(pa.getDataType())) {
                 dataType = "社保公积金";
             }
 

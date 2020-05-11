@@ -10,18 +10,16 @@ import com.authine.cloudpivot.web.api.controller.base.BaseController;
 import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.service.EmployeeFilesService;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
-import com.dingtalk.api.response.OapiNewretailQueryorginfoResponse;
 import jodd.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * @Author:wangyong
+ * @author: wangyong
  * @Date:2020/3/9 13:15
  * @Description: 数据修改controller
  */
@@ -32,6 +30,8 @@ public class DataModifyController extends BaseController {
 
     @Autowired
     EmployeeFilesService employeeFilesService;
+
+    private static OrganizationFacade organizationFacade;
 
     @GetMapping("/getData")
     public ResponseResult<Object> getData(@RequestParam(required = true) String id, @RequestParam(required = true) String schemaCode) {
@@ -107,9 +107,9 @@ public class DataModifyController extends BaseController {
         EmployeeFiles employeeFiles = employeeFilesService.getEmployeeFilesData(sourceId);
         EmployeeFiles employeeFilesUpdate = employeeFilesService.getEmployeeFilesUpdateData(id);
         List<ChangeValue> data = new ArrayList<>();
-        checkString(employeeFiles.getEntrustedUnit(), employeeFilesUpdate.getEntrustedUnit(), "委托单位", id, data);
-        checkString(employeeFiles.getClientName(), employeeFilesUpdate.getClientName(), "客户名称", id, data);
-        checkUnit(employeeFiles.getSalesman(), employeeFilesUpdate.getSalesman(), "客户名称", id, 1, data);
+//        checkString(employeeFiles.getEntrustedUnit(), employeeFilesUpdate.getEntrustedUnit(), "委托单位", id, data);
+//        checkString(employeeFiles.getClientName(), employeeFilesUpdate.getClientName(), "客户名称", id, data);
+//        checkUnit(employeeFiles.getSalesman(), employeeFilesUpdate.getSalesman(), "客户名称", id, 1, data);
         checkString(employeeFiles.getEmployeeName(), employeeFilesUpdate.getEmployeeName(), "员工姓名", id, data);
         checkString(employeeFiles.getIdType(), employeeFilesUpdate.getIdType(), "证件类型", id, data);
         checkString(employeeFiles.getIdNo(), employeeFilesUpdate.getIdNo(), "证件号码", id, data);
@@ -118,38 +118,40 @@ public class DataModifyController extends BaseController {
         checkString(employeeFiles.getEmployeeNature(), employeeFilesUpdate.getEmployeeNature(), "员工性质", id, data);
         checkString(employeeFiles.getHouseholdRegisterNature(), employeeFilesUpdate.getHouseholdRegisterNature(), "户籍性质", id, data);
         checkString(employeeFiles.getMobile(), employeeFilesUpdate.getMobile(), "联系电话", id, data);
-        checkString(employeeFiles.getPosition(), employeeFilesUpdate.getPosition(), "职位", id, data);
-        checkString(employeeFiles.getEmployeeLabels(), employeeFilesUpdate.getEmployeeLabels(), "员工标签", id, data);
-        checkString(employeeFiles.getEmail(), employeeFilesUpdate.getEmail(), "邮箱", id, data);
-        checkDate(employeeFiles.getLabourContractStartTime(), employeeFilesUpdate.getLabourContractStartTime(), "合同开始日期", id, data);
-        checkDate(employeeFiles.getLabourContractEndTime(), employeeFilesUpdate.getLabourContractEndTime(), "合同结束日期", id, data);
-        checkDouble(employeeFiles.getSalary(), employeeFilesUpdate.getSalary(), "合同工资", id, data);
-        checkDate(employeeFiles.getProbationStartTime(), employeeFilesUpdate.getProbationStartTime(), "试用期起始时间", id, data);
-        checkDate(employeeFiles.getProbationEndTime(), employeeFilesUpdate.getProbationEndTime(), "试用期结束时间", id, data);
-        checkDouble(employeeFiles.getProbationSalary(), employeeFilesUpdate.getProbationSalary(), "试用期工资", id, data);
         checkString(employeeFiles.getSocialSecurityCity(), employeeFilesUpdate.getSocialSecurityCity(), "社保福利地", id, data);
         checkString(employeeFiles.getProvidentFundCity(), employeeFilesUpdate.getProvidentFundCity(), "公积金福利地", id, data);
         checkDate(employeeFiles.getReportEntryTime(), employeeFilesUpdate.getReportEntryTime(), "报入职时间", id, data);
-        checkUnit(employeeFiles.getReportRecruits(), employeeFilesUpdate.getReportRecruits(), "报入职时间", id, 1, data);
+        checkUnit(employeeFiles.getReportRecruits(), employeeFilesUpdate.getReportRecruits(), "报入职人", id, 2, data);
         checkDate(employeeFiles.getEntryTime(), employeeFilesUpdate.getEntryTime(), "入职日期", id, data);
         checkDate(employeeFiles.getSocialSecurityChargeStart(), employeeFilesUpdate.getSocialSecurityChargeStart(), "社保收费开始", id, data);
         checkDate(employeeFiles.getProvidentFundChargeStart(), employeeFilesUpdate.getProvidentFundChargeStart(), "公积金收费开始", id, data);
-        checkString(employeeFiles.getSocialSecurityArea(), employeeFilesUpdate.getSocialSecurityArea(), "社保福利办理方", id, data);
-        checkString(employeeFiles.getProvidentFundArea(), employeeFilesUpdate.getProvidentFundArea(), "公积金福利办理方", id, data);
         checkString(employeeFiles.getEntryDescription(), employeeFilesUpdate.getEntryDescription(), "入职备注", id, data);
-        checkString(employeeFiles.getEntryNotice(), employeeFilesUpdate.getEntryNotice(), "是否入职通知", id, data);
-        checkString(employeeFiles.getHealthCheck(), employeeFilesUpdate.getHealthCheck(), "是否体检", id, data);
-        checkString(employeeFiles.getWhetherPay(), employeeFilesUpdate.getWhetherPay(), "是否发薪", id, data);
         checkDate(employeeFiles.getReportQuitDate(), employeeFilesUpdate.getReportQuitDate(), "报离职时间", id, data);
-        checkUnit(employeeFiles.getReportSeveranceOfficer(), employeeFilesUpdate.getReportSeveranceOfficer(), "报离职人", id, 1, data);
+        checkUnit(employeeFiles.getReportSeveranceOfficer(), employeeFilesUpdate.getReportSeveranceOfficer(), "报离职人", id, 2, data);
         checkDate(employeeFiles.getQuitDate(), employeeFilesUpdate.getQuitDate(), "离职日期", id, data);
         checkDate(employeeFiles.getSocialSecurityChargeEnd(), employeeFilesUpdate.getSocialSecurityChargeEnd(), "社保收费截止", id, data);
         checkDate(employeeFiles.getProvidentFundChargeEnd(), employeeFilesUpdate.getProvidentFundChargeEnd(), "公积金收费截止", id, data);
         checkString(employeeFiles.getQuitReason(), employeeFilesUpdate.getQuitReason(), "离职原因", id, data);
         checkString(employeeFiles.getQuitRemark(), employeeFilesUpdate.getQuitRemark(), "离职备注", id, data);
-        checkString(employeeFiles.getBankAccountNumber(), employeeFilesUpdate.getBankAccountNumber(), "银行卡账号", id, data);
-        checkString(employeeFiles.getBankName(), employeeFilesUpdate.getBankName(), "开户行", id, data);
-        checkString(employeeFiles.getBankArea(), employeeFilesUpdate.getBankArea(), "开户地", id, data);
+        checkString(employeeFiles.getEntryNotice(), employeeFilesUpdate.getEntryNotice(), "是否入职通知", id, data);
+        checkString(employeeFiles.getHealthCheck(), employeeFilesUpdate.getHealthCheck(), "是否体检", id, data);
+        checkString(employeeFiles.getWhetherPay(), employeeFilesUpdate.getWhetherPay(), "是否发薪", id, data);
+        checkString(employeeFiles.getPosition(), employeeFilesUpdate.getPosition(), "职位", id, data);
+        checkString(employeeFiles.getEmployeeLabels(), employeeFilesUpdate.getEmployeeLabels(), "员工标签", id, data);
+        checkString(employeeFiles.getEmail(), employeeFilesUpdate.getEmail(), "邮箱", id, data);
+        checkString(employeeFiles.getSocialSecurityNum(), employeeFilesUpdate.getSocialSecurityNum(), "社保账号", id, data);
+        checkString(employeeFiles.getProvidentFundNum(), employeeFilesUpdate.getProvidentFundNum(), "公积金账号", id, data);
+        checkUnit(employeeFiles.getSubordinateDepartment(), employeeFilesUpdate.getSubordinateDepartment(), "所属部门", id, 1, data);
+        checkString(employeeFiles.getFirstLevelClientName(), employeeFilesUpdate.getFirstLevelClientName(), "一级客户名称", id, data);
+        checkString(employeeFiles.getSecondLevelClientName(), employeeFilesUpdate.getSecondLevelClientName(), "二级客户名称", id, data);
+        checkString(employeeFiles.getHouseholdRegisterRemarks(), employeeFilesUpdate.getHouseholdRegisterRemarks(), "户籍备注", id, data);
+        checkDouble(employeeFiles.getSocialSecurityBase(), employeeFilesUpdate.getSocialSecurityBase(), "社保基数", id, data);
+        checkDouble(employeeFiles.getProvidentFundBase(), employeeFilesUpdate.getProvidentFundBase(), "公积金基数", id, data);
+        checkString(employeeFiles.getSWelfareHandler(), employeeFilesUpdate.getSWelfareHandler(), "社保福利办理方", id, data);
+        checkString(employeeFiles.getGWelfareHandler(), employeeFilesUpdate.getGWelfareHandler(), "公积金福利办理方", id, data);
+        checkString(employeeFiles.getIsRetiredSoldier(), employeeFilesUpdate.getIsRetiredSoldier(), "是否退役士兵", id, data);
+        checkString(employeeFiles.getIsPoorArchivists(), employeeFilesUpdate.getIsPoorArchivists(), "是否贫困建档人员", id, data);
+        checkString(employeeFiles.getIsDisabled(), employeeFilesUpdate.getIsDisabled(), "是否残疾人", id, data);
         if (data.size() != 0) {
             employeeFilesService.employeeFilesUpdateDetail(data);
         }
@@ -187,8 +189,11 @@ public class DataModifyController extends BaseController {
         checkString(shDeleteEmployee.getEmployeeName(), shDeleteEmployeeUpdate.getEmployeeName(), "姓名", id, data);
         checkString(shDeleteEmployee.getIdentityNoType(), shDeleteEmployeeUpdate.getIdentityNoType(), "证件类型", id, data);
         checkString(shDeleteEmployee.getIdentityNo(), shDeleteEmployeeUpdate.getIdentityNo(), "身份证号码", id, data);
-        checkString(shDeleteEmployee.getClientNum(), shDeleteEmployeeUpdate.getClientNum(), "客户编号", id, data);
-        checkString(shDeleteEmployee.getClientName(), shDeleteEmployeeUpdate.getClientName(), "客户名称", id, data);
+        checkString(shDeleteEmployee.getClientNum(), shDeleteEmployee.getClientNum(), "客户编号", id, data);
+        checkString(shDeleteEmployee.getFirstLevelClientName(), shDeleteEmployee.getFirstLevelClientName(), "一级客户名称", id, data);
+        checkString(shDeleteEmployee.getSecondLevelClientName(), shDeleteEmployee.getSecondLevelClientName(), "二级客户名称", id, data);
+        checkString(shDeleteEmployee.getGender(), shDeleteEmployee.getGender(), "性别", id, data);
+        checkDate(shDeleteEmployee.getBirthday(), shDeleteEmployee.getBirthday(), "出生年月", id, data);
         checkString(shDeleteEmployee.getClientShortName(), shDeleteEmployeeUpdate.getClientShortName(), "客户简称", id, data);
         checkDate(shDeleteEmployee.getOsInitiatedDepartureTime(), shDeleteEmployeeUpdate.getOsInitiatedDepartureTime(), "OS发起离职时间", id, data);
         checkDate(shDeleteEmployee.getDepartureTime(), shDeleteEmployeeUpdate.getDepartureTime(), "离职日期", id, data);
@@ -217,15 +222,23 @@ public class DataModifyController extends BaseController {
         DeleteEmployee deleteEmployee = employeeFilesService.getDeleteEmployeeData(sourceId);
         DeleteEmployee deleteEmployeeUpdate = employeeFilesService.getDeleteEmployeeUpdateData(id);
         List<ChangeValue> data = new ArrayList<>();
-        checkString(deleteEmployee.getSecondLevelClientName(), deleteEmployeeUpdate.getSecondLevelClientName(), "客户名称", id, data);
+        checkString(deleteEmployee.getFirstLevelClientName(), deleteEmployeeUpdate.getFirstLevelClientName(), "一级客户名称", id, data);
+        checkString(deleteEmployee.getSecondLevelClientName(), deleteEmployeeUpdate.getSecondLevelClientName(), "二级客户名称", id, data);
         checkString(deleteEmployee.getEmployeeName(), deleteEmployeeUpdate.getEmployeeName(), "姓名", id, data);
         checkString(deleteEmployee.getIdentityNoType(), deleteEmployeeUpdate.getIdentityNoType(), "证件类型", id, data);
         checkString(deleteEmployee.getIdentityNo(), deleteEmployeeUpdate.getIdentityNo(), "证件号码", id, data);
-        checkString(deleteEmployee.getProvidentFundCity(), deleteEmployeeUpdate.getProvidentFundCity(), "地区", id, data);
+//        checkString(deleteEmployee.getCity(), deleteEmployeeUpdate.getCity(), "地区", id, data);
         checkString(deleteEmployee.getLeaveReason(), deleteEmployeeUpdate.getLeaveReason(), "离职原因", id, data);
         checkDate(deleteEmployee.getLeaveTime(), deleteEmployeeUpdate.getLeaveTime(), "离职日期", id, data);
         checkDate(deleteEmployee.getSocialSecurityEndTime(), deleteEmployeeUpdate.getSocialSecurityEndTime(), "社保终止时间", id, data);
         checkDate(deleteEmployee.getProvidentFundEndTime(), deleteEmployeeUpdate.getProvidentFundEndTime(), "公积金终止时间", id, data);
+        checkString(deleteEmployee.getSocialSecurityCity(), deleteEmployeeUpdate.getSocialSecurityCity(), "社保福利地", id, data);
+        checkString(deleteEmployee.getProvidentFundCity(), deleteEmployee.getProvidentFundCity(), "公积金福利地", id, data);
+        checkString(deleteEmployee.getSWelfareHandler(), deleteEmployeeUpdate.getSWelfareHandler(), "社保福利办理方", id, data);
+        checkString(deleteEmployee.getGWelfareHandler(), deleteEmployeeUpdate.getGWelfareHandler(), "公积金福利办理方", id, data);
+        checkUnit(deleteEmployee.getSubordinateDepartment(), deleteEmployeeUpdate.getSubordinateDepartment(), "所属单位", id, 1, data);
+        checkString(deleteEmployee.getGender(), deleteEmployeeUpdate.getGender(), "性别", id, data);
+        checkDate(deleteEmployee.getBirthday(), deleteEmployeeUpdate.getBirthday(), "出生年月", id, data);
         if (data.size() != 0) {
             employeeFilesService.delEmployeeUpdateDetail(data);
         }
@@ -269,7 +282,16 @@ public class DataModifyController extends BaseController {
         checkString(shAddEmployee.getQuotationCode(), shAddEmployeeUpdate.getQuotationCode(), "报价单代码", id, data);
         checkString(shAddEmployee.getSysClientNum(), shAddEmployeeUpdate.getSysClientNum(), "系统客户编号", id, data);
         checkString(shAddEmployee.getSysClientNum(), shAddEmployeeUpdate.getSysClientNum(), "系统客户编号", id, data);
-        checkString(shAddEmployee.getClientName(), shAddEmployeeUpdate.getClientName(), "客户名称", id, data);
+        checkString(shAddEmployee.getFirstLevelClientName(), shAddEmployeeUpdate.getFirstLevelClientName(), "一级客户名称", id, data);
+        checkString(shAddEmployee.getSecondLevelClientName(), shAddEmployeeUpdate.getSecondLevelClientName(), "二级客户名称", id, data);
+        checkUnit(shAddEmployee.getSubordinateDepartment(), shAddEmployeeUpdate.getSubordinateDepartment(), "所属部门", id, 1, data);
+        checkString(shAddEmployee.getIsRetiredSoldier(), shAddEmployeeUpdate.getIsRetiredSoldier(), "是否退役士兵", id, data);
+        checkString(shAddEmployee.getIsPoorArchivists(), shAddEmployeeUpdate.getIsPoorArchivists(), "是否贫困建档人员", id, data);
+        checkString(shAddEmployee.getIsDisabled(), shAddEmployeeUpdate.getIsDisabled(), "是否残疾人", id, data);
+        checkString(shAddEmployee.getWelfareHandler(), shAddEmployeeUpdate.getWelfareHandler(), "福利办理方", id, data);
+        checkString(shAddEmployee.getGender(), shAddEmployeeUpdate.getGender(), "性别", id, data);
+        checkDate(shAddEmployee.getBirthday(), shAddEmployeeUpdate.getBirthday(), "出生年月", id, data);
+        checkString(shAddEmployee.getWorkplace(), shAddEmployeeUpdate.getWorkplace(), "工作地", id, data);
         checkString(shAddEmployee.getClientShortName(), shAddEmployeeUpdate.getClientShortName(), "客户简称", id, data);
         checkString(shAddEmployee.getProjectProposalsName(), shAddEmployeeUpdate.getProjectProposalsName(), "项目书名称", id, data);
         checkString(shAddEmployee.getSocialSecurityPayDirect(), shAddEmployeeUpdate.getSocialSecurityPayDirect(), "社保支付方向", id, data);
@@ -341,27 +363,40 @@ public class DataModifyController extends BaseController {
         AddEmployee addEmployee = employeeFilesService.getAddEmployeeData(sourceId);
         AddEmployee addEmployeeUpdate = employeeFilesService.getAddEmployeeUpdateData(id);
         List<ChangeValue> data = new ArrayList<>();
-        checkString(addEmployee.getSecondLevelClientName(), addEmployeeUpdate.getSecondLevelClientName(), "客户名称", id, data);
-        // checkString(addEmployee.get(), addEmployeeUpdate.getErp(), "ERP", id, data);
+
+//        checkString(addEmployee.getErp(), addEmployeeUpdate.getErp(), "ERP", id, data);
         checkString(addEmployee.getEmployeeName(), addEmployeeUpdate.getEmployeeName(), "姓名", id, data);
         checkString(addEmployee.getIdentityNo(), addEmployeeUpdate.getIdentityNo(), "证件号码", id, data);
-        checkString(addEmployee.getIdentityNoType(), addEmployeeUpdate.getIdentityNoType(), "证件类型", id, data);
-        checkString(addEmployee.getEmail(), addEmployeeUpdate.getEmail(), "邮箱", id, data);
         checkString(addEmployee.getMobile(), addEmployeeUpdate.getMobile(), "联系电话", id, data);
+        checkString(addEmployee.getEmail(), addEmployeeUpdate.getEmail(), "邮箱", id, data);
         checkString(addEmployee.getFamilyRegisterNature(), addEmployeeUpdate.getFamilyRegisterNature(), "户籍性质", id, data);
         checkString(addEmployee.getEmployeeNature(), addEmployeeUpdate.getEmployeeNature(), "员工性质", id, data);
         checkDate(addEmployee.getEntryTime(), addEmployeeUpdate.getEntryTime(), "入职日期", id, data);
         checkDate(addEmployee.getContractStartTime(), addEmployeeUpdate.getContractStartTime(), "合同开始日期", id, data);
         checkDate(addEmployee.getContractEndTime(), addEmployeeUpdate.getContractEndTime(), "合同结束日期", id, data);
         checkDouble(addEmployee.getContractSalary(), addEmployeeUpdate.getContractSalary(), "合同工资", id, data);
-        checkString(addEmployee.getSocialSecurityCity(), addEmployeeUpdate.getSocialSecurityCity(), "社保福利地", id, data);
         checkDate(addEmployee.getSocialSecurityStartTime(), addEmployeeUpdate.getSocialSecurityStartTime(), "社保起做时间", id, data);
+        checkString(addEmployee.getSocialSecurityCity(), addEmployeeUpdate.getSocialSecurityCity(), "社保福利地", id, data);
         checkDouble(addEmployee.getSocialSecurityBase(), addEmployeeUpdate.getSocialSecurityBase(), "社保基数", id, data);
         checkString(addEmployee.getProvidentFundCity(), addEmployeeUpdate.getProvidentFundCity(), "公积金福利地", id, data);
         checkDate(addEmployee.getProvidentFundStartTime(), addEmployeeUpdate.getProvidentFundStartTime(), "公积金起做时间", id, data);
         checkDouble(addEmployee.getProvidentFundBase(), addEmployeeUpdate.getProvidentFundBase(), "公积金基数", id, data);
+        checkString(addEmployee.getIdentityNoType(), addEmployeeUpdate.getIdentityNoType(), "证件类型", id, data);
         checkDouble(addEmployee.getCompanyProvidentFundBl(), addEmployeeUpdate.getCompanyProvidentFundBl(), "单位公积金比例", id, data);
-        checkDouble(addEmployee.getEmployeeProvidentFundBl(), addEmployeeUpdate.getEmployeeProvidentFundBl(), "个人公积金比例s", id, data);
+        checkDouble(addEmployee.getEmployeeProvidentFundBl(), addEmployeeUpdate.getEmployeeProvidentFundBl(), "个人公积金比例", id, data);
+        checkString(addEmployee.getFirstLevelClientName(), addEmployeeUpdate.getFirstLevelClientName(), "一级客户名称", id, data);
+        checkString(addEmployee.getSecondLevelClientName(), addEmployeeUpdate.getSecondLevelClientName(), "二级客户名称", id, data);
+        checkUnit(addEmployee.getSubordinateDepartment(), addEmployeeUpdate.getSubordinateDepartment(), "所属部门", id, 1, data);
+        checkString(addEmployee.getHouseholdRegisterRemarks(), addEmployeeUpdate.getHouseholdRegisterRemarks(), "户籍备注", id, data);
+        checkString(addEmployee.getGender(), addEmployeeUpdate.getGender(), "性别", id, data);
+        checkDate(addEmployee.getBirthday(), addEmployeeUpdate.getBirthday(), "出生日期", id, data);
+        checkString(addEmployee.getWorkplace(), addEmployeeUpdate.getWorkplace(), "工作地", id, data);
+        checkString(addEmployee.getIsRetiredSoldier(), addEmployeeUpdate.getIsRetiredSoldier(), "是否退役士兵", id, data);
+        checkString(addEmployee.getIsPoorArchivists(), addEmployeeUpdate.getIsPoorArchivists(), "是否贫困建档人员", id, data);
+        checkString(addEmployee.getIsDisabled(), addEmployeeUpdate.getIsDisabled(), "是否残疾人", id, data);
+        checkString(addEmployee.getSWelfareHandler(), addEmployeeUpdate.getSWelfareHandler(), "社保福利办理方", id, data);
+        checkString(addEmployee.getGWelfareHandler(), addEmployeeUpdate.getGWelfareHandler(), "公积金福利办理方", id, data);
+
         if (data.size() != 0) {
             employeeFilesService.addEmployeeUpdateDetail(data);
         }
@@ -378,7 +413,18 @@ public class DataModifyController extends BaseController {
         checkString(nationwideDispatch.getNationalBusinessWfFlag(), nationwideDispatchUpdate.getNationalBusinessWfFlag(), "全国业务流程标识", id, data);
         checkString(nationwideDispatch.getInvolved(), nationwideDispatchUpdate.getInvolved(), "涉及执行地", id, data);
         checkString(nationwideDispatch.getBusinessCustomerNum(), nationwideDispatchUpdate.getBusinessCustomerNum(), "业务客户编号", id, data);
-        checkString(nationwideDispatch.getBusinessCustomerName(), nationwideDispatchUpdate.getBusinessCustomerName(), "业务客户名称", id, data);
+//        checkString(nationwideDispatch.getBusinessCustomerName(), nationwideDispatchUpdate.getBusinessCustomerName(), "业务客户名称", id, data);
+        checkString(nationwideDispatch.getFirstLevelClientName(), nationwideDispatchUpdate.getFirstLevelClientName(), "一级客户名称", id, data);
+        checkString(nationwideDispatch.getSecondLevelClientName(), nationwideDispatchUpdate.getSecondLevelClientName(), "二级客户名称", id, data);
+        checkUnit(nationwideDispatch.getSubordinateDepartment(), nationwideDispatch.getSubordinateDepartment(), "所属部门",id, 1, data);
+        checkString(nationwideDispatch.getIsRetiredSoldier(), nationwideDispatch.getIsRetiredSoldier(), "是否退役士兵", id, data);
+        checkString(nationwideDispatch.getIsPoorArchivists(), nationwideDispatch.getIsPoorArchivists(), "是否贫困建档人员", id, data);
+        checkString(nationwideDispatch.getIsDisabled(), nationwideDispatch.getIsDisabled(), "是否残疾人", id, data);
+        checkString(nationwideDispatch.getWelfareHandler(), nationwideDispatch.getWelfareHandler(), "福利办理方", id, data);
+        checkString(nationwideDispatch.getGender(), nationwideDispatch.getGender(), "性别", id, data);
+        checkDate(nationwideDispatch.getBirthday(), nationwideDispatch.getBirthday(), "出生年月", id, data);
+        checkString(nationwideDispatch.getWorkplace(), nationwideDispatch.getWorkplace(), "工作地", id, data);
+        checkString(nationwideDispatch.getHouseholdRegisterRemarks(), nationwideDispatchUpdate.getHouseholdRegisterRemarks(), "户籍备注", id, data);
         checkString(nationwideDispatch.getBusinessWfStatus(), nationwideDispatchUpdate.getBusinessWfStatus(), "业务流转状态", id, data);
         checkString(nationwideDispatch.getOrderType(), nationwideDispatchUpdate.getOrderType(), "订单类型", id, data);
         checkString(nationwideDispatch.getProcessingStatus(), nationwideDispatchUpdate.getProcessingStatus(), "处理状态", id, data);
@@ -434,7 +480,7 @@ public class DataModifyController extends BaseController {
     private void checkUnit(String beforeModify, String nextModify, String field, String parentId, Integer type, List<ChangeValue> data) {
         Unit before = null;
         Unit next = null;
-        OrganizationFacade organizationFacade = this.getOrganizationFacade();
+
         if (beforeModify == nextModify) {
             // 无变化
             return;
@@ -473,6 +519,8 @@ public class DataModifyController extends BaseController {
             }
         } else {
             // 旧值为空
+            before = ((List<Unit>) JSON.parse(beforeModify)).get(0);
+            next = ((List<Unit>) JSON.parse(nextModify)).get(0);
             if (type == 1) {
                 // 部门
                 DepartmentModel oldDepartment = organizationFacade.getDepartment(before.getId());
@@ -555,7 +603,7 @@ public class DataModifyController extends BaseController {
                 data.add(getChangeData(field, time, null, parentId));
             }
         } else {
-            if (beforeModify.getYear() != nextModify.getYear() || beforeModify.getMonth() != nextModify.getMonth() || beforeModify.getDay() != nextModify.getDay()) {
+            if (beforeModify.getYear() != nextModify.getYear() || beforeModify.getMonth() != nextModify.getMonth() || beforeModify.getDate() != nextModify.getDate()) {
                 calendar.setTime(beforeModify);
                 String time1 = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH) + 1) + "-" + calendar.get(Calendar.DATE);
                 calendar.setTime(nextModify);

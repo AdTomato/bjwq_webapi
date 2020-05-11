@@ -1,14 +1,24 @@
 package com.authine.cloudpivot.web.api.utils;
 
+<<<<<<< HEAD
 import org.thymeleaf.util.StringUtils;
 
+=======
+import java.math.BigDecimal;
+>>>>>>> c0849e2d097aeec4138cb43f6efc529a1c8c4742
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 
 /**
+<<<<<<< HEAD
  * @Author: wangyong
  * @Date: 2020-01-10 16:29
  * @Description: double工具类
+=======
+ * @Author:wangyong
+ * @Date:2020/4/1 14:10
+ * @Description: Double工具类
+>>>>>>> c0849e2d097aeec4138cb43f6efc529a1c8c4742
  */
 public class DoubleUtils {
 
@@ -29,36 +39,39 @@ public class DoubleUtils {
         if (null == d) {
             return 0D;
         } else {
-            String format = nf.format(d);
-            if (format.contains(",")){
-                format =format.replace(",", "");
-            }
-            double result = Double.parseDouble(format);
-            return result;
+            return Double.parseDouble(nf.format(d));
         }
     }
 
     /**
-     * @param d : 需要转换的double
-     * @return : java.lang.Double
+     * @param d1:
+     * @param d2:
      * @Author: wangyong
-     * @Date: 2020/1/18 20:57
-     * @Description: 将null转换成0
+     * @Date: 2020/4/1 14:13
+     * @return: java.lang.Double
+     * @Description: 比较两个Double的差值
      */
-    public static Double nullToDouble(Double d) {
-        if (null == d) {
-            return 0D;
-        } else {
-            return d;
+    public static Double getDifference(Double d1, Double d2) {
+        Double result = 0D;
+        if (d1 == null) {
+            d1 = 0D;
         }
+        if (d2 == null) {
+            d2 = 0D;
+        }
+        result = d1 - d2;
+        return result;
     }
 
-    public static Double stringToDouble(String s) {
-        if (StringUtils.isEmpty(s)) {
-            return 0D;
-        } else {
-            return Double.parseDouble(s);
-        }
+    /**
+     * @Author: wangyong
+     * @Date: 2020/4/2 13:37
+     * @param d:
+     * @return: java.lang.Double
+     * @Description: 空转double
+     */
+    public static Double nullToDouble(Double d) {
+        return d == null ? 0D : d;
     }
 
 }

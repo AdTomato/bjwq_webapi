@@ -35,6 +35,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProvidentFundDeclare extends BaseEntity {
+
     /** 员工订单id*/
     String employeeOrderFormId;
 
@@ -53,26 +54,10 @@ public class ProvidentFundDeclare extends BaseEntity {
     /** 证件号码*/
     String identityNo;
 
-    /** 派出单位*/
-    String dispatchUnit;
-
-    /** 客户名称*/
-    String clientName;
-
-    /** 客服*/
-    String customerService;
-
-    /** 客服部门*/
-    String customerServices;
-
     /** 福利办理方*/
     String welfareHandler;
 
-    /** 申请人*/
-    String applicant;
-
-    /** 申请日期*/
-    Date applicationDate;
+    String city;
 
     /** 起始月*/
     Date startMonth;
@@ -100,29 +85,57 @@ public class ProvidentFundDeclare extends BaseEntity {
     /** 已有退回原因*/
     String returnReasonAlready;
 
+    /**
+     * 一级客户名称
+     */
+    String firstLevelClientName;
+    /**
+     * 二级客户名称
+     */
+    String secondLevelClientName;
+    /**
+     * 所属部门
+     */
+    String subordinateDepartment;
+
     // 社保申报详细
     List <Map <String, String>> providentFundDetail;
 
-    public ProvidentFundDeclare(String employeeName, String gender, Date birthday,
-                                String identityNoType, String identityNo, String dispatchUnit, String clientName,
-                                String customerService, String customerServices, String welfareHandler,
-                                String applicant, Date applicationDate, Date startMonth, Double providentFundBase,
-                                String operateLeader, List <Map <String, String>> providentFundDetail) {
+    public ProvidentFundDeclare(String sequenceStatus, String creater, String createdDeptId, Date createdTime,
+                                String owner, String ownerDeptId,
+                                String ownerDeptQueryCode, String employeeOrderFormId,
+                                String employeeName, String gender, Date birthday,
+                                String identityNoType, String identityNo,
+                                String welfareHandler, Date startMonth,
+                                Double providentFundBase, Double corporatePayment,
+                                Double personalDeposit, Double totalDeposit,
+                                String operateLeader, String status, String city,
+                                String firstLevelClientName, String secondLevelClientName,
+                                String subordinateDepartment) {
+        this.creater = creater;
+        this.createdDeptId = createdDeptId;
+        this.createdTime = createdTime;
+        this.sequenceStatus = sequenceStatus;
+        this.owner = owner;
+        this.ownerDeptId = ownerDeptId;
+        this.ownerDeptQueryCode = ownerDeptQueryCode;
+        this.employeeOrderFormId = employeeOrderFormId;
         this.employeeName = employeeName;
         this.gender = gender;
         this.birthday = birthday;
         this.identityNoType = identityNoType;
         this.identityNo = identityNo;
-        this.dispatchUnit = dispatchUnit;
-        this.clientName = clientName;
-        this.customerService = customerService;
-        this.customerServices = customerServices;
         this.welfareHandler = welfareHandler;
-        this.applicant = applicant;
-        this.applicationDate = applicationDate;
         this.startMonth = startMonth;
         this.providentFundBase = providentFundBase;
+        this.corporatePayment = corporatePayment;
+        this.personalDeposit = personalDeposit;
+        this.totalDeposit = totalDeposit;
         this.operateLeader = operateLeader;
-        this.providentFundDetail = providentFundDetail;
+        this.status = status;
+        this.city = city;
+        this.firstLevelClientName = firstLevelClientName;
+        this.secondLevelClientName = secondLevelClientName;
+        this.subordinateDepartment = subordinateDepartment;
     }
 }

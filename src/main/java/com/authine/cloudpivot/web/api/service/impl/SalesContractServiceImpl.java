@@ -4,6 +4,7 @@ import com.authine.cloudpivot.web.api.dto.SalesContractDto;
 import com.authine.cloudpivot.web.api.entity.ServiceChargeUnitPrice;
 import com.authine.cloudpivot.web.api.mapper.SalesContractMapper;
 import com.authine.cloudpivot.web.api.service.SalesContractService;
+import com.authine.cloudpivot.web.api.utils.AreaUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -11,7 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @Author:wangyong
+ * @author: wangyong
  * @Date:2020/3/18 11:04
  * @Description:
  */
@@ -35,15 +36,14 @@ public class SalesContractServiceImpl implements SalesContractService {
 
     /**
      * @param startDate: 开始时间
-     * @param endDate:   结束时间
      * @Author: wangyong
      * @Date: 2020/3/24 22:24
      * @return: java.util.List<com.authine.cloudpivot.web.api.dto.SalesContractDto>
      * @Description: 根据账单生成时间在startDate和endDate之间的销售合同
      */
     @Override
-    public List<SalesContractDto> getSalesContractByGenerateBillDate(Date startDate, Date endDate) {
-        return salesContractMapper.getSalesContractByGenerateBillDate(startDate, endDate);
+    public List<SalesContractDto> getSalesContractByGenerateBillDate(Date startDate) {
+        return salesContractMapper.getSalesContractByGenerateBillDate(startDate);
     }
 
     /**
@@ -69,5 +69,58 @@ public class SalesContractServiceImpl implements SalesContractService {
     @Override
     public ServiceChargeUnitPrice getServiceChargeUnitPricesById(String id) {
         return salesContractMapper.getServiceChargeUnitPricesById(id);
+    }
+
+    /**
+     * 获取销售合同中的服务费
+     *
+     * @param clientName  客户名称
+     * @param staffNature 员工性质
+     * @param area        地区
+     * @return 服务费
+     */
+    @Override
+    public Double getFee(String clientName, String staffNature, String area) {
+        SalesContractDto salesContractDto = getSalesContractDto(clientName, staffNature);
+        if (salesContractDto == null) {
+            return 0D;
+        }
+        List<ServiceChargeUnitPrice> serviceChargeUnitPrices = salesContractDto.getServiceChargeUnitPrices();
+        boolean isAnhuiCity = AreaUtils.isAnhuiCity(area);
+        String flag = "";
+        if (isAnhuiCity) {
+            flag = "省内";
+        } else {
+            flag = "省外";
+        }
+        if (null == serviceChargeUnitPrices || 0 == serviceChargeUnitPrices.size()) {
+            return 0D;
+        }
+        if (serviceChargeUnitPrices.size() == 1) {
+            return serviceChargeUnitPrices.get(0).getServiceChargeUnitPrice();
+        }
+        int level = 0;
+        Double result = 0D;
+        for (ServiceChargeUnitPrice serviceChargeUnitPrice : serviceChargeUnitPrices) {
+            if (flag.equals(serviceChargeUnitPrice.getServiceArea())) {
+                level = 1;
+                if (serviceChargeUnitPrice.getAreaDetails().length() > area.length()) {
+                    if (serviceChargeUnitPrice.getAreaDetails().contains(area)) {
+                        level = 2;
+                        result = serviceChargeUnitPrice.getServiceChargeUnitPrice();
+                    }
+                } else {
+                    if (area.contains(serviceChargeUnitPrice.getAreaDetails())) {
+                        level = 2;
+                        result = serviceChargeUnitPrice.getServiceChargeUnitPrice();
+                    }
+                }
+            }
+            if (level == 2) {
+                // 达到最终筛选条件了
+                break;
+            }
+        }
+        return result;
     }
 }

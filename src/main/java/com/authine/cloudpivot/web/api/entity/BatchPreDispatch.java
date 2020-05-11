@@ -104,7 +104,9 @@ public class BatchPreDispatch extends BaseEntity {
     /**
      * 委派地区
      */
-    private String delegatedArea;
+    private String sDelegatedArea;
+
+    private String gDelegatedArea;
 
     /**
      * 人员组成类型
@@ -138,7 +140,7 @@ public class BatchPreDispatch extends BaseEntity {
 
     public BatchPreDispatch(String employeeName, String identityNo, String mobile, Double socialInsuranceAmount,
                             String providentFundRatio, String suppleProvidentFundRatio, Double providentFundAmount,
-                            Date entryDate, Date orderStartDate, String delegatedArea, String remark) {
+                            Date entryDate, Date orderStartDate, String sDelegatedArea, String gDelegatedArea, String remark) {
         this.employeeName = employeeName;
         this.identityNo = identityNo;
         this.mobile = mobile;
@@ -148,7 +150,8 @@ public class BatchPreDispatch extends BaseEntity {
         this.providentFundAmount = providentFundAmount;
         this.entryDate = entryDate;
         this.orderStartDate = orderStartDate;
-        this.delegatedArea = delegatedArea;
+        this.sDelegatedArea = sDelegatedArea;
+        this.gDelegatedArea = gDelegatedArea;
         this.remark = remark;
     }
 }

@@ -17,7 +17,7 @@ public interface EmployeeFilesService {
     /**
      * 根据员工身份证（必填）和客户名称（非必填，可为空）获取员工档案
      *
-     * @param idNo     身份证（必填）
+     * @param idNo       身份证（必填）
      * @param clientName 客户名称（非必填，可为空）
      * @return 员工档案实体
      */
@@ -136,11 +136,17 @@ public interface EmployeeFilesService {
     EmployeeFiles getEmployeeFilesUpdateData(String id);
 
     void addEmployeeUpdateDetail(List<ChangeValue> data);
+
     void shAddEmployeeUpdateDetail(List<ChangeValue> data);
+
     void nationAddUpdateDetail(List<ChangeValue> data);
+
     void delEmployeeUpdateDetail(List<ChangeValue> data);
+
     void shDelEmployeeUpdateDetail(List<ChangeValue> data);
+
     void nationDelUpdateDetail(List<ChangeValue> data);
+
     void employeeFilesUpdateDetail(List<ChangeValue> data);
 
     /**
@@ -162,8 +168,51 @@ public interface EmployeeFilesService {
 
     /**
      * 根据员工订单id获取员工
+     *
      * @param id
      * @return
      */
     List<SocialSecurityFundDetail> getSocialSecurityFundDetailByParentId(String id);
+
+    /**
+     * 根据员工的证件号码获取之前没有对比的账单
+     *
+     * @param idNo
+     * @return
+     */
+    List<Bill> getNoCompareBills(String idNo);
+
+    /**
+     * 根据账单年月，证件号码获取薪资收费账单
+     *
+     * @param billYear: 账单年月
+     * @param idNo:     证件号码
+     * @return 薪资收费账单
+     */
+    PayrollBill getPayrollBill(String billYear, String idNo);
+
+    /**
+     * 更新员工档案
+     *
+     * @param employeeFilesDto
+     */
+    void updateEmployee(List<EmployeeFilesDto> employeeFilesDto);
+
+    /**
+     * 创建账单明细
+     *
+     * @param bills
+     */
+    void insertBills(List<Bill> bills);
+
+    /**
+     * 方法说明：根据员工证件号,一级客户名称，二级客户名称获取员工档案
+     * @param identityNo 证件号
+     * @param firstLevelClientName 一级客户名称
+     * @param secondLevelClientName 二级客户名称
+     * @return com.authine.cloudpivot.web.api.entity.EmployeeFiles
+     * @author liulei
+     * @Date 2020/4/17 11:04
+     */
+    EmployeeFiles getEmployeeFilesByIdNoAndClientName(String identityNo, String firstLevelClientName, String secondLevelClientName) throws Exception;
 }

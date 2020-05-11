@@ -7,6 +7,8 @@ import com.authine.cloudpivot.web.api.controller.base.BaseController;
 import com.authine.cloudpivot.web.api.entity.Client;
 import com.authine.cloudpivot.web.api.handler.CustomizedOrigin;
 import com.authine.cloudpivot.web.api.service.ClientUserService;
+import com.authine.cloudpivot.web.api.utils.CommonUtils;
+import com.authine.cloudpivot.web.api.utils.MD5;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
 import jodd.util.BCrypt;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +16,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * @author liulei
@@ -45,69 +49,43 @@ public class ClientUserController extends BaseController {
      */
     @PostMapping("/addClientUser")
     public ResponseResult <String> addClientUser(@RequestBody Client client) {
-        /** 客户账号用户名称,即客户名称 */
-        String employeeName = client.getClientName();
-        /** 客户账号手机号 */
-        String moblie = client.getMoblie();
         /** 对应用户表的id */
         String userId = client.getUserId();
-
         // 根据手机号判断是否有重复用户
-        UserModel user = this.getOrganizationFacade().getUserByMobile(moblie);
-        //DepartmentModel dept = this.getOrganizationFacade().getDepartment(CLIENT_DEPARTMENT_ID);
+        //UserModel user = this.getOrganizationFacade().getUserByMobile(moblie);
         // 根据用户id获取当前用户
         UserModel newUser = new UserModel();
         if (StringUtils.isNotBlank(userId)) {
             newUser = this.getOrganizationFacade().getUser(userId);
         }
         // 用户名
-        newUser.setName(employeeName);
+        newUser.setName(client.getSecondLevelClientName());
         // 手机号
-        newUser.setMobile(moblie);
-        // 登录名
-        newUser.setUsername(moblie);
+        newUser.setMobile(client.getMoblie());
 
-        if (StringUtils.isNotBlank(newUser.getId())) {
-            // 此时修改
-            if (user != null && !user.getId().equals(newUser.getId())) {
-                // 用户中已经存在当前手机号，且手机号不是当前用户
-                log.info("手机号码“" +moblie + "”重复校验不通过!");
-                return this.getOkResponseResult("error", "修改用户失败!");
-            }
-            try {
+        try {
+            if (StringUtils.isNotBlank(newUser.getId())) {
+                // 此时修改
                 this.getOrganizationFacade().updateUser(newUser);
-
                 log.info("修改用户成功!");
-                return this.getOkResponseResult("success", userId);
-            } catch (Exception e) {
-                log.info("修改用户出错!");
-                return this.getOkResponseResult("error", "修改用户出错!");
-            }
-
-        } else {
-            // 此时新增
-            if (user != null) {
-                // 用户中已经存在当前手机号，且手机号不是当前用户
-                log.info("手机号码“" +moblie + "”重复校验不通过!");
-                return this.getOkResponseResult("error", "新增用户失败!");
-            }
-            // 系统自动赋值
-            newUser = autoAssignment(newUser);
-            try {
+            } else {
+                // 随机生成编码作为登录名
+                newUser.setUsername(CommonUtils.randomGenerateCode());
+                log.info("随机生成登录名：" + newUser.getUsername() + "!");
+                // 系统自动赋值
+                newUser = autoAssignment(newUser);
                 // 新增用户
                 newUser = this.getOrganizationFacade().addUser(newUser);
                 // 新增部门用户表数据
                 this.addClientDepartmentUserModel(newUser);
                 // 更新客户信息表对应的用户id
                 clientUserService.updateClientUserId(client.getId(), newUser.getId());
-
                 log.info("新增用户成功!");
-                return this.getOkResponseResult("success", newUser.getId());
-
-            } catch (Exception e) {
-                log.info("新增用户出错!");
-                return this.getOkResponseResult("error", "新增用户出错!");
             }
+            return this.getOkResponseResult("success", newUser.getId());
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            return this.getOkResponseResult("error", e.getMessage());
         }
     }
 

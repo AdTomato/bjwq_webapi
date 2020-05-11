@@ -3,6 +3,7 @@ package com.authine.cloudpivot.web.api.mapper;
 import com.authine.cloudpivot.web.api.entity.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: wangyong
@@ -13,6 +14,7 @@ public interface SystemManageMapper {
 
     /**
      * 根据城市名称获取时间节点
+     *
      * @param cityName
      * @return 时间节点
      */
@@ -20,13 +22,14 @@ public interface SystemManageMapper {
 
     /**
      * 方法说明：根据客户名称，城市名称查询委托单位
+     *
      * @param clientName 客户名称
-     * @param city 城市名称
+     * @param city       城市名称
      * @return com.authine.cloudpivot.web.api.entity.AppointmentSheet
      * @author liulei
      * @Date 2020/3/11 13:34
      */
-    List <AppointmentSheet> getWelfareHandlerByClientNameAndCity(String clientName, String city);
+    List<AppointmentSheet> getWelfareHandlerByClientNameAndCity(String clientName, String city);
 
     /**
      * @param mobile: 手机号码
@@ -48,6 +51,7 @@ public interface SystemManageMapper {
 
     /**
      * 方法说明：根据地区和福利办理方获取社保，公积金经办人
+     *
      * @param city
      * @param welfareHandler
      * @return com.authine.cloudpivot.web.api.entity.OperateLeader
@@ -58,10 +62,33 @@ public interface SystemManageMapper {
 
     /**
      * 方法说明：根据id查询供应商数据
+     *
      * @param id
      * @return com.authine.cloudpivot.web.api.entity.Supplier
      * @author liulei
      * @Date 2020/3/20 16:24
      */
     Supplier getSupplierById(String id);
+
+    /**
+     * 方法说明：获取客户个性化设置
+     *
+     * @param clientName
+     * @return java.util.List<com.authine.cloudpivot.web.api.entity.Ccps>
+     * @author liulei
+     * @Date 2020/4/2 14:48
+     */
+    List<Ccps> getCcpsByClientName(String clientName);
+
+    /**
+     * 根据获取名称和用户名
+     *
+     * @param mobile 手机号码
+     * @return
+     */
+    List<Map<String, String>> getNameAndUserNameByMobile(String mobile);
+
+    List<Ccps> getCcpsByClientNames(String firstLevelClientName, String secondLevelClientName);
+
+    List<OperateLeader> getOperateLeader(String city, String welfareHandler, String secondLevelClientName);
 }

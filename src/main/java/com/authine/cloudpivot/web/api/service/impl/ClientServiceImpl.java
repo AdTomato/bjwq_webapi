@@ -61,7 +61,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getFirstLevelClientSalesman(String parentId, String area, String staffNature) {
         List<String> result = clientMapper.getFirstLevelClientSalesman(parentId, area, staffNature);
-        return null == result || result.size() > 0 ? null : result.get(0);
+        return null == result || result.size() == 0 ? null : result.get(0);
     }
 
     /**
@@ -74,7 +74,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getFirstLevelClientSalesmanByCompanyName(String companyName) {
         List<String> result = clientMapper.getFirstLevelClientSalesmanByCompanyName(companyName);
-        return null == result || result.size() > 0 ? null : result.get(0);
+        return null == result || result.size() == 0 ? null : result.get(0);
     }
 
     /**
@@ -117,7 +117,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getSecondLevelClientSalesman(String parentId, String area, String staffNature) {
         List<String> result = clientMapper.getSecondLevelClientSalesman(parentId, area, staffNature);
-        return null == result || result.size() > 0 ? null : result.get(0);
+        return null == result || result.size() == 0 ? null : result.get(0);
     }
 
     /**
@@ -130,7 +130,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getSecondLevelClientSalesmanByCompanyName(String companyName) {
         List<String> result = clientMapper.getSecondLevelClientSalesmanByCompanyName(companyName);
-        return null == result || result.size() > 0 ? null : result.get(0);
+        return null == result || result.size() == 0 ? null : result.get(0);
     }
 
     /**
@@ -186,7 +186,7 @@ public class ClientServiceImpl implements ClientService {
      * @return: java.lang.Double
      * @Description: 获取销售合同中该地区的服务费
      */
-    private Double getFee(SalesContractDto salesContractDto, String area) {
+    public Double getFee(SalesContractDto salesContractDto, String area) {
         List<ServiceChargeUnitPrice> serviceChargeUnitPrices = salesContractDto.getServiceChargeUnitPrices();
         boolean isAnhuiCity = AreaUtils.isAnhuiCity(area);
         String flag = "";

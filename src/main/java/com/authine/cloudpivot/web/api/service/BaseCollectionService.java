@@ -81,7 +81,7 @@ public interface BaseCollectionService {
      * @throws
      * @param baseInfoCollections  excel导出映射的实体类
      * @param start_collect_id 发起基数采集的id
-     * @return {@link java.util.List<com.authine.cloudpivot.web.api.entity.BaseInfoCollection>}
+     * @return {@link List< BaseInfoCollection>}
      **/
     List<BaseInfoCollection> findBaseCollectInfoFromTotalInfo(List<BaseInfoCollection> baseInfoCollections,String start_collect_id);
 

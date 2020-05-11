@@ -88,8 +88,8 @@ public class ParseExcelUtils {
      */
     public static Workbook getWorkBook(InputStream in, String fileName) throws IOException {
         if (fileName.endsWith(".xlsx")) {
-            return WorkbookFactory.create(in);
-            // return new XSSFWorkbook(in);
+            // return WorkbookFactory.create(in);
+            return new XSSFWorkbook(in);
         } else {
             return WorkbookFactory.create(in);
         }
@@ -175,8 +175,7 @@ public class ParseExcelUtils {
 
                                 }
                                 if (StringUtils.isEmpty(value)) {
-                                    // volidateValueRequired(eHead, sheetName, rowIndex);
-                                    value ="";
+                                    volidateValueRequired(eHead, sheetName, rowIndex);
                                     break;
                                 }
                                 method.invoke(instance, convertType(field.getType(), value.trim()));
@@ -207,7 +206,7 @@ public class ParseExcelUtils {
      * @param excelHead
      * @throws Exception
      */
-    public static void volidateValueRequired(ExcelHead excelHead, String sheetName, int rowIndex) throws Exception {
+    private static void volidateValueRequired(ExcelHead excelHead, String sheetName, int rowIndex) throws Exception {
         if (excelHead != null && excelHead.isRequired()) {
             throw new Exception("《" + sheetName + "》第" + (rowIndex + 1) + "行:\"" + excelHead.getExcelName() + "\"不能为空！");
         }
@@ -350,7 +349,7 @@ public class ParseExcelUtils {
         }
         return wb;
     }
-   
+
     /**
      * @Author lfh
      * @Description 动态获取表头信息

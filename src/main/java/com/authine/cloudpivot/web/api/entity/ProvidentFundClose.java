@@ -47,23 +47,12 @@ public class ProvidentFundClose extends BaseEntity {
     /** 证件号码*/
     String identityNo;
 
-    /** 派出单位*/
-    String dispatchUnit;
-
     /** 客户名称*/
-    String clientName;
-
-    /** 客服*/
-    String customerService;
+    String	firstLevelClientName;
+    String	secondLevelClientName;
 
     /** 福利办理方*/
     String welfareHandler;
-
-    /** 申请人*/
-    String applicant;
-
-    /** 申请日期*/
-    Date applicationTime;
 
     /** 起始月*/
     Date startMonth;
@@ -88,4 +77,42 @@ public class ProvidentFundClose extends BaseEntity {
 
     /** 待办，在办，停缴，驳回*/
     String status;
+
+    String subordinateDepartment;
+    String city;
+
+    public ProvidentFundClose(String sequenceStatus, String creater, String createdDeptId, Date createdTime, String owner, String ownerDeptId, String ownerDeptQueryCode,
+                              String employeeOrderFormId, String employeeName, String gender, Date birthday,
+                              String identityNoType, String identityNo, String firstLevelClientName,
+                              String secondLevelClientName, String welfareHandler, Date startMonth, Date chargeEndMonth,
+                              Double providentFundBase, Double enterpriseDeposit, Double personalDeposit,
+                              Double totalDeposit, String operateLeader, String status, String subordinateDepartment,
+                              String city) {
+        this.creater = creater;
+        this.createdDeptId = createdDeptId;
+        this.createdTime = createdTime;
+        this.sequenceStatus = sequenceStatus;
+        this.owner = owner;
+        this.ownerDeptId = ownerDeptId;
+        this.ownerDeptQueryCode = ownerDeptQueryCode;
+        this.employeeOrderFormId = employeeOrderFormId;
+        this.employeeName = employeeName;
+        this.gender = gender;
+        this.birthday = birthday;
+        this.identityNoType = identityNoType;
+        this.identityNo = identityNo;
+        this.firstLevelClientName = firstLevelClientName;
+        this.secondLevelClientName = secondLevelClientName;
+        this.welfareHandler = welfareHandler;
+        this.startMonth = startMonth;
+        this.chargeEndMonth = chargeEndMonth;
+        this.providentFundBase = providentFundBase;
+        this.enterpriseDeposit = enterpriseDeposit;
+        this.personalDeposit = personalDeposit;
+        this.totalDeposit = totalDeposit;
+        this.operateLeader = operateLeader;
+        this.status = status;
+        this.subordinateDepartment = subordinateDepartment;
+        this.city = city;
+    }
 }

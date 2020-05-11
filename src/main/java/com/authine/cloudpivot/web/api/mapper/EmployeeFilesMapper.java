@@ -177,9 +177,52 @@ public interface EmployeeFilesMapper {
 
     /**
      * 根据员工订单id获取员工
+     *
      * @param id
      * @return
      */
     List<SocialSecurityFundDetail> getSocialSecurityFundDetailByParentId(String id);
 
+    /**
+     * 根据员工的证件号码获取之前没有对比的账单
+     *
+     * @param idNo
+     * @return
+     */
+    List<Bill> getNoCompareBills(String idNo);
+
+    /**
+     * 根据账单年月，证件号码获取薪资收费账单
+     *
+     * @param billYear
+     * @param idNo
+     * @return 薪资收费账单
+     */
+    List<PayrollBill> getPayrollBills(String billYear, String idNo);
+
+    /**
+     * 更新员工档案
+     *
+     * @param employeeFilesDto
+     */
+    void updateEmployee(List<EmployeeFilesDto> employeeFilesDto);
+
+    /**
+     * 创建账单明细
+     *
+     * @param bills
+     */
+    void insertBills(List<Bill> bills);
+
+    /**
+     * 方法说明：根据员工证件号,一级客户名称，二级客户名称获取员工档案
+     * @param identityNo 证件号
+     * @param firstLevelClientName 一级客户名称
+     * @param secondLevelClientName 二级客户名称
+     * @return java.util.List<com.authine.cloudpivot.web.api.entity.EmployeeFiles>
+     * @author liulei
+     * @Date 2020/4/17 11:06
+     */
+    List <EmployeeFiles> getEmployeeFilesByIdNoAndClientName(String identityNo, String firstLevelClientName,
+                                                             String secondLevelClientName);
 }

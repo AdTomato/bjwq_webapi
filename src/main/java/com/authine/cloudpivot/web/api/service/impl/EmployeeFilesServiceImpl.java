@@ -6,6 +6,7 @@ import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper;
 import com.authine.cloudpivot.web.api.service.EmployeeFilesService;
 import com.sun.istack.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -17,13 +18,14 @@ import java.util.List;
  * @Description: 员工档案service
  */
 @Service
+@Slf4j
 public class EmployeeFilesServiceImpl implements EmployeeFilesService {
 
     @Resource
     EmployeeFilesMapper employeeFilesMapper;
 
     /**
-     * @param idNo     : 身份证
+     * @param idNo       : 身份证
      * @param clientName : 客户名称
      * @return : com.authine.cloudpivot.web.api.entity.EmployeeFilesDto
      * @Author: wangyong
@@ -141,10 +143,10 @@ public class EmployeeFilesServiceImpl implements EmployeeFilesService {
     }
 
     /**
+     * @param clientName:     客户名称
+     * @param employeeNature: 员工性质
      * @Author: wangyong
      * @Date: 2020/3/18 9:32
-     * @param clientName: 客户名称
-     * @param employeeNature: 员工性质
      * @return: java.util.List<com.authine.cloudpivot.web.api.dto.EmployeeFilesDto>
      * @Description: 获取该客户名称下面该员工性质的员工档案
      */
@@ -154,9 +156,9 @@ public class EmployeeFilesServiceImpl implements EmployeeFilesService {
     }
 
     /**
+     * @param id: 员工档案id
      * @Author: wangyong
      * @Date: 2020/3/18 9:33
-     * @param id: 员工档案id
      * @return: java.util.List<com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto>
      * @Description: 根据员工档案id获取该员工的订单信息
      */
@@ -166,14 +168,71 @@ public class EmployeeFilesServiceImpl implements EmployeeFilesService {
     }
 
     /**
+     * @param id: 根据员工订单id获取员工订单信息
      * @Author: wangyong
      * @Date: 2020/3/18 9:34
-     * @param id: 根据员工订单id获取员工订单信息
      * @return: java.util.List<com.authine.cloudpivot.web.api.entity.SocialSecurityFundDetail>
      * @Description: 员工订单详情
      */
     @Override
     public List<SocialSecurityFundDetail> getSocialSecurityFundDetailByParentId(String id) {
         return employeeFilesMapper.getSocialSecurityFundDetailByParentId(id);
+    }
+
+    /**
+     * @param idNo: 证件号
+     * @Author: wangyong
+     * @Date: 2020/4/1 13:32
+     * @return: java.util.List<com.authine.cloudpivot.web.api.entity.Bill>
+     * @Description: 根据员工证件号获取该员工没有对比的账单
+     */
+    @Override
+    public List<Bill> getNoCompareBills(String idNo) {
+        return employeeFilesMapper.getNoCompareBills(idNo);
+    }
+
+    /**
+     * @param billYear: 账单年月
+     * @param idNo:     证件号码
+     * @Author: wangyong
+     * @Date: 2020/4/2 13:22
+     * @return: com.authine.cloudpivot.web.api.entity.PayrollBill
+     * @Description:
+     */
+    @Override
+    public PayrollBill getPayrollBill(String billYear, String idNo) {
+        List<PayrollBill> payrollBills = employeeFilesMapper.getPayrollBills(billYear, idNo);
+        return payrollBills == null || payrollBills.size() == 0 ? null : payrollBills.get(0);
+    }
+
+    /**
+     * @param employeeFilesDto:
+     * @Author: wangyong
+     * @Date: 2020/4/8 11:26
+     * @return: void
+     * @Description: 更新员工档案
+     */
+    @Override
+    public void updateEmployee(List<EmployeeFilesDto> employeeFilesDto) {
+        employeeFilesMapper.updateEmployee(employeeFilesDto);
+    }
+
+    @Override
+    public void insertBills(List<Bill> bills) {
+        if (bills != null && bills.size() > 0)
+            employeeFilesMapper.insertBills(bills);
+    }
+
+    @Override
+    public EmployeeFiles getEmployeeFilesByIdNoAndClientName(String identityNo, String firstLevelClientName,
+                                                             String secondLevelClientName) throws Exception {
+        List <EmployeeFiles> list = employeeFilesMapper.getEmployeeFilesByIdNoAndClientName(identityNo,
+                firstLevelClientName, secondLevelClientName);
+        if (list != null && list.size() > 0) {
+            return list.get(0);
+        } else {
+            log.error("没有获取到员工档案数据！");
+            throw new RuntimeException("没有获取到员工档案数据！");
+        }
     }
 }

@@ -4,8 +4,10 @@ import com.authine.cloudpivot.web.api.dto.EmployeeFilesDto;
 import com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto;
 import com.authine.cloudpivot.web.api.entity.PaymentApplication;
 import com.authine.cloudpivot.web.api.entity.PaymentClientDetails;
+import com.authine.cloudpivot.web.api.entity.PaymentDetails;
 import com.authine.cloudpivot.web.api.entity.SocialSecurityFundDetail;
 import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.security.core.parameters.P;
 
 import java.util.List;
 import java.util.Map;
@@ -81,13 +83,16 @@ public interface PaymentApplicationMapper {
 
     List<SocialSecurityFundDetail> getSocialSecurityFundDetailByParentId1(String id);
 
-    void batchInsertPaymentDetailsTemp(List<Map<String, Object>> paymentDetailIds);
+    void batchInsertPaymentDetailsTemp(@Param("paymentDetails") List<Map<String, Object>> paymentDetails, @Param(
+            "tableName") String tableName);
 
     void updatePaymentDetailsByTemp(String sourceId);
 
     void insertPaymentDetailsByTemp(String sourceId);
 
     void insertPaymentClientDetailsBySourceId(String sourceId);
+
+    void giveClientDetailsAssignmentClientCode(String sourceId);
 
     List <PaymentApplication> getSnPaymentApplicationBySourceId(String sourceId);
 
@@ -108,4 +113,27 @@ public interface PaymentApplicationMapper {
     void updatePaymentClientDetailsSourceIdToNull(String sourceId);
 
     void updatePaymentApplicationSourceIdToNull(String sourceId);
+
+    @Deprecated
+    void updatePaymentDetailsOneTimeFee(String sourceId, String dataType);
+
+    @Deprecated
+    void insertPaymentDetailsOneTimeFee(String sourceId, String dataType);
+
+    @Deprecated
+    void updatePaymentClientDetailsOneTimeFee(String sourceId, String dataType);
+
+    @Deprecated
+    void updatePaymentApplicationOneTimeFee(String sourceId, String dataType);
+
+    void insertPaymentApplicationBySourceId(String sourceId, String userId, String name, String deptId,
+                                            String queryCode, String sequenceStatus);
+
+    void updateEmployeeFilesPaymentApplication(@Param("ids") List<String> ids,
+                                               @Param("processType") String processType,
+                                               @Param("billYear") String billYear);
+
+    List<String> getAddPaymentApplicationIdsBySourceId(String sourceId);
+
+    void updatePaymentDetailsSalesman(String sourceId);
 }

@@ -26,10 +26,9 @@ public interface SalesContractMapper {
      * 根据账单生成时间在startDate和endDate之间的时间获取销售合同
      *
      * @param startDate 开始时间
-     * @param endDate   结束时间
      * @return 销售合同
      */
-    List<SalesContractDto> getSalesContractByGenerateBillDate(Date startDate, Date endDate);
+    List<SalesContractDto> getSalesContractByGenerateBillDate(Date startDate);
 
     /**
      * 根据客户名称，业务类型获取销售合同

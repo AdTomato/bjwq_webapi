@@ -39,7 +39,8 @@ public class SystemDataSetUtils {
         baseEntity.setCreatedTime(new Date());
         baseEntity.setModifier(user.getId());
         baseEntity.setModifiedTime(new Date());
-        baseEntity.setSequenceNo(sequenceStatus);
+        baseEntity.setSequenceStatus(sequenceStatus);
+        baseEntity.setSequenceNo(null);
         baseEntity.setOwnerDeptQueryCode(department.getQueryCode());
     }
 

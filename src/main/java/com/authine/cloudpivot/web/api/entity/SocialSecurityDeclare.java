@@ -38,7 +38,6 @@ import java.util.Map;
 public class SocialSecurityDeclare extends BaseEntity {
     /** 员工订单id 新增的值*/
     String employeeOrderFormId;
-
     /** 姓名*/
     String employeeName;
 
@@ -54,26 +53,8 @@ public class SocialSecurityDeclare extends BaseEntity {
     /** 证件号码*/
     String identityNo;
 
-    /** 派出单位*/
-    String dispatchUnit;
-
-    /** 客户名称*/
-    String clientName;
-
-    /** 客服*/
-    String customerService;
-
-    /** 客服部门*/
-    String customerServices;
-
     /** 福利办理方*/
     String welfareHandler;
-
-    /** 申请人*/
-    String applicant;
-
-    /** 申请日期*/
-    Date applicationDate;
 
     /** 合同签订日期*/
     Date contractSigningDate;
@@ -93,9 +74,6 @@ public class SocialSecurityDeclare extends BaseEntity {
     /** 手机号码*/
     String mobile;
 
-    /** 是否兼职工伤*/
-    String weatherPartWorkInjury;
-
     /** 运行负责人*/
     String operateLeader;
 
@@ -106,74 +84,69 @@ public class SocialSecurityDeclare extends BaseEntity {
 
     /** 待办，在办，预点，在缴，驳回*/
     String status;
+    /**
+     * 一级客户名称
+     */
+    String firstLevelClientName;
+    /**
+     * 二级客户名称
+     */
+    String secondLevelClientName;
+    /**
+     * 所属部门
+     */
+    String subordinateDepartment;
+    /**
+     * 福利地
+     */
+    String city;
+    /**
+     * 账单年月
+     */
+    String billYear;
+    /**
+     * 备注
+     */
+    String remark;
 
     // 社保申报详细
     List <Map <String, String>> socialSecurityDetail;
 
-    /**
-     * 方法说明：增员_客户表单创建社保申报实体
-     * @author liulei
-     * @Date 2020/2/26 11:36
-     */
-    public SocialSecurityDeclare(String employeeName, String gender, Date birthday,
-                                 String identityNoType, String identityNo, String dispatchUnit, String clientName,
-                                 String customerService, String customerServices, String welfareHandler,
-                                 String applicant, Date applicationDate, Date contractSigningDate,
-                                 Date contractDeadline, Date startMonth, Double positiveSalary, Double basePay,
-                                 String mobile, String weatherPartWorkInjury, String operateLeader,
-                                 List <Map <String, String>> socialSecurityDetail) {
+    public SocialSecurityDeclare(String sequenceStatus, String creater, String createdDeptId, Date createdTime,
+                                 String owner, String ownerDeptId, String ownerDeptQueryCode,
+                                 Date startMonth, String employeeName, String gender, String identityNo,
+                                 String identityNoType, Date contractSigningDate, Date contractDeadline,
+                                 Double positiveSalary, Double basePay, String mobile, String welfareHandler,
+                                 Date birthday, String operateLeader, String employeeOrderFormId, String status,
+                                 String firstLevelClientName, String secondLevelClientName,
+                                 String subordinateDepartment, String city, String remark) {
+        this.creater = creater;
+        this.createdDeptId = createdDeptId;
+        this.createdTime = createdTime;
+        this.sequenceStatus = sequenceStatus;
+        this.owner = owner;
+        this.ownerDeptId = ownerDeptId;
+        this.ownerDeptQueryCode = ownerDeptQueryCode;
+        this.startMonth = startMonth;
         this.employeeName = employeeName;
         this.gender = gender;
-        this.birthday = birthday;
-        this.identityNoType = identityNoType;
         this.identityNo = identityNo;
-        this.dispatchUnit = dispatchUnit;
-        this.clientName = clientName;
-        this.customerService = customerService;
-        this.customerServices = customerServices;
-        this.welfareHandler = welfareHandler;
-        this.applicant = applicant;
-        this.applicationDate = applicationDate;
+        this.identityNoType = identityNoType;
         this.contractSigningDate = contractSigningDate;
         this.contractDeadline = contractDeadline;
-        this.startMonth = startMonth;
         this.positiveSalary = positiveSalary;
         this.basePay = basePay;
         this.mobile = mobile;
-        this.weatherPartWorkInjury = weatherPartWorkInjury;
-        this.operateLeader = operateLeader;
-        this.socialSecurityDetail = socialSecurityDetail;
-    }
-
-    /**
-     * 方法说明：增员_上海&&全国表单创建社保申报实体
-     * @author liulei
-     * @Date 2020/2/26 11:36
-     */
-    public SocialSecurityDeclare(String employeeName, String gender, Date birthday, String identityNoType,
-                                 String identityNo, String dispatchUnit, String clientName, String customerService,
-                                 String customerServices, String welfareHandler, String applicant,
-                                 Date applicationDate, Date startMonth, Double positiveSalary, Double basePay,
-                                 String mobile, String weatherPartWorkInjury, String operateLeader,
-                                 List <Map <String, String>> socialSecurityDetail) {
-        this.employeeName = employeeName;
-        this.gender = gender;
-        this.birthday = birthday;
-        this.identityNoType = identityNoType;
-        this.identityNo = identityNo;
-        this.dispatchUnit = dispatchUnit;
-        this.clientName = clientName;
-        this.customerService = customerService;
-        this.customerServices = customerServices;
         this.welfareHandler = welfareHandler;
-        this.applicant = applicant;
-        this.applicationDate = applicationDate;
-        this.startMonth = startMonth;
-        this.positiveSalary = positiveSalary;
-        this.basePay = basePay;
-        this.mobile = mobile;
-        this.weatherPartWorkInjury = weatherPartWorkInjury;
+        this.birthday = birthday;
         this.operateLeader = operateLeader;
-        this.socialSecurityDetail = socialSecurityDetail;
+        this.employeeOrderFormId = employeeOrderFormId;
+        this.status = status;
+        this.firstLevelClientName = firstLevelClientName;
+        this.secondLevelClientName = secondLevelClientName;
+        this.subordinateDepartment = subordinateDepartment;
+        this.city = city;
+        this.remark = remark;
+
     }
 }

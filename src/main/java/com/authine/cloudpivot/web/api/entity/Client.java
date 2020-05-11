@@ -16,7 +16,10 @@ import lombok.NoArgsConstructor;
 public class Client {
     String id;
     /** 客户名称 */
-    String clientName;
+    String firstLevelClientName;
+    String secondLevelClientName;
+    /** 对接人姓名*/
+    String contactName;
     /** 客户账号手机号 */
     String moblie;
     /** 对应用户表的id */

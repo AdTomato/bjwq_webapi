@@ -16,28 +16,130 @@ import java.util.Date;
 @AllArgsConstructor
 public class EnquiryReceivable extends BaseEntity {
 
-    private String billYear;
-    private String entrustedUnit;
+    /**
+     * 业务员
+     */
     private String salesman;
+
+    /**
+     * 业务部门
+     */
     private String businessDept;
-    private String businessType;
-    private Double socialSecurityTotal;
-    private Double accumulationFundTotal;
-    private Double realWagesTotal;
-    private Double personalTaxTotal;
-    private Double welfareProductsTotal;
-    private Double valueAddedTaxTotal;
-    private Double riskManagementFee;
-    private Double serviceCharge;
-    private Double receivableTotal;
+
+    /**
+     * 委托单位
+     */
+    private String entrustedUnit;
+
+    /**
+     * 业务客户名称
+     */
     private String businessCustomerName;
-    private Double outsourcingManageFee;
-    private Double businessTaxesFees;
+
+    /**
+     * 业务类型
+     */
+    private String businessType;
+
+    /**
+     * 账单年月
+     */
+    private String billYear;
+
+    /**
+     * 社保合计
+     */
+    private Double socialSecurityTotal = 0D;
+
+    /**
+     * 公积金合计
+     */
+    private Double accumulationFundTotal = 0D;
+
+    /**
+     * 实发工资合计
+     */
+    private Double realWagesTotal = 0D;
+
+    /**
+     * 个税合计
+     */
+    private Double personalTaxTotal = 0D;
+
+    /**
+     * 福利产品合计
+     */
+    private Double welfareProductsTotal = 0D;
+
+    /**
+     * 服务费
+     */
+    private Double serviceCharge = 0D;
+
+    /**
+     * 魏姚加
+     * 一次性质服务费
+     */
+    private Double serviceChargeOnce = 0D;
+
+    /**
+     * 增值税税费
+     */
+    private Double valueAddedTaxTotal = 0D;
+
+    /**
+     * 风险管理费
+     */
+    private Double riskManagementFee = 0D;
+
+    /**
+     * 外包管理费
+     */
+    private Double outsourcingManageFee = 0D;
+
+    /**
+     * 营业税税费
+     */
+    private Double businessTaxesFees = 0D;
+
+    /**
+     * 应收总计
+     */
+    private Double receivableTotal = 0D;
+
+    /**
+     * 约定回款日期
+     */
     private Date agreedPaymentDate;
+
+    /**
+     * 系统生成时间
+     */
     private Date systemGenerationDate;
-    private String billModify;
-    private Date billModifyDate;
-    private String billWetherDefine;
-    private String billDefine;
+
+    /**
+     * 是否锁定
+     */
     private Integer isLock;
+
+    /**
+     * 账单修改人
+     */
+    private String billModify;
+
+    /**
+     * 账单修改时间
+     */
+    private Date billModifyDate;
+
+    /**
+     * 账单确认人
+     */
+    private String billDefine;
+
+    /**
+     * 账单是否确认
+     */
+    private Integer billWetherDefine;
+
 }

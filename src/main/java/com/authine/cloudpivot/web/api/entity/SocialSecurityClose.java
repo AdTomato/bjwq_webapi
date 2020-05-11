@@ -48,23 +48,8 @@ public class SocialSecurityClose extends BaseEntity {
     /** 证件号码*/
     String identityNo;
 
-    /** 派出单位*/
-    String dispatchUnit;
-
-    /** 客户名称*/
-    String clientName;
-
-    /** 客服*/
-    String customerService;
-
     /** 福利办理方*/
     String welfareHandler;
-
-    /** 申请人*/
-    String applicant;
-
-    /** 申请日期*/
-    Date applicationTime;
 
     /** 起始月*/
     Date startMonth;
@@ -83,4 +68,42 @@ public class SocialSecurityClose extends BaseEntity {
 
     /** 待办，在办，停缴，驳回*/
     String status;
+
+    String	firstLevelClientName	;
+    String	secondLevelClientName	;
+    String	subordinateDepartment	;
+    String	city	;
+
+    public SocialSecurityClose(String sequenceStatus, String creater, String createdDeptId, Date createdTime,
+                               String owner, String ownerDeptId, String ownerDeptQueryCode,
+                               String employeeOrderFormId, String employeeName, String gender, Date birthday,
+                               String identityNoType, String identityNo, String welfareHandler, Date startMonth,
+                               Date chargeEndMonth, Double socialSecurityBase, String resignationRemarks,
+                               String operateLeader, String status, String firstLevelClientName,
+                               String secondLevelClientName, String subordinateDepartment, String city) {
+        this.creater = creater;
+        this.createdDeptId = createdDeptId;
+        this.createdTime = createdTime;
+        this.sequenceStatus = sequenceStatus;
+        this.owner = owner;
+        this.ownerDeptId = ownerDeptId;
+        this.ownerDeptQueryCode = ownerDeptQueryCode;
+        this.employeeOrderFormId = employeeOrderFormId;
+        this.employeeName = employeeName;
+        this.gender = gender;
+        this.birthday = birthday;
+        this.identityNoType = identityNoType;
+        this.identityNo = identityNo;
+        this.welfareHandler = welfareHandler;
+        this.startMonth = startMonth;
+        this.chargeEndMonth = chargeEndMonth;
+        this.socialSecurityBase = socialSecurityBase;
+        this.resignationRemarks = resignationRemarks;
+        this.operateLeader = operateLeader;
+        this.status = status;
+        this.firstLevelClientName = firstLevelClientName;
+        this.secondLevelClientName = secondLevelClientName;
+        this.subordinateDepartment = subordinateDepartment;
+        this.city = city;
+    }
 }

@@ -54,7 +54,6 @@ public class ProvidentFundDeclareStopPaymentController extends BaseController {
     public void openAccount(@RequestBody ImportCondition importCondition, HttpServletResponse response) throws IOException, ParseException {
 
         List<OpenAccountInfo> openAccountInfos = null;
-        //查询上月节点时间和这月节点时间封装
 
         openAccountInfos = declareStopPaymentService.findOpenAccountInfo(importCondition);
 
@@ -91,7 +90,6 @@ public class ProvidentFundDeclareStopPaymentController extends BaseController {
         Sheet sheet = workbook.createSheet("sheet1");
         int rowNum = 0;
         //第二行表头
-        // String[] header1 = {"序号", "个人姓名", "证件号码", "缴存基数", "缴存比例", "公积金起缴月"};
         String[] header1 = {"公积金福利地", "公积金福利办理方", "一级客户名称", "二级客户名称", "业务员", "姓名", "证件号码", "公积金起缴时间", "公积金基数", "单位公积金比例", "个人公积金比例", "单位缴存额", "个人缴存额", "缴存额", "联系电话", "现住址"};
         //第三行
         Row row2 = sheet.createRow(rowNum++);

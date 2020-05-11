@@ -67,9 +67,20 @@ public class CheckExcelController extends BaseController {
         Sheet sheet = workBook.getSheetAt(0);
         for (int i = 1; i < sheet.getLastRowNum(); i++) {
             Row row = sheet.getRow(i);
-            if (!ParseExcelUtils.checkIsNumber(row.getCell(7)) || !ParseExcelUtils.checkIsNumber(row.getCell(8))) {
+            if (!checkIsNumber(row.getCell(7)) || !checkIsNumber(row.getCell(8))) {
                 return this.getOkResponseResult("error", "原基数或者新基数为空或者为非数字");
             }
+//            if (row.getCell(7).getStringCellValue() == null || row.getCell(8).getStringCellValue() == null) {
+//                return this.getOkResponseResult("error", "原基数和新基数不允许存在空值");
+//            }
+//            if (row.getCell(7).getCellType() != CellType.NUMERIC || row.getCell(8).getCellType() != CellType.NUMERIC) {
+//                return this.getOkResponseResult("error", "原基数和新基数填写存在非数字类型");
+//            }
+//            if (row.getCell(7).getCellType() == CellType.NUMERIC || row.getCell(8).getCellType() == CellType.NUMERIC) {
+//                if (HSSFDateUtil.isCellDateFormatted(row.getCell(7)) || HSSFDateUtil.isCellDateFormatted(row.getCell(8))) {
+//                    return this.getOkResponseResult("error", "原基数或新基数存在时间类型");
+//                }
+//            }
         }
         FileInputStream is = new FileInputStream(file);
         List<String> headName = ParseExcelUtils.getHeadName(realPath, is);
@@ -99,5 +110,47 @@ public class CheckExcelController extends BaseController {
         }
         return this.getOkResponseResult("成功", "不存在null值");
     }
+
+    /**
+     * 用于判断number是否为空或者是否为数字
+     *
+     * @param cell cell单元格
+     * @return true 是数字且不为空 false 不是数字或者为空
+     * @author wangyong
+     */
+    private boolean checkIsNumber(Cell cell) {
+        boolean result = true;
+
+        if (cell.getCellType() == CellType.NUMERIC) {
+            // 本身为数字
+            Double numericCellValue = cell.getNumericCellValue();
+            if (numericCellValue == null) {
+                // 不存在值
+                result = false;
+            } else if (HSSFDateUtil.isCellDateFormatted(cell)) {
+                // 为时间
+                result = false;
+            }
+        }
+
+        if (cell.getCellType() == CellType.STRING) {
+            // 本身为字符串
+            String value = cell.getStringCellValue();
+            if (StringUtils.isEmpty(value)) {
+                // 为空，校验失败
+                result = false;
+            } else {
+                try {
+                    Double d = Double.parseDouble(value);
+                } catch (Exception e) {
+                    // 类型转换异常，证明不是数字
+                    result = false;
+                }
+            }
+        }
+
+        return result;
+    }
+
 
 }

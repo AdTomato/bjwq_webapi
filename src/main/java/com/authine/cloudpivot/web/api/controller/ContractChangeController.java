@@ -205,7 +205,6 @@ public class ContractChangeController extends BaseController {
             }
         }
     }
-
     /**
      * 检查字符串是否修改
      *

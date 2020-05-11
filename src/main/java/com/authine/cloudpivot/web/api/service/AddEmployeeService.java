@@ -63,4 +63,14 @@ public interface AddEmployeeService {
      * @Date 2020/2/28 15:03
      */
     EmployeeOrderForm getEmployeeOrderFormById(String id) throws Exception;
+
+    EmployeeOrderForm getEmployeeOrderFormByEmployeeFilesId(String id) throws Exception;
+
+    SocialSecurityDeclare getSocialSecurityDeclareByOrderFormId(String id) throws Exception;
+
+    ProvidentFundDeclare getProvidentFundDeclareByOrderFormId(String id) throws Exception;
+
+    SocialSecurityClose getSocialSecurityCloseByOrderFormId(String id) throws Exception;
+
+    ProvidentFundClose getProvidentFundCloseByOrderFormId(String id) throws Exception;
 }
