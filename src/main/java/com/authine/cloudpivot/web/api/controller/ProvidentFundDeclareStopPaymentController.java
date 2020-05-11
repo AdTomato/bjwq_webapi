@@ -52,7 +52,7 @@ public class ProvidentFundDeclareStopPaymentController extends BaseController {
     //公积金开户
     @PostMapping("/openAccount")
     public void openAccount(@RequestBody ImportCondition importCondition, HttpServletResponse response) throws IOException, ParseException {
-
+        log.info("公积金开户导出");
         List<OpenAccountInfo> openAccountInfos = null;
 
         openAccountInfos = declareStopPaymentService.findOpenAccountInfo(importCondition);
