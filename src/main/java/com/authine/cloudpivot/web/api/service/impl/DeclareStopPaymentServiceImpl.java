@@ -3,10 +3,7 @@ package com.authine.cloudpivot.web.api.service.impl;
 import com.authine.cloudpivot.web.api.entity.OpenAccountInfo;
 import com.authine.cloudpivot.web.api.entity.UnsealAndSealInfos;
 import com.authine.cloudpivot.web.api.mapper.DeclareStopPaymentMapper;
-<<<<<<< HEAD
 import com.authine.cloudpivot.web.api.params.ImportCondition;
-=======
->>>>>>> c0849e2d097aeec4138cb43f6efc529a1c8c4742
 import com.authine.cloudpivot.web.api.service.DeclareStopPaymentService;
 import org.springframework.stereotype.Service;
 

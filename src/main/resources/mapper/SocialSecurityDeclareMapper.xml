@@ -68,7 +68,7 @@
             and city=#{city}
         </if>
         <if test="second_level_client_name!=null and second_level_client_name!=''">
-            and second_level_client_name = #{second_level_client_name}
+            and ssd.second_level_client_name = #{second_level_client_name}
         </if>
 
         <if test="startTime !=null and endTime !=null ">
@@ -91,7 +91,7 @@
             and city=#{city}
         </if>
         <if test="second_level_client_name!=null and second_level_client_name!=''">
-            and second_level_client_name = #{second_level_client_name}
+            and ssc.second_level_client_name = #{second_level_client_name}
         </if>
 
         <if test="startTime !=null and endTime !=null ">
@@ -121,7 +121,7 @@
             and city=#{city}
         </if>
         <if test="second_level_client_name!=null and second_level_client_name!=''">
-            and second_level_client_name = #{second_level_client_name}
+            and ssd.second_level_client_name = #{second_level_client_name}
         </if>
 
         <if test="startTime !=null and endTime !=null ">
@@ -159,7 +159,7 @@
             and city=#{city}
         </if>
         <if test="second_level_client_name!=null and second_level_client_name!=''">
-            and second_level_client_name = #{second_level_client_name}
+            and ssc.second_level_client_name = #{second_level_client_name}
         </if>
 
         <if test="startTime !=null and endTime !=null ">

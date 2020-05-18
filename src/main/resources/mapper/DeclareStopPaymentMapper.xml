@@ -42,7 +42,7 @@
             and city=#{city}
         </if>
         <if test="second_level_client_name!=null and second_level_client_name!=''">
-            and second_level_client_name = #{second_level_client_name}
+            and pfd.second_level_client_name = #{second_level_client_name}
         </if>
 
         <if test="startTime !=null and endTime !=null ">
@@ -85,8 +85,7 @@
         select
         pfc.*, pfdd.employee_ratio employee_ratio ,pfdd.company_ratio company_ratio,lci.phone,lci.current_address
         from
-        i4fvb_provident_fund_detail pfdd, i4fvb_provident_fund_close pfc,i4fvb_provident_fund_declare
-        pfd,ibkct_labor_contract_info lci
+            i4fvb_provident_fund_detail pfdd, i4fvb_provident_fund_close pfc,i4fvb_provident_fund_declare pfd,ibkct_labor_contract_info lci
         where
         pfd.identityNo = pfc.identityNo and pfd.id = pfdd.parentId and lci.idnumber = pfd.identityNo
         <if test="welfare_handler!=null and welfare_handler!='' ">
@@ -96,7 +95,7 @@
             and city=#{city}
         </if>
         <if test="second_level_client_name!=null and second_level_client_name!=''">
-            and second_level_client_name = #{second_level_client_name}
+            and pfd.second_level_client_name = #{second_level_client_name}
         </if>
         <if test="startTime !=null and endTime !=null ">
             and pfd.createdTime between #{startTime} and #{endTime}
