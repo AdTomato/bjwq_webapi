@@ -38,6 +38,18 @@ public interface SalesContractService {
      */
     SalesContractDto getSalesContractDto(String clientName, String businessType);
 
+    /**
+     * 获取销售合同中的销售单价列表
+     *
+     * @param clientName   客户名称
+     * @param businessType 业务类型
+     * @param serviceArea  服务地区
+     * @param areaDetails  地区详情
+     * @return 销售单价列表
+     * @author wangyong
+     */
+    ServiceChargeUnitPrice getServiceChargeUnitPrice(String clientName, String businessType, String serviceArea, String areaDetails);
+
 
     /**
      * 根据销售id获取销售合同中的销售单单价列表

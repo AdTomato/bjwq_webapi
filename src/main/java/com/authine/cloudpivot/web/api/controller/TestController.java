@@ -12,6 +12,7 @@ import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.service.*;
 import com.authine.cloudpivot.web.api.service.impl.ClientServiceImpl;
 import com.authine.cloudpivot.web.api.utils.*;
+import com.sun.xml.bind.v2.TODO;
 import jodd.util.StringUtil;
 import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
 import org.springframework.beans.BeanUtils;
@@ -931,10 +932,12 @@ public class TestController extends BaseController {
                 bill.setRiskManageFee(riskManagementFee);  // 风险管理费
             }
             // 外包管理费
-            bill.setOutsourcingManageFee(DoubleUtils.nullToDouble(serviceChargeUnitPrice.getOutsourcingManagementFee()));
+            // TODO: 外包管理费被删除，查询不到
+            bill.setOutsourcingManageFee(DoubleUtils.nullToDouble(0D));
 
             // 营业税税费
-            double businessTax = DoubleUtils.nullToDouble(serviceChargeUnitPrice.getBusinessTax());
+            // TODO: 营业税税费被删除查询不到
+            double businessTax = DoubleUtils.nullToDouble(0D);
             if (businessTax < 1) {
                 double payable = 0D; // 应发工资
                 if (payrollBill != null) {

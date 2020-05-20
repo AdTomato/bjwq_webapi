@@ -5,14 +5,16 @@ import com.authine.cloudpivot.web.api.entity.ServiceChargeUnitPrice;
 import com.authine.cloudpivot.web.api.mapper.SalesContractMapper;
 import com.authine.cloudpivot.web.api.service.SalesContractService;
 import com.authine.cloudpivot.web.api.utils.AreaUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 /**
- * @author: wangyong
+ * @author wangyong
  * @Date:2020/3/18 11:04
  * @Description:
  */
@@ -57,6 +59,65 @@ public class SalesContractServiceImpl implements SalesContractService {
     @Override
     public SalesContractDto getSalesContractDto(String clientName, String businessType) {
         return salesContractMapper.getSalesContractDto(clientName, businessType);
+    }
+
+    /**
+     * 获取销售合同中的销售单价列表
+     *
+     * @param clientName   客户名称
+     * @param businessType 业务类型
+     * @param serviceArea  服务地区
+     * @param areaDetails  地区详情
+     * @return 销售单价列表
+     * @author wangyong
+     */
+    @Override
+    public ServiceChargeUnitPrice getServiceChargeUnitPrice(String clientName, String businessType, String serviceArea, String areaDetails) {
+        SalesContractDto salesContractDto = getSalesContractDto(clientName, businessType);
+        if (salesContractDto != null) {
+            List<ServiceChargeUnitPrice> serviceChargeUnitPrices = salesContractDto.getServiceChargeUnitPrices();
+            if (serviceChargeUnitPrices != null && serviceChargeUnitPrices.size() != 0) {
+                List<ServiceChargeUnitPrice> nextLevelData = new ArrayList<>();
+                for (ServiceChargeUnitPrice serviceChargeUnitPrice : serviceChargeUnitPrices) {
+                    if (StringUtils.isEmpty(serviceChargeUnitPrice.getAreaDetails())) {
+                        nextLevelData.add(serviceChargeUnitPrice);
+                    } else {
+                        if (serviceChargeUnitPrice.getAreaDetails().contains(areaDetails)) {
+                            if ("预收".equals(salesContractDto.getBillType())) {
+                                serviceChargeUnitPrice.setPrecollected("是");
+                            }
+                            serviceChargeUnitPrice.setPayCycle(salesContractDto.getBillCycle());
+                            return serviceChargeUnitPrice;
+                        }
+                    }
+                }
+                List<ServiceChargeUnitPrice> allNullData = new ArrayList<>();
+                if (!nextLevelData.isEmpty()) {
+                    for (ServiceChargeUnitPrice serviceChargeUnitPrice : nextLevelData) {
+                        if (StringUtils.isEmpty(serviceChargeUnitPrice.getServiceArea())) {
+                            allNullData.add(serviceChargeUnitPrice);
+                        } else {
+                            if (serviceChargeUnitPrice.getServiceArea().contains(serviceArea)) {
+                                if ("预收".equals(salesContractDto.getBillType())) {
+                                    serviceChargeUnitPrice.setPrecollected("是");
+                                }
+                                serviceChargeUnitPrice.setPayCycle(salesContractDto.getBillCycle());
+                                return serviceChargeUnitPrice;
+                            }
+                        }
+                    }
+                }
+                if (!allNullData.isEmpty()) {
+                    ServiceChargeUnitPrice serviceChargeUnitPrice = allNullData.get(0);
+                    if ("预收".equals(salesContractDto.getBillType())) {
+                        serviceChargeUnitPrice.setPrecollected("是");
+                    }
+                    serviceChargeUnitPrice.setPayCycle(salesContractDto.getBillCycle());
+                    return serviceChargeUnitPrice;
+                }
+            }
+        }
+        return null;
     }
 
     /**

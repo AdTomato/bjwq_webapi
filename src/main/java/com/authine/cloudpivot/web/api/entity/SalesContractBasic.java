@@ -7,14 +7,15 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * @Author:wangyong
+ * 销售合同主表
+ *
+ * @author wangyong
  * @Date:2020/3/18 0:19
- * @Description: 销售合同主表
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SalesContractBasic extends BaseEntity{
+public class SalesContractBasic extends BaseEntity {
 
     /**
      * 合同编号
@@ -57,6 +58,11 @@ public class SalesContractBasic extends BaseEntity{
     private String businessType;
 
     /**
+     * 客户来源
+     */
+    private String clientSource;
+
+    /**
      * 产品服务
      */
     private String productService;
@@ -87,9 +93,9 @@ public class SalesContractBasic extends BaseEntity{
     private String feesInvoic;
 
     /**
-     * 风险金比例
+     * 账单生成时间
      */
-    private Double riskRatio;
+    private Date generateBillDate;
 
     /**
      * 约定回款日
@@ -155,4 +161,9 @@ public class SalesContractBasic extends BaseEntity{
      * 是否提醒
      */
     private String whetherRemind;
+
+    /**
+     * 是否终止
+     */
+    private String whetherEnd;
 }

@@ -1,24 +1,15 @@
 package com.authine.cloudpivot.web.api.utils;
 
-<<<<<<< HEAD
 import org.thymeleaf.util.StringUtils;
 
-=======
 import java.math.BigDecimal;
->>>>>>> c0849e2d097aeec4138cb43f6efc529a1c8c4742
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 
 /**
-<<<<<<< HEAD
  * @Author: wangyong
  * @Date: 2020-01-10 16:29
  * @Description: double工具类
-=======
- * @Author:wangyong
- * @Date:2020/4/1 14:10
- * @Description: Double工具类
->>>>>>> c0849e2d097aeec4138cb43f6efc529a1c8c4742
  */
 public class DoubleUtils {
 
