@@ -1,6 +1,9 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
+import com.authine.cloudpivot.web.api.dto.FirstLevelClientDto;
 import com.authine.cloudpivot.web.api.dto.SalesContractDto;
+import com.authine.cloudpivot.web.api.dto.SecondLevelClientDto;
+import com.authine.cloudpivot.web.api.entity.FlcSalesman;
 import com.authine.cloudpivot.web.api.entity.ServiceChargeUnitPrice;
 import com.authine.cloudpivot.web.api.entity.Unit;
 import com.authine.cloudpivot.web.api.mapper.ClientMapper;
@@ -14,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -144,7 +148,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String getSecondLevelClientId(String clientName, String entrustedUnit) {
         List<String> secondLevelClientId = clientMapper.getSecondLevelClientId(clientName, entrustedUnit);
-        return null == secondLevelClientId || secondLevelClientId.size() > 0 ?  null : secondLevelClientId.get(0);
+        return null == secondLevelClientId || secondLevelClientId.size() > 0 ? null : secondLevelClientId.get(0);
     }
 
 
@@ -222,6 +226,65 @@ public class ClientServiceImpl implements ClientService {
                 // 达到最终筛选条件了
                 break;
             }
+        }
+        return result;
+    }
+
+    /**
+     * 获取客户里面的操作人、查看人
+     *
+     * @param firstClientName  一级客户名称
+     * @param secondClientName 二级客户名称
+     * @param businessType     业务类型
+     * @param welfare          福利地(地市)
+     * @param welfareHandler   福利办理方(大库、单立户)
+     * @return 操作人，查看人
+     * @author wangyong
+     */
+    @Override
+    public Map<String, String> getLookAndEditPerson(String firstClientName, String secondClientName, String businessType, String welfare, String welfareHandler) {
+        FirstLevelClientDto firstLevelClientDto = clientMapper.getFirstLevelClientDtoByClientName(firstClientName);
+        SecondLevelClientDto secondLevelClientDto = clientMapper.getSecondLevelClientDtoByClientName(secondClientName);
+        Map<String, String> result = new HashMap<>();
+
+
+        if (secondLevelClientDto != null && !StringUtils.isEmpty(secondLevelClientDto.getSalesman())) {
+            result.put("edit", secondLevelClientDto.getSalesman());
+            result.put("dept", secondLevelClientDto.getDepartment());
+            if (firstLevelClientDto != null) {
+                result.put("look", firstLevelClientDto.getInquirer());
+            }
+        } else if (firstLevelClientDto != null) {
+            result.put("look", firstLevelClientDto.getInquirer());
+            List<FlcSalesman> flcSalesmanList = firstLevelClientDto.getFlcSalesmanList();
+            boolean flag = false;
+            List<FlcSalesman> noWelfareData = new ArrayList<>();
+            for (FlcSalesman flcSalesman : flcSalesmanList) {
+
+                if (!StringUtils.isEmpty(flcSalesman.getBusinessType()) && !StringUtils.isEmpty(flcSalesman.getWelfareHandler()) && flcSalesman.getBusinessType().contains(businessType) && flcSalesman.getWelfareHandler().contains(welfareHandler)) {
+                    noWelfareData.add(flcSalesman);
+                } else if (!StringUtils.isEmpty(flcSalesman.getBusinessType()) && !StringUtils.isEmpty(flcSalesman.getWelfare()) && !StringUtils.isEmpty(flcSalesman.getWelfareHandler())) {
+                    if (flcSalesman.getBusinessType().contains(businessType) && flcSalesman.getWelfare().contains(welfare) && flcSalesman.getWelfareHandler().contains(welfareHandler)) {
+                        flag = true;
+                        result.put("edit", flcSalesman.getSalesman());
+                        result.put("dept", flcSalesman.getDepartment());
+                        break;
+                    }
+                }
+            }
+            if (!flag) {
+                if (!noWelfareData.isEmpty()) {
+                    result.put("edit", noWelfareData.get(0).getSalesman());
+                    result.put("dept", noWelfareData.get(0).getDepartment());
+                } else {
+                    result.put("edit", firstLevelClientDto.getSalesman());
+                    result.put("dept", firstLevelClientDto.getDepartment());
+                }
+            }
+        } else {
+            result.put("look", "");
+            result.put("edit", "");
+            result.put("dept", "");
         }
         return result;
     }

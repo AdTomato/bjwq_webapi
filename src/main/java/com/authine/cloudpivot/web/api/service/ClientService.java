@@ -93,4 +93,16 @@ public interface ClientService {
      */
     public Map<String, Object> getClientSalesmanAndFee(String clientName, String entrustedUnit, String area, String staffNature);
 
+
+    /**
+     * 获取客户里面的操作人以及查看人
+     *
+     * @param firstClientName  一级客户名称
+     * @param secondClientName 二级客户名称
+     * @param welfare          福利地
+     * @param welfareHandler   福利办理方
+     * @return 操作人、查看人
+     * @author wangyong
+     */
+    Map<String, String> getLookAndEditPerson(String firstClientName, String secondClientName, String businessType, String welfare, String welfareHandler);
 }

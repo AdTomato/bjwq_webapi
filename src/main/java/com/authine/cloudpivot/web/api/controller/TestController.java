@@ -9,6 +9,7 @@ import com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto;
 import com.authine.cloudpivot.web.api.dto.EnquiryReceivableDto;
 import com.authine.cloudpivot.web.api.dto.SalesContractDto;
 import com.authine.cloudpivot.web.api.entity.*;
+import com.authine.cloudpivot.web.api.mapper.ClientMapper;
 import com.authine.cloudpivot.web.api.service.*;
 import com.authine.cloudpivot.web.api.service.impl.ClientServiceImpl;
 import com.authine.cloudpivot.web.api.utils.*;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriTemplateHandler;
 
+import javax.annotation.Resource;
 import java.io.IOException;
 
 import java.security.NoSuchAlgorithmException;
@@ -60,6 +62,17 @@ public class TestController extends BaseController {
 
     @Autowired
     EnquiryReceivableService enquiryReceivableService;
+
+    @Resource
+    ClientMapper clientMapper;
+
+    @RequestMapping("/myTest")
+    public Object myTest() {
+
+//        return clientMapper.getSecondLevelClientDtoByClientName("宝鸡新城万博房地产开发有限公司-商业开发事业部-客服部");
+        Map<String, String> lookAndEditPerson = clientService.getLookAndEditPerson("北京外企人力资源服务有限公司", "", "","芜湖市", "");
+        return lookAndEditPerson;
+    }
 
     @RequestMapping("/getProperty")
     public void getProperty() {

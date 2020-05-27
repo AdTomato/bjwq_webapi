@@ -1,6 +1,12 @@
 package com.authine.cloudpivot.web.api.mapper;
 
 
+import com.authine.cloudpivot.web.api.dto.FirstLevelClientDto;
+import com.authine.cloudpivot.web.api.dto.SecondLevelClientDto;
+import com.authine.cloudpivot.web.api.entity.ContactInfo;
+import com.authine.cloudpivot.web.api.entity.FlcSalesman;
+import com.authine.cloudpivot.web.api.entity.SecondContactInfo;
+
 import java.util.List;
 
 /**
@@ -81,4 +87,51 @@ public interface ClientMapper {
      * @return 服务费
      */
     public List<Integer> getSecondLevelClientFee(String parentId, String area);
+
+
+    /**修改后的代码*/
+    /**
+     * 根据一级客户名称获取一级客户全部信息
+     *
+     * @param firstClientName 一级客户名称
+     * @return 一级客户全部信息
+     * @author wangyong
+     */
+    FirstLevelClientDto getFirstLevelClientDtoByClientName(String firstClientName);
+
+    /**
+     * 根据父id获取一级客户里面的业务员信息子表
+     *
+     * @param parentId 父id
+     * @return 业务员信息子表
+     * @author wangyong
+     */
+    List<FlcSalesman> getFlcSalesmanListByParentId(String parentId);
+
+    /**
+     * 根据父id获取一级客户里面的联系人子表
+     *
+     * @param parentId 父id
+     * @return 联系人子表
+     * @author wangyong
+     */
+    List<ContactInfo> getContactInfoListByParentId(String parentId);
+
+    /**
+     * 根据二级客户名称获取二级客户全部信息
+     *
+     * @param secondClientName 二级客户名称
+     * @return 二级客户全部信息
+     * @author wangyong
+     */
+    SecondLevelClientDto getSecondLevelClientDtoByClientName(String secondClientName);
+
+    /**
+     * 根据父id获取二级客户里面的联系人子表
+     *
+     * @param parentId 父id
+     * @return 联系人子表
+     * @author wangyong
+     */
+    SecondContactInfo getSecondContractInfoListByParentId(String parentId);
 }
