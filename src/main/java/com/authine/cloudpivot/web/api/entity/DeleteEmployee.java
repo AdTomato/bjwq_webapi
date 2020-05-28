@@ -86,4 +86,14 @@ public class DeleteEmployee extends BaseEntity {
      * 生日
      */
     Date birthday;
+    /** 社保状态*/
+    String sbStatus;
+    /** 公积金状态*/
+    String gjjStatus;
+    /** 操作人*/
+    String operator;
+    /** 查询人*/
+    String inquirer;
+
+    String returnReason;
 }

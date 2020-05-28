@@ -69,10 +69,14 @@ public class SocialSecurityClose extends BaseEntity {
     /** 待办，在办，停缴，驳回*/
     String status;
 
-    String	firstLevelClientName	;
-    String	secondLevelClientName	;
-    String	subordinateDepartment	;
-    String	city	;
+    String firstLevelClientName;
+    String secondLevelClientName;
+    String subordinateDepartment;
+    String city;
+    String operator;
+    String inquirer;
+    String employeeFilesId;
+    String delEmployeeId;
 
     public SocialSecurityClose(String sequenceStatus, String creater, String createdDeptId, Date createdTime,
                                String owner, String ownerDeptId, String ownerDeptQueryCode,
@@ -105,5 +109,33 @@ public class SocialSecurityClose extends BaseEntity {
         this.secondLevelClientName = secondLevelClientName;
         this.subordinateDepartment = subordinateDepartment;
         this.city = city;
+    }
+
+    public SocialSecurityClose(DeleteEmployee delEmployee, EmployeeFiles employeeFiles, String employeeOrderFormId) {
+        super(null, delEmployee.getName(), delEmployee.getCreater(), delEmployee.getCreatedDeptId(),
+                delEmployee.getOwner(), delEmployee.getOwnerDeptId(), delEmployee.getCreatedTime(),
+                delEmployee.getModifier(), delEmployee.getModifiedTime(), null, null, "PROCESSING",
+                delEmployee.getOwnerDeptQueryCode());
+        this.employeeOrderFormId = employeeOrderFormId;
+        this.employeeName = delEmployee.getEmployeeName();
+        this.gender = delEmployee.getGender();
+        this.birthday = delEmployee.getBirthday();
+        this.identityNoType = delEmployee.getIdentityNoType();
+        this.identityNo = delEmployee.getIdentityNo();
+        this.welfareHandler = delEmployee.getSWelfareHandler();
+        this.startMonth = employeeFiles.getSocialSecurityChargeStart();
+        this.chargeEndMonth = delEmployee.getSocialSecurityEndTime();
+        this.socialSecurityBase = employeeFiles.getSocialSecurityBase();
+        this.resignationRemarks = delEmployee.getRemark();
+        /*this.operateLeader = operateLeader;*/
+        this.status = "待办";
+        this.firstLevelClientName = delEmployee.getFirstLevelClientName();
+        this.secondLevelClientName = delEmployee.getSecondLevelClientName();
+        this.subordinateDepartment = delEmployee.getSubordinateDepartment();
+        this.city = delEmployee.getSocialSecurityCity();
+        this.operator = delEmployee.getOperator();
+        this.inquirer = delEmployee.getInquirer();
+        this.employeeFilesId = employeeFiles.getId();
+        this.delEmployeeId = delEmployee.getId();
     }
 }

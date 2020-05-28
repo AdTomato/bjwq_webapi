@@ -18,76 +18,143 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EmployeeOrderForm extends BaseEntity {
-    /** 员工档案id*/
-    String employeeFilesId;
-    String firstLevelClientName;
-    String secondLevelClientName;
-    String businessType;
-    String idType;
-    String identityNo;
-    /** 详细*/
+    /**
+     * 备注
+     */
     String detail;
-
-    /** 是否历史订单*/
-    String isHistory;
-
-    /** 总金额*/
-    Double total;
-
-    /** 社保福利地*/
-    String socialSecurityCity;
-
-    String sWelfareHandler;
-
-    /** 公积金福利地*/
-    String providentFundCity;
-
-    String gWelfareHandler;
-
-    /** 养老保险*/
-    String endowment;
-
-    /** 医疗保险*/
-    String medical;
-
-    /** 失业保险*/
-    String unemployment;
-
-    /** 工伤保险*/
-    String workRelatedInjury;
-
-    /** 生育保险*/
-    String childbirth;
-
-    /** 大病保险*/
-    String criticalIllness;
-
-    /** 住房公积金*/
-    String housingAccumulationFunds;
-
-    /** 服务费*/
-    Double serviceFee;
-
-    /** 开始时间*/
-    Date startTime;
-
-    /**  结束数据*/
-    Date endTime;
-
-    /**  输入时间*/
-    Date inputTime;
-
-    /**  金额*/
-    Double sum;
-
-    /**  社保状态*/
+    /**
+     * 社保状态
+     */
     String socialSecurityStatus;
-
-    /**  公积金状态*/
+    /**
+     * 公积金状态
+     */
     String providentFundStatus;
+    /**
+     * 社保福利地
+     */
+    String socialSecurityCity;
+    /**
+     * 公积金福利地
+     */
+    String providentFundCity;
+    /**
+     * 员工订单
+     */
+    String employeeFilesId;
+    /**
+     * 一级客户名称
+     */
+    String firstLevelClientName;
+    /**
+     * 二级客户名称
+     */
+    String secondLevelClientName;
+    /**
+     * 证件类型
+     */
+    String idType;
+    /**
+     * 业务类型
+     */
+    String businessType;
+    /**
+     * 证件号码
+     */
+    String identityNo;
+    /**
+     * 社保福利办理方
+     */
+    String sWelfareHandler;
+    /**
+     * 公积金利办理方
+     */
+    String gWelfareHandler;
+    /**
+     * 社保基数
+     */
+    Double socialSecurityBase;
+    /**
+     * 公积金基数
+     */
+    Double providentFundBase;
+    /**
+     * 社保起做时间
+     */
+    Date socialSecurityChargeStart;
+    /**
+     * 公积金起做时间
+     */
+    Date providentFundChargeStart;
+    /**
+     * 社保截止时间
+     */
+    Date socialSecurityChargeEnd;
+    /**
+     * 公积金截止时间
+     */
+    Date providentFundChargeEnd;
+    /**
+     * 是否预收
+     */
+    String precollected;
+    /**
+     * 收费频率
+     */
+    String payCycle;
+    /**
+     * 汇缴订单明细
+     */
+    List <EmployeeOrderFormDetails> remittanceList;
+    /**
+     * 补缴订单明细
+     */
+    List <EmployeeOrderFormDetails> payBackList;
 
-    /**  社保申报详细*/
-    List <Map <String, String>> socialSecurityDetail;
-    /**  公积金申报详细*/
-    List <Map <String, String>> providentFundDetail;
+    // 辅助字段
+    Double remittanceSortKey = 0d;
+    Double payBackSortKey = 0d;
+
+    public EmployeeOrderForm(AddEmployee addEmployee, String employeeFilesId) {
+        this.name = addEmployee.getName();
+        this.creater = addEmployee.getCreater();
+        this.createdDeptId = addEmployee.getCreatedDeptId();
+        this.owner = addEmployee.getOwner();
+        this.ownerDeptId = addEmployee.getOwnerDeptId();
+        this.createdTime = addEmployee.getCreatedTime();
+        this.modifier = addEmployee.getModifier();
+        this.modifiedTime = addEmployee.getModifiedTime();
+        this.workflowInstanceId = null;
+        this.sequenceNo = null;
+        this.sequenceStatus = "COMPLETED";
+        this.ownerDeptQueryCode = addEmployee.getOwnerDeptQueryCode();
+
+        if (addEmployee.getSocialSecurityBase() - 0d > 0d) {
+            // 有社保申报
+            this.socialSecurityStatus = "待办";
+            this.socialSecurityCity = addEmployee.getSocialSecurityCity();
+            this.sWelfareHandler = addEmployee.getSWelfareHandler();
+            this.socialSecurityBase = addEmployee.getSocialSecurityBase();
+            this.socialSecurityChargeStart = addEmployee.getSocialSecurityStartTime();
+        }
+        if (addEmployee.getProvidentFundBase() - 0d > 0d) {
+            // 有公积金申报
+            this.providentFundStatus = "待办";
+            this.providentFundCity = addEmployee.getProvidentFundCity();
+            this.gWelfareHandler = addEmployee.getGWelfareHandler();
+            this.providentFundBase = addEmployee.getProvidentFundBase();
+            this.providentFundChargeStart = addEmployee.getProvidentFundStartTime();
+        }
+        this.employeeFilesId = employeeFilesId;
+        this.firstLevelClientName = addEmployee.getFirstLevelClientName();
+        this.secondLevelClientName = addEmployee.getSecondLevelClientName();
+        this.idType = addEmployee.getIdentityNoType();
+        this.businessType = addEmployee.getEmployeeNature();
+        this.identityNo = addEmployee.getIdentityNo();
+        /*this.precollected = precollected;
+        this.payCycle = payCycle;
+        this.remittanceList = remittanceList;
+        this.payBackList = payBackList;*/
+        this.detail = addEmployee.getRemark();
+    }
 }

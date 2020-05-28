@@ -15,41 +15,30 @@ import java.util.List;
  **/
 public interface SocialSecurityCardService {
     /**
-     * 方法说明：导入社保卡办理申请
+     * 方法说明：导入社保卡/五险一金享受办理申请
      * @param fileName 文件名称
      * @param user 当前导入人
      * @param dept 当前部门
+     * @param code 模型编码
      * @param workflowInstanceFacade 流程实例
      * @return java.util.List<java.lang.String>
      * @author liulei
      * @Date 2020/3/17 9:43
      */
-    void importSocialSecurityCard(String fileName, UserModel user, DepartmentModel dept,
+    void importAddData(String fileName, UserModel user, DepartmentModel dept, String code,
                                           WorkflowInstanceFacade workflowInstanceFacade) throws Exception;
 
     /**
-     * 方法说明：导入办理记录数据
+     * 方法说明：导入办理过程中数据
      * @param fileName 文件名称
      * @param user 当前导入人
      * @param dept 当前部门
+     * @param type 导入类型
      * @param workflowInstanceFacade 流程实例
      * @return void
      * @author liulei
      * @Date 2020/3/17 11:21
      */
-    void importProcessFeedback(String fileName, UserModel user, DepartmentModel dept,
+    void importUpdateData(String fileName, UserModel user, DepartmentModel dept, String type,
                                WorkflowInstanceFacade workflowInstanceFacade) throws Exception;
-
-    /**
-     * 方法说明：导入发卡记录数据
-     * @param fileName 文件名称
-     * @param user 当前导入人
-     * @param dept 当前部门
-     * @param workflowInstanceFacade 流程实例
-     * @return void
-     * @author liulei
-     * @Date 2020/3/17 11:21
-     */
-    void importIssueFeedback(String fileName, UserModel user, DepartmentModel dept,
-                             WorkflowInstanceFacade workflowInstanceFacade) throws Exception;
 }

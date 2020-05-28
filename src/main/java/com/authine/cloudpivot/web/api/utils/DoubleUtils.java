@@ -1,15 +1,13 @@
 package com.authine.cloudpivot.web.api.utils;
 
-import org.thymeleaf.util.StringUtils;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 
 /**
- * @Author: wangyong
- * @Date: 2020-01-10 16:29
- * @Description: double工具类
+ * @Author:wangyong
+ * @Date:2020/4/1 14:10
+ * @Description: Double工具类
  */
 public class DoubleUtils {
 

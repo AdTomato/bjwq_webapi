@@ -49,4 +49,15 @@ public class SalesmansMaintain extends BaseEntity {
      */
     private String department;
 
+    /**
+     * 操作人
+     */
+    String operator;
+
+    /**
+     * 查询人
+     */
+    String inquirer;
+
+    String subordinateDepartment;
 }

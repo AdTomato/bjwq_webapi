@@ -3,23 +3,129 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.authine.cloudpivot.web.api.mapper.AdjustBaseAndRatioMapper">
+    <select id="getAdjustBaseRatioTaskById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.AdjustBaseRatioTask">
+        SELECT * FROM i4fvb_adjust_base_ratio_task WHERE id = #{id}
+    </select>
+
+    <insert id="addAdjustBaseRatioDetails" parameterType="java.util.List">
+        INSERT INTO i4fvb_adjust_base_ratio_details(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
+        modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode,
+        first_level_client_name, second_level_client_name, employee_name, identityNo, city, old_base,new_base,
+        provident_fund_ratio, remarks, task_id, welfare_handler)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner}, #{item.ownerDeptId},
+            #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId},
+            #{item.sequenceNo}, #{item.sequenceStatus}, #{item.ownerDeptQueryCode}, #{item.first_level_client_name},
+            #{item.second_level_client_name}, #{item.employee_name}, #{item.identityNo}, #{item.city},
+            #{item.old_base}, #{item.new_base}, #{item.provident_fund_ratio}, #{item.remarks}, #{item.task_id},
+            #{item.welfare_handler})
+        </foreach>
+    </insert>
+
+    <update id="updateAdjustBaseRatioDetailsOwner" parameterType="java.util.List">
+        UPDATE i4fvb_adjust_base_ratio_details details
+        LEFT JOIN h_org_user org ON org.NAME = details.owner
+        JOIN h_org_department dept ON org.departmentId = dept.id
+        SET details.owner = org.id,
+        details.ownerDeptId = dept.id,
+        details.ownerDeptQueryCode = dept.queryCode
+        where details.id IN
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </update>
+
+    <select id="getAdjustBaseRatioDetailsByTaskId" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.AdjustBaseRatioDetails">
+        SELECT * FROM i4fvb_adjust_base_ratio_details WHERE task_id = #{taskId}
+    </select>
+
+    <resultMap id="employeeOrderFormDto" type="com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto">
+        <id column="id" property="id"></id>
+        <collection property="socialSecurityFundDetails"
+                    select="com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper.getSocialSecurityFundDetailByParentId"
+                    column="id"></collection>
+    </resultMap>
+    <select id="getEmployeeOrderForm" resultMap="employeeOrderFormDto">
+        SELECT *
+        FROM i4fvb_employee_order_form
+        WHERE first_level_client_name = #{firstLevelClientName}
+        AND second_level_client_name = #{secondLevelClientName}
+        AND identityNo = #{identityNo}
+        AND is_history = '否'
+        <if test="adjustType == '社保'">AND social_security_city = #{city} AND s_welfare_handler = #{welfareHandler}</if>
+        <if test="adjustType == '公积金'">AND provident_fund_city = #{city} AND g_welfare_handler = #{welfareHandler}</if>
+        ORDER BY createdTime DESC LIMIT 0, 1
+    </select>
+
+    <insert id="addEmployeeOrderForm" parameterType="com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto">
+        INSERT INTO i4fvb_employee_order_form(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
+                                              modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus,
+                                              ownerDeptQueryCode, detail, total, work_related_injury, unemployment,
+                                              medical, endowment, childbirth, critical_illness,
+                                              housing_accumulation_funds, service_fee, start_time, end_time, input_time,
+                                              sum, social_security_status, is_history, provident_fund_status,
+                                              social_security_city, provident_fund_city, employee_files_id,
+                                              first_level_client_name, second_level_client_name, id_type, business_type,
+                                              identityNo, s_welfare_handler, g_welfare_handler)
+        VALUES (#{id}, #{name}, #{creater}, #{createdDeptId}, #{owner}, #{ownerDeptId}, SYSDATE(), #{modifier},
+                SYSDATE(), #{workflowInstanceId}, #{sequenceNo}, #{sequenceStatus}, #{ownerDeptQueryCode},
+                date_format(#{startTime}, '%Y-%m-%d'), #{total}, #{workRelatedInjury}, #{unemployment}, #{medical}, #{endowment}, #{childbirth},
+                #{criticalIllness}, #{housingAccumulationFunds}, #{serviceFee}, #{startTime}, #{endTime}, SYSDATE(),
+                #{sum}, #{socialSecurityStatus}, #{isHistory}, #{providentFundStatus}, #{socialSecurityCity},
+                #{providentFundCity}, #{employeeFilesId}, #{firstLevelClientName}, #{secondLevelClientName}, #{idType},
+                #{businessType}, #{identityNo}, #{sWelfareHandler}, #{gWelfareHandler})
+    </insert>
+
+    <update id="updateOldEmployeeOrderForm">
+        UPDATE i4fvb_employee_order_form
+        SET end_time   = #{endTime},
+            is_history = '是',
+            detail     = CONCAT(date_format(start_time, '%Y-%m-%d'), '~', date_format(end_time, '%Y-%m-%d'))
+        WHERE id = #{id}
+    </update>
+
+    <insert id="addSocialSecurityFundDetail" parameterType="java.util.List">
+        INSERT INTO i4fvb_social_security_fund_detail(social_security_group, base_num, sum, employee_money,
+        company_money, company_ratio, employee_ratio,
+        company_surcharge_value, employee_surcharge_value, precollected,
+        pay_cycle, start_charge_time, end_charge_time, id, parentId,
+        sortKey, product_name, name_hide)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.socialSecurityGroup}, #{item.baseNum}, #{item.sum}, #{item.employeeMoney}, #{item.companyMoney},
+            #{item.companyRatio}, #{item.employeeRatio}, #{item.companySurchargeValue}, #{item.employeeSurchargeValue},
+            #{item.precollected}, #{item.payCycle}, #{item.startChargeTime}, #{item.endChargeTime}, #{item.id},
+            #{item.parentId}, #{item.sortKey}, #{item.productName}, #{item.nameHide})
+        </foreach>
+    </insert>
+
+    <update id="updateSocialSecurityFundDetail">
+        UPDATE i4fvb_social_security_fund_detail SET end_charge_time = #{endTime} WHERE parentId = #{parentId}
+    </update>
+
     <update id="updateBillDetailsWhetherCompareToNo">
         UPDATE i4fvb_bill_details
         SET whether_compare = 0
         WHERE whether_difference_data = 0
           AND bill_year >= #{billYear}
-          <foreach collection="list" item="item" separator="OR" index="index" open="AND (" close=")">
-              (client_name = #{item.clientName} AND id_no = #{item.idNo})
-          </foreach>
+          AND client_name = #{secondLevelClientName}
+          AND id_no = #{identityNo}
     </update>
 
     <update id="updatePaymentDetailsWhetherCompareToNo">
         UPDATE i4fvb_payment_details
         SET whether_compare = 0
         WHERE whether_difference_data = 0
-        AND bill_year >= #{billYear}
-        <foreach collection="list" item="item" separator="OR" index="index" open="AND (" close=")">
-            (client_name = #{item.clientName} AND id_no = #{item.idNo})
-        </foreach>
+          AND bill_year >= #{billYear}
+          AND client_name = #{secondLevelClientName}
+          AND id_no = #{identityNo}
+          AND data_type = #{adjustType}
+    </update>
+
+    <update id="updateTaskAdjustInfo">
+        UPDATE i4fvb_adjust_base_ratio_task SET adjust_time = SYSDATE(),adjust_status = '已调整' WHERE id = #{id}
     </update>
 </mapper>

@@ -38,7 +38,7 @@ public interface SystemManageMapper {
      * @return: com.authine.cloudpivot.web.api.entity.OrgUser
      * @Description: 成员实体类
      */
-    OrgUser getOrgUserByMobile(String mobile);
+    List<OrgUser> getOrgUserByMobile(String mobile);
 
     /**
      * @param id: id
@@ -91,4 +91,8 @@ public interface SystemManageMapper {
     List<Ccps> getCcpsByClientNames(String firstLevelClientName, String secondLevelClientName);
 
     List<OperateLeader> getOperateLeader(String city, String welfareHandler, String secondLevelClientName);
+
+    WelfareSet getWelfareSet(String city);
+
+    List<String> getAllCity();
 }

@@ -48,9 +48,6 @@ public class NationwideDispatch extends BaseEntity{
     /** 业务客户编号*/
     String businessCustomerNum;
 
-    /** 业务客户名称*/
-//    String businessCustomerName;
-
     /** 业务流转状态*/
     String businessWfStatus;
 
@@ -215,5 +212,14 @@ public class NationwideDispatch extends BaseEntity{
      * 户籍备注
      */
     String householdRegisterRemarks;
+    /**
+     * 操作人
+     */
+    String operator;
+    /**
+     * 查询人
+     */
+    String inquirer;
 
+    String returnReason;
 }

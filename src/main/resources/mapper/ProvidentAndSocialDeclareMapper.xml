@@ -5,21 +5,13 @@
 
 <mapper namespace="com.authine.cloudpivot.web.api.mapper.ProvidentAndSocialDeclareMapper">
     <!-- 查询公积金申报 -->
-    <select id="getProvidentFundDeclare" parameterType="java.lang.String"
-            resultType="com.authine.cloudpivot.web.api.entity.ProvidentFundDeclare">
-        SELECT *
-        from i4fvb_provident_fund_declare
-        where welfare_handler like CONCAT('%', #{welfareHandler}, '%')
-        order by welfare_handler
+    <select id="getProvidentFundDeclare" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ProvidentFundDeclare">
+        SELECT * from i4fvb_provident_fund_declare where welfare_handler  like  CONCAT('%',#{welfareHandler},'%') order by welfare_handler
     </select>
 
     <!-- 查询社保申报 -->
-    <select id="getSocialSecurityDeclare" parameterType="java.lang.String"
-            resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare">
-        SELECT *
-        from i4fvb_social_security_declare
-        where welfare_handler like CONCAT('%', #{welfareHandler}, '%')
-        order by welfare_handler
+    <select id="getSocialSecurityDeclare" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare">
+        SELECT * from i4fvb_social_security_declare where welfare_handler  like  CONCAT('%',#{welfareHandler},'%') order by welfare_handler
     </select>
 
 

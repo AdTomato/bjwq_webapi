@@ -15,7 +15,6 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EmployeeFiles extends BaseEntity {
-
     String employeeFilesId;
     /**
      * 员工姓名
@@ -158,10 +157,6 @@ public class EmployeeFiles extends BaseEntity {
      */
     String gPaymentApplication;
     /**
-     * 所属部门
-     */
-    String subordinateDepartment;
-    /**
      * 一级客户名称
      */
     String firstLevelClientName;
@@ -201,53 +196,192 @@ public class EmployeeFiles extends BaseEntity {
      * 残疾人
      */
     String isDisabled;
+    /**
+     * 操作人
+     */
+    String operator;
+    /**
+     * 查询人
+     */
+    String inquirer;
+    /**
+     * 社保增员表单id
+     */
+    String sbAddEmployeeId;
+    /**
+     * 公积金增员表单id
+     */
+    String gjjAddEmployeeId;
+    /**
+     * 社保减员表单id
+     */
+    String sbDelEmployeeId;
+    /**
+     * 公积金减员表单id
+     */
+    String gjjDelEmployeeId;
+    /**
+     * 所属部门
+     */
+    String subordinateDepartment;
 
-    public EmployeeFiles(String sequenceStatus,String creater, String createdDeptId, Date createdTime, String owner, String ownerDeptId, String ownerDeptQueryCode,
-                         String employeeName, String idType, String idNo, String gender, Date birthDate,
-                         String employeeNature, String householdRegisterNature, String mobile,
-                         String socialSecurityCity, String providentFundCity, Date reportEntryTime,
-                         String reportRecruits, Date entryTime, Date socialSecurityChargeStart,
-                         Date providentFundChargeStart, String entryDescription, String email,
-                         int stopGenerateBill, int isOldEmployee, String subordinateDepartment,
-                         String firstLevelClientName, String secondLevelClientName, String householdRegisterRemarks,
-                         Double socialSecurityBase, Double providentFundBase, String sWelfareHandler,
-                         String gWelfareHandler, String isRetiredSoldier, String isPoorArchivists, String isDisabled) {
-        this.creater = creater;
-        this.createdDeptId = createdDeptId;
-        this.createdTime = createdTime;
-        this.sequenceStatus = sequenceStatus;
-        this.owner = owner;
-        this.ownerDeptId = ownerDeptId;
-        this.ownerDeptQueryCode = ownerDeptQueryCode;
-        this.employeeName = employeeName;
-        this.idType = idType;
-        this.idNo = idNo;
-        this.gender = gender;
-        this.birthDate = birthDate;
-        this.employeeNature = employeeNature;
-        this.householdRegisterNature = householdRegisterNature;
-        this.mobile = mobile;
-        this.socialSecurityCity = socialSecurityCity;
-        this.providentFundCity = providentFundCity;
-        this.reportEntryTime = reportEntryTime;
-        this.reportRecruits = reportRecruits;
-        this.entryTime = entryTime;
-        this.socialSecurityChargeStart = socialSecurityChargeStart;
-        this.providentFundChargeStart = providentFundChargeStart;
-        this.entryDescription = entryDescription;
-        this.email = email;
-        this.stopGenerateBill = stopGenerateBill;
-        this.isOldEmployee = isOldEmployee;
-        this.subordinateDepartment = subordinateDepartment;
-        this.firstLevelClientName = firstLevelClientName;
-        this.secondLevelClientName = secondLevelClientName;
-        this.householdRegisterRemarks = householdRegisterRemarks;
-        this.socialSecurityBase = socialSecurityBase;
-        this.providentFundBase = providentFundBase;
-        this.sWelfareHandler = sWelfareHandler;
-        this.gWelfareHandler = gWelfareHandler;
-        this.isRetiredSoldier = isRetiredSoldier;
-        this.isPoorArchivists = isPoorArchivists;
-        this.isDisabled = isDisabled;
+    public EmployeeFiles(AddEmployee addEmployee) {
+        this.name = addEmployee.getName();
+        this.creater = addEmployee.getCreater();
+        this.createdDeptId = addEmployee.getCreatedDeptId();
+        this.owner = addEmployee.getOwner();
+        this.ownerDeptId = addEmployee.getOwnerDeptId();
+        this.createdTime = addEmployee.getCreatedTime();
+        this.modifier = addEmployee.getModifier();
+        this.modifiedTime = addEmployee.getModifiedTime();
+        this.workflowInstanceId = null;
+        this.sequenceNo = null;
+        this.sequenceStatus = "COMPLETED";
+        this.ownerDeptQueryCode = addEmployee.getOwnerDeptQueryCode();
+
+        this.employeeName = addEmployee.getEmployeeName();
+        this.idType = addEmployee.getIdentityNoType();
+        this.idNo = addEmployee.getIdentityNo();
+        this.gender = addEmployee.getGender();
+        this.birthDate = addEmployee.getBirthday();
+        this.employeeNature = addEmployee.getEmployeeNature();
+        this.householdRegisterNature = addEmployee.getFamilyRegisterNature();
+        this.mobile = addEmployee.getMobile();
+        this.reportEntryTime = addEmployee.getCreatedTime();
+        this.reportRecruits = "[{\"id\":\"" + addEmployee.getCreater() + "\",\"type\":3}]";
+        this.entryTime = addEmployee.getEntryTime();
+        this.entryDescription = addEmployee.getRemark();
+        this.email = addEmployee.getEmail();
+        this.stopGenerateBill = 0;
+        this.isOldEmployee = 0;
+        this.firstLevelClientName = addEmployee.getFirstLevelClientName();
+        this.secondLevelClientName = addEmployee.getSecondLevelClientName();
+        this.householdRegisterRemarks = addEmployee.getHouseholdRegisterRemarks();
+        this.isRetiredSoldier = addEmployee.getIsRetiredSoldier();
+        this.isPoorArchivists = addEmployee.getIsPoorArchivists();
+        this.isDisabled = addEmployee.getIsDisabled();
+        this.operator = addEmployee.getOperator();
+        this.inquirer = addEmployee.getInquirer();
+        if (addEmployee.getSocialSecurityBase() > 0d) {
+            this.sbAddEmployeeId = addEmployee.getId();
+            this.socialSecurityBase = addEmployee.getSocialSecurityBase();
+            this.sWelfareHandler = addEmployee.getSWelfareHandler();
+            this.socialSecurityCity = addEmployee.getSocialSecurityCity();
+            this.socialSecurityChargeStart = addEmployee.getSocialSecurityStartTime();
+        }
+        if (addEmployee.getProvidentFundBase() > 0d) {
+            this.gjjAddEmployeeId = addEmployee.getId();
+            this.providentFundBase = addEmployee.getProvidentFundBase();
+            this.gWelfareHandler = addEmployee.getGWelfareHandler();
+            this.providentFundCity = addEmployee.getProvidentFundCity();
+            this.providentFundChargeStart = addEmployee.getProvidentFundStartTime();
+        }
+        this.subordinateDepartment = addEmployee.getSubordinateDepartment();
+    }
+
+    public EmployeeFiles(ShAddEmployee addEmployee) {
+        this.name = addEmployee.getName();
+        this.creater = addEmployee.getCreater();
+        this.createdDeptId = addEmployee.getCreatedDeptId();
+        this.owner = addEmployee.getOwner();
+        this.ownerDeptId = addEmployee.getOwnerDeptId();
+        this.createdTime = addEmployee.getCreatedTime();
+        this.modifier = addEmployee.getModifier();
+        this.modifiedTime = addEmployee.getModifiedTime();
+        this.workflowInstanceId = null;
+        this.sequenceNo = null;
+        this.sequenceStatus = "COMPLETED";
+        this.ownerDeptQueryCode = addEmployee.getOwnerDeptQueryCode();
+
+        this.employeeName = addEmployee.getEmployeeName();
+        this.idType = addEmployee.getIdentityNoType();
+        this.idNo = addEmployee.getIdentityNo();
+        this.gender = addEmployee.getGender();
+        this.birthDate = addEmployee.getBirthday();
+        this.employeeNature = "代理";
+        this.mobile = addEmployee.getMobile();
+        this.reportEntryTime = addEmployee.getCreatedTime();
+        this.reportRecruits = "[{\"id\":\"" + addEmployee.getCreater() + "\",\"type\":3}]";
+        this.entryTime = addEmployee.getEntryTime();
+        this.entryDescription = addEmployee.getInductionRemark();
+        this.email = addEmployee.getMail();
+        this.stopGenerateBill = 0;
+        this.isOldEmployee = 0;
+        this.firstLevelClientName = addEmployee.getFirstLevelClientName();
+        this.secondLevelClientName = addEmployee.getSecondLevelClientName();
+        this.householdRegisterRemarks = addEmployee.getHouseholdRegisterRemarks();
+        this.isRetiredSoldier = addEmployee.getIsRetiredSoldier();
+        this.isPoorArchivists = addEmployee.getIsPoorArchivists();
+        this.isDisabled = addEmployee.getIsDisabled();
+        this.operator = addEmployee.getOperator();
+        this.inquirer = addEmployee.getInquirer();
+        if (addEmployee.getSocialSecurityBase() - 0d > 0d) {
+            this.sbAddEmployeeId = addEmployee.getId();
+            this.socialSecurityCity = addEmployee.getCityName();
+            this.socialSecurityChargeStart = addEmployee.getBenefitStartTime();
+            this.socialSecurityBase = addEmployee.getSocialSecurityBase();
+            this.sWelfareHandler = addEmployee.getWelfareHandler();
+        }
+        if (addEmployee.getProvidentFundBase() - 0d > 0d) {
+            this.gjjAddEmployeeId = addEmployee.getId();
+            this.providentFundCity = addEmployee.getCityName();
+            this.providentFundChargeStart = addEmployee.getProvidentFundStartTime();
+            this.providentFundBase = addEmployee.getProvidentFundBase();
+            this.gWelfareHandler = addEmployee.getWelfareHandler();
+        }
+        this.subordinateDepartment = addEmployee.getSubordinateDepartment();
+    }
+
+    public EmployeeFiles(NationwideDispatch addEmployee) {
+        this.name = addEmployee.getName();
+        this.creater = addEmployee.getCreater();
+        this.createdDeptId = addEmployee.getCreatedDeptId();
+        this.owner = addEmployee.getOwner();
+        this.ownerDeptId = addEmployee.getOwnerDeptId();
+        this.createdTime = addEmployee.getCreatedTime();
+        this.modifier = addEmployee.getModifier();
+        this.modifiedTime = addEmployee.getModifiedTime();
+        this.workflowInstanceId = null;
+        this.sequenceNo = null;
+        this.sequenceStatus = "COMPLETED";
+        this.ownerDeptQueryCode = addEmployee.getOwnerDeptQueryCode();
+
+        this.employeeName = addEmployee.getEmployeeName();
+        this.idType = addEmployee.getIdentityNoType();
+        this.idNo = addEmployee.getIdentityNo();
+        this.gender = addEmployee.getGender();
+        this.birthDate = addEmployee.getBirthday();
+        this.employeeNature = "代理";
+        this.mobile = addEmployee.getContactNumber();
+        this.reportEntryTime = addEmployee.getCreatedTime();
+        this.reportRecruits = "[{\"id\":\"" + addEmployee.getCreater() + "\",\"type\":3}]";
+        this.entryTime = addEmployee.getEntryDate();
+        this.entryDescription = addEmployee.getRemark();
+        this.email = addEmployee.getEmployeeEmail();
+        this.stopGenerateBill = 0;
+        this.isOldEmployee = 0;
+        this.firstLevelClientName = addEmployee.getFirstLevelClientName();
+        this.secondLevelClientName = addEmployee.getSecondLevelClientName();
+        this.householdRegisterRemarks = addEmployee.getHouseholdRegisterRemarks();
+        this.isRetiredSoldier = addEmployee.getIsRetiredSoldier();
+        this.isPoorArchivists = addEmployee.getIsPoorArchivists();
+        this.isDisabled = addEmployee.getIsDisabled();
+        this.operator = addEmployee.getOperator();
+        this.inquirer = addEmployee.getInquirer();
+        if (addEmployee.getSocialInsuranceAmount() - 0d > 0d) {
+            this.sbAddEmployeeId = addEmployee.getId();
+            this.socialSecurityCity = addEmployee.getInvolved();
+            this.socialSecurityChargeStart = addEmployee.getSServiceFeeStartDate();
+            this.socialSecurityBase = addEmployee.getSocialInsuranceAmount();
+            this.sWelfareHandler = addEmployee.getWelfareHandler();
+        }
+        if (addEmployee.getProvidentFundAmount() - 0d > 0d) {
+            this.gjjAddEmployeeId = addEmployee.getId();
+            this.providentFundCity = addEmployee.getInvolved();
+            this.providentFundChargeStart = addEmployee.getGServiceFeeStartDate();
+            this.providentFundBase = addEmployee.getProvidentFundAmount();
+            this.gWelfareHandler = addEmployee.getWelfareHandler();
+        }
+        this.subordinateDepartment = addEmployee.getSubordinateDepartment();
     }
 }

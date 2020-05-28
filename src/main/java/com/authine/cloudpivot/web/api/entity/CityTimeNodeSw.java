@@ -4,20 +4,18 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
- * 省外城市节点
- *
- * @author wangyong
- * @time 2020/5/28 8:59
- */
+ * @author liulei
+ * @Description
+ * @ClassName com.authine.cloudpivot.web.api.entity.CityTimeNodeSw
+ * @Date 2020/5/9 17:19
+ **/
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CityTimeNodeSw extends BaseEntity {
-
-    /**
-     * 业务年月
-     */
-    private String businessYear;
-
+public class CityTimeNodeSw extends BaseEntity{
+    String businessYear;
+    List <CityTimeNodeSwDetails> cityTimeNodeSwDetails;
 }

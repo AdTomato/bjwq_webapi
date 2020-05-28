@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Client {
+public class Client extends BaseEntity{
     String id;
     /** 客户名称 */
     String firstLevelClientName;

@@ -588,7 +588,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
             map = compareGjjDetailData(map, details, paymentMethod, paymentDetails);
         } else if ("社保".equals(paymentDetails.getDataType())) {
             // 社保数据 服务费放到社保里面
-            map.put("service_fee_total", filesDto.getEmployeeOrderFormDto().getServiceFee());
+            /*map.put("service_fee_total", filesDto.getEmployeeOrderFormDto().getServiceFee());*/
             // 投保地
             map.put("insured_area", filesDto.getSocialSecurityCity());
             map = compareSbDetailData(map, details, paymentMethod, paymentDetails);
@@ -908,7 +908,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
             map = getGjjDetailData(map, details, paymentMethod);
         } else if ("社保".equals(type)) {
             // 社保数据 服务费放到社保里面
-            map.put("service_fee_total", filesDto.getEmployeeOrderFormDto().getServiceFee());
+            /*map.put("service_fee_total", filesDto.getEmployeeOrderFormDto().getServiceFee());*/
             // 投保地
             map.put("insured_area", filesDto.getSocialSecurityCity());
             map = getSbDetailData(map, details, paymentMethod);

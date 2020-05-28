@@ -34,7 +34,6 @@ public class GetBizObjectModelUntils {
         model.setCreater(creater);
         model.setCreatedDeptId(createdDeptId);
         model.setCreatedTime(createdTime);
-        // 业务员
         model.setOwner(owner);
         model.setOwnerDeptId(ownerDeptId);
         model.setOwnerDeptQueryCode(ownerDeptQueryCode);
@@ -48,44 +47,60 @@ public class GetBizObjectModelUntils {
      * @author liulei
      * @Date 2020/4/16 17:26
      */
-    public static BizObjectModel getEntryNotice(String sequenceStatus, String creater, String createdDeptId,
-                                                Date createdTime, String owner, String ownerDeptId,
-                                                String ownerDeptQueryCode, String employeeName, String identityNo,
-                                                String socialSecurity, String providentFund, String submissionMethod,
-                                                String operateSignatory, String operateSignFor,
-                                                String unitProvidentFundNum, String personalProvidentFundNum,
-                                                String employmentRegisterNum, String entryContactRemark,
-                                                String subordinateDepartment, String firstLevelClientName,
-                                                String secondLevelClientName, String mobile,
-                                                String socialSecurityCity, String providentFundCity,
-                                                String isRetiredSoldier, String isDisabled, String isPoorArchivists,
-                                                String recordOfEmployment, String feedback, String status) {
-        BizObjectModel model = getBizObjectModel(Constants.ENTRY_NOTICE_SCHEMA, sequenceStatus, owner, ownerDeptId,
-                ownerDeptQueryCode, creater, createdDeptId , createdTime);
+    public static BizObjectModel getEntryNotice(EntryNotice entryNotice) {
+        BizObjectModel model = getBizObjectModel(Constants.ENTRY_NOTICE_SCHEMA, entryNotice.getSequenceStatus(),
+                entryNotice.getOwner(), entryNotice.getOwnerDeptId(), entryNotice.getOwnerDeptQueryCode(),
+                entryNotice.getCreater(), entryNotice.getCreatedDeptId(), entryNotice.getCreatedTime());
         Map <String, Object> data = new HashMap <>();
-        data.put("employee_name", employeeName);
-        data.put("identityNo", identityNo);
-        data.put("social_security", socialSecurity);
-        data.put("provident_fund", providentFund);
-        data.put("submission_method", submissionMethod);
-        data.put("operate_signatory", operateSignatory);
-        data.put("operate_sign_for", operateSignFor);
-        data.put("unit_provident_fund_num", unitProvidentFundNum);
-        data.put("personal_provident_fund_num", personalProvidentFundNum);
-        data.put("employment_register_num", employmentRegisterNum);
-        data.put("entry_contact_remark", entryContactRemark);
-        data.put("subordinate_department", subordinateDepartment);
-        data.put("first_level_client_name", firstLevelClientName);
-        data.put("second_level_client_name", secondLevelClientName);
-        data.put("mobile", mobile);
-        data.put("social_security_city", socialSecurityCity);
-        data.put("provident_fund_city", providentFundCity);
-        data.put("is_retired_soldier", isRetiredSoldier);
-        data.put("is_disabled", isDisabled);
-        data.put("is_poor_archivists", isPoorArchivists);
-        data.put("record_of_employment", recordOfEmployment);
-        data.put("feedback", feedback);
-        data.put("status", status);
+        //	姓名
+        data.put("employee_name", entryNotice.getEmployeeName());
+        //	身份证号码
+        data.put("identityNo", entryNotice.getIdentityNo());
+        //	社保
+        data.put("social_security", entryNotice.getSocialSecurity());
+        //	公积金
+        data.put("provident_fund", entryNotice.getProvidentFund());
+        //	递交方式
+        data.put("submission_method", entryNotice.getSubmissionMethod());
+        //	运行签收人
+        data.put("operate_signatory", entryNotice.getOperateSignatory());
+        //	运行签收
+        data.put("operate_sign_for", entryNotice.getOperateSignFor());
+        //	单位公积金账号
+        data.put("unit_provident_fund_num", entryNotice.getUnitProvidentFundNum());
+        //	个人公积金账号
+        data.put("personal_provident_fund_num", entryNotice.getPersonalProvidentFundNum());
+        //	就业登记证账号
+        data.put("employment_register_num", entryNotice.getEmploymentRegisterNum());
+        //	入职联系备注
+        data.put("entry_contact_remark", entryNotice.getEntryContactRemark());
+        //	一级客户
+        data.put("first_level_client_name", entryNotice.getFirstLevelClientName());
+        //	二级客户
+        data.put("second_level_client_name", entryNotice.getSecondLevelClientName());
+        //	联系电话
+        data.put("mobile", entryNotice.getMobile());
+        //	社保福利地
+        data.put("social_security_city", entryNotice.getSocialSecurityCity());
+        //	公积金福利地
+        data.put("provident_fund_city", entryNotice.getProvidentFundCity());
+        //	退役士兵
+        data.put("is_retired_soldier", entryNotice.getIsRetiredSoldier());
+        //	残疾人
+        data.put("is_disabled", entryNotice.getIsDisabled());
+        //	贫困建档人员
+        data.put("is_poor_archivists", entryNotice.getIsPoorArchivists());
+        //	用工备案
+        data.put("record_of_employment", entryNotice.getRecordOfEmployment());
+        //	运行反馈
+        data.put("feedback", entryNotice.getFeedback());
+        //	入职联系状态
+        data.put("status", entryNotice.getStatus());
+        //	操作人
+        data.put("operator", entryNotice.getOperator());
+        //	查询人
+        data.put("inquirer", entryNotice.getInquirer());
+        data.put("subordinate_department", entryNotice.getSubordinateDepartment());
 
         model.put(data);
         return model;
@@ -194,6 +209,18 @@ public class GetBizObjectModelUntils {
         data.put("is_poor_archivists", employeeFiles.getIsPoorArchivists());
         // 残疾人
         data.put("is_disabled", employeeFiles.getIsDisabled());
+        /**	操作人	*/
+        data.put("operator", employeeFiles.getOperator());
+        //查询人
+        data.put("inquirer", employeeFiles.getInquirer());
+        //社保增员表单id
+        data.put("sb_add_employee_id", employeeFiles.getSbAddEmployeeId());
+        //公积金增员表单id
+        data.put("gjj_add_employee_id", employeeFiles.getGjjAddEmployeeId());
+        //社保减员表单id
+        data.put("sb_del_employee_id", employeeFiles.getSbDelEmployeeId());
+        //公积金减员表单id
+        data.put("gjj_del_employee_id", employeeFiles.getGjjDelEmployeeId());
 
         model.put(data);
 
@@ -212,26 +239,58 @@ public class GetBizObjectModelUntils {
                 sDeclare.getOwnerDeptQueryCode(), sDeclare.getCreater(), sDeclare.getCreatedDeptId(),
                 sDeclare.getCreatedTime());
         Map <String, Object> data = new HashMap <>();
+        // 	起始月
         data.put("start_month", sDeclare.getStartMonth());
+        // 	姓名
         data.put("employee_name", sDeclare.getEmployeeName());
+        // 	性别
         data.put("gender", sDeclare.getGender());
+        // 	证件号码
         data.put("identityNo", sDeclare.getIdentityNo());
+        // 	合同签订日期
         data.put("contract_signing_date", sDeclare.getContractSigningDate());
+        // 	合同截止日期
         data.put("contract_deadline", sDeclare.getContractDeadline());
+        // 	转正工资
         data.put("positive_salary", sDeclare.getPositiveSalary());
+        // 	缴费基数
         data.put("base_pay", sDeclare.getBasePay());
+        // 	手机号码
         data.put("mobile", sDeclare.getMobile());
+        // 	福利办理方
         data.put("welfare_handler", sDeclare.getWelfareHandler());
+        // 	出生日期
         data.put("birthday", sDeclare.getBirthday());
+        // 	证件类型
         data.put("identityNo_type", sDeclare.getIdentityNoType());
+        // 	已有退回原因
+        data.put("return_reason_already", sDeclare.getReturnReasonAlready());
+        // 	运行负责人
         data.put("operate_leader", sDeclare.getOperateLeader());
+        // 	员工订单
         data.put("employee_order_form_id", sDeclare.getEmployeeOrderFormId());
+        // 	状态
         data.put("status", sDeclare.getStatus());
+        // 	一级客户名称
         data.put("first_level_client_name", sDeclare.getFirstLevelClientName());
+        // 	二级客户名称
         data.put("second_level_client_name", sDeclare.getSecondLevelClientName());
-        data.put("subordinate_department", sDeclare.getSubordinateDepartment());
+        // 	福利地
         data.put("city", sDeclare.getCity());
+        // 	账单年月
+        data.put("bill_year", sDeclare.getBillYear());
+        // 	备注
         data.put("remark", sDeclare.getRemark());
+        // 	操作人
+        data.put("operator", sDeclare.getOperator());
+        // 	查询人
+        data.put("inquirer", sDeclare.getInquirer());
+        // 	员工档案
+        data.put("employee_files_id", sDeclare.getEmployeeFilesId());
+        // 	增员表单id
+        data.put("add_employee_id", sDeclare.getAddEmployeeId());
+        // 	所属部门
+        data.put("subordinate_department", sDeclare.getSubordinateDepartment());
         model.put(data);
         return model;
     }
@@ -248,24 +307,52 @@ public class GetBizObjectModelUntils {
                 gDeclare.getOwnerDeptQueryCode(), gDeclare.getCreater(), gDeclare.getCreatedDeptId(),
                 gDeclare.getCreatedTime());
         Map <String, Object> data = new HashMap <>();
+        // 	姓名
         data.put("employee_name", gDeclare.getEmployeeName());
+        // 	性别
         data.put("gender", gDeclare.getGender());
+        // 	证件号码
         data.put("identityNo", gDeclare.getIdentityNo());
+        // 	起始月
         data.put("start_month", gDeclare.getStartMonth());
+        // 	公积金基数
         data.put("provident_fund_base", gDeclare.getProvidentFundBase());
+        // 	企业缴存额
         data.put("corporate_payment", gDeclare.getCorporatePayment());
+        // 	个人缴存额
         data.put("personal_deposit", gDeclare.getPersonalDeposit());
+        // 	缴存总额
         data.put("total_deposit", gDeclare.getTotalDeposit());
+        // 	福利办理方
         data.put("welfare_handler", gDeclare.getWelfareHandler());
+        // 	出生日期
         data.put("birthday", gDeclare.getBirthday());
+        // 	证件类型
         data.put("identityNo_type", gDeclare.getIdentityNoType());
+        // 	运行负责人
         data.put("operate_leader", gDeclare.getOperateLeader());
+        // 	员工订单
         data.put("employee_order_form_id", gDeclare.getEmployeeOrderFormId());
+        // 	状态
         data.put("status", gDeclare.getStatus());
+        // 	已有退回原因
+        data.put("return_reason_already", gDeclare.getReturnReasonAlready());
+        // 	一级客户名称
         data.put("first_level_client_name", gDeclare.getFirstLevelClientName());
+        // 	二级客户名称
         data.put("second_level_client_name", gDeclare.getSecondLevelClientName());
-        data.put("subordinate_department", gDeclare.getSubordinateDepartment());
+        // 	福利地
         data.put("city", gDeclare.getCity());
+        // 	操作人
+        data.put("operator", gDeclare.getOperator());
+        // 	查询人
+        data.put("inquirer", gDeclare.getInquirer());
+        // 	员工档案
+        data.put("employee_files_id", gDeclare.getEmployeeFilesId());
+        // 	增员表单id
+        data.put("add_employee_id", gDeclare.getAddEmployeeId());
+        // 	所属部门
+        data.put("subordinate_department", gDeclare.getSubordinateDepartment());
         model.put(data);
         return model;
     }
@@ -291,6 +378,10 @@ public class GetBizObjectModelUntils {
         data.put("second_level_client_name", sClose.getSecondLevelClientName());
         data.put("subordinate_department", sClose.getSubordinateDepartment());
         data.put("city", sClose.getCity());
+        data.put("operator", sClose.getOperator());
+        data.put("inquirer", sClose.getInquirer());
+        data.put("employee_files_id", sClose.getEmployeeFilesId());
+        data.put("del_employee_id", sClose.getDelEmployeeId());
         model.put(data);
         return model;
     }
@@ -319,6 +410,10 @@ public class GetBizObjectModelUntils {
         data.put("second_level_client_name", gClose.getSecondLevelClientName());
         data.put("subordinate_department", gClose.getSubordinateDepartment());
         data.put("city", gClose.getCity());
+        data.put("operator", gClose.getOperator());
+        data.put("inquirer", gClose.getInquirer());
+        data.put("employee_files_id", gClose.getEmployeeFilesId());
+        data.put("del_employee_id", gClose.getDelEmployeeId());
         model.put(data);
         return model;
     }

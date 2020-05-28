@@ -14,27 +14,6 @@ import java.util.Map;
  */
 @Mapper
 public interface AddEmployeeMapper {
-
-    /**
-     * 方法说明：根据客户名称，证件号码获取社保申报实体
-     * @param clientName 客户名称
-     * @param identityNo 证件号码
-     * @return void
-     * @author liulei
-     * @Date 2020/3/13 10:10
-     */
-    SocialSecurityDeclare getSocialSecurityDeclareByClientNameAndIdentityNo(String clientName, String identityNo);
-
-    /**
-     * 方法说明：根据客户名称，证件号码获取公积金申报实体
-     * @param clientName 客户名称
-     * @param identityNo 证件号码
-     * @return void
-     * @author liulei
-     * @Date 2020/3/13 10:10
-     */
-    ProvidentFundDeclare getProvidentFundDeclareByClientNameAndIdentityNo(String clientName, String identityNo);
-
     /**
      * 方法说明：根据id获取员工订单实体
      * @param id 主键id
@@ -46,36 +25,59 @@ public interface AddEmployeeMapper {
 
     void updateEmployeeFiles(EmployeeFiles employeeFiles);
 
-    void updateSocialSecurityDeclare(SocialSecurityDeclare socialSecurityDeclare);
-
-    void updateProvidentFundDeclare(ProvidentFundDeclare providentFundDeclare);
-
-    void updateOrderFormStatusToPrePoint(@Param("ids") String[] ids, @Param("field") String field);
-
-    void updateDeclareOrCloseStatus(@Param("ids") String[] ids, @Param("declareTableName") String declareTableName,
-                                    @Param("status") String status);
-
-    List<EmployeeOrderForm> getEmployeeOrderFormByEmployeeFilesId(String id);
-
-    List<SocialSecurityDeclare> getSocialSecurityDeclareByOrderFormId(String id);
-
-    List<ProvidentFundDeclare> getProvidentFundDeclareByOrderFormId(String id);
-
-    void updateEmployeeOrderFromTime(String id);
-
-    List<SocialSecurityClose> getSocialSecurityCloseByOrderFormId(String id);
-
-    List<ProvidentFundClose> getProvidentFundCloseByOrderFormId(String id);
-
-    void updateSocialSecurityClose(SocialSecurityClose socialSecurityClose);
-
-    void updateProvidentFundClose(ProvidentFundClose providentFundClose);
+    EmployeeOrderForm getEmployeeOrderFormByEmployeeFilesId(String id);
 
     void addEmployeeImportData(List<Map<String, Object>> list);
 
     void deleteEmployeeImportData(List<Map<String, Object>> list);
 
-    void updateAddEmployeeOwner(List<Map<String, Object>> list);
+    /**
+     * 方法说明：根据id查询增员_客户数据
+     * @param id
+     * @return com.authine.cloudpivot.web.api.entity.AddEmployee
+     * @author liulei
+     * @Date 2020/5/15 8:53
+     */
+    AddEmployee getAddEmployeeById(String id);
 
-    void updateDeleteEmployeeOwner(List<Map<String, Object>> list);
+    /**
+     * 方法说明：根据id查询增员_上海数据
+     * @param id
+     * @return com.authine.cloudpivot.web.api.entity.AddEmployee
+     * @author liulei
+     * @Date 2020/5/15 8:53
+     */
+    ShAddEmployee getShAddEmployeeById(String id);
+
+    /**
+     * 方法说明：根据id查询增员_全国数据
+     * @param id
+     * @return com.authine.cloudpivot.web.api.entity.AddEmployee
+     * @author liulei
+     * @Date 2020/5/15 8:53
+     */
+    NationwideDispatch getQgAddEmployeeById(String id);
+
+    void createEmployeeOrderFormDetails(List<EmployeeOrderFormDetails> list, String parentId, String tableName);
+
+    String getHsLevyHandler(String city, String welfareHandler, String businessType, String clientName);
+
+    EmployeeFiles getEmployeeFilesByClientNameAndIdentityNo(String firstLevelClientName, String secondLevelClientName,
+                                                            String identityNo);
+
+    void updateEmployeeOrderFrom(EmployeeOrderForm orderForm);
+
+    SocialSecurityDeclare getSocialSecurityDeclareByAddEmployeeId(String addEmployeeId);
+
+    ProvidentFundDeclare getProvidentFundDeclareByAddEmployeeId(String addEmployeeId);
+
+    EmployeeFiles getEmployeeFilesByAddEmployeeId(String id);
+
+    void updateAddEmployee(AddEmployee addEmployee);
+
+    void updateShAddEmployee(ShAddEmployee shAddEmployee);
+
+    void updateQgAddEmployee(NationwideDispatch nationwideDispatch);
+
+    void delOrderFormServiceChargeUnitPrice(String parentId, String tableName);
 }

@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 /**
  * @author liulei
  * @Description
@@ -59,9 +61,13 @@ public class EntryNotice extends BaseEntity {
      */
     String entryContactRemark;
     /**
-     * 所属部门
+     * 操作人
      */
-    String subordinateDepartment;
+    String operator;
+    /**
+     * 操作人
+     */
+    String inquirer;
     /**
      * 一级客户
      */
@@ -106,4 +112,47 @@ public class EntryNotice extends BaseEntity {
      * 入职联系状态
      */
     String status;
+
+    String subordinateDepartment;
+
+    public EntryNotice(AddEmployee addEmployee) {
+        this.name = addEmployee.getName();
+        this.creater = addEmployee.getCreater();
+        this.createdDeptId = addEmployee.getCreatedDeptId();
+        this.owner = addEmployee.getOwner();
+        this.ownerDeptId = addEmployee.getOwnerDeptId();
+        this.createdTime = addEmployee.getCreatedTime();
+        this.modifier = addEmployee.getModifier();
+        this.modifiedTime = addEmployee.getModifiedTime();
+        this.workflowInstanceId = null;
+        this.sequenceNo = null;
+        this.sequenceStatus = "PROCESSING";
+        this.ownerDeptQueryCode = addEmployee.getOwnerDeptQueryCode();
+
+        this.employeeName = addEmployee.getEmployeeName();
+        this.identityNo = addEmployee.getIdentityNo();
+        /*this.socialSecurity = socialSecurity;
+        this.providentFund = providentFund;
+        this.submissionMethod = submissionMethod;
+        this.operateSignatory = operateSignatory;
+        this.operateSignFor = operateSignFor;
+        this.unitProvidentFundNum = unitProvidentFundNum;
+        this.personalProvidentFundNum = personalProvidentFundNum;
+        this.employmentRegisterNum = employmentRegisterNum;*/
+        this.entryContactRemark = addEmployee.getRemark();
+        this.operator = addEmployee.getOperator();
+        this.inquirer = addEmployee.getInquirer();
+        this.subordinateDepartment = addEmployee.getSubordinateDepartment();
+        this.firstLevelClientName = addEmployee.getFirstLevelClientName();
+        this.secondLevelClientName = addEmployee.getSecondLevelClientName();
+        this.mobile = addEmployee.getMobile();
+        this.socialSecurityCity = addEmployee.getSocialSecurityCity();
+        this.providentFundCity = addEmployee.getProvidentFundCity();
+        this.isRetiredSoldier = addEmployee.getIsRetiredSoldier();
+        this.isDisabled = addEmployee.getIsDisabled();
+        this.isPoorArchivists = addEmployee.getIsPoorArchivists();
+        /*this.recordOfEmployment = recordOfEmployment;
+        this.feedback = feedback;*/
+        this.status = "通知中";
+    }
 }

@@ -5,9 +5,9 @@ import com.authine.cloudpivot.engine.api.model.organization.UserModel;
 import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
 import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
+import com.authine.cloudpivot.web.api.dto.UpdateAddEmployeeDto;
 import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.service.*;
-import com.authine.cloudpivot.web.api.service.impl.UpdateEmployeesServiceImpl;
 import com.authine.cloudpivot.web.api.utils.CommonUtils;
 import com.authine.cloudpivot.web.api.utils.ExcelUtils;
 import com.authine.cloudpivot.web.api.utils.GetBizObjectModelUntils;
@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -39,10 +40,10 @@ public class EmployeeMaintainController extends BaseController {
     private AddEmployeeService addEmployeeService;
 
     @Resource
-    private SalesContractService salesContractService;
+    private DeleteEmployeeService deleteEmployeeService;
 
     @Resource
-    private EmployeeFilesService employeeFilesService;
+    private SalesContractService salesContractService;
 
     @Resource
     private BatchPreDispatchService batchPreDispatchService;
@@ -54,10 +55,7 @@ public class EmployeeMaintainController extends BaseController {
     private BusinessInsuranceService businessInsuranceService;
 
     @Resource
-    private UpdateEmployeesServiceImpl updateEmployeeService;
-
-    @Resource
-    private CollectionRuleService collectionRuleService;
+    private UpdateEmployeeService updateEmployeeService;
 
     @Resource
     private LaborContractInfoService laborContractInfoService;
@@ -133,110 +131,87 @@ public class EmployeeMaintainController extends BaseController {
     @GetMapping("/deleteEmployeeSubmit")
     @ResponseBody
     public ResponseResult <String> deleteEmployeeSubmit(String id) {
-
         try {
-            DeleteEmployee delEmployee = employeeFilesService.getDeleteEmployeeData(id);
-            if (delEmployee == null) {
-                log.error("没有获取到减员数据！");
-                return this.getErrResponseResult("error", 404l, "没有获取到减员数据！");
-            }
-            delEmployee = CommonUtils.processingIdentityNo(delEmployee);
-            //获取员工档案
-            EmployeeFiles employeeFiles =
-                    employeeFilesService.getEmployeeFilesByIdNoAndClientName(delEmployee.getIdentityNo(),
-                            delEmployee.getFirstLevelClientName(), delEmployee.getSecondLevelClientName());
-
-            employeeFiles = setEmployeeFilesQuitInfo(employeeFiles, delEmployee.getCreatedTime(),
-                    "[{\"id\":\"" + delEmployee.getCreater() + "\",\"type\":3}]", delEmployee.getLeaveTime(),
-                    delEmployee.getSocialSecurityEndTime(), delEmployee.getProvidentFundEndTime(),
-                    delEmployee.getLeaveReason(), delEmployee.getRemark());
-
-            boolean sIsOut = false, gIsOut = false;
-            if (StringUtils.isNotBlank(delEmployee.getSocialSecurityCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delEmployee.getSocialSecurityCity()) < 0) {
-                sIsOut = true;
-            }
-            if (StringUtils.isNotBlank(delEmployee.getProvidentFundCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delEmployee.getProvidentFundCity()) < 0) {
-                gIsOut = true;
-            }
-            if (sIsOut || gIsOut) {
-                // 判断批量撤离（省外）
-                List<BatchEvacuation> batchEvacuations = new ArrayList <>();
-                if (Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
-                    BatchEvacuation batchEvacuation = new BatchEvacuation(employeeFiles.getEmployeeName(),
-                            employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getReportQuitDate(),
-                            employeeFiles.getSocialSecurityChargeEnd(), employeeFiles.getProvidentFundChargeEnd(),
-                            employeeFiles.getQuitReason(), employeeFiles.getQuitRemark());
-                    batchEvacuations.add(batchEvacuation);
-                }
-                // 生成批量撤离
-                batchEvacuationService.addBatchEvacuationDatas(this.getUserId(), this.getOrganizationFacade(),
-                        batchEvacuations);
-            }
-
-            // 更新员工档案数据
-            employeeMaintainService.updateEmployeeFiles(employeeFiles);
-
-            if (sIsOut && gIsOut) {
-                return this.getOkResponseResult("success", "操作成功!");
-            }
-
-            // 员工订单实体
-            EmployeeOrderForm employeeOrderForm =
-                    addEmployeeService.getEmployeeOrderFormByEmployeeFilesId(employeeFiles.getId());
-            // 运行负责人
-            OperateLeader operateLeader = getOperateLeader(delEmployee.getSocialSecurityCity(),
-                    delEmployee.getSWelfareHandler(), delEmployee.getProvidentFundCity(), delEmployee.getGWelfareHandler(),
-                    delEmployee.getSecondLevelClientName());
-
-            if (!sIsOut && employeeFiles.getSocialSecurityChargeEnd() != null) {
-                // 有社保停缴申请
-                SocialSecurityClose sClose = new SocialSecurityClose("PROCESSING", delEmployee.getCreater(),
-                        delEmployee.getCreatedDeptId(), delEmployee.getCreatedTime(), delEmployee.getOwner(),
-                        delEmployee.getOwnerDeptId(), delEmployee.getOwnerDeptQueryCode(), employeeOrderForm.getId(),
-                        employeeFiles.getEmployeeName(), employeeFiles.getGender(), employeeFiles.getBirthDate(),
-                        employeeFiles.getIdType(), employeeFiles.getIdNo(), delEmployee.getSWelfareHandler(),
-                        employeeFiles.getSocialSecurityChargeStart(), employeeFiles.getSocialSecurityChargeEnd(),
-                        employeeFiles.getSocialSecurityBase(), employeeFiles.getQuitReason(),
-                        operateLeader.getSocialSecurityLeader(), "待办", employeeFiles.getFirstLevelClientName(),
-                        employeeFiles.getSecondLevelClientName(), delEmployee.getSubordinateDepartment(),
-                        delEmployee.getSocialSecurityCity());
-                // 社保停缴
-                createSocialSecurityClose(sClose, delEmployee.getCreater(), delEmployee.getCreatedDeptId());
-            }
-
-            if (!gIsOut && employeeFiles.getProvidentFundChargeEnd() != null) {
-                SocialSecurityFundDetail detail =
-                        employeeMaintainService.getSocialSecurityFundDetail(employeeOrderForm.getId(), "公积金");
-                Double enterpriseDeposit = null, personalDeposit = null, totalDeposit = null;
-                if (detail != null) {
-                    enterpriseDeposit = detail.getCompanyMoney();
-                    personalDeposit = detail.getEmployeeMoney();
-                    totalDeposit = detail.getSum();
-                }
-                // 有公积金停缴
-                ProvidentFundClose gClose = new ProvidentFundClose("PROCESSING",delEmployee.getCreater(),
-                        delEmployee.getCreatedDeptId(), delEmployee.getCreatedTime(), delEmployee.getOwner(),
-                        delEmployee.getOwnerDeptId(), delEmployee.getOwnerDeptQueryCode(), employeeOrderForm.getId(),
-                        employeeFiles.getEmployeeName(), employeeFiles.getGender(), employeeFiles.getBirthDate(),
-                        employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getFirstLevelClientName(),
-                        employeeFiles.getSecondLevelClientName(), delEmployee.getGWelfareHandler(),
-                        employeeFiles.getProvidentFundChargeStart(), employeeFiles.getProvidentFundChargeEnd(),
-                        employeeFiles.getProvidentFundBase(), enterpriseDeposit, personalDeposit, totalDeposit,
-                        operateLeader.getProvidentFundLeader(), "待办", delEmployee.getSubordinateDepartment(),
-                        delEmployee.getProvidentFundCity());
-                // 公积金停缴
-                createProvidentFundClose(gClose, delEmployee.getCreater(), delEmployee.getCreatedDeptId());
-            }
-
-            // 修改员工补充福利（商保，体检，代发福利）的员工状态为已离职
-            businessInsuranceService.updateEmployeeStatus(employeeFiles.getSecondLevelClientName(),
-                    employeeFiles.getIdNo(), EMPLOYEE_STATUS_QUIT);
-
-            return this.getOkResponseResult("success", "激发停缴社保，公积金流程成功!");
+            DeleteEmployee delEmployee = deleteEmployeeService.getDeleteEmployeeById(id);
+            return deleteEmployeeSubmit(delEmployee);
         } catch (Exception e) {
             log.info(e.getMessage());
             return this.getErrResponseResult("error", 404l, e.getMessage());
         }
+    }
+
+    /**
+     * 方法说明：减员提交
+     * @param delEmployee 减员实体
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @author liulei
+     * @Date 2020/5/25 15:04
+     */
+    private ResponseResult <String> deleteEmployeeSubmit(DeleteEmployee delEmployee) throws Exception{
+        /*delEmployee = CommonUtils.processingIdentityNo(delEmployee);*/
+        //获取员工档案
+        EmployeeFiles employeeFiles = getEmployeeFiles(delEmployee.getFirstLevelClientName(),
+                delEmployee.getSecondLevelClientName(), delEmployee.getIdentityNo());
+
+        employeeFiles = setEmployeeFilesQuitInfo(employeeFiles, delEmployee.getCreatedTime(),
+                "[{\"id\":\"" + delEmployee.getCreater() + "\",\"type\":3}]", delEmployee.getLeaveTime(),
+                delEmployee.getSocialSecurityEndTime(), delEmployee.getProvidentFundEndTime(),
+                delEmployee.getLeaveReason(), delEmployee.getRemark(), delEmployee.getId());
+
+        boolean sIsOut = StringUtils.isNotBlank(delEmployee.getSocialSecurityCity()) &&
+                Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delEmployee.getSocialSecurityCity()) < 0 ? true : false;
+        boolean gIsOut = StringUtils.isNotBlank(delEmployee.getProvidentFundCity()) &&
+                Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delEmployee.getProvidentFundCity()) < 0 ? true : false;
+
+        if (sIsOut || gIsOut) {
+            // 判断批量撤离（省外）
+            List<BatchEvacuation> batchEvacuations = new ArrayList <>();
+            if (Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
+                BatchEvacuation batchEvacuation = new BatchEvacuation(employeeFiles.getEmployeeName(),
+                        employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getReportQuitDate(),
+                        employeeFiles.getSocialSecurityChargeEnd(), employeeFiles.getProvidentFundChargeEnd(),
+                        employeeFiles.getQuitReason(), employeeFiles.getQuitRemark());
+                batchEvacuations.add(batchEvacuation);
+            }
+            // 生成批量撤离
+            batchEvacuationService.addBatchEvacuationDatas(this.getUserId(), this.getOrganizationFacade(),
+                    batchEvacuations);
+        }
+
+        // 更新员工档案数据
+        addEmployeeService.updateEmployeeFiles(employeeFiles);
+
+        // 修改员工补充福利（商保，体检，代发福利）的员工状态为已离职
+        businessInsuranceService.updateEmployeeStatus(employeeFiles.getFirstLevelClientName(),
+                employeeFiles.getSecondLevelClientName(), employeeFiles.getIdNo(), EMPLOYEE_STATUS_QUIT);
+
+        if (sIsOut && gIsOut) {
+            return this.getOkResponseResult("success", "操作成功!");
+        }
+
+        deleteEmployeeService.createDeleteEmployeeData(delEmployee, employeeFiles, this.getBizObjectFacade(),
+                this.getWorkflowInstanceFacade());
+
+        return this.getOkResponseResult("success", "操作成功!");
+    }
+
+    /**
+     * 方法说明：获取员工档案
+     * @param firstLevelClientName
+     * @param secondLevelClientName
+     * @param identityNo
+     * @return com.authine.cloudpivot.web.api.entity.EmployeeFiles
+     * @author liulei
+     * @Date 2020/5/15 14:10
+     */
+    private EmployeeFiles getEmployeeFiles(String firstLevelClientName, String secondLevelClientName,
+                                           String identityNo) throws Exception {
+        EmployeeFiles employeeFiles = addEmployeeService.getEmployeeFilesByClientNameAndIdentityNo(firstLevelClientName,
+                secondLevelClientName, identityNo);
+        if (employeeFiles == null) {
+            throw new RuntimeException("没有获取到员工档案数据！");
+        }
+        return employeeFiles;
     }
 
     /**
@@ -252,81 +227,40 @@ public class EmployeeMaintainController extends BaseController {
     public ResponseResult <String> shDeleteEmployeeSubmit(String id) {
 
         try {
-            ShDeleteEmployee shDeleteEmployee = employeeFilesService.getShDeleteEmployeeData(id);
-            if (shDeleteEmployee == null) {
-                log.error("没有获取到减员数据！");
-                return this.getErrResponseResult("error", 404l, "没有获取到减员数据！");
-            }
-            shDeleteEmployee = CommonUtils.processingIdentityNo(shDeleteEmployee);
-
-            //获取员工档案
-            EmployeeFiles employeeFiles =
-                    employeeFilesService.getEmployeeFilesByIdNoAndClientName(shDeleteEmployee.getIdentityNo(),
-                            shDeleteEmployee.getFirstLevelClientName(), shDeleteEmployee.getSecondLevelClientName());
-
-            employeeFiles = setEmployeeFilesQuitInfo(employeeFiles, shDeleteEmployee.getCreatedTime(),
-                    "[{\"id\":\"" + shDeleteEmployee.getCreater() + "\",\"type\":3}]", shDeleteEmployee.getDepartureTime(),
-                    shDeleteEmployee.getChargeEndTime(), shDeleteEmployee.getChargeEndTime(),
-                    shDeleteEmployee.getLeaveReason(), shDeleteEmployee.getLeaveRemark());
-
-            // 更新员工档案数据
-            employeeMaintainService.updateEmployeeFiles(employeeFiles);
-
-            // 员工订单实体
-            EmployeeOrderForm employeeOrderForm =
-                    addEmployeeService.getEmployeeOrderFormByEmployeeFilesId(employeeFiles.getId());
-            // 运行负责人
-            OperateLeader operateLeader = employeeMaintainService.getOperateLeader(employeeFiles.getSocialSecurityCity(),
-                    employeeFiles.getSWelfareHandler(), employeeFiles.getSecondLevelClientName());
-            if (employeeFiles.getSocialSecurityChargeEnd() != null) {
-                // 有社保停缴申请
-                SocialSecurityClose sClose = new SocialSecurityClose("PROCESSING",shDeleteEmployee.getCreater(),
-                        shDeleteEmployee.getCreatedDeptId(), shDeleteEmployee.getCreatedTime(), shDeleteEmployee.getOwner(),
-                        shDeleteEmployee.getOwnerDeptId(), shDeleteEmployee.getOwnerDeptQueryCode(), employeeOrderForm.getId(),
-                        employeeFiles.getEmployeeName(), employeeFiles.getGender(), employeeFiles.getBirthDate(),
-                        employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getSWelfareHandler(),
-                        employeeFiles.getSocialSecurityChargeStart(), employeeFiles.getSocialSecurityChargeEnd(),
-                        employeeFiles.getSocialSecurityBase(), employeeFiles.getQuitReason(),
-                        operateLeader.getSocialSecurityLeader(), "待办", employeeFiles.getFirstLevelClientName(),
-                        employeeFiles.getSecondLevelClientName(), shDeleteEmployee.getSubordinateDepartment(),
-                        employeeFiles.getSocialSecurityCity());
-                // 社保停缴
-                createSocialSecurityClose(sClose, shDeleteEmployee.getCreater(), shDeleteEmployee.getCreatedDeptId());
-            }
-
-            if (employeeFiles.getProvidentFundChargeEnd() != null) {
-                SocialSecurityFundDetail detail =
-                        employeeMaintainService.getSocialSecurityFundDetail(employeeOrderForm.getId(), "公积金");
-                Double enterpriseDeposit = null, personalDeposit = null, totalDeposit = null;
-                if (detail != null) {
-                    enterpriseDeposit = detail.getCompanyMoney();
-                    personalDeposit = detail.getEmployeeMoney();
-                    totalDeposit = detail.getSum();
-                }
-                // 有公积金停缴
-                ProvidentFundClose gClose = new ProvidentFundClose("PROCESSING",shDeleteEmployee.getCreater(),
-                        shDeleteEmployee.getCreatedDeptId(), shDeleteEmployee.getCreatedTime(), shDeleteEmployee.getOwner(),
-                        shDeleteEmployee.getOwnerDeptId(), shDeleteEmployee.getOwnerDeptQueryCode(), employeeOrderForm.getId(),
-                        employeeFiles.getEmployeeName(), employeeFiles.getGender(), employeeFiles.getBirthDate(),
-                        employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getFirstLevelClientName(),
-                        employeeFiles.getSecondLevelClientName(), employeeFiles.getGWelfareHandler(),
-                        employeeFiles.getProvidentFundChargeStart(), employeeFiles.getProvidentFundChargeEnd(),
-                        employeeFiles.getProvidentFundBase(), enterpriseDeposit, personalDeposit, totalDeposit,
-                        operateLeader.getProvidentFundLeader(), "待办", shDeleteEmployee.getSubordinateDepartment(),
-                        employeeFiles.getProvidentFundCity());
-                // 公积金停缴
-                createProvidentFundClose(gClose, shDeleteEmployee.getCreater(), shDeleteEmployee.getCreatedDeptId());
-            }
-
-            // 修改员工补充福利（商保，体检，代发福利）的员工状态为已离职
-            businessInsuranceService.updateEmployeeStatus(employeeFiles.getSecondLevelClientName(), employeeFiles.getIdNo(),
-                    EMPLOYEE_STATUS_QUIT);
-
-            return this.getOkResponseResult("success", "激发停缴社保，公积金流程成功!");
+            ShDeleteEmployee shDelEmployee = deleteEmployeeService.getShDeleteEmployeeById(id);
+            return shDeleteEmployeeSubmit(shDelEmployee);
         } catch (Exception e) {
             log.info(e.getMessage());
             return this.getErrResponseResult("error", 404l, e.getMessage());
         }
+    }
+
+    /**
+     * 方法说明：减员上海
+     * @param shDelEmployee 减员上海实体
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @author liulei
+     * @Date 2020/5/25 15:08
+     */
+    private ResponseResult <String> shDeleteEmployeeSubmit(ShDeleteEmployee shDelEmployee) throws Exception {
+        shDelEmployee = CommonUtils.processingIdentityNo(shDelEmployee);
+        //获取员工档案
+        EmployeeFiles employeeFiles = getEmployeeFiles(shDelEmployee.getFirstLevelClientName(),
+                shDelEmployee.getSecondLevelClientName(), shDelEmployee.getIdentityNo());
+
+        employeeFiles = setEmployeeFilesQuitInfo(employeeFiles, shDelEmployee.getCreatedTime(),
+                "[{\"id\":\"" + shDelEmployee.getCreater() + "\",\"type\":3}]", shDelEmployee.getDepartureTime(),
+                shDelEmployee.getChargeEndTime(), shDelEmployee.getChargeEndTime(), shDelEmployee.getLeaveReason(),
+                shDelEmployee.getLeaveRemark(), shDelEmployee.getId());
+
+        // 更新员工档案数据
+        addEmployeeService.updateEmployeeFiles(employeeFiles);
+
+        // 修改员工补充福利（商保，体检，代发福利）的员工状态为已离职
+        businessInsuranceService.updateEmployeeStatus(employeeFiles.getFirstLevelClientName(),
+                employeeFiles.getSecondLevelClientName(), employeeFiles.getIdNo(), EMPLOYEE_STATUS_QUIT);
+
+        return this.getOkResponseResult("success", "操作成功!");
     }
 
     /**
@@ -343,84 +277,39 @@ public class EmployeeMaintainController extends BaseController {
     public ResponseResult <String> qgDeleteEmployeeSubmit(String id) {
 
         try {
-            NationwideDispatch nationwideDispatch = employeeFilesService.getNationwideDeleteEmployeeData(id);
-            if (nationwideDispatch == null) {
-                log.error("没有获取到减员数据！");
-                return this.getErrResponseResult("error", 404l, "没有获取到增员数据！");
-            }
-
-            nationwideDispatch = CommonUtils.processingIdentityNo(nationwideDispatch);
-
-            // 获取员工档案
-            EmployeeFiles employeeFiles =
-                    employeeFilesService.getEmployeeFilesByIdNoAndClientName(nationwideDispatch.getIdentityNo(),
-                            nationwideDispatch.getFirstLevelClientName(),
-                            nationwideDispatch.getSecondLevelClientName());
-
-            employeeFiles = setEmployeeFilesQuitInfo(employeeFiles, nationwideDispatch.getCreatedTime(),
-                    "[{\"id\":\"" + nationwideDispatch.getCreater() + "\",\"type\":3}]", nationwideDispatch.getDepartureDate(),
-                    nationwideDispatch.getSServiceFeeEndDate(), nationwideDispatch.getGServiceFeeEndDate(),
-                    nationwideDispatch.getSocialSecurityStopReason(), nationwideDispatch.getDepartureRemark());
-
-            // 更新员工档案数据
-            employeeMaintainService.updateEmployeeFiles(employeeFiles);
-
-            // 员工订单实体
-            EmployeeOrderForm employeeOrderForm =
-                    addEmployeeService.getEmployeeOrderFormByEmployeeFilesId(employeeFiles.getId());
-            // 运行负责人
-            OperateLeader operateLeader = employeeMaintainService.getOperateLeader(employeeFiles.getSocialSecurityCity(),
-                    employeeFiles.getSWelfareHandler(), employeeFiles.getSecondLevelClientName());
-
-            if (employeeFiles.getSocialSecurityChargeEnd() != null) {
-                // 有社保停缴申请
-                SocialSecurityClose sClose = new SocialSecurityClose("PROCESSING",nationwideDispatch.getCreater(),
-                        nationwideDispatch.getCreatedDeptId(), nationwideDispatch.getCreatedTime() ,nationwideDispatch.getOwner(),
-                        nationwideDispatch.getOwnerDeptId(), nationwideDispatch.getOwnerDeptQueryCode(), employeeOrderForm.getId(),
-                        employeeFiles.getEmployeeName(), employeeFiles.getGender(), employeeFiles.getBirthDate(),
-                        employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getSWelfareHandler(),
-                        employeeFiles.getSocialSecurityChargeStart(), employeeFiles.getSocialSecurityChargeEnd(),
-                        employeeFiles.getSocialSecurityBase(), employeeFiles.getQuitReason() + employeeFiles.getQuitRemark(),
-                        operateLeader.getSocialSecurityLeader(), "待办", employeeFiles.getFirstLevelClientName(),
-                        employeeFiles.getSecondLevelClientName(), nationwideDispatch.getSubordinateDepartment(),
-                        employeeFiles.getSocialSecurityCity());
-                // 社保停缴
-                createSocialSecurityClose(sClose, nationwideDispatch.getCreater(), nationwideDispatch.getCreatedDeptId());
-            }
-
-            if (employeeFiles.getProvidentFundChargeEnd() != null) {
-                SocialSecurityFundDetail detail =
-                        employeeMaintainService.getSocialSecurityFundDetail(employeeOrderForm.getId(), "公积金");
-                Double enterpriseDeposit = null, personalDeposit = null, totalDeposit = null;
-                if (detail != null) {
-                    enterpriseDeposit = detail.getCompanyMoney();
-                    personalDeposit = detail.getEmployeeMoney();
-                    totalDeposit = detail.getSum();
-                }
-                // 有公积金停缴
-                ProvidentFundClose gClose = new ProvidentFundClose("PROCESSING",nationwideDispatch.getCreater(),
-                        nationwideDispatch.getCreatedDeptId(), nationwideDispatch.getCreatedTime(), nationwideDispatch.getOwner(),
-                        nationwideDispatch.getOwnerDeptId(), nationwideDispatch.getOwnerDeptQueryCode(), employeeOrderForm.getId(),
-                        employeeFiles.getEmployeeName(), employeeFiles.getGender(), employeeFiles.getBirthDate(),
-                        employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getFirstLevelClientName(),
-                        employeeFiles.getSecondLevelClientName(), employeeFiles.getGWelfareHandler(),
-                        employeeFiles.getProvidentFundChargeStart(), employeeFiles.getProvidentFundChargeEnd(),
-                        employeeFiles.getProvidentFundBase(), enterpriseDeposit, personalDeposit, totalDeposit,
-                        operateLeader.getProvidentFundLeader(), "待办", nationwideDispatch.getSubordinateDepartment(),
-                        employeeFiles.getProvidentFundCity());
-                // 公积金停缴
-                createProvidentFundClose(gClose, nationwideDispatch.getCreater(), nationwideDispatch.getCreatedDeptId());
-            }
-
-            // 修改员工补充福利（商保，体检，代发福利）的员工状态为已离职
-            businessInsuranceService.updateEmployeeStatus(employeeFiles.getSecondLevelClientName(), employeeFiles.getIdNo(),
-                    EMPLOYEE_STATUS_QUIT);
-
-            return this.getOkResponseResult("success", "激发停缴社保，公积金流程成功!");
+            NationwideDispatch qgDelEmployee = deleteEmployeeService.getQgDeleteEmployeeById(id);
+            return qgDeleteEmployeeSubmit(qgDelEmployee);
         } catch (Exception e) {
             log.info(e.getMessage());
             return this.getErrResponseResult("error", 404l, e.getMessage());
         }
+    }
+
+    /**
+     * 方法说明：减员全国
+     * @param qgDelEmployee 减员全国实体
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @author liulei
+     * @Date 2020/5/25 15:08
+     */
+    private ResponseResult <String> qgDeleteEmployeeSubmit(NationwideDispatch qgDelEmployee) throws Exception {
+        /*qgDelEmployee = CommonUtils.processingIdentityNo(qgDelEmployee);*/
+        EmployeeFiles employeeFiles = getEmployeeFiles(qgDelEmployee.getFirstLevelClientName(),
+                qgDelEmployee.getSecondLevelClientName(), qgDelEmployee.getIdentityNo());
+
+        employeeFiles = setEmployeeFilesQuitInfo(employeeFiles, qgDelEmployee.getCreatedTime(),
+                "[{\"id\":\"" + qgDelEmployee.getCreater() + "\",\"type\":3}]", qgDelEmployee.getDepartureDate(),
+                qgDelEmployee.getSServiceFeeEndDate(), qgDelEmployee.getGServiceFeeEndDate(),
+                qgDelEmployee.getSocialSecurityStopReason(), qgDelEmployee.getDepartureRemark(), qgDelEmployee.getId());
+
+        // 更新员工档案数据
+        addEmployeeService.updateEmployeeFiles(employeeFiles);
+
+        // 修改员工补充福利（商保，体检，代发福利）的员工状态为已离职
+        businessInsuranceService.updateEmployeeStatus(employeeFiles.getFirstLevelClientName(),
+                employeeFiles.getSecondLevelClientName(), employeeFiles.getIdNo(), EMPLOYEE_STATUS_QUIT);
+
+        return this.getOkResponseResult("success", "激发停缴社保，公积金流程成功!");
     }
 
     /**
@@ -435,93 +324,46 @@ public class EmployeeMaintainController extends BaseController {
     @GetMapping("/addEmployeeSubmit")
     @ResponseBody
     public ResponseResult <String> addEmployeeSubmit(String id) {
-
         try {
-            AddEmployee addEmployee = employeeFilesService.getAddEmployeeData(id);
-            if (addEmployee == null) {
-                log.error("没有获取到增员数据！");
-                return this.getErrResponseResult("error", 404l, "没有获取到增员数据！");
-            }
-            // 判断是否是六安，是基数四舍五入取整
-            addEmployee = CommonUtils.needBaseRounding(addEmployee);
-            addEmployee = CommonUtils.processingIdentityNo(addEmployee);
+            AddEmployee addEmployee = addEmployeeService.getAddEmployeeById(id);
+            return addEmployeeSubmit(addEmployee);
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            return this.getErrResponseResult("error", 404l, e.getMessage());
+        }
+    }
 
-            EmployeeFiles employeeFiles = new EmployeeFiles("COMPLETED", addEmployee.getCreater(),
-                    addEmployee.getCreatedDeptId(), addEmployee.getCreatedTime(), addEmployee.getOwner(),
-                    addEmployee.getOwnerDeptId(), addEmployee.getOwnerDeptQueryCode(), addEmployee.getEmployeeName(),
-                    addEmployee.getIdentityNoType(), addEmployee.getIdentityNo(), addEmployee.getGender(),
-                    addEmployee.getBirthday(), addEmployee.getEmployeeNature(), addEmployee.getFamilyRegisterNature(),
-                    addEmployee.getMobile(), addEmployee.getSocialSecurityCity(), addEmployee.getProvidentFundCity(),
-                    addEmployee.getCreatedTime(), "[{\"id\":\"" + addEmployee.getCreater() + "\",\"type\":3}]",
-                    addEmployee.getEntryTime(), addEmployee.getSocialSecurityStartTime(),
-                    addEmployee.getProvidentFundStartTime(), addEmployee.getRemark(), addEmployee.getEmail(), 0, 0,
-                    addEmployee.getSubordinateDepartment(), addEmployee.getFirstLevelClientName(),
-                    addEmployee.getSecondLevelClientName(), addEmployee.getHouseholdRegisterRemarks(),
-                    addEmployee.getSocialSecurityBase(), addEmployee.getProvidentFundBase(),
-                    addEmployee.getSWelfareHandler(), addEmployee.getGWelfareHandler(),
-                    addEmployee.getIsRetiredSoldier(), addEmployee.getIsPoorArchivists(), addEmployee.getIsDisabled());
+    /**
+     * 方法说明：增员客户
+     * @param addEmployee 增员客户实体
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @author liulei
+     * @Date 2020/5/25 15:12
+     */
+    private ResponseResult <String> addEmployeeSubmit(AddEmployee addEmployee) throws Exception{
+        // 处理身份证号码
+        /*addEmployee = CommonUtils.processingIdentityNo(addEmployee);*/
+        // 判断是否已经存在员工档案
+        EmployeeFiles employeeFiles =
+                addEmployeeService.getEmployeeFilesByClientNameAndIdentityNo(addEmployee.getFirstLevelClientName(),
+                        addEmployee.getSecondLevelClientName(), addEmployee.getIdentityNo());
+        if (employeeFiles == null) {
+            employeeFiles = new EmployeeFiles(addEmployee);
+            // 生成员工档案数据
+            String employeeFilesId = createEmployeeFiles(employeeFiles, addEmployee.getCreater());
 
-            boolean sIsOut = false, gIsOut = false;
-            if (StringUtils.isNotBlank(addEmployee.getSocialSecurityCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(addEmployee.getSocialSecurityCity()) < 0) {
-                sIsOut = true;
-            }
-            if (StringUtils.isNotBlank(addEmployee.getProvidentFundCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(addEmployee.getProvidentFundCity()) < 0) {
-                gIsOut = true;
-            }
+            boolean sIsOut = addEmployee.getSocialSecurityBase() - 0d > 0d &&
+                    Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(addEmployee.getSocialSecurityCity()) < 0 ? true : false;
+            boolean gIsOut = addEmployee.getProvidentFundBase() - 0d > 0d &&
+                    Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(addEmployee.getProvidentFundCity()) < 0 ? true : false;
+
             if (sIsOut || gIsOut) {
                 // 批量生成预派
                 addBatchPreDispatch(addEmployee, sIsOut, gIsOut);
             }
-            // 查询征缴规则
-            CollectionRule collectionRule =
-                    collectionRuleService.getCollectionRuleByCity(addEmployee.getSocialSecurityCity(),
-                        addEmployee.getProvidentFundCity());
-            // 查询客户个性化设置
-            Ccps ccps = employeeMaintainService.getCcps(addEmployee.getFirstLevelClientName(), addEmployee.getSecondLevelClientName());
-            int sTimeNode=0,gTimeNode=0;
-            if (ccps != null) {
-                sTimeNode = ccps.getTimeNode();
-                gTimeNode = ccps.getTimeNode();
-            } else {
-                if (StringUtils.isNotBlank(addEmployee.getSocialSecurityCity())) {
-                    sTimeNode = employeeMaintainService.getTimeNode(addEmployee.getSocialSecurityCity());
-                }
-                if (StringUtils.isNotBlank(addEmployee.getProvidentFundCity())) {
-                    if (addEmployee.getProvidentFundCity().equals(addEmployee.getSocialSecurityCity())) {
-                        gTimeNode = sTimeNode;
-                    } else {
-                        gTimeNode = employeeMaintainService.getTimeNode(addEmployee.getProvidentFundCity());
-                    }
-                }
+            if (sIsOut && gIsOut) {
+                return this.getOkResponseResult("success", "增员提交成功!");
             }
-            // 补缴月份
-            int sMonth = getMonthDifference(sTimeNode, new Date(), addEmployee.getSocialSecurityStartTime());
-            int gMonth = getMonthDifference(gTimeNode, new Date(), addEmployee.getProvidentFundStartTime());
-            // 是否入职通知
-            BizObjectModel entryNotice = employeeMaintainService.getEntryNotice(addEmployee, sMonth, gMonth,
-                    collectionRule);
-            if(entryNotice == null) {
-                employeeFiles.setEntryNotice("否");
-            } else {
-                employeeFiles.setEntryNotice("是");
-            }
-            // 运行负责人
-            OperateLeader operateLeader = getOperateLeader(addEmployee.getSocialSecurityCity(),
-                    addEmployee.getSWelfareHandler(), addEmployee.getProvidentFundCity(), addEmployee.getGWelfareHandler(),
-                    addEmployee.getSecondLevelClientName());
-
-            if (entryNotice != null) {
-                entryNotice.getData().put("operate_signatory", operateLeader.getSocialSecurityLeader() == null ?
-                        operateLeader.getProvidentFundLeader() : operateLeader.getSocialSecurityLeader());
-            }
-
-            // 生成员工档案数据
-            String employeeFilesId = createEmployeeFiles(employeeFiles, addEmployee.getCreater());
-            // 生成入职通知
-            if (entryNotice != null) {
-                createEntryNotice(entryNotice, addEmployee.getCreater(), addEmployee.getCreatedDeptId());
-            }
-
             // 如果员工性质是“派遣”，“外包”需要创建劳动合同
             if ("派遣".equals(addEmployee.getEmployeeNature()) || "外包".equals(addEmployee.getEmployeeNature())) {
                 LaborContractInfo laborContractInfo = new LaborContractInfo(addEmployee);
@@ -529,88 +371,22 @@ public class EmployeeMaintainController extends BaseController {
                 laborContractInfoService.saveLaborContractInfo(laborContractInfo);
             }
 
-            if (sIsOut && gIsOut) {
-                return this.getOkResponseResult("success", "增员提交成功!");
+            ServiceChargeUnitPrice price = addEmployeeService.createAddEmployeeData(addEmployee, employeeFilesId,
+                    this.getBizObjectFacade(), this.getWorkflowInstanceFacade());
+            // 生成订单的服务费等数据
+            if (price != null) {
+                updateEmployeeService.addEmployeeOrderFormDetails(price, price.getOrderFormId());
             }
-
-            // 查询服务费
-            Double serviceFee = salesContractService.getFee(addEmployee.getSecondLevelClientName(),
-                    addEmployee.getEmployeeNature(), StringUtils.isBlank(addEmployee.getSocialSecurityCity()) ?
-                            addEmployee.getProvidentFundCity() : addEmployee.getSocialSecurityCity());
-
-            /** 员工订单实体*/
-            EmployeeOrderForm employeeOrderForm = employeeMaintainService.getEmployeeOrderForm(
-                    addEmployee.getSocialSecurityCity(), addEmployee.getSocialSecurityStartTime(),
-                    addEmployee.getSocialSecurityBase(), addEmployee.getProvidentFundCity(),
-                    addEmployee.getProvidentFundStartTime(), addEmployee.getProvidentFundBase(),
-                    addEmployee.getCompanyProvidentFundBl(), addEmployee.getEmployeeProvidentFundBl(),
-                    sMonth, gMonth, ccps);
-            // TODO: 2020/4/16  businessType待确定
-            employeeOrderForm = setEmployeeOrderFormValue(employeeOrderForm, serviceFee, employeeOrderForm.getSum(),
-                    employeeFilesId, addEmployee.getSWelfareHandler(), addEmployee.getGWelfareHandler(),
-                    addEmployee.getIdentityNoType(), addEmployee.getIdentityNo(), addEmployee.getEmployeeNature(),
-                    addEmployee.getFirstLevelClientName(), addEmployee.getSecondLevelClientName());
-
-            // 创建员工订单数据
-            String employeeOrderFormId = employeeMaintainService.createEmployeeOrderForm(this.getBizObjectFacade(),
-                    employeeOrderForm, addEmployee.getCreater(), addEmployee.getOwner(), addEmployee.getOwnerDeptId()
-                    , addEmployee.getOwnerDeptQueryCode());
-
-            //创建社保申报
-            if (addEmployee.getSocialSecurityStartTime() != null && !sIsOut) {
-                SocialSecurityDeclare sDeclare = new SocialSecurityDeclare("PROCESSING", addEmployee.getCreater(),
-                        addEmployee.getCreatedDeptId(), addEmployee.getCreatedTime(), addEmployee.getOwner(),
-                        addEmployee.getOwnerDeptId(), addEmployee.getOwnerDeptQueryCode(),
-                        addEmployee.getSocialSecurityStartTime(), addEmployee.getEmployeeName(), addEmployee.getGender(),
-                        addEmployee.getIdentityNo(), addEmployee.getIdentityNoType(), addEmployee.getContractStartTime(),
-                        addEmployee.getContractEndTime(), addEmployee.getContractSalary(),
-                        addEmployee.getSocialSecurityBase(), addEmployee.getMobile(), addEmployee.getSWelfareHandler(),
-                        addEmployee.getBirthday(), operateLeader.getSocialSecurityLeader(), employeeOrderFormId, "待办",
-                        addEmployee.getFirstLevelClientName(), addEmployee.getSecondLevelClientName(),
-                        addEmployee.getSubordinateDepartment(), addEmployee.getSocialSecurityCity(),
-                        addEmployee.getRemark());
-                String sId = createSocialSecurityDeclare(sDeclare, addEmployee.getCreater(),
-                        addEmployee.getCreatedDeptId());
-                // 创建子表数据
-                employeeMaintainService.createSocialSecurityFundDetail(sId,
-                        employeeOrderForm.getSocialSecurityDetail(), Constants.SOCIAL_SECURITY_DETAIL);
+        } else {
+            // 存在历史数据，此时增加没有的数据
+            ServiceChargeUnitPrice price = addEmployeeService.addAddEmployeeData(addEmployee, employeeFiles, this.getBizObjectFacade(),
+                    this.getWorkflowInstanceFacade());
+            if (price != null) {
+                updateEmployeeService.addEmployeeOrderFormDetails(price, price.getOrderFormId());
             }
-
-            //创建公积金申报
-            if (addEmployee.getProvidentFundStartTime() != null  && !gIsOut) {
-                /** 企业缴存额, 个人缴存额, 缴存总额*/
-                Double corporatePayment = null, personalDeposit = null, totalDeposit = null;
-                List <Map <String, String>> details = employeeOrderForm.getProvidentFundDetail();
-                if (details != null && details.size() > 0) {
-                    corporatePayment = StringUtils.isNotBlank(details.get(0).get("company_money")) ?
-                            Double.parseDouble(details.get(0).get("company_money")) : null;
-                    personalDeposit = StringUtils.isNotBlank(details.get(0).get("employee_money")) ?
-                            Double.parseDouble(details.get(0).get("employee_money")) : null;
-                    totalDeposit = StringUtils.isNotBlank(details.get(0).get("sum")) ?
-                            Double.parseDouble(details.get(0).get("sum")) : null;
-                }
-
-                ProvidentFundDeclare gDeclare = new ProvidentFundDeclare("PROCESSING", addEmployee.getCreater(),
-                        addEmployee.getCreatedDeptId(), addEmployee.getCreatedTime(), addEmployee.getOwner(),
-                        addEmployee.getOwnerDeptId(), addEmployee.getOwnerDeptQueryCode(), employeeOrderFormId,
-                        addEmployee.getEmployeeName(), addEmployee.getGender(), addEmployee.getBirthday(),
-                        addEmployee.getIdentityNoType(), addEmployee.getIdentityNo(), addEmployee.getGWelfareHandler(),
-                        addEmployee.getProvidentFundStartTime(), addEmployee.getProvidentFundBase(), corporatePayment,
-                        personalDeposit, totalDeposit, operateLeader.getProvidentFundLeader(), "待办",
-                        addEmployee.getProvidentFundCity(), addEmployee.getFirstLevelClientName(),
-                        addEmployee.getSecondLevelClientName(), addEmployee.getSubordinateDepartment());
-
-                String gId = createProvidentFundDeclare(gDeclare, addEmployee.getCreater(), addEmployee.getCreatedDeptId());
-                // 创建子表数据
-                employeeMaintainService.createSocialSecurityFundDetail(gId,
-                        employeeOrderForm.getProvidentFundDetail(), Constants.PROVIDENT_FUND_DETAIL);
-            }
-
-            return this.getOkResponseResult("success", "增员提交成功!");
-        } catch (Exception e) {
-            log.info(e.getMessage());
-            return this.getErrResponseResult("error", 404l, e.getMessage());
         }
+
+        return this.getOkResponseResult("success", "增员提交成功!");
     }
 
     /**
@@ -625,150 +401,68 @@ public class EmployeeMaintainController extends BaseController {
     @GetMapping("/shAddEmployeeSubmit")
     @ResponseBody
     public ResponseResult <String> shAddEmployeeSubmit(String id) {
-
         try {
-            ShAddEmployee shAddEmployee = employeeFilesService.getShAddEmployeeData(id);
-            if (shAddEmployee == null) {
-                log.error("没有获取到增员数据！");
-                return this.getErrResponseResult("error", 404l, "没有获取到增员数据！");
-            }
-            // 判断是否是六安，是基数四舍五入取整
-            shAddEmployee = CommonUtils.needBaseRounding(shAddEmployee);
-            // 身份证号验证
-            shAddEmployee = CommonUtils.processingIdentityNo(shAddEmployee);
-
-            if ("一致".equals(shAddEmployee.getWhetherConsistent())) {
-                shAddEmployee.setProvidentFundStartTime(shAddEmployee.getBenefitStartTime());
-            }
-            EmployeeFiles employeeFiles = new EmployeeFiles("COMPLETED",shAddEmployee.getCreater(),
-                    shAddEmployee.getCreatedDeptId(), shAddEmployee.getCreatedTime(), shAddEmployee.getOwner(),
-                    shAddEmployee.getOwnerDeptId(), shAddEmployee.getOwnerDeptQueryCode(), shAddEmployee.getEmployeeName(),
-                    shAddEmployee.getIdentityNoType(), shAddEmployee.getIdentityNo(), shAddEmployee.getGender(),
-                    shAddEmployee.getBirthday(), "代理", null,
-                    shAddEmployee.getMobile(), shAddEmployee.getCityName(), shAddEmployee.getCityName(),
-                    shAddEmployee.getCreatedTime(), "[{\"id\":\"" + shAddEmployee.getCreater() + "\",\"type\":3}]",
-                    shAddEmployee.getEntryTime(), shAddEmployee.getBenefitStartTime(),
-                    shAddEmployee.getProvidentFundStartTime(), shAddEmployee.getInductionRemark(), shAddEmployee.getMail(), 0, 0,
-                    shAddEmployee.getSubordinateDepartment(), shAddEmployee.getFirstLevelClientName(),
-                    shAddEmployee.getSecondLevelClientName(), shAddEmployee.getHouseholdRegisterRemarks(),
-                    shAddEmployee.getSocialSecurityBase(), shAddEmployee.getProvidentFundBase(),
-                    shAddEmployee.getWelfareHandler(), shAddEmployee.getWelfareHandler(), shAddEmployee.getIsRetiredSoldier(),
-                    shAddEmployee.getIsPoorArchivists(), shAddEmployee.getIsDisabled());
-
-            // 查询征缴规则
-            CollectionRule collectionRule = collectionRuleService.getCollectionRuleByCity(shAddEmployee.getCityName());
-            // 查询客户个性化设置
-            Ccps ccps = employeeMaintainService.getCcps(shAddEmployee.getFirstLevelClientName(), shAddEmployee.getSecondLevelClientName());
-            int timeNode = 0;
-            if (ccps != null) {
-                timeNode = ccps.getTimeNode();
-            } else {
-                if (StringUtils.isNotBlank(shAddEmployee.getCityName())) {
-                    timeNode = employeeMaintainService.getTimeNode(shAddEmployee.getCityName());
-                }
-            }
-            // 补缴月份
-            int sMonth = getMonthDifference(timeNode, new Date(), shAddEmployee.getBenefitStartTime());
-            int gMonth = getMonthDifference(timeNode, new Date(), shAddEmployee.getProvidentFundStartTime());
-            // 是否入职通知
-            BizObjectModel entryNotice = employeeMaintainService.getEntryNotice(shAddEmployee, sMonth, gMonth,
-                    collectionRule);
-            if(entryNotice == null) {
-                employeeFiles.setEntryNotice("否");
-            } else {
-                employeeFiles.setEntryNotice("是");
-            }
-            // 运行负责人
-            OperateLeader operateLeader = employeeMaintainService.getOperateLeader(shAddEmployee.getCityName(),
-                    shAddEmployee.getWelfareHandler(), shAddEmployee.getSecondLevelClientName());
-
-            if (entryNotice != null) {
-                entryNotice.getData().put("operate_signatory", operateLeader.getSocialSecurityLeader() == null ?
-                        operateLeader.getProvidentFundLeader() : operateLeader.getSocialSecurityLeader());
-            }
-
-            // 生成员工档案数据
-            String employeeFilesId = createEmployeeFiles(employeeFiles, shAddEmployee.getCreater());
-            // 生成入职通知
-            if (entryNotice != null) {
-                createEntryNotice(entryNotice, shAddEmployee.getCreater(), shAddEmployee.getCreatedDeptId());
-            }
-
-            // 查询服务费
-            Double serviceFee = salesContractService.getFee(shAddEmployee.getSecondLevelClientName(), "代理",
-                    shAddEmployee.getCityName());
-
-            /** 员工订单实体*/
-            EmployeeOrderForm employeeOrderForm = employeeMaintainService.getEmployeeOrderForm(
-                    shAddEmployee.getCityName(), shAddEmployee.getBenefitStartTime(),
-                    shAddEmployee.getSocialSecurityBase(), shAddEmployee.getCityName(),
-                    shAddEmployee.getProvidentFundStartTime(), shAddEmployee.getProvidentFundBase(),
-                    shAddEmployee.getPSupplementProvidentFund(), shAddEmployee.getUSupplementProvidentFund(), sMonth,
-                    gMonth, ccps);
-            // TODO: 2020/4/16  businessType待确定
-            employeeOrderForm = setEmployeeOrderFormValue(employeeOrderForm, serviceFee, employeeOrderForm.getSum(),
-                    employeeFilesId, shAddEmployee.getWelfareHandler(), shAddEmployee.getWelfareHandler(),
-                    shAddEmployee.getIdentityNoType(), shAddEmployee.getIdentityNo(), "代理",
-                    shAddEmployee.getFirstLevelClientName(), shAddEmployee.getSecondLevelClientName());
-
-            // 创建员工订单数据
-            String employeeOrderFormId = employeeMaintainService.createEmployeeOrderForm(this.getBizObjectFacade(),
-                    employeeOrderForm, shAddEmployee.getCreater(), shAddEmployee.getOwner(),
-                    shAddEmployee.getOwnerDeptId(), shAddEmployee.getOwnerDeptQueryCode());
-
-            //创建社保申报
-            if (shAddEmployee.getBenefitStartTime() != null) {
-                SocialSecurityDeclare sDeclare = new SocialSecurityDeclare("PROCESSING", shAddEmployee.getCreater(),
-                        shAddEmployee.getCreatedDeptId(), shAddEmployee.getCreatedTime(), shAddEmployee.getOwner(),
-                        shAddEmployee.getOwnerDeptId(), shAddEmployee.getOwnerDeptQueryCode(),
-                        shAddEmployee.getBenefitStartTime(), shAddEmployee.getEmployeeName(), shAddEmployee.getGender(),
-                        shAddEmployee.getIdentityNo(), shAddEmployee.getIdentityNoType(), null,
-                        null, shAddEmployee.getSocialSecurityBase(),
-                        shAddEmployee.getSocialSecurityBase(), shAddEmployee.getMobile(), shAddEmployee.getWelfareHandler(),
-                        shAddEmployee.getBirthday(), operateLeader.getSocialSecurityLeader(), employeeOrderFormId, "待办",
-                        shAddEmployee.getFirstLevelClientName(), shAddEmployee.getSecondLevelClientName(),
-                        shAddEmployee.getSubordinateDepartment(), shAddEmployee.getCityName(),
-                        shAddEmployee.getInductionRemark());
-                String sId = createSocialSecurityDeclare(sDeclare, shAddEmployee.getCreater(), shAddEmployee.getCreatedDeptId());
-                // 创建子表数据
-                employeeMaintainService.createSocialSecurityFundDetail(sId,
-                        employeeOrderForm.getSocialSecurityDetail(), Constants.SOCIAL_SECURITY_DETAIL);
-            }
-
-            //创建公积金申报
-            if (shAddEmployee.getProvidentFundStartTime() != null) {
-                /** 企业缴存额, 个人缴存额, 缴存总额*/
-                Double corporatePayment = null, personalDeposit = null, totalDeposit = null;
-                List <Map <String, String>> details = employeeOrderForm.getProvidentFundDetail();
-                if (details != null && details.size() > 0) {
-                    corporatePayment = StringUtils.isNotBlank(details.get(0).get("company_money")) ?
-                            Double.parseDouble(details.get(0).get("company_money")) : null;
-                    personalDeposit = StringUtils.isNotBlank(details.get(0).get("employee_money")) ?
-                            Double.parseDouble(details.get(0).get("employee_money")) : null;
-                    totalDeposit = StringUtils.isNotBlank(details.get(0).get("sum")) ?
-                            Double.parseDouble(details.get(0).get("sum")) : null;
-                }
-
-                ProvidentFundDeclare gDeclare = new ProvidentFundDeclare("PROCESSING", shAddEmployee.getCreater(),
-                        shAddEmployee.getCreatedDeptId(), shAddEmployee.getCreatedTime(), shAddEmployee.getOwner(),
-                        shAddEmployee.getOwnerDeptId(), shAddEmployee.getOwnerDeptQueryCode(), employeeOrderFormId,
-                        shAddEmployee.getEmployeeName(), shAddEmployee.getGender(), shAddEmployee.getBirthday(),
-                        shAddEmployee.getIdentityNoType(), shAddEmployee.getIdentityNo(), shAddEmployee.getWelfareHandler(),
-                        shAddEmployee.getProvidentFundStartTime(), shAddEmployee.getProvidentFundBase(), corporatePayment,
-                        personalDeposit, totalDeposit, operateLeader.getProvidentFundLeader(), "待办",
-                        shAddEmployee.getCityName(), shAddEmployee.getFirstLevelClientName(),
-                        shAddEmployee.getSecondLevelClientName(), shAddEmployee.getSubordinateDepartment());
-                String gId = createProvidentFundDeclare(gDeclare, shAddEmployee.getCreater(), shAddEmployee.getCreatedDeptId());
-                // 创建子表数据
-                employeeMaintainService.createSocialSecurityFundDetail(gId,
-                        employeeOrderForm.getProvidentFundDetail(), Constants.PROVIDENT_FUND_DETAIL);
-            }
-
-            return this.getOkResponseResult("success", "增员提交成功!");
+            ShAddEmployee shAddEmployee = addEmployeeService.getShAddEmployeeById(id);
+            return shAddEmployeeSubmit(shAddEmployee);
         } catch (Exception e) {
             log.info(e.getMessage());
             return this.getErrResponseResult("error", 404l, e.getMessage());
         }
+    }
+
+    /**
+     * 方法说明：增员上海
+     * @param shAddEmployee 增员上海实体
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @author liulei
+     * @Date 2020/5/25 15:12
+     */
+    private ResponseResult<String> shAddEmployeeSubmit(ShAddEmployee shAddEmployee) throws Exception{
+        // 身份证号验证
+        /*shAddEmployee = CommonUtils.processingIdentityNo(shAddEmployee);*/
+        if ("一致".equals(shAddEmployee.getWhetherConsistent())) {
+            shAddEmployee.setProvidentFundStartTime(shAddEmployee.getBenefitStartTime());
+        }
+        // 判断是否已经存在员工档案
+        EmployeeFiles employeeFiles =
+                addEmployeeService.getEmployeeFilesByClientNameAndIdentityNo(shAddEmployee.getFirstLevelClientName(),
+                        shAddEmployee.getSecondLevelClientName(), shAddEmployee.getIdentityNo());
+        if (employeeFiles != null) {
+            boolean needAdd = false;
+            if (shAddEmployee.getSocialSecurityBase() - 0d > 0d) {
+                if(StringUtils.isBlank(employeeFiles.getSbAddEmployeeId())) {
+                    // 此时是社保申报数据
+                    employeeFiles.setSbAddEmployeeId(shAddEmployee.getId());
+                    employeeFiles.setSocialSecurityCity(shAddEmployee.getCityName());
+                    employeeFiles.setSocialSecurityChargeStart(shAddEmployee.getBenefitStartTime());
+                    employeeFiles.setSocialSecurityBase(shAddEmployee.getSocialSecurityBase());
+                    employeeFiles.setSWelfareHandler(shAddEmployee.getWelfareHandler());
+                } else {
+                    // 改员工档案对应的社保申报数据不是该增员数据，此时是新增
+                    needAdd = true;
+                    throw new RuntimeException("员工档案已经存在了该员工的社保申报信息！");
+                }
+            }
+            if (shAddEmployee.getProvidentFundBase() - 0d > 0d) {
+                if(StringUtils.isBlank(employeeFiles.getGjjAddEmployeeId())) {
+                    employeeFiles.setGjjAddEmployeeId(shAddEmployee.getId());
+                    employeeFiles.setProvidentFundCity(shAddEmployee.getCityName());
+                    employeeFiles.setSocialSecurityChargeStart(shAddEmployee.getProvidentFundStartTime());
+                    employeeFiles.setProvidentFundBase(shAddEmployee.getProvidentFundBase());
+                    employeeFiles.setGWelfareHandler(shAddEmployee.getWelfareHandler());
+                } else {
+                    // 改员工档案对应的公积金申报数据不是该增员数据，此时是新增
+                    needAdd = true;
+                    throw new RuntimeException("员工档案已经存在了该员工的公积金申报信息！");
+                }
+            }
+            addEmployeeService.updateEmployeeFiles(employeeFiles);
+        } else {
+            employeeFiles = new EmployeeFiles(shAddEmployee);
+            createEmployeeFiles(employeeFiles, shAddEmployee.getCreater());
+        }
+
+        return this.getOkResponseResult("success", "增员提交成功!");
     }
 
     /**
@@ -783,215 +477,72 @@ public class EmployeeMaintainController extends BaseController {
     @GetMapping("/qgAddEmployeeSubmit")
     @ResponseBody
     public ResponseResult <String> qgAddEmployeeSubmit(String id) {
-
         try {
-            NationwideDispatch nationwideDispatch = employeeFilesService.getNationwideAddEmployeeData(id);
-            if (nationwideDispatch == null) {
-                log.error("没有获取到增员数据！");
-                return this.getErrResponseResult("error", 404l, "没有获取到增员数据！");
-            }
+            NationwideDispatch nationwideDispatch = addEmployeeService.getQgAddEmployeeById(id);
+            return qgAddEmployeeSubmit(nationwideDispatch);
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            return this.getErrResponseResult("error", 404l, e.getMessage());
+        }
+    }
 
-            // 判断是否是六安，是基数四舍五入取整
-            nationwideDispatch = CommonUtils.needBaseRounding(nationwideDispatch);
-            nationwideDispatch = CommonUtils.processingIdentityNo(nationwideDispatch);
-
-            EmployeeFiles employeeFiles = new EmployeeFiles("COMPLETED",nationwideDispatch.getCreater(),
-                    nationwideDispatch.getCreatedDeptId(), nationwideDispatch.getCreatedTime(), nationwideDispatch.getOwner(),
-                    nationwideDispatch.getOwnerDeptId(), nationwideDispatch.getOwnerDeptQueryCode(), nationwideDispatch.getEmployeeName(),
-                    nationwideDispatch.getIdentityNoType(), nationwideDispatch.getIdentityNo(), nationwideDispatch.getGender(),
-                    nationwideDispatch.getBirthday(), "代理", null,
-                    nationwideDispatch.getContactNumber(), nationwideDispatch.getInvolved(), nationwideDispatch.getInvolved(),
-                    nationwideDispatch.getCreatedTime(), "[{\"id\":\"" + nationwideDispatch.getCreater() + "\",\"type\":3}]",
-                    nationwideDispatch.getEntryDate(), nationwideDispatch.getSServiceFeeStartDate(),
-                    nationwideDispatch.getGServiceFeeStartDate(), nationwideDispatch.getRemark(), nationwideDispatch.getEmployeeEmail(), 0, 0,
-                    nationwideDispatch.getSubordinateDepartment(), nationwideDispatch.getFirstLevelClientName(),
-                    nationwideDispatch.getSecondLevelClientName(), nationwideDispatch.getHouseholdRegisterRemarks(),
-                    nationwideDispatch.getSocialInsuranceAmount(), nationwideDispatch.getProvidentFundAmount(),
-                    nationwideDispatch.getWelfareHandler(), nationwideDispatch.getWelfareHandler(), nationwideDispatch.getIsRetiredSoldier(),
-                    nationwideDispatch.getIsPoorArchivists(), nationwideDispatch.getIsDisabled());
-
-            // 查询征缴规则
-            CollectionRule collectionRule = collectionRuleService.getCollectionRuleByCity(nationwideDispatch.getInvolved());
-            // 查询客户个性化设置
-            Ccps ccps = employeeMaintainService.getCcps(nationwideDispatch.getFirstLevelClientName(),
-                    nationwideDispatch.getSecondLevelClientName());
-            int timeNode = 0;
-            if (ccps != null) {
-                timeNode = ccps.getTimeNode();
-            } else {
-                if (StringUtils.isNotBlank(nationwideDispatch.getInvolved())) {
-                    timeNode = employeeMaintainService.getTimeNode(nationwideDispatch.getInvolved());
+    /**
+     * 方法说明：增员全国
+     * @param nationwideDispatch 增员全国实体
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @author liulei
+     * @Date 2020/5/25 15:12
+     */
+    private ResponseResult<String> qgAddEmployeeSubmit(NationwideDispatch nationwideDispatch) throws Exception{
+        // 身份证号验证
+        /*nationwideDispatch = CommonUtils.processingIdentityNo(nationwideDispatch);*/
+        // 判断是否已经存在员工档案
+        EmployeeFiles employeeFiles =
+                addEmployeeService.getEmployeeFilesByClientNameAndIdentityNo(nationwideDispatch.getFirstLevelClientName(),
+                        nationwideDispatch.getSecondLevelClientName(), nationwideDispatch.getIdentityNo());
+        if (employeeFiles != null) {
+            boolean needAdd = false;
+            if (nationwideDispatch.getSocialInsuranceAmount() - 0d > 0d) {
+                if(StringUtils.isBlank(employeeFiles.getSbAddEmployeeId())) {
+                    // 此时是社保申报数据
+                    employeeFiles.setSbAddEmployeeId(nationwideDispatch.getId());
+                    employeeFiles.setSocialSecurityCity(nationwideDispatch.getInvolved());
+                    employeeFiles.setSocialSecurityChargeStart(nationwideDispatch.getSServiceFeeStartDate());
+                    employeeFiles.setSocialSecurityBase(nationwideDispatch.getSocialInsuranceAmount());
+                    employeeFiles.setSWelfareHandler(nationwideDispatch.getWelfareHandler());
+                } else {
+                    // 改员工档案对应的社保申报数据不是该增员数据，此时是新增
+                    needAdd = true;
+                    throw new RuntimeException("员工档案已经存在了该员工的社保申报信息！");
                 }
             }
-            // 补缴月份
-            int sMonth = getMonthDifference(timeNode, new Date(), nationwideDispatch.getSServiceFeeStartDate());
-            int gMonth = getMonthDifference(timeNode, new Date(), nationwideDispatch.getGServiceFeeStartDate());
-            // 是否入职通知
-            BizObjectModel entryNotice = employeeMaintainService.getEntryNotice(nationwideDispatch, sMonth, gMonth,
-                    collectionRule);
-            if(entryNotice == null) {
-                employeeFiles.setEntryNotice("否");
-            } else {
-                employeeFiles.setEntryNotice("是");
-            }
-            // 运行负责人
-            OperateLeader operateLeader = employeeMaintainService.getOperateLeader(nationwideDispatch.getInvolved(),
-                    nationwideDispatch.getWelfareHandler(), nationwideDispatch.getSecondLevelClientName());
-
-            if (entryNotice != null) {
-                entryNotice.getData().put("operate_signatory", operateLeader.getSocialSecurityLeader() == null ?
-                        operateLeader.getProvidentFundLeader() : operateLeader.getSocialSecurityLeader());
-            }
-
-            // 生成员工档案数据
-            String employeeFilesId = createEmployeeFiles(employeeFiles, nationwideDispatch.getCreater());
-            // 生成入职通知
-            if (entryNotice != null) {
-                createEntryNotice(entryNotice, nationwideDispatch.getCreater(), nationwideDispatch.getCreatedDeptId());
-            }
-
-            // 查询服务费
-            Double serviceFee = salesContractService.getFee(nationwideDispatch.getSecondLevelClientName(), "代理",
-                    nationwideDispatch.getInvolved());
-
-            /** 员工订单实体*/
-            String providentFundRatio = nationwideDispatch.getProvidentFundRatio();
-            Double companyRatio = 0.0;
-            Double employeeRatio = 0.0;
-            if (StringUtils.isNotBlank(providentFundRatio)) {
-                String[] ratioArr = providentFundRatio.split("\\+");
-                companyRatio = StringUtils.isNotBlank(ratioArr[0]) ? Double.parseDouble(ratioArr[0]) : 0.0;
-                employeeRatio = StringUtils.isNotBlank(ratioArr[1]) ? Double.parseDouble(ratioArr[1]) : 0.0;
-            }
-            EmployeeOrderForm employeeOrderForm = employeeMaintainService.getEmployeeOrderForm(
-                    nationwideDispatch.getInvolved(), nationwideDispatch.getSServiceFeeStartDate(),
-                    nationwideDispatch.getSocialInsuranceAmount(), nationwideDispatch.getInvolved(),
-                    nationwideDispatch.getGServiceFeeStartDate(), nationwideDispatch.getProvidentFundAmount(),
-                    companyRatio, employeeRatio, sMonth, gMonth, ccps);
-            // TODO: 2020/4/16  businessType待确定
-            employeeOrderForm = setEmployeeOrderFormValue(employeeOrderForm, serviceFee, employeeOrderForm.getSum(),
-                    employeeFilesId, nationwideDispatch.getWelfareHandler(), nationwideDispatch.getWelfareHandler(),
-                    nationwideDispatch.getIdentityNoType(), nationwideDispatch.getIdentityNo(), "代理",
-                    nationwideDispatch.getFirstLevelClientName(), nationwideDispatch.getSecondLevelClientName());
-
-            // 创建员工订单数据
-            String employeeOrderFormId = employeeMaintainService.createEmployeeOrderForm(this.getBizObjectFacade(),
-                    employeeOrderForm, nationwideDispatch.getCreater(), nationwideDispatch.getOwner(),
-                    nationwideDispatch.getOwnerDeptId(), nationwideDispatch.getOwnerDeptQueryCode());
-            //创建社保申报
-            if (nationwideDispatch.getSServiceFeeStartDate() != null) {
-                SocialSecurityDeclare sDeclare = new SocialSecurityDeclare("PROCESSING",nationwideDispatch.getCreater(),
-                        nationwideDispatch.getCreatedDeptId(), nationwideDispatch.getCreatedTime(),  nationwideDispatch.getOwner(),
-                        nationwideDispatch.getOwnerDeptId(), nationwideDispatch.getOwnerDeptQueryCode(),
-                        nationwideDispatch.getSServiceFeeStartDate(), nationwideDispatch.getEmployeeName(),
-                        nationwideDispatch.getGender(), nationwideDispatch.getIdentityNo(),
-                        nationwideDispatch.getIdentityNoType(), null, null,
-                        nationwideDispatch.getSocialInsuranceAmount(), nationwideDispatch.getSocialInsuranceAmount(),
-                        nationwideDispatch.getContactNumber(), nationwideDispatch.getWelfareHandler(),
-                        nationwideDispatch.getBirthday(), operateLeader.getSocialSecurityLeader(),
-                        employeeOrderFormId, "待办", nationwideDispatch.getFirstLevelClientName(),
-                        nationwideDispatch.getSecondLevelClientName(), nationwideDispatch.getSubordinateDepartment(),
-                        nationwideDispatch.getInvolved(), nationwideDispatch.getRemark());
-                String sId = createSocialSecurityDeclare(sDeclare, nationwideDispatch.getCreater(), nationwideDispatch.getCreatedDeptId());
-                // 创建子表数据
-                employeeMaintainService.createSocialSecurityFundDetail(sId,
-                        employeeOrderForm.getSocialSecurityDetail(), Constants.SOCIAL_SECURITY_DETAIL);
-            }
-
-            //创建公积金申报
-            if (nationwideDispatch.getGServiceFeeStartDate() != null) {
-                /** 企业缴存额, 个人缴存额, 缴存总额*/
-                Double corporatePayment = null, personalDeposit = null, totalDeposit = null;
-                List <Map <String, String>> details = employeeOrderForm.getProvidentFundDetail();
-                if (details != null && details.size() > 0) {
-                    corporatePayment = StringUtils.isNotBlank(details.get(0).get("company_money")) ?
-                            Double.parseDouble(details.get(0).get("company_money")) : null;
-                    personalDeposit = StringUtils.isNotBlank(details.get(0).get("employee_money")) ?
-                            Double.parseDouble(details.get(0).get("employee_money")) : null;
-                    totalDeposit = StringUtils.isNotBlank(details.get(0).get("sum")) ?
-                            Double.parseDouble(details.get(0).get("sum")) : null;
+            if (nationwideDispatch.getProvidentFundAmount() - 0d > 0d) {
+                if(StringUtils.isBlank(employeeFiles.getGjjAddEmployeeId())) {
+                    employeeFiles.setGjjAddEmployeeId(nationwideDispatch.getId());
+                    employeeFiles.setProvidentFundCity(nationwideDispatch.getInvolved());
+                    employeeFiles.setSocialSecurityChargeStart(nationwideDispatch.getGServiceFeeStartDate());
+                    employeeFiles.setProvidentFundBase(nationwideDispatch.getProvidentFundAmount());
+                    employeeFiles.setGWelfareHandler(nationwideDispatch.getWelfareHandler());
+                } else {
+                    // 改员工档案对应的公积金申报数据不是该增员数据，此时是新增
+                    needAdd = true;
+                    throw new RuntimeException("员工档案已经存在了该员工的公积金申报信息！");
                 }
-
-                ProvidentFundDeclare gDeclare = new ProvidentFundDeclare("PROCESSING", nationwideDispatch.getCreater(),
-                        nationwideDispatch.getCreatedDeptId(), nationwideDispatch.getCreatedTime(), nationwideDispatch.getOwner(),
-                        nationwideDispatch.getOwnerDeptId(), nationwideDispatch.getOwnerDeptQueryCode(), employeeOrderFormId,
-                        nationwideDispatch.getEmployeeName(), nationwideDispatch.getGender(), nationwideDispatch.getBirthday(),
-                        nationwideDispatch.getIdentityNoType(), nationwideDispatch.getIdentityNo(), nationwideDispatch.getWelfareHandler(),
-                        nationwideDispatch.getGServiceFeeStartDate(), nationwideDispatch.getProvidentFundAmount(), corporatePayment,
-                        personalDeposit, totalDeposit, operateLeader.getProvidentFundLeader(), "待办",
-                        nationwideDispatch.getInvolved(), nationwideDispatch.getFirstLevelClientName(),
-                        nationwideDispatch.getSecondLevelClientName(), nationwideDispatch.getSubordinateDepartment());
-                String gId = createProvidentFundDeclare(gDeclare, nationwideDispatch.getCreater(), nationwideDispatch.getCreatedDeptId());
-                // 创建子表数据
-                employeeMaintainService.createSocialSecurityFundDetail(gId,
-                        employeeOrderForm.getProvidentFundDetail(), Constants.PROVIDENT_FUND_DETAIL);
             }
-
-            return this.getOkResponseResult("success", "增员提交成功!");
-        } catch (Exception e) {
-            log.info(e.getMessage());
-            return this.getErrResponseResult("error", 404l, e.getMessage());
+            addEmployeeService.updateEmployeeFiles(employeeFiles);
+        } else {
+            employeeFiles = new EmployeeFiles(nationwideDispatch);
+            createEmployeeFiles(employeeFiles, nationwideDispatch.getCreater());
         }
+
+        return this.getOkResponseResult("success", "增员提交成功!");
     }
 
     /**
-     * 方法说明：修改员工订单状态
-     * @param ids 员工订单id,多个id用“,”隔开
-     * @param field 修改的字段
-     * @param status 修改后的状态
-     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
-     * @throws
-     * @author liulei
-     * @Date 2020/2/17 9:34
-     */
-    @GetMapping("/updateEmployeeOrderFormStatus")
-    @ResponseBody
-    public ResponseResult<String> updateEmployeeOrderFormStatus(String ids, String field, String status) {
-        if (StringUtils.isBlank(ids)) {
-            return this.getErrResponseResult("error", 404l, "没有获取到订单id,修改员工订单状态失败。");
-        }
-        if (StringUtils.isBlank(field)) {
-            return this.getErrResponseResult("error", 404l, "没有获取到修改字段名称,修改员工订单状态失败。");
-        }
-        if (StringUtils.isBlank(status)) {
-            return this.getErrResponseResult("error", 404l, "没有获取到修改后的状态,修改员工订单状态失败。");
-        }
-        try {
-            employeeMaintainService.updateEmployeeOrderFormStatus(ids, field, status);
-            return this.getOkResponseResult("success", "修改员工订单状态成功!");
-        } catch (Exception e) {
-            log.info(e.getMessage());
-            return this.getErrResponseResult("error", 404l, e.getMessage());
-        }
-    }
-
-    /**
-     * 方法说明：社保，公积金运行提交时重新生成员工订单数据
-     * @param id 社保申报，公积金申报表单id
-     * @param employeeOrderFormId 员工订单表单id
-     * @param type 类型(社保办理成功：social_security；公积金办理成功：provident_fund；)
-     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
-     * @throws
-     * @author liulei
-     * @Date 2020/2/17 15:59
-     */
-    @GetMapping("/createNewEmployeeOrderForm")
-    @ResponseBody
-    public ResponseResult<String> createNewEmployeeOrderForm(String id, String employeeOrderFormId, String type) {
-        try {
-            employeeMaintainService.createNewEmployeeOrderForm(this.getBizObjectFacade(), id, employeeOrderFormId,
-                    type);
-            return this.getOkResponseResult("success", "重新生成员工订单数据成功!");
-        } catch (Exception e) {
-            log.info(e.getMessage());
-            return this.getErrResponseResult("error", 404l, e.getMessage());
-        }
-    }
-
-    /**
-     * 方法说明：批量提交接口
+     * 方法说明：批量提交申报，停缴接口
      * @param ids 表单id,多个id使用“,”隔开
-     * @param code 表单编码
+     * @param code 表单编码（社保申报：social_security_declare；公积金申报：provident_fund_declare；
+     *             社保停缴：social_security_close；公积金停缴：provident_fund_close。）
      * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
      * @author liulei
      * @Date 2020/3/12 13:22
@@ -999,15 +550,9 @@ public class EmployeeMaintainController extends BaseController {
     @GetMapping("/batchSubmit")
     @ResponseBody
     public ResponseResult<String> batchSubmit(String ids, String code) {
-        if (StringUtils.isBlank(ids)) {
-            return this.getErrResponseResult("error", 404l, "没有获取到id,操作失败。");
-        }
-        if (StringUtils.isBlank(code)) {
-            return this.getErrResponseResult("error", 404l, "没有获取到表单编码,操作失败。");
-        }
         try {
-            employeeMaintainService.batchSubmit(this.getBizObjectFacade(),
-                    this.getWorkflowInstanceFacade(), this.getUserId(), ids, code);
+            List<String> idList = getListByIds(ids);
+            employeeMaintainService.batchSubmit(this.getWorkflowInstanceFacade(), this.getUserId(), idList, code);
             return this.getOkResponseResult("success", "操作成功！");
         } catch (Exception e) {
             log.info(e.getMessage());
@@ -1015,10 +560,22 @@ public class EmployeeMaintainController extends BaseController {
         }
     }
 
+    private List<String> getListByIds(String ids) throws Exception{
+        if (StringUtils.isBlank(ids)) {
+            throw new RuntimeException("没有获取到表单id");
+        }
+        List<String> idList = Arrays.asList(ids.split(","));
+        if (idList == null && idList.size() == 0) {
+            throw new RuntimeException("没有获取到表单id");
+        }
+        return idList;
+    }
+
     /**
-     * 方法说明：批量驳回接口
+     * 方法说明：批量驳回申报，停缴接口
      * @param ids 表单id，多个id使用“,”隔开
-     * @param code 表单编码
+     * @param code 表单编码（社保申报：social_security_declare；公积金申报：provident_fund_declare；
+     *             社保停缴：social_security_close；公积金停缴：provident_fund_close。）
      * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
      * @author liulei
      * @Date 2020/3/12 13:22
@@ -1026,15 +583,9 @@ public class EmployeeMaintainController extends BaseController {
     @GetMapping("/batchReject")
     @ResponseBody
     public ResponseResult<String> batchReject(String ids, String code) {
-        if (StringUtils.isBlank(ids)) {
-            return this.getErrResponseResult("error", 404l, "没有获取到id,操作失败。");
-        }
-        if (StringUtils.isBlank(code)) {
-            return this.getErrResponseResult("error", 404l, "没有获取到表单编码,操作失败。");
-        }
         try {
-            employeeMaintainService.batchReject(this.getBizObjectFacade(),
-                    this.getWorkflowInstanceFacade(), this.getUserId(), ids, code);
+            List<String> idList = getListByIds(ids);
+            employeeMaintainService.batchReject(this.getWorkflowInstanceFacade(), this.getUserId(), idList, code);
             return this.getOkResponseResult("success", "操作成功！");
         } catch (Exception e) {
             log.info(e.getMessage());
@@ -1054,137 +605,128 @@ public class EmployeeMaintainController extends BaseController {
     public ResponseResult <String> deleteEmployeeUpdateSubmit(String id) {
         try {
             DeleteEmployee delUpdate = updateEmployeeService.getDeleteEmployeeUpdateById(id);
-            if (delUpdate == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到修改表单数据！");
-            }
-            DeleteEmployee del = employeeFilesService.getDeleteEmployeeData(delUpdate.getDeleteEmployeeId());
-            if (del == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到对应的减员表单数据！");
-            }
+
+            DeleteEmployee del = deleteEmployeeService.getDeleteEmployeeById(delUpdate.getDeleteEmployeeId());
+
             //获取员工档案
             EmployeeFiles employeeFiles =
-                    employeeFilesService.getEmployeeFilesByIdNoAndClientName(del.getIdentityNo(),
-                            del.getFirstLevelClientName(), del.getSecondLevelClientName());
+                    deleteEmployeeService.getEmployeeFilesByDelEmployeeId(delUpdate.getDeleteEmployeeId());
 
-            employeeFiles = setEmployeeFilesQuitInfo(employeeFiles, del.getCreatedTime(),
-                    "[{\"id\":\"" + del.getCreater() + "\",\"type\":3}]", delUpdate.getLeaveTime(),
-                    delUpdate.getSocialSecurityEndTime(), delUpdate.getProvidentFundEndTime(),
-                    delUpdate.getLeaveReason(), delUpdate.getRemark());
-            // 更新员工档案数据
-            employeeMaintainService.updateEmployeeFiles(employeeFiles);
+            SocialSecurityClose sClose = deleteEmployeeService.getSocialSecurityCloseByDelEmployeeId(del.getId());
 
-            boolean sIsOut = false, gIsOut = false;
-            if (StringUtils.isNotBlank(delUpdate.getSocialSecurityCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delUpdate.getSocialSecurityCity()) < 0) {
-                sIsOut = true;
-            }
-            if (StringUtils.isNotBlank(delUpdate.getProvidentFundCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delUpdate.getProvidentFundCity()) < 0) {
-                gIsOut = true;
-            }
-            // 获取订单数据
-            EmployeeOrderForm employeeOrderForm =
+            ProvidentFundClose gClose = deleteEmployeeService.getProvidentFundCloseByDelEmployeeId(del.getId());
+            // 原员工订单实体
+            EmployeeOrderForm orderForm =
                     addEmployeeService.getEmployeeOrderFormByEmployeeFilesId(employeeFiles.getId());
-            // 获取社保停缴数据
-            SocialSecurityClose securityClose = new SocialSecurityClose();
-            // 获取公积金停缴数据
-            ProvidentFundClose fundClose = new ProvidentFundClose();
-            if (employeeOrderForm != null) {
-                securityClose = getOldSocialSecurityCloseByOrderFormId(employeeOrderForm.getId());
-                fundClose = getOldProvidentFundCloseByOrderFormId(employeeOrderForm.getId());
+            if (orderForm == null) {
+                throw new RuntimeException("没有查询到对应的员工订单数据！");
             }
-            // 运行负责人
-            OperateLeader operateLeader = getOperateLeader(delUpdate.getSocialSecurityCity(),
-                    delUpdate.getSWelfareHandler(), delUpdate.getProvidentFundCity(), delUpdate.getGWelfareHandler(),
-                    delUpdate.getSecondLevelClientName());
+            if (delUpdate.getSocialSecurityEndTime() != null) {
+                if(StringUtils.isBlank(employeeFiles.getSbDelEmployeeId()) || del.getId().equals(employeeFiles.getSbDelEmployeeId())) {
+                    // 此时是社保停缴数据,员工档案原来没有社保数据，或者有当前表单饿数据
+                    employeeFiles.setQuitDate(delUpdate.getLeaveTime());
+                    employeeFiles.setSocialSecurityChargeEnd(delUpdate.getSocialSecurityEndTime());
+                    employeeFiles.setQuitReason(delUpdate.getLeaveReason());
+                    employeeFiles.setQuitRemark(delUpdate.getRemark());
+                    employeeFiles.setSbDelEmployeeId(del.getId());
 
-            if (sIsOut && gIsOut) {
-                if (securityClose != null && StringUtils.isNotBlank(securityClose.getId())) {
-                    // 删除
-                    this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.SOCIAL_SECURITY_CLOSE_SCHEMA,
-                            securityClose.getId());
-                }
-                if (fundClose != null && StringUtils.isNotBlank(fundClose.getId())) {
-                    // 删除
-                    this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.PROVIDENT_FUND_CLOSE_SCHEMA,
-                            fundClose.getId());
-                }
-                employeeMaintainService.updateDeleteEmployee(delUpdate.getId(), delUpdate.getDeleteEmployeeId());
-                return this.getOkResponseResult("success", "操作成功!");
-            }
-
-            if (!sIsOut && employeeFiles.getSocialSecurityChargeEnd() != null) {
-                if (securityClose != null && StringUtils.isNotBlank(securityClose.getId())) {
-                    // 更新
-                    securityClose = getChangeValue(securityClose, employeeFiles.getEmployeeName(),
-                            employeeFiles.getGender(), employeeFiles.getBirthDate(), employeeFiles.getIdType(),
-                            employeeFiles.getIdNo(), delUpdate.getSWelfareHandler(),
-                            employeeFiles.getSocialSecurityChargeStart(), employeeFiles.getSocialSecurityChargeEnd(),
-                            employeeFiles.getSocialSecurityBase(), employeeFiles.getQuitReason(),
-                            operateLeader.getSocialSecurityLeader(), employeeFiles.getFirstLevelClientName(),
-                            employeeFiles.getSecondLevelClientName(), delUpdate.getSocialSecurityCity());
-                    employeeMaintainService.updateSocialSecurityClose(securityClose);
+                    orderForm.setSocialSecurityChargeEnd(delUpdate.getSocialSecurityEndTime());
                 } else {
-                    // 有社保停缴申请
-                    SocialSecurityClose sClose = new SocialSecurityClose("PROCESSING",del.getCreater(),
-                            del.getCreatedDeptId(), del.getCreatedTime(), del.getOwner(),
-                            del.getOwnerDeptId(), del.getOwnerDeptQueryCode(), employeeOrderForm.getId(),
-                            employeeFiles.getEmployeeName(), employeeFiles.getGender(), employeeFiles.getBirthDate(),
-                            employeeFiles.getIdType(), employeeFiles.getIdNo(), delUpdate.getSWelfareHandler(),
-                            employeeFiles.getSocialSecurityChargeStart(), employeeFiles.getSocialSecurityChargeEnd(),
-                            employeeFiles.getSocialSecurityBase(), employeeFiles.getQuitReason(),
-                            operateLeader.getSocialSecurityLeader(), "待办", employeeFiles.getFirstLevelClientName(),
-                            employeeFiles.getSecondLevelClientName(), del.getSubordinateDepartment(),
-                            delUpdate.getSocialSecurityCity());
-                    // 社保停缴
-                    createSocialSecurityClose(sClose, del.getCreater(), del.getCreatedDeptId());
+                    // 改员工档案对应的社保停缴数据不是该减员数据，此时是新增
+                    throw new RuntimeException("员工档案已经存在了该员工的社保停缴信息！");
                 }
-            } else if (securityClose != null && StringUtils.isNotBlank(securityClose.getId())) {
-                // 删除
+            }
+            if (delUpdate.getProvidentFundEndTime() != null) {
+                if(StringUtils.isBlank(employeeFiles.getGjjDelEmployeeId()) || del.getId().equals(employeeFiles.getGjjDelEmployeeId())) {
+                    employeeFiles.setQuitDate(delUpdate.getLeaveTime());
+                    employeeFiles.setProvidentFundChargeEnd(delUpdate.getProvidentFundEndTime());
+                    employeeFiles.setQuitReason(delUpdate.getLeaveReason());
+                    employeeFiles.setQuitRemark(delUpdate.getRemark());
+                    employeeFiles.setGjjDelEmployeeId(del.getId());
+
+                    orderForm.setProvidentFundChargeEnd(delUpdate.getProvidentFundEndTime());
+                } else {
+                    // 改员工档案对应的公积金停缴数据不是该减员数据，此时是新增
+                    throw new RuntimeException("员工档案已经存在了该员工的公积金停缴信息！");
+                }
+            }
+            // 更新员工档案数据
+            addEmployeeService.updateEmployeeFiles(employeeFiles);
+
+            updateEmployeeService.upateEmployeeOrderForm(orderForm);
+
+            if (delUpdate.getSocialSecurityEndTime() != null  && employeeFiles.getSocialSecurityBase() - 0d > 0d &&
+                    Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delUpdate.getSocialSecurityCity()) >= 0) {
+                // 需要生成社保停缴
+                if (sClose == null) {
+                    deleteEmployeeService.createSocialSecurityClose(delUpdate, employeeFiles, orderForm.getId(),
+                            this.getBizObjectFacade(), this.getWorkflowInstanceFacade());
+                } else {
+                    // 修改
+                    sClose.setEmployeeName(delUpdate.getEmployeeName());
+                    sClose.setGender(delUpdate.getGender());
+                    sClose.setBirthday(delUpdate.getBirthday());
+                    sClose.setIdentityNoType(delUpdate.getIdentityNoType());
+                    sClose.setIdentityNo(delUpdate.getIdentityNo());
+                    sClose.setWelfareHandler(delUpdate.getSWelfareHandler());
+                    sClose.setChargeEndMonth(delUpdate.getSocialSecurityEndTime());
+                    sClose.setResignationRemarks(delUpdate.getRemark());
+                    sClose.setFirstLevelClientName(delUpdate.getFirstLevelClientName());
+                    sClose.setSecondLevelClientName(delUpdate.getSecondLevelClientName());
+                    sClose.setSubordinateDepartment(delUpdate.getSubordinateDepartment());
+                    sClose.setCity(delUpdate.getSocialSecurityCity());
+                    sClose.setOperator(delUpdate.getOperator());
+                    sClose.setInquirer(delUpdate.getInquirer());
+                    sClose.setInquirer(delUpdate.getInquirer());
+                    sClose.setDelEmployeeId(delUpdate.getDeleteEmployeeId());
+                    String handler = addEmployeeService.getHsLevyHandler(sClose.getCity(), sClose.getWelfareHandler(),
+                            "社保", sClose.getSecondLevelClientName());
+                    sClose.setOperateLeader(handler);
+
+                    updateEmployeeService.updateSocialSecurityClose(sClose);
+                }
+            } else if (sClose != null) {
+                // 不需要，删除
                 this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.SOCIAL_SECURITY_CLOSE_SCHEMA,
-                        securityClose.getId());
+                        sClose.getId());
             }
 
-            // 获取公积金停缴数据
-            if (!gIsOut && employeeFiles.getProvidentFundChargeEnd() != null) {
-                if (fundClose != null && StringUtils.isNotBlank(fundClose.getId())) {
-                    // 更新
-                    fundClose = getChangeValue(fundClose,  employeeFiles.getEmployeeName(), employeeFiles.getGender(),
-                            employeeFiles.getBirthDate(), employeeFiles.getIdType(), employeeFiles.getIdNo(),
-                            employeeFiles.getFirstLevelClientName(), employeeFiles.getSecondLevelClientName(),
-                            delUpdate.getGWelfareHandler(), employeeFiles.getProvidentFundChargeStart(),
-                            employeeFiles.getProvidentFundChargeEnd(), employeeFiles.getProvidentFundBase(),
-                            operateLeader.getProvidentFundLeader(), delUpdate.getProvidentFundCity());
-
-                    employeeMaintainService.updateProvidentFundClose(fundClose);
+            if (delUpdate.getProvidentFundEndTime() != null  && employeeFiles.getProvidentFundBase() - 0d > 0d &&
+                    Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delUpdate.getProvidentFundCity()) >= 0) {
+                // 需要生成社保停缴
+                if (gClose == null) {
+                    deleteEmployeeService.createProvidentFundClose(delUpdate, employeeFiles, orderForm.getId(),
+                            this.getBizObjectFacade(), this.getWorkflowInstanceFacade());
                 } else {
-                    // 有公积金停缴
-                    SocialSecurityFundDetail detail =
-                            employeeMaintainService.getSocialSecurityFundDetail(employeeOrderForm.getId(), "公积金");
-                    Double enterpriseDeposit = null, personalDeposit = null, totalDeposit = null;
-                    if (detail != null) {
-                        enterpriseDeposit = detail.getCompanyMoney();
-                        personalDeposit = detail.getEmployeeMoney();
-                        totalDeposit = detail.getSum();
-                    }
-                    ProvidentFundClose gClose = new ProvidentFundClose("PROCESSING",del.getCreater(),
-                            del.getCreatedDeptId(), del.getCreatedTime(), del.getOwner(),
-                            del.getOwnerDeptId(), del.getOwnerDeptQueryCode(), employeeOrderForm.getId(),
-                            employeeFiles.getEmployeeName(), employeeFiles.getGender(), employeeFiles.getBirthDate(),
-                            employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getFirstLevelClientName(),
-                            employeeFiles.getSecondLevelClientName(), delUpdate.getGWelfareHandler(),
-                            employeeFiles.getProvidentFundChargeStart(), employeeFiles.getProvidentFundChargeEnd(),
-                            employeeFiles.getProvidentFundBase(), enterpriseDeposit, personalDeposit, totalDeposit,
-                            operateLeader.getProvidentFundLeader(), "待办", del.getSubordinateDepartment(),
-                            delUpdate.getProvidentFundCity());
-                    // 公积金停缴
-                    createProvidentFundClose(gClose, del.getCreater(), del.getCreatedDeptId());
+                    // 修改
+                    gClose.setEmployeeName(delUpdate.getEmployeeName());
+                    gClose.setGender(delUpdate.getGender());
+                    gClose.setBirthday(delUpdate.getBirthday());
+                    gClose.setIdentityNoType(delUpdate.getIdentityNoType());
+                    gClose.setIdentityNo(delUpdate.getIdentityNo());
+                    gClose.setWelfareHandler(delUpdate.getGWelfareHandler());
+                    gClose.setChargeEndMonth(delUpdate.getProvidentFundEndTime());
+                    gClose.setFirstLevelClientName(delUpdate.getFirstLevelClientName());
+                    gClose.setSecondLevelClientName(delUpdate.getSecondLevelClientName());
+                    gClose.setSubordinateDepartment(delUpdate.getSubordinateDepartment());
+                    gClose.setCity(delUpdate.getProvidentFundCity());
+                    gClose.setOperator(delUpdate.getOperator());
+                    gClose.setInquirer(delUpdate.getInquirer());
+                    gClose.setInquirer(delUpdate.getInquirer());
+                    gClose.setDelEmployeeId(delUpdate.getDeleteEmployeeId());
+                    String handler = addEmployeeService.getHsLevyHandler(gClose.getCity(), gClose.getWelfareHandler(),
+                            "公积金", gClose.getSecondLevelClientName());
+                    gClose.setOperateLeader(handler);
+
+                    updateEmployeeService.updateProvidentFundClose(gClose);
                 }
-            } else if (fundClose != null && StringUtils.isNotBlank(fundClose.getId())) {
-                // 删除
+            } else if (gClose != null) {
+                // 不需要，删除
                 this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.PROVIDENT_FUND_CLOSE_SCHEMA,
-                        fundClose.getId());
+                        gClose.getId());
             }
 
-            employeeMaintainService.updateDeleteEmployee(delUpdate.getId(), delUpdate.getDeleteEmployeeId());
+            updateEmployeeService.updateDeleteEmployee(delUpdate);
 
             return this.getOkResponseResult("success", "操作成功");
         } catch (Exception e) {
@@ -1205,114 +747,20 @@ public class EmployeeMaintainController extends BaseController {
     public ResponseResult <String> shDeleteEmployeeUpdateSubmit(String id) {
         try {
             ShDeleteEmployee delUpdate = updateEmployeeService.getShDeleteEmployeeUpdateById(id);
-            if (delUpdate == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到修改表单数据！");
-            }
-            ShDeleteEmployee del = employeeFilesService.getShDeleteEmployeeData(delUpdate.getShDeleteEmployeeId());
-            if (del == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到对应的减员表单数据！");
-            }
+            ShDeleteEmployee del = deleteEmployeeService.getShDeleteEmployeeById(delUpdate.getShDeleteEmployeeId());
+
             //获取员工档案
-            EmployeeFiles employeeFiles =
-                    employeeFilesService.getEmployeeFilesByIdNoAndClientName(del.getIdentityNo(),
-                            del.getFirstLevelClientName(), del.getSecondLevelClientName());
+            EmployeeFiles employeeFiles = deleteEmployeeService.getEmployeeFilesByDelEmployeeId(del.getId());
 
             employeeFiles = setEmployeeFilesQuitInfo(employeeFiles, del.getCreatedTime(),
                     "[{\"id\":\"" + del.getCreater() + "\",\"type\":3}]", delUpdate.getDepartureTime(),
                     delUpdate.getChargeEndTime(), delUpdate.getChargeEndTime(), delUpdate.getLeaveReason(),
-                    delUpdate.getLeaveRemark());
+                    delUpdate.getLeaveRemark(), del.getId());
             // 更新员工档案数据
-            employeeMaintainService.updateEmployeeFiles(employeeFiles);
+            addEmployeeService.updateEmployeeFiles(employeeFiles);
 
-            // 员工订单实体
-            EmployeeOrderForm employeeOrderForm =
-                    addEmployeeService.getEmployeeOrderFormByEmployeeFilesId(employeeFiles.getId());
-            if (employeeOrderForm == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到对应的员工订单数据！");
-            }
+            updateEmployeeService.updateShDeleteEmployee(delUpdate);
 
-            // 获取社保停缴数据
-            SocialSecurityClose securityClose = getOldSocialSecurityCloseByOrderFormId(employeeOrderForm.getId());
-            // 获取公积金停缴数据
-            ProvidentFundClose fundClose = getOldProvidentFundCloseByOrderFormId(employeeOrderForm.getId());
-            // 运行负责人
-            OperateLeader operateLeader = employeeMaintainService.getOperateLeader(employeeFiles.getSocialSecurityCity(),
-                    employeeFiles.getSWelfareHandler(), employeeFiles.getSecondLevelClientName());
-
-            if (employeeFiles.getSocialSecurityChargeEnd() != null) {
-                if (securityClose != null && StringUtils.isNotBlank(securityClose.getId())) {
-                    // 更新
-                    securityClose = getChangeValue(securityClose, employeeFiles.getEmployeeName(),
-                            employeeFiles.getGender(), employeeFiles.getBirthDate(), employeeFiles.getIdType(),
-                            employeeFiles.getIdNo(), employeeFiles.getSWelfareHandler(),
-                            employeeFiles.getSocialSecurityChargeStart(), employeeFiles.getSocialSecurityChargeEnd(),
-                            employeeFiles.getSocialSecurityBase(), employeeFiles.getQuitReason(),
-                            operateLeader.getSocialSecurityLeader(), employeeFiles.getFirstLevelClientName(),
-                            employeeFiles.getSecondLevelClientName(), employeeFiles.getSocialSecurityCity());
-                    employeeMaintainService.updateSocialSecurityClose(securityClose);
-                } else {
-                    // 有社保停缴申请
-                    SocialSecurityClose sClose = new SocialSecurityClose("PROCESSING",del.getCreater(),
-                            del.getCreatedDeptId(), del.getCreatedTime(), del.getOwner(),
-                            del.getOwnerDeptId(), del.getOwnerDeptQueryCode(), employeeOrderForm.getId(),
-                            employeeFiles.getEmployeeName(), employeeFiles.getGender(), employeeFiles.getBirthDate(),
-                            employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getSWelfareHandler(),
-                            employeeFiles.getSocialSecurityChargeStart(), employeeFiles.getSocialSecurityChargeEnd(),
-                            employeeFiles.getSocialSecurityBase(), employeeFiles.getQuitReason(),
-                            operateLeader.getSocialSecurityLeader(), "待办", employeeFiles.getFirstLevelClientName(),
-                            employeeFiles.getSecondLevelClientName(), del.getSubordinateDepartment(),
-                            employeeFiles.getSocialSecurityCity());
-                    // 社保停缴
-                    createSocialSecurityClose(sClose, del.getCreater(), del.getCreatedDeptId());
-                }
-            } else if (securityClose != null && StringUtils.isNotBlank(securityClose.getId())) {
-                // 删除
-                this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.SOCIAL_SECURITY_CLOSE_SCHEMA,
-                        securityClose.getId());
-            }
-
-            // 获取公积金停缴数据
-            if (employeeFiles.getProvidentFundChargeEnd() != null) {
-                if (fundClose != null && StringUtils.isNotBlank(fundClose.getId())) {
-                    // 更新
-                    fundClose = getChangeValue(fundClose,  employeeFiles.getEmployeeName(), employeeFiles.getGender(),
-                            employeeFiles.getBirthDate(), employeeFiles.getIdType(), employeeFiles.getIdNo(),
-                            employeeFiles.getFirstLevelClientName(), employeeFiles.getSecondLevelClientName(),
-                            employeeFiles.getGWelfareHandler(), employeeFiles.getProvidentFundChargeStart(),
-                            employeeFiles.getProvidentFundChargeEnd(), employeeFiles.getProvidentFundBase(),
-                            operateLeader.getProvidentFundLeader(), employeeFiles.getProvidentFundCity());
-
-                    employeeMaintainService.updateProvidentFundClose(fundClose);
-                } else {
-                    // 有公积金停缴
-                    SocialSecurityFundDetail detail =
-                            employeeMaintainService.getSocialSecurityFundDetail(employeeOrderForm.getId(), "公积金");
-                    Double enterpriseDeposit = null, personalDeposit = null, totalDeposit = null;
-                    if (detail != null) {
-                        enterpriseDeposit = detail.getCompanyMoney();
-                        personalDeposit = detail.getEmployeeMoney();
-                        totalDeposit = detail.getSum();
-                    }
-                    ProvidentFundClose gClose = new ProvidentFundClose("PROCESSING",del.getCreater(),
-                            del.getCreatedDeptId(), del.getCreatedTime(), del.getOwner(),
-                            del.getOwnerDeptId(), del.getOwnerDeptQueryCode(), employeeOrderForm.getId(),
-                            employeeFiles.getEmployeeName(), employeeFiles.getGender(), employeeFiles.getBirthDate(),
-                            employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getFirstLevelClientName(),
-                            employeeFiles.getSecondLevelClientName(), employeeFiles.getGWelfareHandler(),
-                            employeeFiles.getProvidentFundChargeStart(), employeeFiles.getProvidentFundChargeEnd(),
-                            employeeFiles.getProvidentFundBase(), enterpriseDeposit, personalDeposit, totalDeposit,
-                            operateLeader.getProvidentFundLeader(), "待办", del.getSubordinateDepartment(),
-                            employeeFiles.getProvidentFundCity());
-                    // 公积金停缴
-                    createProvidentFundClose(gClose, del.getCreater(), del.getCreatedDeptId());
-                }
-            } else if (fundClose != null && StringUtils.isNotBlank(fundClose.getId())) {
-                // 删除
-                this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.PROVIDENT_FUND_CLOSE_SCHEMA,
-                        fundClose.getId());
-            }
-
-            employeeMaintainService.updateShDeleteEmployee(delUpdate.getId(), delUpdate.getShDeleteEmployeeId());
             return this.getOkResponseResult("success", "操作成功");
         } catch (Exception e) {
             log.info(e.getMessage());
@@ -1332,116 +780,18 @@ public class EmployeeMaintainController extends BaseController {
     public ResponseResult <String> qgDeleteEmployeeUpdateSubmit(String id) {
         try {
             NationwideDispatch delUpdate = updateEmployeeService.getQgDeleteEmployeeUpdateById(id);
-            if (delUpdate == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到修改表单数据！");
-            }
-            NationwideDispatch del = employeeFilesService.getNationwideDeleteEmployeeData(delUpdate.getNationwideDispatchDelId());
-            if (del == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到对应的减员表单数据！");
-            }
+            NationwideDispatch del = deleteEmployeeService.getQgDeleteEmployeeById(delUpdate.getNationwideDispatchDelId());
             //获取员工档案
-            EmployeeFiles employeeFiles =
-                    employeeFilesService.getEmployeeFilesByIdNoAndClientName(del.getIdentityNo(),
-                            del.getFirstLevelClientName(), del.getSecondLevelClientName());
+            EmployeeFiles employeeFiles = deleteEmployeeService.getEmployeeFilesByDelEmployeeId(del.getId());
 
             employeeFiles = setEmployeeFilesQuitInfo(employeeFiles, del.getCreatedTime(),
                     "[{\"id\":\"" + del.getCreater() + "\",\"type\":3}]", delUpdate.getDepartureDate(),
                     delUpdate.getSServiceFeeEndDate(), delUpdate.getGServiceFeeEndDate(), delUpdate.getSocialSecurityStopReason(),
-                    delUpdate.getDepartureRemark());
+                    delUpdate.getDepartureRemark(), del.getId());
             // 更新员工档案数据
-            employeeMaintainService.updateEmployeeFiles(employeeFiles);
+            addEmployeeService.updateEmployeeFiles(employeeFiles);
 
-            // 员工订单实体
-            EmployeeOrderForm employeeOrderForm =
-                    addEmployeeService.getEmployeeOrderFormByEmployeeFilesId(employeeFiles.getId());
-            if (employeeOrderForm == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到对应的员工订单数据！");
-            }
-            // 获取社保停缴数据
-            SocialSecurityClose securityClose = getOldSocialSecurityCloseByOrderFormId(employeeOrderForm.getId());
-            // 获取公积金停缴数据
-            ProvidentFundClose fundClose = getOldProvidentFundCloseByOrderFormId(employeeOrderForm.getId());
-
-            // 运行负责人
-            OperateLeader operateLeader = employeeMaintainService.getOperateLeader(employeeFiles.getSocialSecurityCity(),
-                    employeeFiles.getSWelfareHandler(), employeeFiles.getSecondLevelClientName());
-
-            if (employeeFiles.getSocialSecurityChargeEnd() != null) {
-                if (securityClose != null && StringUtils.isNotBlank(securityClose.getId())) {
-                    // 更新
-                    securityClose = getChangeValue(securityClose, employeeFiles.getEmployeeName(),
-                            employeeFiles.getGender(), employeeFiles.getBirthDate(), employeeFiles.getIdType(),
-                            employeeFiles.getIdNo(), employeeFiles.getSWelfareHandler(),
-                            employeeFiles.getSocialSecurityChargeStart(), employeeFiles.getSocialSecurityChargeEnd(),
-                            employeeFiles.getSocialSecurityBase(), employeeFiles.getQuitReason(),
-                            operateLeader.getSocialSecurityLeader(), employeeFiles.getFirstLevelClientName(),
-                            employeeFiles.getSecondLevelClientName(), employeeFiles.getSocialSecurityCity());
-                    employeeMaintainService.updateSocialSecurityClose(securityClose);
-                } else {
-                    // 有社保停缴申请
-                    // 有社保停缴申请
-                    SocialSecurityClose sClose = new SocialSecurityClose("PROCESSING",del.getCreater(),
-                            del.getCreatedDeptId(), del.getCreatedTime(), del.getOwner(),
-                            del.getOwnerDeptId(), del.getOwnerDeptQueryCode(), employeeOrderForm.getId(),
-                            employeeFiles.getEmployeeName(), employeeFiles.getGender(), employeeFiles.getBirthDate(),
-                            employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getSWelfareHandler(),
-                            employeeFiles.getSocialSecurityChargeStart(), employeeFiles.getSocialSecurityChargeEnd(),
-                            employeeFiles.getSocialSecurityBase(), employeeFiles.getQuitReason() + employeeFiles.getQuitRemark(),
-                            operateLeader.getSocialSecurityLeader(), "待办", employeeFiles.getFirstLevelClientName(),
-                            employeeFiles.getSecondLevelClientName(), del.getSubordinateDepartment(),
-                            employeeFiles.getSocialSecurityCity());
-                    // 社保停缴
-                    createSocialSecurityClose(sClose, del.getCreater(), del.getCreatedDeptId());
-                }
-            } else if (securityClose != null && StringUtils.isNotBlank(securityClose.getId())) {
-                // 删除
-                this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.SOCIAL_SECURITY_CLOSE_SCHEMA,
-                        securityClose.getId());
-            }
-
-            // 获取公积金停缴数据
-            if (employeeFiles.getProvidentFundChargeEnd() != null) {
-                if (fundClose != null && StringUtils.isNotBlank(fundClose.getId())) {
-                    // 更新
-                    fundClose = getChangeValue(fundClose,  employeeFiles.getEmployeeName(), employeeFiles.getGender(),
-                            employeeFiles.getBirthDate(), employeeFiles.getIdType(), employeeFiles.getIdNo(),
-                            employeeFiles.getFirstLevelClientName(), employeeFiles.getSecondLevelClientName(),
-                            employeeFiles.getGWelfareHandler(), employeeFiles.getProvidentFundChargeStart(),
-                            employeeFiles.getProvidentFundChargeEnd(), employeeFiles.getProvidentFundBase(),
-                            operateLeader.getProvidentFundLeader(), employeeFiles.getProvidentFundCity());
-
-                    employeeMaintainService.updateProvidentFundClose(fundClose);
-                } else {
-                    // 有公积金停缴
-                    SocialSecurityFundDetail detail =
-                            employeeMaintainService.getSocialSecurityFundDetail(employeeOrderForm.getId(), "公积金");
-                    Double enterpriseDeposit = null, personalDeposit = null, totalDeposit = null;
-                    if (detail != null) {
-                        enterpriseDeposit = detail.getCompanyMoney();
-                        personalDeposit = detail.getEmployeeMoney();
-                        totalDeposit = detail.getSum();
-                    }
-                    // 有公积金停缴
-                    ProvidentFundClose gClose = new ProvidentFundClose("PROCESSING",del.getCreater(),
-                            del.getCreatedDeptId(), del.getCreatedTime(), del.getOwner(),
-                            del.getOwnerDeptId(), del.getOwnerDeptQueryCode(), employeeOrderForm.getId(),
-                            employeeFiles.getEmployeeName(), employeeFiles.getGender(), employeeFiles.getBirthDate(),
-                            employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getFirstLevelClientName(),
-                            employeeFiles.getSecondLevelClientName(), employeeFiles.getGWelfareHandler(),
-                            employeeFiles.getProvidentFundChargeStart(), employeeFiles.getProvidentFundChargeEnd(),
-                            employeeFiles.getProvidentFundBase(), enterpriseDeposit, personalDeposit, totalDeposit,
-                            operateLeader.getProvidentFundLeader(), "待办", del.getSubordinateDepartment(),
-                            employeeFiles.getProvidentFundCity());
-                    // 公积金停缴
-                    createProvidentFundClose(gClose, del.getCreater(), del.getCreatedDeptId());
-                }
-            } else if (fundClose != null && StringUtils.isNotBlank(fundClose.getId())) {
-                // 删除
-                this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.PROVIDENT_FUND_CLOSE_SCHEMA,
-                        fundClose.getId());
-            }
-            employeeMaintainService.updateQgAddEmployee(delUpdate.getId(), delUpdate.getNationwideDispatchDelId(),
-                    "del");
+            updateEmployeeService.updateQgDeleteEmployee(delUpdate);
 
             return this.getOkResponseResult("success", "操作成功");
         } catch (Exception e) {
@@ -1461,11 +811,19 @@ public class EmployeeMaintainController extends BaseController {
     @ResponseBody
     public ResponseResult <String> employeeFilesUpdateSubmit(String id) {
         try {
-            EmployeeFiles employeeFiles = updateEmployeeService.getEmployeeFilesUpdateById(id);
-            if (employeeFiles == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到修改表单数据！");
-            }
-            employeeMaintainService.employeeFilesUpdateSubmit(employeeFiles);
+            EmployeeFiles update = updateEmployeeService.getEmployeeFilesUpdateById(id);
+            EmployeeFiles files = updateEmployeeService.getEmployeeFilesById(update.getEmployeeFilesId());
+            // 隐藏字段赋值
+            update.setStopGenerateBill(files.getStopGenerateBill());
+            update.setIsOldEmployee(files.getStopGenerateBill());
+            update.setSPaymentApplication(files.getSPaymentApplication());
+            update.setGPaymentApplication(files.getGPaymentApplication());
+            update.setSbAddEmployeeId(files.getSbAddEmployeeId());
+            update.setGjjAddEmployeeId(files.getGjjAddEmployeeId());
+            update.setSbDelEmployeeId(files.getSbDelEmployeeId());
+            update.setGjjDelEmployeeId(files.getGjjDelEmployeeId());
+
+            addEmployeeService.updateEmployeeFiles(update);
             return this.getOkResponseResult("success", "操作成功");
         } catch (Exception e) {
             log.info(e.getMessage());
@@ -1484,230 +842,215 @@ public class EmployeeMaintainController extends BaseController {
     @ResponseBody
     public ResponseResult <String> addEmployeeUpdateSubmit(String id) {
         try {
-            AddEmployee addEmployee = updateEmployeeService.getAddEmployeeUpdateById(id);
-            if (addEmployee == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到修改表单数据！");
-            }
-            // 判断是否是六安，是基数四舍五入取整
-            // 判断是否是六安，是基数四舍五入取整
-            addEmployee = CommonUtils.needBaseRounding(addEmployee);
-            addEmployee = CommonUtils.processingIdentityNo(addEmployee);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMM");
+
+            AddEmployee updateAddEmployee = updateEmployeeService.getAddEmployeeUpdateById(id);
+            updateAddEmployee = CommonUtils.processingIdentityNo(updateAddEmployee);
+
             // 获取原增员表单
-            AddEmployee oldAddEmployee = addEmployeeService.getAddEmployeeById(addEmployee.getAddEmployeeId());
-            if (oldAddEmployee == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到对应增员表单数据。");
-            }
+            AddEmployee addEmployee = addEmployeeService.getAddEmployeeById(updateAddEmployee.getAddEmployeeId());
+
             // 获取原员工档案
-            EmployeeFiles oldEmployeeFiles =
-                    employeeFilesService.getEmployeeFilesByIdNoAndClientName(oldAddEmployee.getIdentityNo(),
-                            oldAddEmployee.getFirstLevelClientName(), oldAddEmployee.getSecondLevelClientName());
-
+            EmployeeFiles employeeFiles = addEmployeeService.getEmployeeFilesByAddEmployeeId(addEmployee.getId());
+            // 社保申报数据
+            SocialSecurityDeclare sDeclare = addEmployeeService.getSocialSecurityDeclareByAddEmployeeId(addEmployee.getId());
+            // 公积金申报数据
+            ProvidentFundDeclare pDeclare = addEmployeeService.getProvidentFundDeclareByAddEmployeeId(addEmployee.getId());
             // 原员工订单实体
-            EmployeeOrderForm oldEmployeeOrderForm =
-                    addEmployeeService.getEmployeeOrderFormByEmployeeFilesId(oldEmployeeFiles.getId());
-            if (oldEmployeeOrderForm == null) {
-                oldEmployeeOrderForm = new EmployeeOrderForm();
+            EmployeeOrderForm orderForm =
+                    addEmployeeService.getEmployeeOrderFormByEmployeeFilesId(employeeFiles.getId());
+            if (orderForm != null) {
+                orderForm.setFirstLevelClientName(updateAddEmployee.getFirstLevelClientName());
+                orderForm.setSecondLevelClientName(updateAddEmployee.getSecondLevelClientName());
+                orderForm.setBusinessType(updateAddEmployee.getEmployeeNature());
+                orderForm.setIdentityNo(updateAddEmployee.getIdentityNo());
+                orderForm.setIdType(updateAddEmployee.getIdentityNoType());
+                orderForm.setDetail(updateAddEmployee.getRemark());
             }
-            // 原社保申报实体
-            SocialSecurityDeclare oldSocialSecurityDeclare =
-                    getOldSocialSecurityDeclareByOrderFormId(oldEmployeeOrderForm.getId());
-            // 原公积金申报实体
-            ProvidentFundDeclare oldProvidentFundDeclare =
-                    getOldProvidentFundDeclareByOrderFormId(oldEmployeeOrderForm.getId());
-
-            // 基本信息还是原来的数据
-            addEmployee.setCreatedTime(oldAddEmployee.getCreatedTime());
-            addEmployee.setCreater(oldAddEmployee.getCreater());
-            addEmployee.setCreatedDeptId(oldAddEmployee.getCreatedDeptId());
-            addEmployee.setOwner(oldAddEmployee.getOwner());
-            addEmployee.setOwnerDeptId(oldAddEmployee.getOwnerDeptId());
-            addEmployee.setOwnerDeptQueryCode(oldAddEmployee.getOwnerDeptQueryCode());
-
-            /** 员工档案*/
-            oldEmployeeFiles = getChangeValue(oldEmployeeFiles, addEmployee.getEmployeeName(),
-                    addEmployee.getIdentityNoType(), addEmployee.getIdentityNo(), addEmployee.getGender(),
-                    addEmployee.getBirthday(), addEmployee.getEmployeeNature(), addEmployee.getFamilyRegisterNature(),
-                    addEmployee.getMobile(), addEmployee.getSocialSecurityCity(), addEmployee.getProvidentFundCity(),
-                    addEmployee.getSocialSecurityStartTime(), addEmployee.getProvidentFundStartTime(),
-                    addEmployee.getEmail(), addEmployee.getHouseholdRegisterRemarks(),
-                    addEmployee.getSocialSecurityBase(), addEmployee.getProvidentFundBase(),
-                    addEmployee.getSWelfareHandler(), addEmployee.getGWelfareHandler(),
-                    addEmployee.getIsRetiredSoldier(), addEmployee.getIsPoorArchivists(), addEmployee.getIsDisabled());
-
-            employeeMaintainService.updateEmployeeFiles(oldEmployeeFiles);
-
-            boolean sIsOut = false, gIsOut = false;
-            if (StringUtils.isNotBlank(addEmployee.getSocialSecurityCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(addEmployee.getSocialSecurityCity()) < 0) {
-                sIsOut = true;
+            // 根据当前表单生成增员数据
+            UpdateAddEmployeeDto dto = addEmployeeService.getAddEmployeeData(updateAddEmployee, employeeFiles.getId());
+            EmployeeOrderForm newOrderForm = dto.getOrderForm();
+            SocialSecurityDeclare newSDeclare = dto.getSDeclare();
+            ProvidentFundDeclare newPDeclare = dto.getPDeclare();
+            if (newSDeclare == null && newPDeclare == null) {
+                newOrderForm = null;
             }
-            if (StringUtils.isNotBlank(addEmployee.getProvidentFundCity()) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(addEmployee.getProvidentFundCity()) < 0) {
-                gIsOut = true;
+            if (addEmployee.getId().equals(employeeFiles.getSbAddEmployeeId()) &&
+                    addEmployee.getId().equals(employeeFiles.getGjjAddEmployeeId())) {
+                String employeeOrderFormId = updateEmployeeOrderForm(newOrderForm, orderForm, true, true, newSDeclare, newPDeclare);
+                updateSocialSecurityDeclare(newSDeclare, sDeclare, employeeOrderFormId);
+                updateProvidentFundDeclare(newPDeclare, pDeclare, employeeOrderFormId);
+            }else if (addEmployee.getId().equals(employeeFiles.getSbAddEmployeeId())) {
+                String employeeOrderFormId = updateEmployeeOrderForm(newOrderForm, orderForm, true, false, newSDeclare, newPDeclare);
+                // 该增员表单对应社保数据
+                updateSocialSecurityDeclare(newSDeclare, sDeclare, employeeOrderFormId);
+
+            }else if (addEmployee.getId().equals(employeeFiles.getGjjAddEmployeeId())) {
+                String employeeOrderFormId = updateEmployeeOrderForm(newOrderForm, orderForm, false, true, newSDeclare, newPDeclare);
+                // 该增员表单对应公积金数据
+                updateProvidentFundDeclare(newPDeclare, pDeclare, employeeOrderFormId);
             }
+            // 更新增员表单
+            updateEmployeeService.updateAddEmployee(updateAddEmployee);
 
-            if (gIsOut && sIsOut) {
-                // 省外数据
-                if(StringUtils.isNotBlank(oldSocialSecurityDeclare.getId())){
-                    this.getBizObjectFacade().removeBizObject(this.getUserId(),
-                            Constants.PROVIDENT_FUND_DECLARE_SCHEMA, oldProvidentFundDeclare.getId());
-                }
-                if (StringUtils.isNotBlank(oldSocialSecurityDeclare.getId())) {
-                    this.getBizObjectFacade().removeBizObject(this.getUserId(),
-                            Constants.SOCIAL_SECURITY_DECLARE_SCHEMA, oldSocialSecurityDeclare.getId());
-                }
-                if (StringUtils.isNotBlank(oldEmployeeOrderForm.getId())) {
-                    this.getBizObjectFacade().removeBizObject(this.getUserId(),
-                            Constants.EMPLOYEE_ORDER_FORM_SCHEMA, oldEmployeeOrderForm.getId());
-                }
-                employeeMaintainService.updateAddEmployee(addEmployee.getId(), addEmployee.getAddEmployeeId());
-                return this.getOkResponseResult("success", "操作成功");
-            }
-            // 有省内数据
-            // 查询客户个性化设置
-            Ccps ccps = employeeMaintainService.getCcps(addEmployee.getFirstLevelClientName(), addEmployee.getSecondLevelClientName());
-            int sTimeNode=0,gTimeNode=0;
-            if (ccps != null) {
-                sTimeNode = ccps.getTimeNode();
-                gTimeNode = ccps.getTimeNode();
-            } else {
-                if (StringUtils.isNotBlank(addEmployee.getSocialSecurityCity())) {
-                    sTimeNode = employeeMaintainService.getTimeNode(addEmployee.getSocialSecurityCity());
-                }
-                if (StringUtils.isNotBlank(addEmployee.getProvidentFundCity())) {
-                    if (addEmployee.getProvidentFundCity().equals(addEmployee.getSocialSecurityCity())) {
-                        gTimeNode = sTimeNode;
-                    } else {
-                        gTimeNode = employeeMaintainService.getTimeNode(addEmployee.getProvidentFundCity());
-                    }
-                }
-            }
-            // 补缴月份
-            int sMonth = getMonthDifference(sTimeNode, new Date(), addEmployee.getSocialSecurityStartTime());
-            int gMonth = getMonthDifference(gTimeNode, new Date(), addEmployee.getProvidentFundStartTime());
-
-            // 运行负责人
-            OperateLeader operateLeader = getOperateLeader(addEmployee.getSocialSecurityCity(),
-                    addEmployee.getSWelfareHandler(), addEmployee.getProvidentFundCity(), addEmployee.getGWelfareHandler(),
-                    addEmployee.getSecondLevelClientName());
-
-            // 查询服务费
-            Double serviceFee = salesContractService.getFee(addEmployee.getSecondLevelClientName(),
-                    addEmployee.getEmployeeNature(), StringUtils.isNotBlank(addEmployee.getSocialSecurityCity()) ?
-                            addEmployee.getSocialSecurityCity() : addEmployee.getProvidentFundCity());
-
-            // 更新订单
-            EmployeeOrderForm employeeOrderForm = employeeMaintainService.getEmployeeOrderForm(
-                    addEmployee.getSocialSecurityCity(), addEmployee.getSocialSecurityStartTime(),
-                    addEmployee.getSocialSecurityBase(), addEmployee.getProvidentFundCity(),
-                    addEmployee.getProvidentFundStartTime(), addEmployee.getProvidentFundBase(),
-                    addEmployee.getCompanyProvidentFundBl(), addEmployee.getEmployeeProvidentFundBl(),
-                    sMonth, gMonth, ccps);
-            // TODO: 2020/4/16  businessType待确定
-            employeeOrderForm = setEmployeeOrderFormValue(employeeOrderForm, serviceFee, employeeOrderForm.getSum(),
-                    oldEmployeeFiles.getId(), addEmployee.getSWelfareHandler(), addEmployee.getGWelfareHandler(),
-                    addEmployee.getIdentityNoType(), addEmployee.getIdentityNo(), addEmployee.getEmployeeNature(),
-                    addEmployee.getFirstLevelClientName(), addEmployee.getSecondLevelClientName());
-
-            // 创建员工订单数据
-            String employeeOrderFormId = employeeMaintainService.createEmployeeOrderForm(this.getBizObjectFacade(),
-                    employeeOrderForm, addEmployee.getCreater(), addEmployee.getOwner(), addEmployee.getOwnerDeptId()
-                    , addEmployee.getOwnerDeptQueryCode());
-            if (StringUtils.isNotBlank(oldEmployeeOrderForm.getId())) {
-                // 原订单改为历史表单
-                employeeMaintainService.updateEmployeeOrderFormIsHistory(oldEmployeeOrderForm.getId());
-                // 修改申报表单订单id
-                employeeMaintainService.updateDeclareEmployeeOrderFormId(oldEmployeeOrderForm.getId(), employeeOrderFormId);
-            }
-            // 有社保申报
-            if (!sIsOut && addEmployee.getSocialSecurityStartTime() != null) {
-                if (StringUtils.isNotBlank(oldSocialSecurityDeclare.getId())) {
-                    // 更新
-                    oldSocialSecurityDeclare = getChangeValue(oldSocialSecurityDeclare,
-                            addEmployee.getSocialSecurityStartTime(), addEmployee.getEmployeeName(), addEmployee.getGender(),
-                            addEmployee.getIdentityNo(), addEmployee.getIdentityNoType(),
-                            addEmployee.getContractStartTime(), addEmployee.getContractEndTime(), addEmployee.getContractSalary(),
-                            addEmployee.getSocialSecurityBase(), addEmployee.getMobile(), addEmployee.getSWelfareHandler(),
-                            addEmployee.getBirthday(), operateLeader.getSocialSecurityLeader(), employeeOrderFormId,
-                            oldSocialSecurityDeclare.getStatus(), addEmployee.getFirstLevelClientName(), addEmployee.getSecondLevelClientName(),
-                            addEmployee.getSocialSecurityCity(), addEmployee.getRemark());
-                    oldSocialSecurityDeclare.setSocialSecurityDetail(employeeOrderForm.getSocialSecurityDetail());
-
-                    employeeMaintainService.updateSocialSecurityDeclare(oldSocialSecurityDeclare);
-                } else {
-                    // 新增
-                    SocialSecurityDeclare sDeclare = new SocialSecurityDeclare("PROCESSING", oldAddEmployee.getCreater(),
-                            oldAddEmployee.getCreatedDeptId(), oldAddEmployee.getCreatedTime(),
-                            oldAddEmployee.getOwner(), oldAddEmployee.getOwnerDeptId(),
-                            oldAddEmployee.getOwnerDeptQueryCode(), addEmployee.getSocialSecurityStartTime(),
-                            addEmployee.getEmployeeName(), addEmployee.getGender(), addEmployee.getIdentityNo(),
-                            addEmployee.getIdentityNoType(), addEmployee.getContractStartTime(),
-                            addEmployee.getContractEndTime(), addEmployee.getContractSalary(),
-                            addEmployee.getSocialSecurityBase(), addEmployee.getMobile(), addEmployee.getSWelfareHandler(),
-                            addEmployee.getBirthday(), operateLeader.getSocialSecurityLeader(), employeeOrderFormId,
-                            "待办",
-                            addEmployee.getFirstLevelClientName(), addEmployee.getSecondLevelClientName(),
-                            oldAddEmployee.getSubordinateDepartment(), addEmployee.getSocialSecurityCity(),
-                            addEmployee.getRemark());
-                    String sId = createSocialSecurityDeclare(sDeclare, oldAddEmployee.getCreater(), oldAddEmployee.getCreatedDeptId());
-                    // 创建子表数据
-                    employeeMaintainService.createSocialSecurityFundDetail(sId,
-                            employeeOrderForm.getSocialSecurityDetail(), Constants.SOCIAL_SECURITY_DETAIL);
-                }
-            } else if (StringUtils.isNotBlank(oldSocialSecurityDeclare.getId())) {
-                this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.SOCIAL_SECURITY_DECLARE_SCHEMA,
-                        oldSocialSecurityDeclare.getId());
-            }
-            // 有公积金申报
-            if (!gIsOut && addEmployee.getProvidentFundStartTime() != null) {
-                /** 企业缴存额, 个人缴存额, 缴存总额*/
-                Double corporatePayment = null, personalDeposit = null, totalDeposit = null;
-                List <Map <String, String>> details = employeeOrderForm.getProvidentFundDetail();
-                if (details != null && details.size() > 0) {
-                    corporatePayment = StringUtils.isNotBlank(details.get(0).get("company_money")) ?
-                            Double.parseDouble(details.get(0).get("company_money")) : null;
-                    personalDeposit = StringUtils.isNotBlank(details.get(0).get("employee_money")) ?
-                            Double.parseDouble(details.get(0).get("employee_money")) : null;
-                    totalDeposit = StringUtils.isNotBlank(details.get(0).get("sum")) ?
-                            Double.parseDouble(details.get(0).get("sum")) : null;
-                }
-                if (StringUtils.isNotBlank(oldProvidentFundDeclare.getId())) {
-                    // 更新
-                    oldProvidentFundDeclare = getChangeValue(oldProvidentFundDeclare, employeeOrderFormId,
-                            addEmployee.getEmployeeName(), addEmployee.getGender(), addEmployee.getBirthday(),
-                            addEmployee.getIdentityNoType(), addEmployee.getIdentityNo(), addEmployee.getGWelfareHandler(),
-                            addEmployee.getProvidentFundStartTime(), addEmployee.getProvidentFundBase(), corporatePayment,
-                            personalDeposit, totalDeposit, operateLeader.getProvidentFundLeader(), oldSocialSecurityDeclare.getStatus(),
-                            addEmployee.getProvidentFundCity(), addEmployee.getFirstLevelClientName(),
-                            addEmployee.getSecondLevelClientName());
-                    oldProvidentFundDeclare.setProvidentFundDetail(employeeOrderForm.getProvidentFundDetail());
-
-                    employeeMaintainService.updateProvidentFundDeclare(oldProvidentFundDeclare);
-                } else {
-                    // 新增
-                    ProvidentFundDeclare gDeclare = new ProvidentFundDeclare("PROCESSING", oldAddEmployee.getCreater(),
-                            oldAddEmployee.getCreatedDeptId(), oldAddEmployee.getCreatedTime(), oldAddEmployee.getOwner(),
-                            oldAddEmployee.getOwnerDeptId(), oldAddEmployee.getOwnerDeptQueryCode(), employeeOrderFormId,
-                            addEmployee.getEmployeeName(), addEmployee.getGender(), addEmployee.getBirthday(),
-                            addEmployee.getIdentityNoType(), addEmployee.getIdentityNo(), addEmployee.getGWelfareHandler(),
-                            addEmployee.getProvidentFundStartTime(), addEmployee.getProvidentFundBase(), corporatePayment,
-                            personalDeposit, totalDeposit, operateLeader.getProvidentFundLeader(), "待办",
-                            addEmployee.getProvidentFundCity(), addEmployee.getFirstLevelClientName(),
-                            addEmployee.getSecondLevelClientName(), oldAddEmployee.getSubordinateDepartment());
-
-                    String gId = createProvidentFundDeclare(gDeclare, oldAddEmployee.getCreater(), oldAddEmployee.getCreatedDeptId());
-                    // 创建子表数据
-                    employeeMaintainService.createSocialSecurityFundDetail(gId,
-                            employeeOrderForm.getProvidentFundDetail(), Constants.PROVIDENT_FUND_DETAIL);
-                }
-            } else if (StringUtils.isNotBlank(oldProvidentFundDeclare.getId())) {
-                this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
-                        oldEmployeeOrderForm.getId());
-            }
-
-            employeeMaintainService.updateAddEmployee(addEmployee.getId(), addEmployee.getAddEmployeeId());
             return this.getOkResponseResult("success", "操作成功");
         } catch (Exception e) {
             log.info(e.getMessage());
             return this.getErrResponseResult("error", 404l, e.getMessage());
+        }
+    }
+
+    private String updateEmployeeOrderForm(EmployeeOrderForm newOrderForm, EmployeeOrderForm orderForm, boolean sb,
+                                           boolean gjj, SocialSecurityDeclare newSDeclare,
+                                           ProvidentFundDeclare newPDeclare) throws Exception {
+        String employeeOrderFormId = "";
+        // 该增员表单对应社保，公积金数据
+        if (orderForm == null && newOrderForm != null) {
+            // 原来没有员工订单,现在有了,新增
+            ServiceChargeUnitPrice price = getServiceChargeUnitPrice(newOrderForm);
+            if (price != null) {
+                orderForm.setPrecollected(price.getPrecollected());
+                orderForm.setPayCycle(price.getPayCycle());
+            }
+            employeeOrderFormId = addEmployeeService.createEmployeeOrderForm(newOrderForm, this.getBizObjectFacade());
+            if (price != null) {
+                updateEmployeeService.addEmployeeOrderFormDetails(price, orderForm.getId());
+            }
+            return employeeOrderFormId;
+        } else if (orderForm != null && newOrderForm != null) {
+            // 更新员工订单社保，公积金数据
+            employeeOrderFormId = orderForm.getId();
+            if (sb && gjj) {
+                // 原增员数据申报了社保和公积金，更新社保，公积金数据
+                orderForm = updateEmployeeOrderFormSbData(orderForm, newOrderForm);
+                orderForm = updateEmployeeOrderFormGjjData(orderForm, newOrderForm);
+                // 删除员工订单的所有子表数据
+                updateEmployeeService.delEmployeeOrderFormDetails(orderForm.getId(), "3");
+                updateEmployeeService.addEmployeeOrderFormDetails(orderForm.getId(), newOrderForm.getPayBackList(),
+                        newOrderForm.getRemittanceList());
+            } else if (sb) {
+                // 更新订单的社保数据
+                orderForm = updateEmployeeOrderFormSbData(orderForm, newOrderForm);
+                // 删除员工订单的社保,服务费,增值税费,风险管理费,福利产品子表数据
+                updateEmployeeService.delEmployeeOrderFormDetails(orderForm.getId(), "1");
+                if (newSDeclare != null) {
+                    updateEmployeeService.addEmployeeOrderFormDetails(orderForm.getId(), newSDeclare.getPayBackList(),
+                            newSDeclare.getRemittanceList());
+                }
+            } else if (gjj) {
+                // 更新订单的公积金数据
+                orderForm = updateEmployeeOrderFormGjjData(orderForm, newOrderForm);
+                // 删除员工订单的公积金,服务费,增值税费,风险管理费,福利产品子表数据
+                updateEmployeeService.delEmployeeOrderFormDetails(orderForm.getId(), "2");
+                if (newPDeclare != null) {
+                    updateEmployeeService.addEmployeeOrderFormDetails(orderForm.getId(), newPDeclare.getPayBackList(),
+                            newPDeclare.getRemittanceList());
+                }
+            }
+        } else if (orderForm != null && newOrderForm == null){
+            if (sb && gjj) {
+                // 原增员数据申报了社保和公积金
+                this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
+                        employeeOrderFormId);
+                return employeeOrderFormId;
+            } else if (sb) {
+                // 删除订单的社保数据
+                if (orderForm.getProvidentFundBase() - 0d > 0d) {
+                    // 订单有公积金数据, 删除社保数据
+                    orderForm = updateEmployeeOrderFormSbData(orderForm, new EmployeeOrderForm());
+
+                    updateEmployeeService.delEmployeeOrderFormDetails(orderForm.getId(), "1");
+                } else {
+                    this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
+                            employeeOrderFormId);
+                    return employeeOrderFormId;
+                }
+            } else if (gjj) {
+                // 删除订单的公积金数据
+                if (orderForm.getSocialSecurityBase() - 0d > 0d) {
+                    // 订单有社保数据 ,删除公积金数据
+                    orderForm = updateEmployeeOrderFormGjjData(orderForm, new EmployeeOrderForm());
+                    updateEmployeeService.delEmployeeOrderFormDetails(orderForm.getId(), "2");
+                } else {
+                    this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
+                            employeeOrderFormId);
+                    return employeeOrderFormId;
+                }
+            }
+        }
+        ServiceChargeUnitPrice price = getServiceChargeUnitPrice(orderForm);
+        if (price != null) {
+            orderForm.setPrecollected(price.getPrecollected());
+            orderForm.setPayCycle(price.getPayCycle());
+            updateEmployeeService.addEmployeeOrderFormDetails(price, orderForm.getId());
+        }
+        updateEmployeeService.upateEmployeeOrderForm(orderForm);
+        return employeeOrderFormId;
+    }
+
+    private ServiceChargeUnitPrice getServiceChargeUnitPrice(EmployeeOrderForm newOrderForm) {
+        String city = StringUtils.isNotBlank(newOrderForm.getSocialSecurityCity()) ? newOrderForm.getSocialSecurityCity() :
+                newOrderForm.getProvidentFundCity();
+        ServiceChargeUnitPrice price = salesContractService.getServiceChargeUnitPrice(newOrderForm.getFirstLevelClientName(),
+                newOrderForm.getBusinessType(), Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(city) < 0 ? "省外" : "省内", city);
+        return  price;
+    }
+
+    private EmployeeOrderForm updateEmployeeOrderFormGjjData(EmployeeOrderForm orderForm,
+                                                             EmployeeOrderForm newOrderForm) {
+        orderForm.setProvidentFundStatus(newOrderForm.getProvidentFundStatus());
+        orderForm.setProvidentFundCity(newOrderForm.getProvidentFundCity());
+        orderForm.setGWelfareHandler(newOrderForm.getGWelfareHandler());
+        orderForm.setProvidentFundBase(newOrderForm.getProvidentFundBase());
+        orderForm.setProvidentFundChargeStart(newOrderForm.getProvidentFundChargeStart());
+        return orderForm;
+    }
+
+    private EmployeeOrderForm updateEmployeeOrderFormSbData(EmployeeOrderForm orderForm,
+                                                            EmployeeOrderForm newOrderForm) {
+        orderForm.setSocialSecurityStatus(newOrderForm.getSocialSecurityStatus());
+        orderForm.setSocialSecurityCity(newOrderForm.getSocialSecurityCity());
+        orderForm.setSWelfareHandler(newOrderForm.getSWelfareHandler());
+        orderForm.setSocialSecurityBase(newOrderForm.getSocialSecurityBase());
+        orderForm.setSocialSecurityChargeStart(newOrderForm.getSocialSecurityChargeStart());
+        return orderForm;
+    }
+
+    private void updateProvidentFundDeclare(ProvidentFundDeclare newPDeclare, ProvidentFundDeclare pDeclare,
+                                            String employeeOrderFormId) throws Exception {
+        // 原增员表单同时申报了，社保，公积金数据
+        if (newPDeclare != null && pDeclare == null) {
+            // 修改后增员有社保申报，原没有社保申报,此时新增社保申报数据
+            newPDeclare.setEmployeeOrderFormId(employeeOrderFormId);
+            addEmployeeService.createProvidentFundDeclare(newPDeclare, this.getBizObjectFacade(),
+                    this.getWorkflowInstanceFacade());
+        } else if (newPDeclare != null && pDeclare != null) {
+            // 修改后增员有社保申报，原也有社保申报,此时更新社保申报数据
+            newPDeclare.setEmployeeOrderFormId(employeeOrderFormId);
+            updateEmployeeService.updateProvidentFundDeclare(newPDeclare, pDeclare);
+        } else if (newPDeclare == null && pDeclare != null){
+            // 修改没有，原有，此时删除
+            this.getBizObjectFacade().removeBizObject(this.getUserId(),
+                    Constants.PROVIDENT_FUND_DECLARE_SCHEMA, pDeclare.getId());
+        }
+    }
+
+    private void updateSocialSecurityDeclare(SocialSecurityDeclare newSDeclare, SocialSecurityDeclare sDeclare,
+                                             String employeeOrderFormId) throws Exception{
+        // 原增员表单同时申报了，社保，公积金数据
+        if (newSDeclare != null && sDeclare == null) {
+            // 修改后增员有社保申报，原没有社保申报,此时新增社保申报数据
+            newSDeclare.setEmployeeOrderFormId(employeeOrderFormId);
+            addEmployeeService.createSocialSecurityDeclare(newSDeclare, this.getBizObjectFacade(),
+                    this.getWorkflowInstanceFacade());
+        } else if (newSDeclare != null && sDeclare != null) {
+            // 修改后增员有社保申报，原也有社保申报,此时更新社保申报数据
+            newSDeclare.setEmployeeOrderFormId(employeeOrderFormId);
+            updateEmployeeService.updateSocialSecurityDeclare(newSDeclare, sDeclare);
+        } else if (newSDeclare == null && sDeclare != null) {
+            // 修改没有，原有，此时删除
+            this.getBizObjectFacade().removeBizObject(this.getUserId(),
+                    Constants.SOCIAL_SECURITY_DECLARE_SCHEMA, sDeclare.getId());
         }
     }
 
@@ -1722,192 +1065,47 @@ public class EmployeeMaintainController extends BaseController {
     @ResponseBody
     public ResponseResult <String> shAddEmployeeUpdateSubmit(String id) {
         try {
-            ShAddEmployee shAddEmployee = updateEmployeeService.getShAddEmployeeUpdateById(id);
-            if (shAddEmployee == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到修改表单数据！");
-            }
-            // 判断是否是六安，是基数四舍五入取整
-            shAddEmployee = CommonUtils.needBaseRounding(shAddEmployee);
-            shAddEmployee = CommonUtils.processingIdentityNo(shAddEmployee);
+            ShAddEmployee updateAddEmployee = updateEmployeeService.getShAddEmployeeUpdateById(id);
+            updateAddEmployee = CommonUtils.processingIdentityNo(updateAddEmployee);
 
-            if ("一致".equals(shAddEmployee.getWhetherConsistent())) {
-                shAddEmployee.setProvidentFundStartTime(shAddEmployee.getBenefitStartTime());
+            if ("一致".equals(updateAddEmployee.getWhetherConsistent())) {
+                updateAddEmployee.setProvidentFundStartTime(updateAddEmployee.getBenefitStartTime());
             }
             // 获取原增员表单
-            ShAddEmployee oldShAddEmployee =
-                    addEmployeeService.getShAddEmployeeById(shAddEmployee.getShAddEmployeeId());
-            if (oldShAddEmployee == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到对应增员表单数据。");
-            }
-            //获取员工档案
-            EmployeeFiles oldEmployeeFiles =
-                    employeeFilesService.getEmployeeFilesByIdNoAndClientName(oldShAddEmployee.getIdentityNo(),
-                            oldShAddEmployee.getFirstLevelClientName(), oldShAddEmployee.getSecondLevelClientName());
+            ShAddEmployee addEmployee =
+                    addEmployeeService.getShAddEmployeeById(updateAddEmployee.getShAddEmployeeId());
 
-            // 员工订单实体
-            EmployeeOrderForm oldEmployeeOrderForm =
-                    addEmployeeService.getEmployeeOrderFormByEmployeeFilesId(oldEmployeeFiles.getId());
-            if (oldEmployeeOrderForm == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到员工订单数据！");
-            }
-            // 原社保申报实体
-            SocialSecurityDeclare oldSocialSecurityDeclare =
-                    getOldSocialSecurityDeclareByOrderFormId(oldEmployeeOrderForm.getId());
-            // 原公积金申报实体
-            ProvidentFundDeclare oldProvidentFundDeclare =
-                    getOldProvidentFundDeclareByOrderFormId(oldEmployeeOrderForm.getId());
+            // 获取原员工档案
+            EmployeeFiles employeeFiles = addEmployeeService.getEmployeeFilesByAddEmployeeId(addEmployee.getId());
 
-            // 基本信息还是原来的数据
-            shAddEmployee.setCreatedTime(oldShAddEmployee.getCreatedTime());
-            shAddEmployee.setCreater(oldShAddEmployee.getCreater());
-            shAddEmployee.setCreatedDeptId(oldShAddEmployee.getCreatedDeptId());
-            shAddEmployee.setOwner(oldShAddEmployee.getOwner());
-            shAddEmployee.setOwnerDeptId(oldShAddEmployee.getOwnerDeptId());
-            shAddEmployee.setOwnerDeptQueryCode(oldShAddEmployee.getOwnerDeptQueryCode());
-
-            /** 员工档案 更新*/
-            oldEmployeeFiles = getChangeValue(oldEmployeeFiles, shAddEmployee.getEmployeeName(),
-                    shAddEmployee.getIdentityNoType(), shAddEmployee.getIdentityNo(), shAddEmployee.getGender(),
-                    shAddEmployee.getBirthday(), "代理", oldEmployeeFiles.getHouseholdRegisterNature(),
-                    shAddEmployee.getMobile(), shAddEmployee.getCityName(), shAddEmployee.getCityName(),
-                    shAddEmployee.getBenefitStartTime(), shAddEmployee.getProvidentFundStartTime(),
-                    shAddEmployee.getMail(), shAddEmployee.getHouseholdRegisterRemarks(),
-                    shAddEmployee.getSocialSecurityBase(), shAddEmployee.getProvidentFundBase(),
-                    shAddEmployee.getWelfareHandler(), shAddEmployee.getWelfareHandler(),
-                    shAddEmployee.getIsRetiredSoldier(), shAddEmployee.getIsPoorArchivists(),
-                    shAddEmployee.getIsDisabled());
-            employeeMaintainService.updateEmployeeFiles(oldEmployeeFiles);
-
-            // 查询客户个性化设置
-            Ccps ccps = employeeMaintainService.getCcps(shAddEmployee.getFirstLevelClientName(), shAddEmployee.getSecondLevelClientName());
-            int timeNode = 0;
-            if (ccps != null) {
-                timeNode = ccps.getTimeNode();
-            } else {
-                if (StringUtils.isNotBlank(shAddEmployee.getCityName())) {
-                    timeNode = employeeMaintainService.getTimeNode(shAddEmployee.getCityName());
-                }
-            }
-            // 补缴月份
-            int sMonth = getMonthDifference(timeNode, new Date(), shAddEmployee.getBenefitStartTime());
-            int gMonth = getMonthDifference(timeNode, new Date(), shAddEmployee.getProvidentFundStartTime());
-
-            // 运行负责人
-            OperateLeader operateLeader = employeeMaintainService.getOperateLeader(shAddEmployee.getCityName(),
-                    shAddEmployee.getWelfareHandler(), shAddEmployee.getSecondLevelClientName());
-
-            // 查询服务费
-            Double serviceFee = salesContractService.getFee(shAddEmployee.getSecondLevelClientName(), "代理",
-                    shAddEmployee.getCityName());
-
-            EmployeeOrderForm employeeOrderForm = employeeMaintainService.getEmployeeOrderForm(
-                    shAddEmployee.getCityName(), shAddEmployee.getBenefitStartTime(),
-                    shAddEmployee.getSocialSecurityBase(), shAddEmployee.getCityName(),
-                    shAddEmployee.getProvidentFundStartTime(), shAddEmployee.getProvidentFundBase(),
-                    shAddEmployee.getPSupplementProvidentFund(), shAddEmployee.getUSupplementProvidentFund(), sMonth,
-                    gMonth, ccps);
-            // TODO: 2020/4/16  businessType待确定
-            employeeOrderForm = setEmployeeOrderFormValue(employeeOrderForm, serviceFee, employeeOrderForm.getSum(),
-                    oldEmployeeFiles.getId(), shAddEmployee.getWelfareHandler(), shAddEmployee.getWelfareHandler(),
-                    shAddEmployee.getIdentityNoType(), shAddEmployee.getIdentityNo(), "代理",
-                    shAddEmployee.getFirstLevelClientName(), shAddEmployee.getSecondLevelClientName());
-
-            // 创建员工订单数据
-            String employeeOrderFormId = employeeMaintainService.createEmployeeOrderForm(this.getBizObjectFacade(),
-                    employeeOrderForm, shAddEmployee.getCreater(), shAddEmployee.getOwner(),
-                    shAddEmployee.getOwnerDeptId(), shAddEmployee.getOwnerDeptQueryCode());
-            // 原订单改为历史表单
-            employeeMaintainService.updateEmployeeOrderFormIsHistory(oldEmployeeOrderForm.getId());
-            // 修改申报表单订单id
-            employeeMaintainService.updateDeclareEmployeeOrderFormId(oldEmployeeOrderForm.getId(), employeeOrderFormId);
-
-            if (shAddEmployee.getBenefitStartTime() != null) {
-                if (StringUtils.isNotBlank(oldSocialSecurityDeclare.getId())) {
-                    // 更新
-                    oldSocialSecurityDeclare = getChangeValue(oldSocialSecurityDeclare,
-                            shAddEmployee.getBenefitStartTime(), shAddEmployee.getEmployeeName(),
-                            shAddEmployee.getGender(),
-                            shAddEmployee.getIdentityNo(), shAddEmployee.getIdentityNoType(),
-                            oldSocialSecurityDeclare.getContractSigningDate(),
-                            oldSocialSecurityDeclare.getContractDeadline(), shAddEmployee.getSocialSecurityBase(),
-                            shAddEmployee.getSocialSecurityBase(), shAddEmployee.getMobile(),
-                            shAddEmployee.getWelfareHandler(), shAddEmployee.getBirthday(),
-                            operateLeader.getSocialSecurityLeader(), employeeOrderFormId,
-                            oldSocialSecurityDeclare.getStatus(), shAddEmployee.getFirstLevelClientName(),
-                            shAddEmployee.getSecondLevelClientName(), shAddEmployee.getCityName(),
-                            shAddEmployee.getInductionRemark());
-                    oldSocialSecurityDeclare.setSocialSecurityDetail(employeeOrderForm.getSocialSecurityDetail());
-
-                    employeeMaintainService.updateSocialSecurityDeclare(oldSocialSecurityDeclare);
+            if (updateAddEmployee.getSocialSecurityBase() - 0d > 0d) {
+                if(StringUtils.isBlank(employeeFiles.getSbAddEmployeeId()) || addEmployee.getId().equals(employeeFiles.getSbAddEmployeeId())) {
+                    // 此时是社保申报数据,员工档案原来没有社保数据，或者有当前表单饿数据
+                    employeeFiles.setSbAddEmployeeId(updateAddEmployee.getId());
+                    employeeFiles.setSocialSecurityCity(updateAddEmployee.getCityName());
+                    employeeFiles.setSocialSecurityChargeStart(updateAddEmployee.getBenefitStartTime());
+                    employeeFiles.setSocialSecurityBase(updateAddEmployee.getSocialSecurityBase());
+                    employeeFiles.setSWelfareHandler(updateAddEmployee.getWelfareHandler());
                 } else {
-                    // 新增
-                    SocialSecurityDeclare sDeclare = new SocialSecurityDeclare("PROCESSING", oldShAddEmployee.getCreater(),
-                            oldShAddEmployee.getCreatedDeptId(), oldShAddEmployee.getCreatedTime(),
-                            oldShAddEmployee.getOwner(), oldShAddEmployee.getOwnerDeptId(),
-                            oldShAddEmployee.getOwnerDeptQueryCode(), shAddEmployee.getBenefitStartTime(),
-                            shAddEmployee.getEmployeeName(), shAddEmployee.getGender(), shAddEmployee.getIdentityNo(),
-                            shAddEmployee.getIdentityNoType(), null, null, shAddEmployee.getSocialSecurityBase(),
-                            shAddEmployee.getSocialSecurityBase(), shAddEmployee.getMobile(),
-                            shAddEmployee.getWelfareHandler(), shAddEmployee.getBirthday(),
-                            operateLeader.getSocialSecurityLeader(), employeeOrderFormId, "待办",
-                            shAddEmployee.getFirstLevelClientName(), shAddEmployee.getSecondLevelClientName(),
-                            oldShAddEmployee.getSubordinateDepartment(), shAddEmployee.getCityName(),
-                            shAddEmployee.getInductionRemark());
-                    String sId = createSocialSecurityDeclare(sDeclare, oldShAddEmployee.getCreater(), oldShAddEmployee.getCreatedDeptId());
-                    // 创建子表数据
-                    employeeMaintainService.createSocialSecurityFundDetail(sId,
-                            employeeOrderForm.getSocialSecurityDetail(), Constants.SOCIAL_SECURITY_DETAIL);
+                    // 改员工档案对应的社保申报数据不是该增员数据，此时是新增
+                    throw new RuntimeException("员工档案已经存在了该员工的社保申报信息！");
                 }
-            } else if (StringUtils.isNotBlank(oldSocialSecurityDeclare.getId())) {
-                this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.SOCIAL_SECURITY_DECLARE_SCHEMA,
-                        oldSocialSecurityDeclare.getId());
             }
-
-            if (shAddEmployee.getProvidentFundStartTime() != null) {
-                /** 企业缴存额, 个人缴存额, 缴存总额*/
-                Double corporatePayment = null, personalDeposit = null, totalDeposit = null;
-                List <Map <String, String>> details = employeeOrderForm.getProvidentFundDetail();
-                if (details != null && details.size() > 0) {
-                    corporatePayment = StringUtils.isNotBlank(details.get(0).get("company_money")) ?
-                            Double.parseDouble(details.get(0).get("company_money")) : null;
-                    personalDeposit = StringUtils.isNotBlank(details.get(0).get("employee_money")) ?
-                            Double.parseDouble(details.get(0).get("employee_money")) : null;
-                    totalDeposit = StringUtils.isNotBlank(details.get(0).get("sum")) ?
-                            Double.parseDouble(details.get(0).get("sum")) : null;
-                }
-                if (StringUtils.isNotBlank(oldProvidentFundDeclare.getId())) {
-                    // 更新
-                    oldProvidentFundDeclare = getChangeValue(oldProvidentFundDeclare, employeeOrderFormId,
-                            shAddEmployee.getEmployeeName(), shAddEmployee.getGender(), shAddEmployee.getBirthday(),
-                            shAddEmployee.getIdentityNoType(), shAddEmployee.getIdentityNo(), shAddEmployee.getWelfareHandler(),
-                            shAddEmployee.getProvidentFundStartTime(), shAddEmployee.getProvidentFundBase(), corporatePayment,
-                            personalDeposit, totalDeposit, operateLeader.getProvidentFundLeader(), oldSocialSecurityDeclare.getStatus(),
-                            shAddEmployee.getCityName(), shAddEmployee.getFirstLevelClientName(),
-                            shAddEmployee.getSecondLevelClientName());
-                    oldProvidentFundDeclare.setProvidentFundDetail(employeeOrderForm.getProvidentFundDetail());
-
-                    employeeMaintainService.updateProvidentFundDeclare(oldProvidentFundDeclare);
+            if (updateAddEmployee.getProvidentFundBase() - 0d > 0d) {
+                if(StringUtils.isBlank(employeeFiles.getGjjAddEmployeeId()) || addEmployee.getId().equals(employeeFiles.getGjjAddEmployeeId())) {
+                    employeeFiles.setGjjAddEmployeeId(updateAddEmployee.getId());
+                    employeeFiles.setProvidentFundCity(updateAddEmployee.getCityName());
+                    employeeFiles.setSocialSecurityChargeStart(updateAddEmployee.getProvidentFundStartTime());
+                    employeeFiles.setProvidentFundBase(updateAddEmployee.getProvidentFundBase());
+                    employeeFiles.setGWelfareHandler(updateAddEmployee.getWelfareHandler());
                 } else {
-                    ProvidentFundDeclare gDeclare = new ProvidentFundDeclare("PROCESSING", oldShAddEmployee.getCreater(),
-                            oldShAddEmployee.getCreatedDeptId(), oldShAddEmployee.getCreatedTime(), oldShAddEmployee.getOwner(),
-                            oldShAddEmployee.getOwnerDeptId(), oldShAddEmployee.getOwnerDeptQueryCode(), employeeOrderFormId,
-                            shAddEmployee.getEmployeeName(), shAddEmployee.getGender(), shAddEmployee.getBirthday(),
-                            shAddEmployee.getIdentityNoType(), shAddEmployee.getIdentityNo(), shAddEmployee.getWelfareHandler(),
-                            shAddEmployee.getProvidentFundStartTime(), shAddEmployee.getProvidentFundBase(), corporatePayment,
-                            personalDeposit, totalDeposit, operateLeader.getProvidentFundLeader(), "待办",
-                            shAddEmployee.getCityName(), shAddEmployee.getFirstLevelClientName(),
-                            shAddEmployee.getSecondLevelClientName(), oldShAddEmployee.getSubordinateDepartment());
-                    String gId = createProvidentFundDeclare(gDeclare, oldShAddEmployee.getCreater(), oldShAddEmployee.getCreatedDeptId());
-                    // 创建子表数据
-                    employeeMaintainService.createSocialSecurityFundDetail(gId,
-                            employeeOrderForm.getProvidentFundDetail(), Constants.PROVIDENT_FUND_DETAIL);
+                    // 改员工档案对应的公积金申报数据不是该增员数据，此时是新增
+                    throw new RuntimeException("员工档案已经存在了该员工的公积金申报信息！");
                 }
-            } else if (StringUtils.isNotBlank(oldProvidentFundDeclare.getId())) {
-                this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
-                        oldEmployeeOrderForm.getId());
             }
-            employeeMaintainService.updateShAddEmployee(shAddEmployee.getId(), shAddEmployee.getShAddEmployeeId());
+            addEmployeeService.updateEmployeeFiles(employeeFiles);
 
+            updateEmployeeService.updateShAddEmployee(updateAddEmployee);
             return this.getOkResponseResult("success", "操作成功");
         } catch (Exception e) {
             log.info(e.getMessage());
@@ -1926,244 +1124,49 @@ public class EmployeeMaintainController extends BaseController {
     @ResponseBody
     public ResponseResult <String> qgAddEmployeeUpdateSubmit(String id) {
         try {
-            NationwideDispatch nationwideDispatch = updateEmployeeService.getQgAddEmployeeUpdateById(id);
-            if (nationwideDispatch == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到修改表单数据！");
-            }
-            // 判断是否是六安，是基数四舍五入取整
-            nationwideDispatch = CommonUtils.needBaseRounding(nationwideDispatch);
+            NationwideDispatch updateAddEmployee = updateEmployeeService.getQgAddEmployeeUpdateById(id);
 
-            nationwideDispatch = CommonUtils.processingIdentityNo(nationwideDispatch);
+            updateAddEmployee = CommonUtils.processingIdentityNo(updateAddEmployee);
 
             // 获取原增员表单
-            NationwideDispatch oldNationwideDispatch =
-                    addEmployeeService.getNationwideDispatchById(nationwideDispatch.getNationwideDispatchId());
-            if (oldNationwideDispatch == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到对应增员表单数据。");
-            }
+            NationwideDispatch addEmployee =
+                    addEmployeeService.getQgAddEmployeeById(updateAddEmployee.getNationwideDispatchId());
+
             //获取员工档案
-            EmployeeFiles oldEmployeeFiles =
-                    employeeFilesService.getEmployeeFilesByIdNoAndClientName(oldNationwideDispatch.getIdentityNo(),
-                            oldNationwideDispatch.getFirstLevelClientName(),
-                            oldNationwideDispatch.getSecondLevelClientName());
+            EmployeeFiles employeeFiles = addEmployeeService.getEmployeeFilesByAddEmployeeId(addEmployee.getId());
 
-            // 员工订单实体
-            EmployeeOrderForm oldEmployeeOrderForm =
-                    addEmployeeService.getEmployeeOrderFormByEmployeeFilesId(oldEmployeeFiles.getId());
-            if (oldEmployeeOrderForm == null) {
-                return this.getErrResponseResult("error", 404l, "没有获取到员工订单数据！");
-            }
-            // 原社保申报实体
-            SocialSecurityDeclare oldSocialSecurityDeclare =
-                    getOldSocialSecurityDeclareByOrderFormId(oldEmployeeOrderForm.getId());
-            // 原公积金申报实体
-            ProvidentFundDeclare oldProvidentFundDeclare =
-                    getOldProvidentFundDeclareByOrderFormId(oldEmployeeOrderForm.getId());
-
-            // 基本信息还是原来的数据
-            nationwideDispatch.setCreatedTime(oldNationwideDispatch.getCreatedTime());
-            nationwideDispatch.setCreater(oldNationwideDispatch.getCreater());
-            nationwideDispatch.setCreatedDeptId(oldNationwideDispatch.getCreatedDeptId());
-            nationwideDispatch.setOwner(oldNationwideDispatch.getOwner());
-            nationwideDispatch.setOwnerDeptId(oldNationwideDispatch.getOwnerDeptId());
-            nationwideDispatch.setOwnerDeptQueryCode(oldNationwideDispatch.getOwnerDeptQueryCode());
-
-            /** 员工档案 更新*/
-            oldEmployeeFiles = getChangeValue(oldEmployeeFiles, nationwideDispatch.getEmployeeName(),
-                    nationwideDispatch.getIdentityNoType(), nationwideDispatch.getIdentityNo(),
-                    nationwideDispatch.getGender(),
-                    nationwideDispatch.getBirthday(), "代理", oldEmployeeFiles.getHouseholdRegisterNature(),
-                    nationwideDispatch.getContactNumber(), nationwideDispatch.getInvolved(),
-                    nationwideDispatch.getInvolved(),
-                    nationwideDispatch.getSServiceFeeStartDate(), nationwideDispatch.getGServiceFeeStartDate(),
-                    nationwideDispatch.getEmployeeEmail(), nationwideDispatch.getHouseholdRegisterRemarks(),
-                    nationwideDispatch.getSocialInsuranceAmount(), nationwideDispatch.getProvidentFundAmount(),
-                    nationwideDispatch.getWelfareHandler(), nationwideDispatch.getWelfareHandler(),
-                    nationwideDispatch.getIsRetiredSoldier(), nationwideDispatch.getIsPoorArchivists(),
-                    nationwideDispatch.getIsDisabled());
-            employeeMaintainService.updateEmployeeFiles(oldEmployeeFiles);
-
-            // 查询征缴规则
-            CollectionRule collectionRule =
-                    collectionRuleService.getCollectionRuleByCity(nationwideDispatch.getInvolved());
-            // 查询客户个性化设置
-            Ccps ccps = employeeMaintainService.getCcps(nationwideDispatch.getFirstLevelClientName(),
-                    nationwideDispatch.getSecondLevelClientName());
-            int timeNode = 0;
-            if (ccps != null) {
-                timeNode = ccps.getTimeNode();
-            } else {
-                if (StringUtils.isNotBlank(nationwideDispatch.getInvolved())) {
-                    timeNode = employeeMaintainService.getTimeNode(nationwideDispatch.getInvolved());
-                }
-            }
-            // 补缴月份
-            int sMonth = getMonthDifference(timeNode, new Date(), nationwideDispatch.getSServiceFeeStartDate());
-            int gMonth = getMonthDifference(timeNode, new Date(), nationwideDispatch.getGServiceFeeStartDate());
-
-            // 运行负责人
-            OperateLeader operateLeader = employeeMaintainService.getOperateLeader(nationwideDispatch.getInvolved(),
-                    nationwideDispatch.getWelfareHandler(), nationwideDispatch.getSecondLevelClientName());
-
-            // 查询服务费
-            Double serviceFee = salesContractService.getFee(nationwideDispatch.getSecondLevelClientName(), "代理",
-                    nationwideDispatch.getInvolved());
-
-            /** 员工订单实体*/
-            String providentFundRatio = nationwideDispatch.getProvidentFundRatio();
-            Double companyRatio = 0.0;
-            Double employeeRatio = 0.0;
-            if (StringUtils.isNotBlank(providentFundRatio)) {
-                String[] ratioArr = providentFundRatio.split("\\+");
-                companyRatio = StringUtils.isNotBlank(ratioArr[0]) ? Double.parseDouble(ratioArr[0]) : 0.0;
-                employeeRatio = StringUtils.isNotBlank(ratioArr[1]) ? Double.parseDouble(ratioArr[1]) : 0.0;
-            }
-            EmployeeOrderForm employeeOrderForm = employeeMaintainService.getEmployeeOrderForm(
-                    nationwideDispatch.getInvolved(), nationwideDispatch.getSServiceFeeStartDate(),
-                    nationwideDispatch.getSocialInsuranceAmount(), nationwideDispatch.getInvolved(),
-                    nationwideDispatch.getGServiceFeeStartDate(), nationwideDispatch.getProvidentFundAmount(),
-                    companyRatio, employeeRatio, sMonth, gMonth, ccps);
-            // TODO: 2020/4/16  businessType待确定
-            employeeOrderForm = setEmployeeOrderFormValue(employeeOrderForm, serviceFee, employeeOrderForm.getSum(),
-                    oldEmployeeFiles.getId(), nationwideDispatch.getWelfareHandler(),
-                    nationwideDispatch.getWelfareHandler(),
-                    nationwideDispatch.getIdentityNoType(), nationwideDispatch.getIdentityNo(), "代理",
-                    nationwideDispatch.getFirstLevelClientName(), nationwideDispatch.getSecondLevelClientName());
-
-            // 创建员工订单数据
-            String employeeOrderFormId = employeeMaintainService.createEmployeeOrderForm(this.getBizObjectFacade(),
-                    employeeOrderForm, nationwideDispatch.getCreater(), nationwideDispatch.getOwner(),
-                    nationwideDispatch.getOwnerDeptId(), nationwideDispatch.getOwnerDeptQueryCode());
-            // 原订单改为历史表单
-            employeeMaintainService.updateEmployeeOrderFormIsHistory(oldEmployeeOrderForm.getId());
-            // 修改申报表单订单id
-            employeeMaintainService.updateDeclareEmployeeOrderFormId(oldEmployeeOrderForm.getId(), employeeOrderFormId);
-
-            if (nationwideDispatch.getSServiceFeeStartDate() != null) {
-                if (StringUtils.isNotBlank(oldSocialSecurityDeclare.getId())) {
-                    // 更新
-                    oldSocialSecurityDeclare = getChangeValue(oldSocialSecurityDeclare,
-                            nationwideDispatch.getSServiceFeeStartDate(), nationwideDispatch.getEmployeeName(),
-                            nationwideDispatch.getGender(), nationwideDispatch.getIdentityNo(),
-                            nationwideDispatch.getIdentityNoType(), oldSocialSecurityDeclare.getContractSigningDate(),
-                            oldSocialSecurityDeclare.getContractDeadline(), nationwideDispatch.getSocialInsuranceAmount(),
-                            nationwideDispatch.getSocialInsuranceAmount(), nationwideDispatch.getContactNumber(),
-                            nationwideDispatch.getWelfareHandler(), nationwideDispatch.getBirthday(),
-                            operateLeader.getSocialSecurityLeader(), employeeOrderFormId,
-                            oldSocialSecurityDeclare.getStatus(), nationwideDispatch.getFirstLevelClientName(),
-                            nationwideDispatch.getSecondLevelClientName(), nationwideDispatch.getInvolved(),
-                            nationwideDispatch.getRemark());
-                    oldSocialSecurityDeclare.setSocialSecurityDetail(employeeOrderForm.getSocialSecurityDetail());
-
-                    employeeMaintainService.updateSocialSecurityDeclare(oldSocialSecurityDeclare);
+            if (updateAddEmployee.getSocialInsuranceAmount() - 0d > 0d) {
+                if(StringUtils.isBlank(employeeFiles.getSbAddEmployeeId()) || addEmployee.getId().equals(employeeFiles.getSbAddEmployeeId())) {
+                    // 此时是社保申报数据,员工档案原来没有社保数据，或者有当前表单饿数据
+                    employeeFiles.setSbAddEmployeeId(updateAddEmployee.getId());
+                    employeeFiles.setSocialSecurityCity(updateAddEmployee.getInvolved());
+                    employeeFiles.setSocialSecurityChargeStart(updateAddEmployee.getSServiceFeeStartDate());
+                    employeeFiles.setSocialSecurityBase(updateAddEmployee.getSocialInsuranceAmount());
+                    employeeFiles.setSWelfareHandler(updateAddEmployee.getWelfareHandler());
                 } else {
-                    // 新增
-                    SocialSecurityDeclare sDeclare = new SocialSecurityDeclare("PROCESSING",
-                            oldNationwideDispatch.getCreater(), oldNationwideDispatch.getCreatedDeptId(),
-                            oldNationwideDispatch.getCreatedTime(), oldNationwideDispatch.getOwner(),
-                            oldNationwideDispatch.getOwnerDeptId(), oldNationwideDispatch.getOwnerDeptQueryCode(),
-                            nationwideDispatch.getSServiceFeeStartDate(), nationwideDispatch.getEmployeeName(),
-                            nationwideDispatch.getGender(), nationwideDispatch.getIdentityNo(),
-                            nationwideDispatch.getIdentityNoType(), null, null,
-                            nationwideDispatch.getSocialInsuranceAmount(),
-                            nationwideDispatch.getSocialInsuranceAmount(),
-                            nationwideDispatch.getContactNumber(), nationwideDispatch.getWelfareHandler(),
-                            nationwideDispatch.getBirthday(), operateLeader.getSocialSecurityLeader(),
-                            employeeOrderFormId, "待办", nationwideDispatch.getFirstLevelClientName(),
-                            nationwideDispatch.getSecondLevelClientName(),
-                            oldNationwideDispatch.getSubordinateDepartment(),
-                            nationwideDispatch.getInvolved(), nationwideDispatch.getRemark());
-                    String sId = createSocialSecurityDeclare(sDeclare, oldNationwideDispatch.getCreater(),
-                            oldNationwideDispatch.getCreatedDeptId());
-                    // 创建子表数据
-                    employeeMaintainService.createSocialSecurityFundDetail(sId,
-                            employeeOrderForm.getSocialSecurityDetail(), Constants.SOCIAL_SECURITY_DETAIL);
+                    // 改员工档案对应的社保申报数据不是该增员数据，此时是新增
+                    throw new RuntimeException("员工档案已经存在了该员工的社保申报信息！");
                 }
-            } else if (StringUtils.isNotBlank(oldSocialSecurityDeclare.getId())) {
-                this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.SOCIAL_SECURITY_DECLARE_SCHEMA,
-                        oldSocialSecurityDeclare.getId());
             }
-
-            if (nationwideDispatch.getGServiceFeeStartDate() != null) {
-                /** 企业缴存额, 个人缴存额, 缴存总额*/
-                Double corporatePayment = null, personalDeposit = null, totalDeposit = null;
-                List <Map <String, String>> details = employeeOrderForm.getProvidentFundDetail();
-                if (details != null && details.size() > 0) {
-                    corporatePayment = StringUtils.isNotBlank(details.get(0).get("company_money")) ?
-                            Double.parseDouble(details.get(0).get("company_money")) : null;
-                    personalDeposit = StringUtils.isNotBlank(details.get(0).get("employee_money")) ?
-                            Double.parseDouble(details.get(0).get("employee_money")) : null;
-                    totalDeposit = StringUtils.isNotBlank(details.get(0).get("sum")) ?
-                            Double.parseDouble(details.get(0).get("sum")) : null;
-                }
-                if (StringUtils.isNotBlank(oldProvidentFundDeclare.getId())) {
-                    // 更新
-                    oldProvidentFundDeclare = getChangeValue(oldProvidentFundDeclare, employeeOrderFormId,
-                            nationwideDispatch.getEmployeeName(), nationwideDispatch.getGender(),
-                            nationwideDispatch.getBirthday(), nationwideDispatch.getIdentityNoType(),
-                            nationwideDispatch.getIdentityNo(), nationwideDispatch.getWelfareHandler(),
-                            nationwideDispatch.getGServiceFeeStartDate(), nationwideDispatch.getProvidentFundAmount(),
-                            corporatePayment, personalDeposit, totalDeposit, operateLeader.getProvidentFundLeader(),
-                            oldSocialSecurityDeclare.getStatus(), nationwideDispatch.getInvolved(),
-                            nationwideDispatch.getFirstLevelClientName(), nationwideDispatch.getSecondLevelClientName());
-                    oldProvidentFundDeclare.setProvidentFundDetail(employeeOrderForm.getProvidentFundDetail());
-
-                    employeeMaintainService.updateProvidentFundDeclare(oldProvidentFundDeclare);
+            if (updateAddEmployee.getProvidentFundAmount() - 0d > 0d) {
+                if(StringUtils.isBlank(employeeFiles.getGjjAddEmployeeId()) || addEmployee.getId().equals(employeeFiles.getGjjAddEmployeeId())) {
+                    employeeFiles.setGjjAddEmployeeId(updateAddEmployee.getId());
+                    employeeFiles.setProvidentFundCity(updateAddEmployee.getInvolved());
+                    employeeFiles.setSocialSecurityChargeStart(updateAddEmployee.getGServiceFeeStartDate());
+                    employeeFiles.setProvidentFundBase(updateAddEmployee.getProvidentFundAmount());
+                    employeeFiles.setGWelfareHandler(updateAddEmployee.getWelfareHandler());
                 } else {
-                    ProvidentFundDeclare gDeclare = new ProvidentFundDeclare("PROCESSING", oldNationwideDispatch.getCreater(),
-                            oldNationwideDispatch.getCreatedDeptId(), oldNationwideDispatch.getCreatedTime(),
-                            oldNationwideDispatch.getOwner(), oldNationwideDispatch.getOwnerDeptId(), oldNationwideDispatch.getOwnerDeptQueryCode(),
-                            employeeOrderFormId, nationwideDispatch.getEmployeeName(), nationwideDispatch.getGender(),
-                            nationwideDispatch.getBirthday(), nationwideDispatch.getIdentityNoType(),
-                            nationwideDispatch.getIdentityNo(), nationwideDispatch.getWelfareHandler(),
-                            nationwideDispatch.getGServiceFeeStartDate(), nationwideDispatch.getProvidentFundAmount(),
-                            corporatePayment, personalDeposit, totalDeposit, operateLeader.getProvidentFundLeader(), "待办",
-                            nationwideDispatch.getInvolved(), nationwideDispatch.getFirstLevelClientName(),
-                            nationwideDispatch.getSecondLevelClientName(),
-                            nationwideDispatch.getSubordinateDepartment());
-                    String gId = createProvidentFundDeclare(gDeclare, oldNationwideDispatch.getCreater(),
-                            oldNationwideDispatch.getCreatedDeptId());
-                    // 创建子表数据
-                    employeeMaintainService.createSocialSecurityFundDetail(gId,
-                            employeeOrderForm.getProvidentFundDetail(), Constants.PROVIDENT_FUND_DETAIL);
+                    // 改员工档案对应的公积金申报数据不是该增员数据，此时是新增
+                    throw new RuntimeException("员工档案已经存在了该员工的公积金申报信息！");
                 }
-            } else if (StringUtils.isNotBlank(oldProvidentFundDeclare.getId())) {
-                this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
-                        oldEmployeeOrderForm.getId());
             }
+            addEmployeeService.updateEmployeeFiles(employeeFiles);
 
-            employeeMaintainService.updateQgAddEmployee(nationwideDispatch.getId(),
-                    nationwideDispatch.getNationwideDispatchId(), "add");
+            updateEmployeeService.updateQgAddEmployee(updateAddEmployee);
 
             return this.getOkResponseResult("success", "操作成功");
         } catch (Exception e) {
             log.info(e.getMessage());
-            return this.getErrResponseResult("error", 404l, e.getMessage());
-        }
-    }
-
-    /**
-     * 方法说明：修改员工钉钉状态为预点
-     * @param ids 表单id,多个id使用“,”隔开
-     * @param field 修改字段名称
-     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
-     * @author liulei
-     * @Date 2020/3/17 14:08
-     */
-    @GetMapping("/updateStatusToPrePoint")
-    @ResponseBody
-    public ResponseResult<String> updateStatusToPrePoint(String ids, String field) {
-        if (StringUtils.isBlank(ids)) {
-            return this.getErrResponseResult("error", 404l, "没有获取到ids！");
-        }
-        if (StringUtils.isBlank(field)) {
-            return this.getErrResponseResult("error", 404l, "没有获取到修改字段值！");
-        }
-        try {
-            employeeMaintainService.updateStatusToPrePoint(ids, field);
-            return this.getOkResponseResult("success", "操作成功！");
-        } catch (Exception e) {
-            log.error(e.getMessage());
             return this.getErrResponseResult("error", 404l, e.getMessage());
         }
     }
@@ -2204,7 +1207,6 @@ public class EmployeeMaintainController extends BaseController {
         try {
             // 获取当前表单的代办任务id
             List<Map<String, Object>> list = employeeMaintainService.getAddOrDelWorkItemId(ids, tableName);
-            String userId = this.getUserId();
             if (list != null && list.size() > 0) {
                 for (int i = 0; i < list.size(); i ++) {
                     String id = list.get(i).get("id").toString();
@@ -2212,17 +1214,135 @@ public class EmployeeMaintainController extends BaseController {
                     // 提交流程
                     this.getWorkflowInstanceFacade().submitWorkItem(this.getUserId(), workItemId, true);
                     if ("add".equals(type)) {
-                        this.addEmployeeSubmit(id);
+                        /*AddEmployee addEmployee = addEmployeeService.getAddEmployeeById(id);
+                        ResponseResult <QueryInfo> result = queryInfo(addEmployee.getCreater(),
+                                addEmployee.getIdentityNo(), addEmployee.getIdentityNoType(),
+                                addEmployee.getEmployeeNature(), addEmployee.getSocialSecurityBase() - 0d > 0d ?
+                                        addEmployee.getSocialSecurityCity() : null, addEmployee.getSWelfareHandler(),
+                                addEmployee.getProvidentFundBase() - 0d > 0d ? addEmployee.getProvidentFundCity() :
+                                        null, addEmployee.getGWelfareHandler());
+                        QueryInfo queryInfo = result.getData();
+                        if ("error".equals(result.getErrmsg())) {
+                            addEmployee.setReturnReason(queryInfo.getReturnReason());
+                            addEmployeeService.updateAddEmployee(addEmployee);
+                            continue;
+                        } else {
+                            addEmployee.setGender(queryInfo.getGender());
+                            addEmployee.setBirthday(queryInfo.getBirthday());
+                            addEmployee.setFirstLevelClientName(queryInfo.getFirstLevelClientName());
+                            addEmployee.setSecondLevelClientName(queryInfo.getSecondLevelClientName());
+                            addEmployee.setOperator(queryInfo.getOperator());
+                            addEmployee.setInquirer(queryInfo.getInquirer());
+                            addEmployee.setSubordinateDepartment(queryInfo.getSubordinateDepartment());
+                            addEmployeeService.updateAddEmployee(addEmployee);
+                            addEmployeeSubmit(addEmployee);
+                        }*/
                     } else if ("shAdd".equals(type)) {
-                        this.shAddEmployeeSubmit(id);
+                        /*ShAddEmployee shAddEmployee = addEmployeeService.getShAddEmployeeById(id);
+                        ResponseResult <QueryInfo> result = queryInfoShQgAdd(shAddEmployee.getIdentityNo(),
+                                shAddEmployee.getIdentityNoType(), shAddEmployee.getFirstLevelClientName(),
+                                shAddEmployee.getSecondLevelClientName(), shAddEmployee.getCityName(),
+                                shAddEmployee.getWelfareHandler());
+                        QueryInfo queryInfo = result.getData();
+                        if ("error".equals(result.getErrmsg())) {
+                            shAddEmployee.setReturnReason(queryInfo.getReturnReason());
+                            addEmployeeService.updateShAddEmployee(shAddEmployee);
+                            continue;
+                        } else {
+                            shAddEmployee.setGender(queryInfo.getGender());
+                            shAddEmployee.setBirthday(queryInfo.getBirthday());
+                            shAddEmployee.setBirthday(queryInfo.getBirthday());
+                            shAddEmployee.setOperator(queryInfo.getOperator());
+                            shAddEmployee.setInquirer(queryInfo.getInquirer());
+                            shAddEmployee.setSubordinateDepartment(queryInfo.getSubordinateDepartment());
+                            addEmployeeService.updateShAddEmployee(shAddEmployee);
+                            shAddEmployeeSubmit(shAddEmployee);
+                        }*/
                     } else if ("qgAdd".equals(type)) {
-                        this.qgAddEmployeeSubmit(id);
+                        /*NationwideDispatch qgAddEmployee = addEmployeeService.getQgAddEmployeeById(id);
+                        ResponseResult <QueryInfo> result = queryInfoShQgAdd(qgAddEmployee.getIdentityNo(),
+                                qgAddEmployee.getIdentityNoType(), qgAddEmployee.getFirstLevelClientName(),
+                                qgAddEmployee.getSecondLevelClientName(), qgAddEmployee.getInvolved(),
+                                qgAddEmployee.getWelfareHandler());
+                        QueryInfo queryInfo = result.getData();
+                        if ("error".equals(result.getErrmsg())) {
+                            qgAddEmployee.setReturnReason(queryInfo.getReturnReason());
+                            addEmployeeService.updateQgAddEmployee(qgAddEmployee);
+                            continue;
+                        } else {
+                            qgAddEmployee.setGender(queryInfo.getGender());
+                            qgAddEmployee.setBirthday(queryInfo.getBirthday());
+                            qgAddEmployee.setBirthday(queryInfo.getBirthday());
+                            qgAddEmployee.setOperator(queryInfo.getOperator());
+                            qgAddEmployee.setInquirer(queryInfo.getInquirer());
+                            qgAddEmployee.setSubordinateDepartment(queryInfo.getSubordinateDepartment());
+                            addEmployeeService.updateQgAddEmployee(qgAddEmployee);
+                            qgAddEmployeeSubmit(qgAddEmployee);
+                        }*/
                     } else if ("del".equals(type)) {
-                        this.deleteEmployeeSubmit(id);
+                        /*DeleteEmployee deleteEmployee = deleteEmployeeService.getDeleteEmployeeById(id);
+                        ResponseResult <QueryInfo> result = queryInfoDel(deleteEmployee.getCreater(),
+                                deleteEmployee.getIdentityNo(), deleteEmployee.getSocialSecurityEndTime() == null ?
+                                        null : deleteEmployee.getSocialSecurityCity(),
+                                deleteEmployee.getSWelfareHandler(),
+                                deleteEmployee.getProvidentFundEndTime() == null ? null :
+                                        deleteEmployee.getProvidentFundCity(), deleteEmployee.getGWelfareHandler());
+                        QueryInfo queryInfo = result.getData();
+                        if ("error".equals(result.getErrmsg())) {
+                            deleteEmployee.setReturnReason(queryInfo.getReturnReason());
+                            deleteEmployeeService.updateDeleteEmployee(deleteEmployee);
+                            continue;
+                        } else {
+                            deleteEmployee.setGender(queryInfo.getGender());
+                            deleteEmployee.setBirthday(queryInfo.getBirthday());
+                            deleteEmployee.setFirstLevelClientName(queryInfo.getFirstLevelClientName());
+                            deleteEmployee.setSecondLevelClientName(queryInfo.getSecondLevelClientName());
+                            deleteEmployee.setOperator(queryInfo.getOperator());
+                            deleteEmployee.setInquirer(queryInfo.getInquirer());
+                            deleteEmployee.setSubordinateDepartment(queryInfo.getSubordinateDepartment());
+                            deleteEmployeeService.updateDeleteEmployee(deleteEmployee);
+                            deleteEmployeeSubmit(deleteEmployee);
+                        }*/
                     } else if ("shDel".equals(type)) {
-                        this.shDeleteEmployeeSubmit(id);
+                        /*ShDeleteEmployee shDeleteEmployee = deleteEmployeeService.getShDeleteEmployeeById(id);
+                        ResponseResult <QueryInfo> result = queryInfoShQgDel(shDeleteEmployee.getFirstLevelClientName(),
+                                shDeleteEmployee.getSecondLevelClientName(), shDeleteEmployee.getIdentityNo());
+                        QueryInfo queryInfo = result.getData();
+                        if ("error".equals(result.getErrmsg())) {
+                            shDeleteEmployee.setReturnReason(queryInfo.getReturnReason());
+                            deleteEmployeeService.updateShDeleteEmployee(shDeleteEmployee);
+                            continue;
+                        } else {
+                            shDeleteEmployee.setGender(queryInfo.getGender());
+                            shDeleteEmployee.setBirthday(queryInfo.getBirthday());
+                            shDeleteEmployee.setFirstLevelClientName(queryInfo.getFirstLevelClientName());
+                            shDeleteEmployee.setSecondLevelClientName(queryInfo.getSecondLevelClientName());
+                            shDeleteEmployee.setOperator(queryInfo.getOperator());
+                            shDeleteEmployee.setInquirer(queryInfo.getInquirer());
+                            shDeleteEmployee.setSubordinateDepartment(queryInfo.getSubordinateDepartment());
+                            deleteEmployeeService.updateShDeleteEmployee(shDeleteEmployee);
+                            shDeleteEmployeeSubmit(shDeleteEmployee);
+                        }*/
                     } else if ("qgDel".equals(type)) {
-                        this.qgDeleteEmployeeSubmit(id);
+                        /*NationwideDispatch qgDeleteEmployee = deleteEmployeeService.getQgDeleteEmployeeById(id);
+                        ResponseResult <QueryInfo> result = queryInfoShQgDel(qgDeleteEmployee.getFirstLevelClientName(),
+                                qgDeleteEmployee.getSecondLevelClientName(), qgDeleteEmployee.getIdentityNo());
+                        QueryInfo queryInfo = result.getData();
+                        if ("error".equals(result.getErrmsg())) {
+                            qgDeleteEmployee.setReturnReason(queryInfo.getReturnReason());
+                            deleteEmployeeService.updateQgDeleteEmployee(qgDeleteEmployee);
+                            continue;
+                        } else {
+                            qgDeleteEmployee.setGender(queryInfo.getGender());
+                            qgDeleteEmployee.setBirthday(queryInfo.getBirthday());
+                            qgDeleteEmployee.setFirstLevelClientName(queryInfo.getFirstLevelClientName());
+                            qgDeleteEmployee.setSecondLevelClientName(queryInfo.getSecondLevelClientName());
+                            qgDeleteEmployee.setOperator(queryInfo.getOperator());
+                            qgDeleteEmployee.setInquirer(queryInfo.getInquirer());
+                            qgDeleteEmployee.setSubordinateDepartment(queryInfo.getSubordinateDepartment());
+                            deleteEmployeeService.updateQgDeleteEmployee(qgDeleteEmployee);
+                            qgDeleteEmployeeSubmit(qgDeleteEmployee);
+                        }*/
                     }
                 }
             }
@@ -2304,79 +1424,6 @@ public class EmployeeMaintainController extends BaseController {
     }
 
     /**
-     * 方法说明：创建公积金申报流程
-     * @return void
-     * @author liulei
-     * @Date 2020/4/16 17:29
-     */
-    private String createProvidentFundDeclare(ProvidentFundDeclare gDeclare, String creater, String createdDeptId) throws Exception {
-        BizObjectModel model =  GetBizObjectModelUntils.getProvidentFundDeclare(gDeclare);
-        String id = this.getBizObjectFacade().saveBizObjectModel(creater, model, "id");
-        String modelWfId = this.getWorkflowInstanceFacade().startWorkflowInstance(createdDeptId,
-                creater, Constants.PROVIDENT_FUND_DECLARE_SCHEMA_WF, id, true);
-        log.info("创建公积金申报业务对象成功：" + id + "; 启动公积金申报流程成功:" + modelWfId);
-        return id;
-    }
-
-    /**
-     * 方法说明：创建社保申报流程
-     * @return void
-     * @author liulei
-     * @Date 2020/4/16 17:29
-     */
-    private String createSocialSecurityDeclare(SocialSecurityDeclare sDeclare, String creater, String createdDeptId) throws Exception{
-        BizObjectModel model =  GetBizObjectModelUntils.getSocialSecurityDeclare(sDeclare);
-        String id = this.getBizObjectFacade().saveBizObjectModel(creater, model, "id");
-        String modelWfId = this.getWorkflowInstanceFacade().startWorkflowInstance(createdDeptId,
-                creater, Constants.SOCIAL_SECURITY_DECLARE_SCHEMA_WF, id, true);
-        log.info("创建社保申报业务对象成功：" + id + "; 启动社保申报流程成功:" + modelWfId);
-        return id;
-    }
-
-    /**
-     * 方法说明：创建公积金停缴流程
-     * @return void
-     * @author liulei
-     * @Date 2020/4/16 17:29
-     */
-    private String createProvidentFundClose(ProvidentFundClose gClose, String creater, String createdDeptId) throws Exception {
-        BizObjectModel model =  GetBizObjectModelUntils.getProvidentFundClose(gClose);
-        String id = this.getBizObjectFacade().saveBizObjectModel(creater, model, "id");
-        String modelWfId = this.getWorkflowInstanceFacade().startWorkflowInstance(createdDeptId,
-                creater, Constants.PROVIDENT_FUND_CLOSE_SCHEMA_WF, id, true);
-        log.info("创建公积金停缴业务对象成功：" + id + "; 启动公积金停缴流程成功:" + modelWfId);
-        return id;
-    }
-
-    /**
-     * 方法说明：创建社保停缴流程
-     * @return void
-     * @author liulei
-     * @Date 2020/4/16 17:29
-     */
-    private String createSocialSecurityClose(SocialSecurityClose sClose, String creater, String createdDeptId) throws Exception{
-        BizObjectModel model =  GetBizObjectModelUntils.getSocialSecurityClose(sClose);
-        String id = this.getBizObjectFacade().saveBizObjectModel(creater, model, "id");
-        String modelWfId = this.getWorkflowInstanceFacade().startWorkflowInstance(createdDeptId,
-                creater, Constants.SOCIAL_SECURITY_CLOSE_SCHEMA_WF, id, true);
-        log.info("创建社保停缴业务对象成功：" + id + "; 启动社保停缴流程成功:" + modelWfId);
-        return id;
-    }
-
-    /**
-     * 方法说明：创建入职通知流程
-     * @return void
-     * @author liulei
-     * @Date 2020/4/16 17:29
-     */
-    private void createEntryNotice(BizObjectModel entryNotice, String creater, String createdDeptId) throws Exception{
-        String id = this.getBizObjectFacade().saveBizObjectModel(creater, entryNotice, "id");
-        String modelWfId = this.getWorkflowInstanceFacade().startWorkflowInstance(createdDeptId,
-                creater, Constants.ENTRY_NOTICE_SCHEMA_WF, id, true);
-        log.info("创建入职通知业务对象成功：" + id + "; 启动入职通知流程成功:" + modelWfId);
-    }
-
-    /**
      * 方法说明：创建员工档案业务对象
      * @return void
      * @author liulei
@@ -2389,249 +1436,6 @@ public class EmployeeMaintainController extends BaseController {
         return id;
     }
 
-
-    /**
-     * 方法说明：获取社保申报
-     * @param id 员工订单id
-     * @return com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare
-     * @author liulei
-     * @Date 2020/4/17 17:45
-     */
-    private SocialSecurityDeclare getOldSocialSecurityDeclareByOrderFormId(String id) throws Exception {
-        SocialSecurityDeclare oldSocialSecurityDeclare = new SocialSecurityDeclare();
-        if (StringUtils.isNotBlank(id)) {
-            oldSocialSecurityDeclare = addEmployeeService.getSocialSecurityDeclareByOrderFormId(id);
-            if (oldSocialSecurityDeclare == null) {
-                oldSocialSecurityDeclare = new SocialSecurityDeclare();
-            }
-        }
-        return oldSocialSecurityDeclare;
-    }
-
-    /**
-     * 方法说明：获取公积金申报
-     * @param id 员工订单id
-     * @return com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare
-     * @author liulei
-     * @Date 2020/4/17 17:45
-     */
-    private ProvidentFundDeclare getOldProvidentFundDeclareByOrderFormId(String id) throws Exception {
-        ProvidentFundDeclare oldProvidentFundDeclare = new ProvidentFundDeclare();
-        if (StringUtils.isNotBlank(id)) {
-            oldProvidentFundDeclare = addEmployeeService.getProvidentFundDeclareByOrderFormId(id);
-            if (oldProvidentFundDeclare == null) {
-                oldProvidentFundDeclare = new ProvidentFundDeclare();
-            }
-        }
-        return oldProvidentFundDeclare;
-    }
-
-    /**
-     * 方法说明：获取社保停缴
-     * @param id 员工订单id
-     * @return com.authine.cloudpivot.web.api.entity.SocialSecurityClose
-     * @author liulei
-     * @Date 2020/4/17 17:45
-     */
-    private SocialSecurityClose getOldSocialSecurityCloseByOrderFormId(String id) throws Exception {
-        SocialSecurityClose sClose = new SocialSecurityClose();
-        if (StringUtils.isNotBlank(id)) {
-            sClose = addEmployeeService.getSocialSecurityCloseByOrderFormId(id);
-            if (sClose == null) {
-                sClose = new SocialSecurityClose();
-            }
-        }
-        return sClose;
-    }
-
-    /**
-     * 方法说明：获取公积金停缴
-     * @param id 员工订单id
-     * @return com.authine.cloudpivot.web.api.entity.ProvidentFundClose
-     * @author liulei
-     * @Date 2020/4/17 17:45
-     */
-    private ProvidentFundClose getOldProvidentFundCloseByOrderFormId(String id) throws Exception {
-        ProvidentFundClose gClose = new ProvidentFundClose();
-        if (StringUtils.isNotBlank(id)) {
-            gClose = addEmployeeService.getProvidentFundCloseByOrderFormId(id);
-            if (gClose == null) {
-                gClose = new ProvidentFundClose();
-            }
-        }
-        return gClose;
-    }
-
-    /**
-     * 方法说明：员工订单赋值
-     * @return com.authine.cloudpivot.web.api.entity.EmployeeOrderForm
-     * @author liulei
-     * @Date 2020/4/17 16:58
-     */
-    private EmployeeOrderForm setEmployeeOrderFormValue(EmployeeOrderForm employeeOrderForm, Double serviceFee,
-                                                        Double sum, String employeeFilesId, String sWelfareHandler,
-                                                        String gWelfareHandler, String identityNoType,
-                                                        String identityNo, String businessType,
-                                                        String firstLevelClientName, String secondLevelClientName) {
-        employeeOrderForm.setServiceFee(serviceFee);
-        employeeOrderForm.setTotal(sum + serviceFee);
-        employeeOrderForm.setEmployeeFilesId(employeeFilesId);
-        employeeOrderForm.setSWelfareHandler(sWelfareHandler);
-        employeeOrderForm.setGWelfareHandler(gWelfareHandler);
-        employeeOrderForm.setIdType(identityNoType);
-        employeeOrderForm.setIdentityNo(identityNo);
-        employeeOrderForm.setBusinessType(businessType);
-        employeeOrderForm.setFirstLevelClientName(firstLevelClientName);
-        employeeOrderForm.setSecondLevelClientName(secondLevelClientName);
-
-        return employeeOrderForm;
-    }
-
-    /**
-     * 方法说明：增员变更时，需要变更的公积金申报字段
-     * @return com.authine.cloudpivot.web.api.entity.EmployeeFiles
-     * @author liulei
-     * @Date 2020/4/17 14:15
-     */
-    private ProvidentFundDeclare getChangeValue(ProvidentFundDeclare oldProvidentFundDeclare,
-                                                String employeeOrderFormId, String employeeName, String gender,
-                                                Date birthday, String identityNoType, String identityNo,
-                                                String welfareHandler, Date startMonth, Double providentFundBase,
-                                                Double corporatePayment, Double personalDeposit, Double totalDeposit,
-                                                String operateLeader, String status, String city,
-                                                String firstLevelClientName, String secondLevelClientName) {
-        oldProvidentFundDeclare.setEmployeeOrderFormId(employeeOrderFormId);
-        oldProvidentFundDeclare.setEmployeeName(employeeName);
-        oldProvidentFundDeclare.setGender(gender);
-        oldProvidentFundDeclare.setBirthday(birthday);
-        oldProvidentFundDeclare.setIdentityNo(identityNo);
-        oldProvidentFundDeclare.setIdentityNoType(identityNoType);
-        oldProvidentFundDeclare.setWelfareHandler(welfareHandler);
-        oldProvidentFundDeclare.setStartMonth(startMonth);
-        oldProvidentFundDeclare.setProvidentFundBase(providentFundBase);
-        oldProvidentFundDeclare.setCorporatePayment(corporatePayment);
-        oldProvidentFundDeclare.setPersonalDeposit(personalDeposit);
-        oldProvidentFundDeclare.setTotalDeposit(totalDeposit);
-        oldProvidentFundDeclare.setOperateLeader(operateLeader);
-        oldProvidentFundDeclare.setStatus(status);
-        oldProvidentFundDeclare.setCity(city);
-        oldProvidentFundDeclare.setFirstLevelClientName(firstLevelClientName);
-        oldProvidentFundDeclare.setSecondLevelClientName(secondLevelClientName);
-
-        return oldProvidentFundDeclare;
-    }
-
-    /**
-     * 方法说明：增员变更时，需要变更的社保申报字段
-     * @return com.authine.cloudpivot.web.api.entity.EmployeeFiles
-     * @author liulei
-     * @Date 2020/4/17 14:15
-     */
-    private SocialSecurityDeclare getChangeValue(SocialSecurityDeclare oldSocialSecurityDeclare, Date startMonth,
-                                                 String employeeName, String gender, String identityNo,
-                                                 String identityNoType, Date contractSigningDate, Date contractDeadline,
-                                                 Double positiveSalary, Double basePay, String mobile,
-                                                 String welfareHandler, Date birthday, String operateLeader,
-                                                 String employeeOrderFormId, String status, String firstLevelClientName,
-                                                 String secondLevelClientName, String city, String remark) {
-        oldSocialSecurityDeclare.setStartMonth(startMonth);
-        oldSocialSecurityDeclare.setEmployeeName(employeeName);
-        oldSocialSecurityDeclare.setGender(gender);
-        oldSocialSecurityDeclare.setIdentityNo(identityNo);
-        oldSocialSecurityDeclare.setIdentityNoType(identityNoType);
-        oldSocialSecurityDeclare.setContractSigningDate(contractSigningDate);
-        oldSocialSecurityDeclare.setContractDeadline(contractDeadline);
-        oldSocialSecurityDeclare.setPositiveSalary(positiveSalary);
-        oldSocialSecurityDeclare.setBasePay(basePay);
-        oldSocialSecurityDeclare.setMobile(mobile);
-        oldSocialSecurityDeclare.setWelfareHandler(welfareHandler);
-        oldSocialSecurityDeclare.setBirthday(birthday);
-        oldSocialSecurityDeclare.setOperateLeader(operateLeader);
-        oldSocialSecurityDeclare.setEmployeeOrderFormId(employeeOrderFormId);
-        oldSocialSecurityDeclare.setStatus(status);
-        oldSocialSecurityDeclare.setFirstLevelClientName(firstLevelClientName);
-        oldSocialSecurityDeclare.setSecondLevelClientName(secondLevelClientName);
-        oldSocialSecurityDeclare.setCity(city);
-        oldSocialSecurityDeclare.setRemark(remark);
-
-        return oldSocialSecurityDeclare;
-    }
-
-    /**
-     * 方法说明：增员变更时，需要变更的员工档案字段
-     * @return com.authine.cloudpivot.web.api.entity.EmployeeFiles
-     * @author liulei
-     * @Date 2020/4/17 14:15
-     */
-    private EmployeeFiles getChangeValue(EmployeeFiles oldEmployeeFiles, String employeeName, String identityNoType,
-                                         String identityNo, String gender, Date birthday, String employeeNature,
-                                         String familyRegisterNature, String mobile, String socialSecurityCity,
-                                         String providentFundCity, Date socialSecurityStartTime,
-                                         Date providentFundStartTime, String email, String householdRegisterRemarks,
-                                         Double socialSecurityBase, Double providentFundBase, String sWelfareHandler,
-                                         String gWelfareHandler, String isRetiredSoldier, String isPoorArchivists,
-                                         String isDisabled) {
-        oldEmployeeFiles.setEmployeeName(employeeName);
-        oldEmployeeFiles.setIdType(identityNoType);
-        oldEmployeeFiles.setIdNo(identityNo);
-        oldEmployeeFiles.setGender(gender);
-        oldEmployeeFiles.setBirthDate(birthday);
-        oldEmployeeFiles.setEmployeeNature(employeeNature);
-        oldEmployeeFiles.setHouseholdRegisterNature(familyRegisterNature);
-        oldEmployeeFiles.setMobile(mobile);
-        oldEmployeeFiles.setSocialSecurityCity(socialSecurityCity);
-        oldEmployeeFiles.setProvidentFundCity(providentFundCity);
-        oldEmployeeFiles.setSocialSecurityChargeStart(socialSecurityStartTime);
-        oldEmployeeFiles.setProvidentFundChargeStart(providentFundStartTime);
-        oldEmployeeFiles.setEmail(email);
-        oldEmployeeFiles.setHouseholdRegisterRemarks(householdRegisterRemarks);
-        oldEmployeeFiles.setSocialSecurityBase(socialSecurityBase);
-        oldEmployeeFiles.setProvidentFundBase(providentFundBase);
-        oldEmployeeFiles.setSWelfareHandler(sWelfareHandler);
-        oldEmployeeFiles.setGWelfareHandler(gWelfareHandler);
-        oldEmployeeFiles.setIsRetiredSoldier(isRetiredSoldier);
-        oldEmployeeFiles.setIsPoorArchivists(isPoorArchivists);
-        oldEmployeeFiles.setIsDisabled(isDisabled);
-
-        return oldEmployeeFiles;
-    }
-
-    /**
-     * 方法说明：获取补缴月份
-     * @param node
-     * @param curTime 当前时间
-     * @param startTime 开始缴纳时间
-     * @return int
-     * @throws
-     * @author liulei
-     * @Date 2020/2/14 14:30
-     */
-    private int getMonthDifference(int node, Date curTime, Date startTime) throws Exception{
-        if (startTime == null) {
-            return  0;
-        }
-        Calendar cur = Calendar.getInstance();
-        cur.setTime(curTime);
-        Calendar start = Calendar.getInstance();
-        start.setTime(startTime);
-
-        int curYear = cur.get(Calendar.YEAR);
-        int curMonth = cur.get(Calendar.MONTH) + 1;
-        int curDay = cur.get(Calendar.DAY_OF_MONTH);
-
-        int startYear = start.get(Calendar.YEAR);
-        int startMonth = start.get(Calendar.MONTH) + 1;
-
-        if (curDay > node) {
-            curMonth++;
-        }
-
-        int monthDifference = (curYear - startYear) * 12 + (curMonth - startMonth);
-        monthDifference++;
-        return monthDifference;
-    }
-
-
     /**
      * 方法说明：减员时员工档案赋值
      * @return com.authine.cloudpivot.web.api.entity.EmployeeFiles
@@ -2640,97 +1444,48 @@ public class EmployeeMaintainController extends BaseController {
      */
     private EmployeeFiles setEmployeeFilesQuitInfo(EmployeeFiles employeeFiles, Date reportQuitDate,
                                                    String reportSeveranceOfficer, Date quitDate, Date sEndTime,
-                                                   Date gEndTime, String quitReason, String quitRemark) {
+                                                   Date gEndTime, String quitReason, String quitRemark,
+                                                   String delEmployeeId) {
         employeeFiles.setReportQuitDate(reportQuitDate);
         employeeFiles.setReportSeveranceOfficer(reportSeveranceOfficer);
         employeeFiles.setQuitDate(quitDate);
-        employeeFiles.setSocialSecurityChargeEnd(sEndTime);
-        employeeFiles.setProvidentFundChargeEnd(gEndTime);
         employeeFiles.setQuitReason(quitReason);
         employeeFiles.setQuitRemark(quitRemark);
+        if (sEndTime != null) {
+            employeeFiles.setSbDelEmployeeId(delEmployeeId);
+            employeeFiles.setSocialSecurityChargeEnd(sEndTime);
+        }
+        if (gEndTime != null) {
+            employeeFiles.setGjjDelEmployeeId(delEmployeeId);
+            employeeFiles.setProvidentFundChargeEnd(gEndTime);
+        }
         return employeeFiles;
     }
 
     /**
-     * 方法说明：获取社保，公积金运行负责人
-     * @param sCity 社保福利地
-     * @param sWelfareHandler 社保福利办理方
-     * @param gCity 公积金福利地
-     * @param gWelfareHandler 公积金福利办理方
-     * @param secondLevelClientName 二级客户名称
-     * @return com.authine.cloudpivot.web.api.entity.OperateLeader
+     * 方法说明：增减员客户取派；申报/停缴流程节点变化，更新订单，增员对应状态
+     * @param ids 表单id
+     * @param schemaCode 表单编码（增员客户：add_employee；减员客户：delete_employee；社保申报：social_security_declare；
+     *                             公积金申报：provident_fund_declare；社保停缴：social_security_close；
+     *                            公积金停缴：provident_fund_close；）
+     * @param status 状态 （增员客户、减员客户：取派；
+     *                      社保申报、公积金申报：在办、预点、在缴、驳回；
+     *                      社保停缴、公积金停缴：在办、停缴、驳回）
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
      * @author liulei
-     * @Date 2020/4/20 9:47
+     * @Date 2020/5/22 9:49
      */
-    private OperateLeader getOperateLeader(String sCity, String sWelfareHandler, String gCity, String gWelfareHandler,
-                                           String secondLevelClientName) throws Exception{
-        OperateLeader operateLeader = new OperateLeader();
-        if (StringUtils.isNotBlank(sCity) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(sCity) >= 0) {
-            operateLeader = employeeMaintainService.getOperateLeader(sCity, sWelfareHandler, secondLevelClientName);
+    @GetMapping("/updateStatus")
+    @ResponseBody
+    public ResponseResult<String> updateStatus(String ids, String schemaCode, String status) {
+        try {
+            employeeMaintainService.updateStatus(ids, schemaCode, status, this.getUserId(), this.getBizObjectFacade(),
+                    this.getWorkflowInstanceFacade());
+            return this.getOkResponseResult("success", "操作成功!");
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            return this.getErrResponseResult("error", 404l, e.getMessage());
         }
-        if (StringUtils.isNotBlank(gCity) && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(gCity) >= 0) {
-            if (!gCity.equals(sCity) || !sWelfareHandler.equals(gWelfareHandler)) {
-                OperateLeader operateLeader1 = employeeMaintainService.getOperateLeader(gCity, gWelfareHandler,
-                        secondLevelClientName);
-                operateLeader.setProvidentFundLeader(operateLeader1.getProvidentFundLeader());
-            }
-        }
-        return operateLeader;
     }
 
-    /**
-     * 方法说明：减员变更社保停缴
-     * @return com.authine.cloudpivot.web.api.entity.SocialSecurityClose
-     * @author liulei
-     * @Date 2020/4/20 13:42
-     */
-    private SocialSecurityClose getChangeValue(SocialSecurityClose securityClose, String employeeName, String gender,
-                                               Date birthday, String identityNoType, String identityNo,
-                                               String welfareHandler, Date startMonth, Date chargeEndMonth,
-                                               Double socialSecurityBase, String resignationRemarks,
-                                               String operateLeader, String firstLevelClientName,
-                                               String secondLevelClientName, String city) {
-        securityClose.setEmployeeName(employeeName);
-        securityClose.setGender(gender);
-        securityClose.setBirthday(birthday);
-        securityClose.setIdentityNoType(identityNoType);
-        securityClose.setIdentityNo(identityNo);
-        securityClose.setWelfareHandler(welfareHandler);
-        securityClose.setStartMonth(startMonth);
-        securityClose.setChargeEndMonth(chargeEndMonth);
-        securityClose.setSocialSecurityBase(socialSecurityBase);
-        securityClose.setResignationRemarks(resignationRemarks);
-        securityClose.setOperateLeader(operateLeader);
-        securityClose.setFirstLevelClientName(firstLevelClientName);
-        securityClose.setSecondLevelClientName(secondLevelClientName);
-        securityClose.setCity(city);
-        return securityClose;
-    }
-
-    /**
-     * 方法说明：减员变更公积金停缴
-     * @return com.authine.cloudpivot.web.api.entity.ProvidentFundClose
-     * @author liulei
-     * @Date 2020/4/20 13:55
-     */
-    private ProvidentFundClose getChangeValue(ProvidentFundClose fundClose, String employeeName, String gender,
-                                              Date birthday, String identityNoType, String identityNo,
-                                              String firstLevelClientName, String secondLevelClientName,
-                                              String welfareHandler, Date startMonth, Date chargeEndMonth,
-                                              Double providentFundBase, String operateLeader, String city) {
-        fundClose.setEmployeeName(employeeName);
-        fundClose.setGender(gender);
-        fundClose.setBirthday(birthday);
-        fundClose.setIdentityNoType(identityNoType);
-        fundClose.setIdentityNo(identityNo);
-        fundClose.setFirstLevelClientName(firstLevelClientName);
-        fundClose.setSecondLevelClientName(secondLevelClientName);
-        fundClose.setWelfareHandler(welfareHandler);
-        fundClose.setStartMonth(startMonth);
-        fundClose.setChargeEndMonth(chargeEndMonth);
-        fundClose.setProvidentFundBase(providentFundBase);
-        fundClose.setOperateLeader(operateLeader);
-        fundClose.setCity(city);
-        return fundClose;
-    }
 }

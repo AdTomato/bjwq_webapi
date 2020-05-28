@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.InsuranceAndHousingFundMapper">
+    <insert id="insertTempData" parameterType="java.util.List">
+        INSERT INTO import_insurance_and_housing_fund_temp
+        (id, source_id, sequenceNo, progress_status, progress_feedback, enjoy_feedback)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.source_id}, #{item.sequenceNo}, #{item.progress_status}, #{item.progress_feedback},
+            #{item.enjoy_feedback})
+        </foreach>
+    </insert>
+
+    <update id="updateEnjoyProgressByTempTable" parameterType="java.lang.String">
+        UPDATE ivdlf_enjoy_progress process
+            JOIN ivdlf_insurance_and_housing_fund card ON card.id = process.parentId
+            JOIN import_insurance_and_housing_fund_temp temp ON temp.sequenceNo = card.sequenceNo AND process.status = temp.progress_status
+        SET process.feedback = CONCAT(IFNULL(process.feedback,''), date_format(SYSDATE(), '%Y-%m-%d %H:%i' ), ':', IFNULL(temp.progress_feedback,' '), CHAR(10)),
+            process.feedback_hide = temp.progress_feedback
+        WHERE temp.source_id = #{sourceId}
+    </update>
+
+    <update id="updateProcessFeedbackByTempTable" parameterType="java.lang.String">
+        UPDATE ivdlf_insurance_and_housing_fund card
+            JOIN import_insurance_and_housing_fund_temp temp ON temp.sequenceNo = card.sequenceNo
+        SET card.progress_status = temp.progress_status,
+            card.progress_feedback = temp.progress_feedback
+        WHERE temp.source_id = #{sourceId}
+    </update>
+
+    <update id="updateEnjoyFeedbackByTempTable" parameterType="java.lang.String">
+        UPDATE ivdlf_insurance_and_housing_fund card
+            JOIN import_insurance_and_housing_fund_temp temp ON temp.sequenceNo = card.sequenceNo
+        SET card.enjoy_feedback = temp.enjoy_feedback,
+            card.enjoy_feedback_hide = temp.enjoy_feedback,
+            card.enjoy_feedbacks = CONCAT(IFNULL(card.enjoy_feedbacks,''), date_format(SYSDATE(), '%Y-%m-%d %H:%i' ), ':', IFNULL(temp.enjoy_feedback,' '), CHAR(10))
+        WHERE temp.source_id = #{sourceId}
+    </update>
+</mapper>

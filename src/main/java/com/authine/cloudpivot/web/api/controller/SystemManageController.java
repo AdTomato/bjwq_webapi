@@ -53,8 +53,8 @@ public class SystemManageController extends BaseController {
     @PostMapping("/sendSmsCode")
     public ResponseResult<Object> sendSmsCode(@RequestParam String mobile) {
         log.info("发送验证码，手机号码为：" + mobile);
-        OrgUser user = systemManageService.getOrgUserByMobile(mobile);
-        if (null == user) {
+        List<OrgUser> user = systemManageService.getOrgUserByMobile(mobile);
+        if (null == user || user.isEmpty()) {
             return this.getErrResponseResult(null, 404L, "该手机号码不存在系统中");
         }
         String userId = Constants.ADMIN_ID;
@@ -131,11 +131,13 @@ public class SystemManageController extends BaseController {
         if (second <= MAX_SECOND_DIFFERENCE) {
             // 在有效期内
             // 修改密码
-            OrgUser user = systemManageService.getOrgUserByMobile(mobile);
-            UserModel userModel = this.getOrganizationFacade().getUser(user.getId());
-            String pwd = PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(password);
-            userModel.setPassword(pwd);
-            this.getOrganizationFacade().updateUser(userModel);
+            List<OrgUser> users = systemManageService.getOrgUserByMobile(mobile);
+            for (OrgUser user : users) {
+                UserModel userModel = this.getOrganizationFacade().getUser(user.getId());
+                String pwd = PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(password);
+                userModel.setPassword(pwd);
+                this.getOrganizationFacade().updateUser(userModel);
+            }
             return getErrResponseResult(null, ErrCode.OK.getErrCode(), "密码修改成功");
         } else {
             // 不在有效期内

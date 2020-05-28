@@ -21,4 +21,17 @@ public interface SalesmansMaintainMapper {
      */
     SalesmansMaintain getSalesmansAndDepartment(String firstLevelClientName, String secondLevelClientName, String businessType, String welfare, String welfareOperator);
 
+    /**
+     * 方法说明：根据一级客户，二级客户，业务类型，福利地，福利办理方查询
+     * @param firstLevelClientName
+     * @param secondLevelClientName
+     * @param businessType
+     * @param city
+     * @param welfareHandler
+     * @return com.authine.cloudpivot.web.api.entity.SalesmansMaintain
+     * @author liulei
+     * @Date 2020/5/12 16:42
+     */
+    SalesmansMaintain getSalesmansMaintain(String firstLevelClientName, String secondLevelClientName,
+                                           String businessType, String city, String welfareHandler);
 }

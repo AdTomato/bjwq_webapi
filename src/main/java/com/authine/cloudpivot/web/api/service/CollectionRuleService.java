@@ -1,9 +1,6 @@
 package com.authine.cloudpivot.web.api.service;
 
 import com.authine.cloudpivot.web.api.entity.CollectionRule;
-import com.authine.cloudpivot.web.api.entity.CrmCollectionRule;
-
-import java.util.List;
 
 /**
  * @author liulei
@@ -12,26 +9,14 @@ import java.util.List;
  * @Date 2020/4/2 13:42
  **/
 public interface CollectionRuleService {
-    /**
-     * 方法说明：根据城市名称查询征缴规则
-     *
-     * @param city
-     * @return java.util.List<com.authine.cloudpivot.web.api.entity.CollectionRule>
-     * @author liulei
-     * @Date 2020/4/2 13:54
-     */
-    CollectionRule getCollectionRuleByCity(String city) throws Exception;
 
     /**
-     * 方法说明：根据福利地查询征缴规则
-     *
-     * @param socialSecurityCity
-     * @param providentFundCity
-     * @return com.authine.cloudpivot.web.api.entity.CollectionRule
+     * 方法说明：将有效终止月<当前时间的汇缴规则数据转移到历史数据中
+     * @return void
      * @author liulei
-     * @Date 2020/4/16 13:45
+     * @Date 2020/5/9 16:51
      */
-    CollectionRule getCollectionRuleByCity(String socialSecurityCity, String providentFundCity) throws Exception;
+    void moveCollectionRuleDataToHistory() throws Exception;
 
     /**
      * 根据城市、公司公积金比例查询最新的有效起始月中是否有满足条件的数据

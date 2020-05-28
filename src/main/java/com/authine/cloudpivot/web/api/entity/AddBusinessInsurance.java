@@ -22,66 +22,70 @@ public class AddBusinessInsurance extends BaseEntity {
      * 业务员
      */
     String salesman;
-
     /**
      * 部门
      */
     String department;
-
-    /**
-     * 公司
-     */
-    String clientName;
-
     /**
      * 姓名
      */
     String employeeName;
-
     /**
      * 身份证号码
      */
     String identityNo;
-
     /**
      * 银行卡号
      */
     String bankCardNumber;
-
     /**
      * 开户行
      */
     String bank;
-
-    /**
-     * 账号所有人姓名
-     */
-    String accountOwnerName;
-
     /**
      * 被保险人手机号
      */
     String mobile;
-
     /**
      * 商保套餐等级
      */
     String level;
-
     /**
      * 商保服务费
      */
     Double serviceFee;
-
     /**
      * 商保生效日
      */
     Date effectiveDate;
-
     /**
      * 商保套餐内容
      */
     String content;
+    /**
+     * 一级客户名称
+     */
+    String firstLevelClientName;
+    /**
+     * 二级客户名称
+     */
+    String secondLevelClientName;
+    /**
+     * 人员类别
+     */
+    String employeeType;
+    /**
+     * 办理状态
+     */
+    String status;
+    /**
+     * 主保险人姓名
+     */
+    String mainEmploeeName;
+    /**
+     * 主保险人身份证号
+     */
+    String mainIdentityNo;
 
     public AddBusinessInsurance(String id, UserModel user, DepartmentModel dept, String sequenceStatus, String salesman,
                                 String department, String clientName, String employeeName, String identityNo,
@@ -100,12 +104,12 @@ public class AddBusinessInsurance extends BaseEntity {
         setOwnerDeptQueryCode(dept.getQueryCode());
         this.salesman = salesman;
         this.department = department;
-        this.clientName = clientName;
+        this.firstLevelClientName = clientName;
         this.employeeName = employeeName;
         this.identityNo = identityNo;
         this.bankCardNumber = bankCardNumber;
         this.bank = bank;
-        this.accountOwnerName = accountOwnerName;
+        this.secondLevelClientName = accountOwnerName;
         this.mobile = mobile;
         this.level = level;
         this.serviceFee = serviceFee;

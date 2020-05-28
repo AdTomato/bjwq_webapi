@@ -3,64 +3,115 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.authine.cloudpivot.web.api.mapper.BusinessInsuranceMapper">
-
-    <!--根据商保增员表单id,生成人员信息表单-->
-    <insert id="addBusinessInsurance" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO i4fvb_business_insurance_info
-        (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime,
-        workflowInstanceId,sequenceNo, sequenceStatus, ownerDeptQueryCode, salesman, department, client_name,
-        employee_name, identityNo, bank_card_number, bank, account_owner_name, mobile, level, service_fee,
-        effective_date, content, employee_status)
-        SELECT
-        MD5(UUID()),name, creater, createdDeptId, owner, ownerDeptId, SYSDATE(), modifier, SYSDATE(), NULL, sequenceNo,
-        'COMPLETED', ownerDeptQueryCode, salesman, department, client_name, employee_name, identityNo,
-        bank_card_number, bank, account_owner_name, mobile, level, service_fee, effective_date, content, '在职'
-        FROM i4fvb_add_business_insurance WHERE ID IN
+    <select id="getAddBusinessInsurance" parameterType="java.util.List"
+            resultType="com.authine.cloudpivot.web.api.entity.AddBusinessInsurance">
+        SELECT * FROM i4fvb_add_business_insurance WHERE id IN
         <foreach item="item" collection="array" index="index" open="(" separator="," close=")">
             #{item}
         </foreach>
+    </select>
+
+    <select id="getDeleteBusinessInsurance" parameterType="java.util.List"
+            resultType="com.authine.cloudpivot.web.api.entity.DeleteBusinessInsurance">
+        SELECT * FROM i4fvb_delete_business_insurance WHERE id IN
+        <foreach item="item" collection="array" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getBusinessInsuranceInfoId" resultType="com.authine.cloudpivot.web.api.entity.BusinessInsuranceInfo">
+        SELECT *
+        FROM i4fvb_business_insurance_info
+        WHERE identityNo = #{identityNo}
+          AND first_level_client_name = #{firstLevelClientName}
+          AND second_level_client_name = #{secondLevelClientName}
+          AND (benefit_deadline IS NULL OR
+               date_format(benefit_deadline, '%Y-%m-%d') > date_format(SYSDATE(), '%Y-%m-%d'))
+            /*AND (employee_status IS NULL OR employee_status = '' OR employee_status = '在职')*/
+        ORDER BY createdTime LIMIT 0, 1
+    </select>
+
+    <select id="getChildrenInfoId" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT id
+        FROM i4fvb_children_info
+        WHERE children_identityNo = #{identityNo}
+          AND (benefit_deadline IS NULL OR
+               date_format(benefit_deadline, '%Y-%m-%d') > date_format(SYSDATE(), '%Y-%m-%d'))
+          AND parentId IN (SELECT ID
+                           FROM i4fvb_business_insurance_info
+                           WHERE first_level_client_name = #{firstLevelClientName}
+                             AND second_level_client_name = #{secondLevelClientName})
+    </select>
+
+    <select id="getUpdateBusinessInsurance" parameterType="java.util.List"
+            resultType="com.authine.cloudpivot.web.api.entity.UpdateBusinessInsurance">
+        SELECT * FROM i4fvb_update_business_insurance WHERE id IN
+        <foreach item="item" collection="array" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <insert id="addBusinessInsuranceInfoChild"
+            parameterType="com.authine.cloudpivot.web.api.entity.AddBusinessInsurance">
+        INSERT INTO i4fvb_children_info(children_name, children_identityNo, id, parentId, sortKey, level, service_fee,
+                                        effective_date, employee_status, benefit_deadline)
+            VALUES
+            (#{childrenName}, #{childrenIdentityNo}, #{id}, #{parentId}, #{sortKey}, #{level}, #{serviceFee},
+             #{effectiveDate}, #{employeeStatus}, #{benefitDeadline})
     </insert>
 
-    <!--根据商保增员表单id,生成子女信息表数据-->
-    <insert id="addBusinessInsuranceChildrenInfo" parameterType="java.util.List">
-        INSERT INTO i4fvb_children_info (children_name, children_identityNo, id, parentId, sortKey)
-        SELECT child.children_name, child.children_identityNo, MD5(UUID()), info.id, child.sortKey
-        FROM i4fvb_children_information child
-        JOIN i4fvb_add_business_insurance parent ON parent.id = child.parentId
-        JOIN i4fvb_business_insurance_info info ON parent.sequenceNo = info.sequenceNo
-        AND parent.client_name = info.client_name
-        AND parent.identityNo = info.identityNo
-        WHERE child.parentId IN
-        <foreach item="item" collection="array" index="index" open="(" separator="," close=")">
-            #{item}
-        </foreach>
+    <insert id="addBusinessInsuranceInfo" parameterType="com.authine.cloudpivot.web.api.entity.BusinessInsuranceInfo">
+        INSERT INTO i4fvb_business_insurance_info(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
+                                                  modifier, modifiedTime, workflowInstanceId, sequenceNo,
+                                                  sequenceStatus, ownerDeptQueryCode, salesman, department,
+                                                  employee_name, identityNo, bank_card_number, bank, mobile, level,
+                                                  service_fee, effective_date, content, employee_status,
+                                                  benefit_deadline, remarks, employee_files_id, first_level_client_name,
+                                                  second_level_client_name)
+            VALUES
+            (#{id}, #{name}, #{creater}, #{createdDeptId}, #{owner}, #{ownerDeptId}, #{createdTime}, #{modifier},
+             #{modifiedTime}, #{workflowInstanceId}, #{sequenceNo},  #{sequenceStatus}, #{ownerDeptQueryCode}, #{salesman}, #{department},
+             #{employeeName}, #{identityNo}, #{bankCardNumber}, #{bank}, #{mobile}, #{level}, #{serviceFee},
+             #{effectiveDate}, #{content}, #{employee_status}, #{benefit_deadline}, #{remarks}, #{employeeFilesId}, #{firstLevelClientName},
+             #{secondLevelClientName})
     </insert>
 
-    <!--根据商保减员表单id，修改对应人员信息表单的福利截止时间，备注-->
-    <update id="updateBenefitDeadlineAndRemarks" parameterType="java.util.List">
-        UPDATE i4fvb_business_insurance_info info
-        INNER JOIN i4fvb_delete_business_insurance del ON info.client_name = del.client_name
-        AND info.identityNo = del.identityNo
-        SET info.benefit_deadline = del.benefit_deadline,
-        info.remarks = del.remarks
-        WHERE del.id IN
-        <foreach item="item" collection="array" index="index" open="(" separator="," close=")">
-            #{item}
-        </foreach>
+    <update id="updateChildrenInfo" parameterType="com.authine.cloudpivot.web.api.entity.BusinessInsuranceInfoChild">
+        UPDATE i4fvb_children_info
+        SET children_name       = #{childrenName},
+            children_identityNo = #{childrenIdentityNo},
+            parentId            = #{parentId},
+            sortKey             = #{sortKey},
+            level               = #{level},
+            service_fee         = #{serviceFee},
+            effective_date      = #{effectiveDate},
+            employee_status     = #{employeeStatus},
+            benefit_deadline    = #{benefitDeadline}
+        WHERE id = #{id}
     </update>
 
     <!--根据商保变更表单id,修改人员信息表单的商保信息（商保套餐等级，服务费，生效日，套餐内容）-->
-    <update id="updateBusinessInsuranceInfo" parameterType="java.util.List">
-        UPDATE i4fvb_business_insurance_info info
-        INNER JOIN i4fvb_update_business_insurance source ON info.id = source.business_insurance_info_id
-        SET info.level = source.after_level,
-        info.service_fee = source.after_service_fee,
-        info.effective_date = source.after_effective_date,
-        info.content = source.after_content
-        WHERE source.id IN
-        <foreach item="item" collection="array" index="index" open="(" separator="," close=")">
-            #{item}
-        </foreach>
+    <update id="updateBusinessInsuranceInfo"
+            parameterType="com.authine.cloudpivot.web.api.entity.BusinessInsuranceInfo">
+        UPDATE i4fvb_business_insurance_info
+        SET salesman                 = #{salesman},
+            department               = #{department},
+            employee_name            = #{employeeName},
+            identityNo               = #{identityNo},
+            bank_card_number         = #{bankCardNumber},
+            bank                     = #{bank},
+            mobile                   = #{mobile},
+            level                    = #{level},
+            service_fee              = #{serviceFee},
+            effective_date           = #{effectiveDate},
+            content                  = #{content},
+            employee_status          = #{employeeStatus},
+            benefit_deadline         = #{benefitDeadline},
+            remarks                  = #{remarks},
+            employee_files_id        = #{employeeFilesId},
+            first_level_client_name  = #{firstLevelClientName},
+            second_level_client_name = #{secondLevelClientName}
+        WHERE id = #{id}
     </update>
 
     <!--根据客户名称，身份证号码修改员工补充福利的员工状态-->
@@ -85,47 +136,72 @@
             <if test="identityNo != null">
                 AND identityNo = #{identityNo}
             </if>
-            <if test="clientName != null">
-                AND client_name = #{clientName}
+            <if test="firstLevelClientName != null">
+                AND first_level_client_name = #{firstLevelClientName}
+            </if>
+            <if test="secondLevelClientName != null">
+                AND second_level_client_name = #{secondLevelClientName}
             </if>
         </where>
     </update>
 
+    <update id="updateBusinessInsuranceInfoChildEmployeeStatus">
+        UPDATE i4fvb_children_info
+        SET employee_status = #{status}
+        WHERE children_identityNo = #{identityNo}
+          AND parentId IN (SELECT id
+                           FROM i4fvb_business_insurance_info
+                           WHERE first_level_client_name = #{firstLevelClientName}
+                             AND second_level_client_name = #{secondLevelClientName})
+    </update>
+
     <insert id="batchInsertAddBusinessInsurance" parameterType="java.util.List">
-        INSERT INTO i4fvb_add_business_insurance (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
-        modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode, salesman,
-        department, client_name, employee_name, identityNo, bank_card_number, bank, account_owner_name, mobile, level,
-        service_fee, effective_date, content)
+        INSERT INTO i4fvb_add_business_insurance
+        (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId,
+        sequenceNo, sequenceStatus, ownerDeptQueryCode, salesman, department, employee_name, identityNo,
+        bank_card_number, bank, mobile, level, service_fee, effective_date, content, first_level_client_name,
+        second_level_client_name, employee_type, status, main_emploee_name, main_identityNo)
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">
-            (#{item.id}, #{item.name},
-            #{item.creater},#{item.createdDeptId},#{item.owner},#{item.ownerDeptId},#{item.createdTime},
-            #{item.modifier},#{item.modifiedTime}, #{item.workflowInstanceId},#{item.sequenceNo},
-            #{item.sequenceStatus}, #{item.ownerDeptQueryCode},#{item.salesman}, #{item.department}, #{item.clientName},
-            #{item.employeeName},#{item.identityNo}, #{item.bankCardNumber}, #{item.bank},#{item.accountOwnerName},
-            #{item.mobile}, #{item.level}, #{item.serviceFee},#{item.effectiveDate}, #{item.content})
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner}, #{item.ownerDeptId},
+            #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId}, #{item.sequenceNo},
+            #{item.sequenceStatus}, #{item.ownerDeptQueryCode}, #{item.salesman}, #{item.department},
+            #{item.employee_name}, #{item.identityNo}, #{item.bank_card_number}, #{item.bank}, #{item.mobile},
+            #{item.level}, #{item.service_fee}, #{item.effective_date}, #{item.content},
+            #{item.first_level_client_name}, #{item.second_level_client_name}, #{item.employee_type}, #{item.status},
+            #{item.main_emploee_name}, #{item.main_identityNo})
         </foreach>
     </insert>
 
-    <insert id="batchInsertChildrenInformation" parameterType="java.util.List">
-        INSERT INTO i4fvb_children_information ( children_name, children_identityNo, id, parentId, sortKey)
+    <insert id="batchInsertUpdateBusinessInsurance" parameterType="java.util.List">
+        INSERT INTO i4fvb_update_business_insurance
+        (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId,
+        sequenceNo, sequenceStatus, ownerDeptQueryCode, business_insurance_info_id, identityNo, change_date,
+        before_level, before_service_fee, before_effective_date, before_content, after_level, after_service_fee,
+        after_effective_date, after_content, first_level_client_name, second_level_client_name)
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">
-            (#{item.childrenName}, #{item.childrenIdentityNo},#{item.id},#{item.parentId},#{item.sortKey})
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner}, #{item.ownerDeptId},
+            #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId}, #{item.sequenceNo},
+            #{item.sequenceStatus}, #{item.ownerDeptQueryCode}, #{item.business_insurance_info_id}, #{item.identityNo},
+            #{item.change_date}, #{item.before_level}, #{item.before_service_fee}, #{item.before_effective_date},
+            #{item.before_content}, #{item.after_level}, #{item.after_service_fee}, #{item.after_effective_date},
+            #{item.after_content}, #{item.first_level_client_name}, #{item.second_level_client_name})
         </foreach>
     </insert>
 
     <insert id="batchInsertDeleteBusinessInsurance" parameterType="java.util.List">
-        INSERT INTO i4fvb_delete_business_insurance (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
-        modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode, salesman,
-        department, client_name, employee_name, identityNo, benefit_deadline, remarks)
+        INSERT INTO i4fvb_delete_business_insurance
+        (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId,
+        sequenceNo, sequenceStatus, ownerDeptQueryCode, salesman, department, employee_name, identityNo,
+        benefit_deadline, remarks, first_level_client_name, second_level_client_name, status)
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">
-            (#{item.id}, #{item.name},
-            #{item.creater},#{item.createdDeptId},#{item.owner},#{item.ownerDeptId},#{item.createdTime},
-            #{item.modifier},#{item.modifiedTime}, #{item.workflowInstanceId},#{item.sequenceNo},
-            #{item.sequenceStatus}, #{item.ownerDeptQueryCode},#{item.salesman}, #{item.department}, #{item.clientName},
-            #{item.employeeName},#{item.identityNo}, #{item.benefitDeadline}, #{item.remarks})
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner}, #{item.ownerDeptId},
+            #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId}, #{item.sequenceNo},
+            #{item.sequenceStatus}, #{item.ownerDeptQueryCode}, #{item.salesman}, #{item.department},
+            #{item.employee_name}, #{item.identityNo}, #{item.benefit_deadline}, #{item.remarks},
+            #{item.first_level_client_name}, #{item.second_level_client_name}, #{item.status})
         </foreach>
     </insert>
 </mapper>

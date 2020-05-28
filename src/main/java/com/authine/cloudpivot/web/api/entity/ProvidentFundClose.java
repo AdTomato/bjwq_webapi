@@ -80,39 +80,47 @@ public class ProvidentFundClose extends BaseEntity {
 
     String subordinateDepartment;
     String city;
+    String operator;
+    String inquirer;
+    String employeeFilesId;
+    String delEmployeeId;
 
-    public ProvidentFundClose(String sequenceStatus, String creater, String createdDeptId, Date createdTime, String owner, String ownerDeptId, String ownerDeptQueryCode,
-                              String employeeOrderFormId, String employeeName, String gender, Date birthday,
-                              String identityNoType, String identityNo, String firstLevelClientName,
-                              String secondLevelClientName, String welfareHandler, Date startMonth, Date chargeEndMonth,
-                              Double providentFundBase, Double enterpriseDeposit, Double personalDeposit,
-                              Double totalDeposit, String operateLeader, String status, String subordinateDepartment,
-                              String city) {
-        this.creater = creater;
-        this.createdDeptId = createdDeptId;
-        this.createdTime = createdTime;
-        this.sequenceStatus = sequenceStatus;
-        this.owner = owner;
-        this.ownerDeptId = ownerDeptId;
-        this.ownerDeptQueryCode = ownerDeptQueryCode;
+    public ProvidentFundClose(DeleteEmployee delEmployee, EmployeeFiles employeeFiles, String employeeOrderFormId) {
+        this.name = delEmployee.getName();
+        this.creater = delEmployee.getCreater();
+        this.createdDeptId = delEmployee.getCreatedDeptId();
+        this.owner = delEmployee.getOwner();
+        this.ownerDeptId = delEmployee.getOwnerDeptId();
+        this.createdTime = delEmployee.getCreatedTime();
+        this.modifier = delEmployee.getModifier();
+        this.modifiedTime = delEmployee.getModifiedTime();
+        this.workflowInstanceId = null;
+        this.sequenceNo = null;
+        this.sequenceStatus = "PROCESSING";
+        this.ownerDeptQueryCode = delEmployee.getOwnerDeptQueryCode();
+
         this.employeeOrderFormId = employeeOrderFormId;
-        this.employeeName = employeeName;
-        this.gender = gender;
-        this.birthday = birthday;
-        this.identityNoType = identityNoType;
-        this.identityNo = identityNo;
-        this.firstLevelClientName = firstLevelClientName;
-        this.secondLevelClientName = secondLevelClientName;
-        this.welfareHandler = welfareHandler;
-        this.startMonth = startMonth;
-        this.chargeEndMonth = chargeEndMonth;
-        this.providentFundBase = providentFundBase;
-        this.enterpriseDeposit = enterpriseDeposit;
+        this.employeeName = delEmployee.getEmployeeName();
+        this.gender = delEmployee.getGender();
+        this.birthday = delEmployee.getBirthday();
+        this.identityNoType = delEmployee.getIdentityNoType();
+        this.identityNo = delEmployee.getIdentityNo();
+        this.firstLevelClientName = delEmployee.getFirstLevelClientName();
+        this.secondLevelClientName = delEmployee.getSecondLevelClientName();
+        this.welfareHandler = delEmployee.getGWelfareHandler();
+        this.startMonth = employeeFiles.getProvidentFundChargeStart();
+        this.chargeEndMonth = delEmployee.getProvidentFundEndTime();
+        this.providentFundBase = employeeFiles.getProvidentFundBase();
+        /*this.enterpriseDeposit = enterpriseDeposit;
         this.personalDeposit = personalDeposit;
         this.totalDeposit = totalDeposit;
-        this.operateLeader = operateLeader;
-        this.status = status;
-        this.subordinateDepartment = subordinateDepartment;
-        this.city = city;
+        this.operateLeader = operateLeader;*/
+        this.status = "待办";
+        this.subordinateDepartment = delEmployee.getSubordinateDepartment();
+        this.city = delEmployee.getProvidentFundCity();
+        this.operator = delEmployee.getOperator();
+        this.inquirer = delEmployee.getInquirer();
+        this.employeeFilesId = employeeFiles.getId();
+        this.delEmployeeId = delEmployee.getId();
     }
 }

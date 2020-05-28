@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -15,41 +16,89 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CollectionRule extends BaseEntity{
+public class CollectionRule {
     /**
-     * 地区
+     * 主键id
      */
-    String city;
+    String id;
     /**
-     * 补缴月份
+     * 子表业务对象父类ID
      */
-    int payMonth;
+    String parentId;
     /**
-     * 补缴月份上限（不包含）
+     * 子表排序号
      */
-    int payBackMaxMonth;
+    Double sortKey;
     /**
-     * 补缴月份下限（包含）
+     * 产品名称
      */
-    int payBackMinMonth;
+    String productName;
     /**
-     * 用工备案
+     * 公司最高基数
      */
-    String recordOfEmployment;
+    Double companyMaxBaseNum = 0d;
     /**
-     * 社保
+     * 公司最低基数
      */
-    String socialSecurity;
+    Double companyMinBaseNum = 0d;
     /**
-     * 公积金
+     * 个人最高基数
      */
-    String providentFund;
+    Double employeeMaxBaseNum = 0d;
     /**
-     * 备注
+     * 个人最低基数
      */
-    String remark;
+    Double employeeMinBaseNum = 0d;
     /**
-     * 规则详情
+     * 公司附加金额
      */
-    List <CollectionRuleDetails> collectionRuleDetails;
+    Double companySurchargeValue = 0d;
+    /**
+     * 个人附加金额
+     */
+    Double employeeSurchargeValue = 0d;
+    /**
+     * 公司比例
+     */
+    Double companyRatio = 0d;
+    /**
+     * 个人比例
+     */
+    Double employeeRatio = 0d;
+    /**
+     * 有效起始月
+     */
+    Date effectiveStartMonth;
+    /**
+     * 有效终止月
+     */
+    Date effectiveTerminationMonth;
+    /**
+     * 公司舍入原则
+     */
+    String companyRoundingPolicy = "四舍五入";
+    /**
+     * 个人舍入原则
+     */
+    String employeeRoundingPolicy = "四舍五入";
+    /**
+     * 公司精度（保留小数位）
+     */
+    String companyPrecision = "0";
+    /**
+     * 个人精度（保留小数位）
+     */
+    String employeePrecision = "0";
+    /**
+     * 产品说明
+     */
+    String productDescription;
+    /**
+     * 采集周期
+     */
+    String acquisitionCycle;
+    /**
+     * 缴费频率
+     */
+    String paymentFrequency;
 }

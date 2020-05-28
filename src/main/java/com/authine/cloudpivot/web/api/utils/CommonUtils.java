@@ -3,11 +3,9 @@ package com.authine.cloudpivot.web.api.utils;
 import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
 import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
 import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
-import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.entity.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 
 import java.math.RoundingMode;
 import java.text.NumberFormat;
@@ -188,40 +186,6 @@ public class CommonUtils {
     }
 
     /**
-     * 方法说明：通过判断福利地对基数四舍五入取整
-     * @param shAddEmployee
-     * @return com.authine.cloudpivot.web.api.entity.AddEmployee
-     * @author liulei
-     * @Date 2020/4/16 9:12
-     */
-    public static ShAddEmployee needBaseRounding(ShAddEmployee shAddEmployee) throws Exception{
-        // 目前仅六安市需要四舍五入取整
-        if (StringUtils.isNotBlank(shAddEmployee.getCityName()) && "六安市".indexOf(shAddEmployee.getCityName()) >= 0) {
-            shAddEmployee.setSocialSecurityBase(processingData(shAddEmployee.getSocialSecurityBase(), "四舍五入", "0"));
-            shAddEmployee.setProvidentFundBase(processingData(shAddEmployee.getProvidentFundBase(), "四舍五入", "0"));
-        }
-        return shAddEmployee;
-    }
-
-    /**
-     * 方法说明：通过判断福利地对基数四舍五入取整
-     * @param nationwideDispatch
-     * @return com.authine.cloudpivot.web.api.entity.AddEmployee
-     * @author liulei
-     * @Date 2020/4/16 9:12
-     */
-    public static NationwideDispatch needBaseRounding(NationwideDispatch nationwideDispatch) throws Exception{
-        // 目前仅六安市需要四舍五入取整
-        if (StringUtils.isNotBlank(nationwideDispatch.getInvolved()) && "六安市".indexOf(nationwideDispatch.getInvolved()) >= 0) {
-            nationwideDispatch.setSocialInsuranceAmount(processingData(nationwideDispatch.getSocialInsuranceAmount(),
-                    "四舍五入", "0"));
-            nationwideDispatch.setProvidentFundAmount(processingData(nationwideDispatch.getProvidentFundAmount(),
-                    "四舍五入", "0"));
-        }
-        return nationwideDispatch;
-    }
-
-    /**
      * 方法说明：增员客户处理身份证号码
      * @param addEmployee
      * @return com.authine.cloudpivot.web.api.entity.AddEmployee
@@ -287,7 +251,7 @@ public class CommonUtils {
         return delEmployee;
     }
 
-    private static boolean checkIdentityNo(String identityNoType, String identityNo) throws Exception {
+    public static boolean checkIdentityNo(String identityNoType, String identityNo) throws Exception {
         if ("身份证".equals(identityNoType)) {
             if (StringUtils.isNotBlank(identityNo) && (identityNo.length() == 18 || identityNo.length() == 15)) {
                 return true;

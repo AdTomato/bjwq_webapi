@@ -1,6 +1,8 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
 import com.authine.cloudpivot.web.api.dao.ClientUserDao;
+import com.authine.cloudpivot.web.api.entity.Client;
+import com.authine.cloudpivot.web.api.mapper.ClientUserMapper;
 import com.authine.cloudpivot.web.api.service.ClientUserService;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,9 @@ public class ClientUserServiceImpl implements ClientUserService {
 
     @Resource
     private ClientUserDao clientUserDao;
+
+    @Resource
+    private ClientUserMapper clientUserMapper;
 
     /**
      * 方法说明：更新客户信息表对应的用户id
@@ -82,6 +87,11 @@ public class ClientUserServiceImpl implements ClientUserService {
             clientUserDao.updateEndTime(id, endTime, null, null, null, null);
         }
 
+    }
+
+    @Override
+    public Client getClientByUserId(String userId) throws Exception {
+        return clientUserMapper.getClientByUserId(userId);
     }
 
     private String getEndTime(int node) {

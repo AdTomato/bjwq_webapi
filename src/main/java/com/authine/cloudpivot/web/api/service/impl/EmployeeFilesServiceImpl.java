@@ -224,15 +224,7 @@ public class EmployeeFilesServiceImpl implements EmployeeFilesService {
     }
 
     @Override
-    public EmployeeFiles getEmployeeFilesByIdNoAndClientName(String identityNo, String firstLevelClientName,
-                                                             String secondLevelClientName) throws Exception {
-        List <EmployeeFiles> list = employeeFilesMapper.getEmployeeFilesByIdNoAndClientName(identityNo,
-                firstLevelClientName, secondLevelClientName);
-        if (list != null && list.size() > 0) {
-            return list.get(0);
-        } else {
-            log.error("没有获取到员工档案数据！");
-            throw new RuntimeException("没有获取到员工档案数据！");
-        }
+    public EmployeeFiles getEmployeeFilesByIdentityNo(String identityNo) throws Exception {
+        return employeeFilesMapper.getEmployeeFilesByIdentityNo(identityNo);
     }
 }

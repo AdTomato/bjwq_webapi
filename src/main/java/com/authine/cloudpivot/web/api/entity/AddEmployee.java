@@ -16,11 +16,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AddEmployee extends BaseEntity {
-    /**
-     * 增员_客户变更时对应的增员_客户表id
-     */
     String addEmployeeId;
-
     /**
      * 姓名
      */
@@ -76,7 +72,7 @@ public class AddEmployee extends BaseEntity {
     /**
      * 社保基数
      */
-    Double socialSecurityBase;
+    Double socialSecurityBase = 0d;
     /**
      * 公积金福利地
      */
@@ -88,7 +84,7 @@ public class AddEmployee extends BaseEntity {
     /**
      * 公积金基数
      */
-    Double providentFundBase;
+    Double providentFundBase = 0d;
     /**
      * 证件类型
      */
@@ -109,10 +105,6 @@ public class AddEmployee extends BaseEntity {
      * 二级客户名称
      */
     String secondLevelClientName;
-    /**
-     * 所属部门
-     */
-    String subordinateDepartment;
     /**
      * 户籍备注
      */
@@ -149,4 +141,30 @@ public class AddEmployee extends BaseEntity {
      * 公积金利办理方
      */
     String gWelfareHandler;
+    /**
+     * 操作人
+     */
+    String operator;
+    /**
+     * 查询人
+     */
+    String inquirer;
+    /**
+     * 社保状态
+     */
+    String sbStatus;
+    /**
+     * 公积金状态
+     */
+    String gjjStatus;
+    /**
+     * 退回原因
+     */
+    String returnReason;
+    /** 公积金种类（省直公积金、市直公积金）*/
+    String providentFundName;
+    /**
+     * 所属部门
+     */
+    String subordinateDepartment;
 }

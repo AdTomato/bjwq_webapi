@@ -206,13 +206,11 @@ public interface EmployeeFilesService {
     void insertBills(List<Bill> bills);
 
     /**
-     * 方法说明：根据员工证件号,一级客户名称，二级客户名称获取员工档案
-     * @param identityNo 证件号
-     * @param firstLevelClientName 一级客户名称
-     * @param secondLevelClientName 二级客户名称
+     * 方法说明：根据证件号码查询未离职的最新一个员工档案数据
+     * @param identityNo
      * @return com.authine.cloudpivot.web.api.entity.EmployeeFiles
      * @author liulei
-     * @Date 2020/4/17 11:04
+     * @Date 2020/5/6 14:12
      */
-    EmployeeFiles getEmployeeFilesByIdNoAndClientName(String identityNo, String firstLevelClientName, String secondLevelClientName) throws Exception;
+    EmployeeFiles getEmployeeFilesByIdentityNo(String identityNo) throws Exception;
 }

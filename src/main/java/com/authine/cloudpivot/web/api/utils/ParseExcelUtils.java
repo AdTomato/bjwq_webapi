@@ -7,7 +7,6 @@ import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.math.BigInteger;
 
@@ -357,7 +356,7 @@ public class ParseExcelUtils {
      * @throws
      * @param fileName 文件名
      * @param fis  文件输入流
-     * @return {@link java.util.List<java.lang.String>}
+     * @return {@link List< String>}
      **/
     public static List<String> getHeadName(String fileName, FileInputStream fis) throws IOException {
         Workbook workBook = null;
@@ -381,45 +380,6 @@ public class ParseExcelUtils {
         }
         return headList;
     }
-    /**
-     * 用于判断number是否为空或者是否为数字
-     *
-     * @param cell cell单元格
-     * @return true 是数字且不为空 false 不是数字或者为空
-     * @author wangyong
-     */
-    public static boolean checkIsNumber(Cell cell) {
-        boolean result = true;
 
-        if (cell.getCellType() == CellType.NUMERIC) {
-            // 本身为数字
-            Double numericCellValue = cell.getNumericCellValue();
-            if (numericCellValue == null) {
-                // 不存在值
-                result = false;
-            } else if (HSSFDateUtil.isCellDateFormatted(cell)) {
-                // 为时间
-                result = false;
-            }
-        }
-
-        if (cell.getCellType() == CellType.STRING) {
-            // 本身为字符串
-            String value = cell.getStringCellValue();
-            if (org.apache.commons.lang3.StringUtils.isEmpty(value)) {
-                // 为空，校验失败
-                result = false;
-            } else {
-                try {
-                    Double d = Double.parseDouble(value);
-                } catch (Exception e) {
-                    // 类型转换异常，证明不是数字
-                    result = false;
-                }
-            }
-        }
-
-        return result;
-    }
 
 }

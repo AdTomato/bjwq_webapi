@@ -11,24 +11,6 @@ import java.util.Map;
 /**
  * @author liulei
  * @Description 社保申报实体
- * 字段名            增员_客户实体		增员_上海实体		增员_全国实体
- * 姓名		         姓名		        员工姓名		    姓名
- * 性别		         取自身份证		    取自身份证		    取自身份证
- * 18位证件号码		 身份证号码		    证件号		        证件号码
- * 出生日期		     取自身份证		    取自身份证		    取自身份证
- * 派出单位		     取自客户账号		固定值，上海德科	签约方供应商
- * 客户名称		     客户名称		    客户名称		    业务客户名称
- * 客服		         取自客户档案业务员	取自客户档案业务员	取自客户档案业务员
- * 客服部门		     客服的部门		    客服的部门		    客服的部门
- * 福利办理方		 取自委派单		    取自委派单		    取自委派单
- * 申请人		     增员创建人		    增员创建人		    增员创建人
- * 申请日期		     增员创建日期		增员创建日期		增员创建日期
- * 合同签订日期		 合同开始日期		不填		        不填
- * 合同截止日期		 合同结束日期		不填		        不填
- * 起始月		     社保起做时间		福利开始时间		订单开始日期
- * 转正工资		     合同工资		    社会保险基数		社保申报工资
- * 缴费基数		     社保基数		    社会保险基数		社保申报工资
- * 是否兼职工伤		 看是否有工伤		看是否有工伤		看是否有工伤
  * @ClassName com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare
  * @Date 2020/2/25 16:33
  **/
@@ -36,53 +18,69 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SocialSecurityDeclare extends BaseEntity {
-    /** 员工订单id 新增的值*/
-    String employeeOrderFormId;
-    /** 姓名*/
-    String employeeName;
-
-    /** 性别*/
-    String gender;
-
-    /** 出生日期*/
-    Date birthday;
-
-    /** 证件类型*/
-    String identityNoType;
-
-    /** 证件号码*/
-    String identityNo;
-
-    /** 福利办理方*/
-    String welfareHandler;
-
-    /** 合同签订日期*/
-    Date contractSigningDate;
-
-    /** 合同截止日期*/
-    Date contractDeadline;
-
-    /** 起始月*/
+    /**
+     * 起始月
+     */
     Date startMonth;
-
-    /** 转正工资*/
+    /**
+     * 姓名
+     */
+    String employeeName;
+    /**
+     * 性别
+     */
+    String gender;
+    /**
+     * 证件号码
+     */
+    String identityNo;
+    /**
+     * 合同签订日期
+     */
+    Date contractSigningDate;
+    /**
+     * 合同截止日期
+     */
+    Date contractDeadline;
+    /**
+     * 转正工资
+     */
     Double positiveSalary;
-
-    /** 缴费基数*/
+    /**
+     * 缴费基数
+     */
     Double basePay;
-
-    /** 手机号码*/
+    /**
+     * 手机号码
+     */
     String mobile;
-
-    /** 运行负责人*/
-    String operateLeader;
-
-    /** 已有退回原因*/
+    /**
+     * 福利办理方
+     */
+    String welfareHandler;
+    /**
+     * 出生日期
+     */
+    Date birthday;
+    /**
+     * 证件类型
+     */
+    String identityNoType;
+    /**
+     * 已有退回原因
+     */
     String returnReasonAlready;
-
-    String isChange;
-
-    /** 待办，在办，预点，在缴，驳回*/
+    /**
+     * 运行负责人
+     */
+    String operateLeader;
+    /**
+     * 员工订单
+     */
+    String employeeOrderFormId;
+    /**
+     * 状态
+     */
     String status;
     /**
      * 一级客户名称
@@ -92,10 +90,6 @@ public class SocialSecurityDeclare extends BaseEntity {
      * 二级客户名称
      */
     String secondLevelClientName;
-    /**
-     * 所属部门
-     */
-    String subordinateDepartment;
     /**
      * 福利地
      */
@@ -108,45 +102,77 @@ public class SocialSecurityDeclare extends BaseEntity {
      * 备注
      */
     String remark;
+    /**
+     * 操作人
+     */
+    String operator;
+    /**
+     * 查询人
+     */
+    String inquirer;
+    /**
+     * 所属部门
+     */
+    String subordinateDepartment;
+    /**
+     * 员工档案
+     */
+    String employeeFilesId;
+    /**
+     * 增员表单id
+     */
+    String addEmployeeId;
+    /**
+     * 汇缴订单明细
+     */
+    List <EmployeeOrderFormDetails> remittanceList;
+    /**
+     * 补缴订单明细
+     */
+    List <EmployeeOrderFormDetails> payBackList;
 
-    // 社保申报详细
-    List <Map <String, String>> socialSecurityDetail;
+    public SocialSecurityDeclare(AddEmployee addEmployee, String employeeFilesId) {
+        this.name = addEmployee.getName();
+        this.creater = addEmployee.getCreater();
+        this.createdDeptId = addEmployee.getCreatedDeptId();
+        this.owner = addEmployee.getOwner();
+        this.ownerDeptId = addEmployee.getOwnerDeptId();
+        this.createdTime = addEmployee.getCreatedTime();
+        this.modifier = addEmployee.getModifier();
+        this.modifiedTime = addEmployee.getModifiedTime();
+        this.workflowInstanceId = null;
+        this.sequenceNo = null;
+        this.sequenceStatus = "PROCESSING";
+        this.ownerDeptQueryCode = addEmployee.getOwnerDeptQueryCode();
 
-    public SocialSecurityDeclare(String sequenceStatus, String creater, String createdDeptId, Date createdTime,
-                                 String owner, String ownerDeptId, String ownerDeptQueryCode,
-                                 Date startMonth, String employeeName, String gender, String identityNo,
-                                 String identityNoType, Date contractSigningDate, Date contractDeadline,
-                                 Double positiveSalary, Double basePay, String mobile, String welfareHandler,
-                                 Date birthday, String operateLeader, String employeeOrderFormId, String status,
-                                 String firstLevelClientName, String secondLevelClientName,
-                                 String subordinateDepartment, String city, String remark) {
-        this.creater = creater;
-        this.createdDeptId = createdDeptId;
-        this.createdTime = createdTime;
-        this.sequenceStatus = sequenceStatus;
-        this.owner = owner;
-        this.ownerDeptId = ownerDeptId;
-        this.ownerDeptQueryCode = ownerDeptQueryCode;
-        this.startMonth = startMonth;
-        this.employeeName = employeeName;
-        this.gender = gender;
-        this.identityNo = identityNo;
-        this.identityNoType = identityNoType;
-        this.contractSigningDate = contractSigningDate;
-        this.contractDeadline = contractDeadline;
-        this.positiveSalary = positiveSalary;
-        this.basePay = basePay;
-        this.mobile = mobile;
-        this.welfareHandler = welfareHandler;
-        this.birthday = birthday;
+        this.startMonth = addEmployee.getSocialSecurityStartTime();
+        this.employeeName = addEmployee.getEmployeeName();
+        this.gender = addEmployee.getGender();
+        this.identityNo = addEmployee.getIdentityNo();
+        this.contractSigningDate = addEmployee.getContractStartTime();
+        this.contractDeadline = addEmployee.getContractEndTime();
+        this.positiveSalary = addEmployee.getContractSalary();
+        this.basePay = addEmployee.getSocialSecurityBase();
+        this.mobile = addEmployee.getMobile();
+        this.welfareHandler = addEmployee.getSWelfareHandler();
+        this.birthday = addEmployee.getBirthday();
+        this.identityNoType = addEmployee.getIdentityNoType();
+        /*this.returnReasonAlready = returnReasonAlready;
         this.operateLeader = operateLeader;
         this.employeeOrderFormId = employeeOrderFormId;
-        this.status = status;
-        this.firstLevelClientName = firstLevelClientName;
-        this.secondLevelClientName = secondLevelClientName;
-        this.subordinateDepartment = subordinateDepartment;
-        this.city = city;
-        this.remark = remark;
-
+        this.isChange = isChange;*/
+        this.status = "待办";
+        this.firstLevelClientName = addEmployee.getFirstLevelClientName();
+        this.secondLevelClientName = addEmployee.getSecondLevelClientName();
+        this.city = addEmployee.getSocialSecurityCity();
+        /*this.billYear = billYear;*/
+        this.remark = addEmployee.getRemark();
+        this.operator = addEmployee.getOperator();
+        this.inquirer = addEmployee.getInquirer();
+        this.subordinateDepartment = addEmployee.getSubordinateDepartment();
+        this.employeeFilesId = employeeFilesId;
+        this.addEmployeeId = addEmployee.getId();
+        /*this.remittanceList = remittanceList;
+        this.payBackList = payBackList;*/
     }
 }

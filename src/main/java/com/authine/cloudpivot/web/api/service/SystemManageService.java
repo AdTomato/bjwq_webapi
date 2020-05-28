@@ -2,6 +2,7 @@ package com.authine.cloudpivot.web.api.service;
 
 import com.authine.cloudpivot.web.api.entity.OrgUser;
 import com.authine.cloudpivot.web.api.entity.SmsHistory;
+import com.authine.cloudpivot.web.api.entity.WelfareSet;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,7 @@ public interface SystemManageService {
      * @param mobile 手机号码
      * @return 用户实体类
      */
-    public OrgUser getOrgUserByMobile(String mobile);
+    List<OrgUser> getOrgUserByMobile(String mobile);
 
     /**
      * 根据id获取手机历史验证码
@@ -44,4 +45,15 @@ public interface SystemManageService {
      * @return
      */
     List<Map<String, String>> getNameAndUserNameByMobile(String mobile);
+
+    /**
+     * 方法说明：根据城市获取省份名称
+     * @param city
+     * @return com.authine.cloudpivot.web.api.entity.WelfareSet
+     * @author liulei
+     * @Date 2020/5/6 15:04
+     */
+    WelfareSet getWelfareSet(String city);
+
+    List<String> getAllCity() throws Exception;
 }

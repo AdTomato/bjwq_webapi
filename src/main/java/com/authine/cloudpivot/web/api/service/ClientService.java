@@ -91,7 +91,8 @@ public interface ClientService {
      * @param staffNature   员工性质
      * @return 业务员和服务费
      */
-    public Map<String, Object> getClientSalesmanAndFee(String clientName, String entrustedUnit, String area, String staffNature);
+    public Map<String, Object> getClientSalesmanAndFee(String clientName, String entrustedUnit, String area,
+                                                       String staffNature);
 
 
     /**

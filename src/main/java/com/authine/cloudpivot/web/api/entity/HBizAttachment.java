@@ -1,4 +1,4 @@
-package com.sample;
+package com.authine.cloudpivot.web.api.entity;
 
 
 public class HBizAttachment {

@@ -22,8 +22,14 @@ public class DeleteBusinessInsurance  extends BaseEntity{
     String salesman;
     /** 部门 */
     String department;
-    /** 公司 */
-    String clientName;
+    /**
+     * 一级客户名称
+     */
+    String firstLevelClientName;
+    /**
+     * 二级客户名称
+     */
+    String secondLevelClientName;
     /** 姓名 */
     String employeeName;
     /** 身份证号码 */
@@ -32,6 +38,10 @@ public class DeleteBusinessInsurance  extends BaseEntity{
     Date benefitDeadline;
     /** 备注*/
     String remarks;
+    /**
+     * 办理状态
+     */
+    String status;
 
     public DeleteBusinessInsurance(String id, UserModel user, DepartmentModel dept, String sequenceStatus,
                                    String salesman, String department, String clientName, String employeeName,
@@ -49,7 +59,7 @@ public class DeleteBusinessInsurance  extends BaseEntity{
         setOwnerDeptQueryCode(dept.getQueryCode());
         this.salesman = salesman;
         this.department = department;
-        this.clientName = clientName;
+        this.firstLevelClientName = clientName;
         this.employeeName = employeeName;
         this.identityNo = identityNo;
         this.benefitDeadline = benefitDeadline;

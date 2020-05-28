@@ -4,6 +4,7 @@ import com.authine.cloudpivot.web.api.entity.ImportSocialSecurityCardTemp;
 import com.authine.cloudpivot.web.api.entity.SocialSecurityCard;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author liulei
@@ -14,12 +15,12 @@ import java.util.List;
 public interface SocialSecurityCardMapper {
     /**
      * 方法说明：批量生成社保卡办理数据
-     * @param socialSecurityCards 社保卡办理数据
+     * @param list 社保卡办理数据
      * @return void
      * @author liulei
      * @Date 2020/3/17 10:40
      */
-    void batchInsertSocialSecurityCard(List<SocialSecurityCard> socialSecurityCards);
+    void batchInsertSocialSecurityCard(List<Map <String, Object>> list);
 
     /**
      * 方法说明：导入社保卡申请数据时更新字段内容
@@ -38,10 +39,10 @@ public interface SocialSecurityCardMapper {
      * @author liulei
      * @Date 2020/3/17 13:51
      */
-    void insertTempData(List<ImportSocialSecurityCardTemp> list);
+    void insertTempData(List<Map <String, Object>> list);
 
     /**
-     * 方法说明：根据临时表数据，更新子表数据
+     * 方法说明：社保卡流程：根据临时表数据，更新子表数据
      * @param sourceId
      * @return void
      * @author liulei
@@ -50,7 +51,7 @@ public interface SocialSecurityCardMapper {
     void updateProcessByTempTable(String sourceId);
 
     /**
-     * 方法说明：根据临时表数据，更新主表数据
+     * 方法说明：社保卡流程：根据临时表数据，更新主表数据
      * @param sourceId
      * @return void
      * @author liulei
@@ -59,7 +60,7 @@ public interface SocialSecurityCardMapper {
     void updateProcessFeedbackByTempTable(String sourceId);
 
     /**
-     * 方法说明：根据临时表数据，更新子表数据
+     * 方法说明：社保卡流程：根据临时表数据，更新子表数据
      * @param sourceId
      * @return void
      * @author liulei
@@ -68,7 +69,7 @@ public interface SocialSecurityCardMapper {
     void updateIssueByTempTable(String sourceId);
 
     /**
-     * 方法说明：根据临时表数据，更新主表数据
+     * 方法说明：社保卡流程：根据临时表数据，更新主表数据
      * @param sourceId
      * @return void
      * @author liulei
@@ -106,5 +107,14 @@ public interface SocialSecurityCardMapper {
      */
     List<String> getWorkItemIdsWhenIssueSuccess(String sourceId, String userId);
 
-    void deleteTempData(String sourceId);
+    void deleteTempData(String sourceId, String tableName);
+
+    /**
+     * 方法说明：批量生成五险一金办理数据
+     * @param list
+     * @return void
+     * @author liulei
+     * @Date 2020/5/7 9:41
+     */
+    void batchInsertInsuranceAndHousingFund(List<Map<String, Object>> list);
 }

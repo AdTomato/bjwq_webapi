@@ -6,20 +6,21 @@
     <insert id="batchInsertSocialSecurityCard" parameterType="java.util.List">
         INSERT INTO ivdlf_social_security_card
         (id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier, modifiedTime, workflowInstanceId,
-        sequenceNo, sequenceStatus, ownerDeptQueryCode, city, submission_list, is_vip, is_emerg, upload_info, is_get,
-        receive, salesman, operator, employee_name, company_name, identityNo, employee_status, mobile, process_select,
-        process_detail, sin_card, have_submission_list, is_class, track_long, track_hide, issue_select, issue_detail,
-        track_detail, address)
+        sequenceNo, sequenceStatus, ownerDeptQueryCode, submission_list, is_vip, is_emerg, upload_info, have_give_out,
+        is_get, receive, operator, employee_name, identityNo, employee_status, mobile, address, process_select,
+        process_detail, sin_card, have_submission_list, track_long, track_hide, issue_select, issue_detail,
+        track_detail, province, city, first_level_client_name, second_level_client_name, welfare_handler)
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">
-            (#{item.id},#{item.name},#{item.creater},#{item.createdDeptId},#{item.owner},#{item.ownerDeptId},
-            #{item.createdTime},#{item.modifier},#{item.modifiedTime}, #{item.workflowInstanceId},#{item.sequenceNo},
-            #{item.sequenceStatus},#{item.ownerDeptQueryCode},#{item.city},#{item.submissionList},#{item.isVip},
-            #{item.isEmerg},#{item.uploadInfo}, #{item.isGet},#{item.receive},#{item.salesman},#{item.operator},
-            #{item.employeeName},#{item.companyName},#{item.identityNo},#{item.employeeStatus},#{item.mobile},
-            #{item.processSelect},#{item.processDetail},#{item.sinCard},#{item.haveSubmissionList},#{item.isClass},
-            #{item.trackLong},#{item.trackHide},#{item.issueSelect},#{item.issueDetail},#{item.trackDetail},
-            #{item.address})
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner}, #{item.ownerDeptId},
+            #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId}, #{item.sequenceNo},
+            #{item.sequenceStatus}, #{item.ownerDeptQueryCode}, #{item.submission_list}, #{item.is_vip},
+            #{item.is_emerg}, #{item.upload_info}, #{item.have_give_out}, #{item.is_get}, #{item.receive},
+            #{item.operator}, #{item.employee_name}, #{item.identityNo}, #{item.employee_status}, #{item.mobile},
+            #{item.address}, #{item.process_select}, #{item.process_detail}, #{item.sin_card},
+            #{item.have_submission_list}, #{item.track_long}, #{item.track_hide}, #{item.issue_select},
+            #{item.issue_detail}, #{item.track_detail}, #{item.province}, #{item.city}, #{item.first_level_client_name},
+            #{item.second_level_client_name}, #{item.welfare_handler})
         </foreach>
     </insert>
 
@@ -48,8 +49,8 @@
         (id, source_id, sequenceNo, process_select, process_detail, sin_card, issue_select, issue_detail)
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">
-            (#{item.id},#{item.sourceId},#{item.sequenceNo},#{item.processSelect},#{item.processDetail},#{item.sinCard},
-            #{item.issueSelect},#{item.issueDetail})
+            (#{item.id}, #{item.source_id}, #{item.sequenceNo}, #{item.process_select}, #{item.process_detail},
+            #{item.sin_card}, #{item.issue_select}, #{item.issue_detail})
         </foreach>
     </insert>
 
@@ -120,7 +121,31 @@
           AND workitem.participant = #{userId}
     </select>
 
-    <delete id="deleteTempData" parameterType="java.lang.String">
-        DELETE FROM import_social_security_card_temp WHERE source_id = #{sourceId}
+    <delete id="deleteTempData">
+        DELETE FROM ${tableName} WHERE source_id = #{sourceId}
     </delete>
+
+    <select id="batchInsertInsuranceAndHousingFund" parameterType="java.util.List">
+        INSERT INTO ivdlf_insurance_and_housing_fund(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
+        modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus, ownerDeptQueryCode,
+        have_submission_list, have_return_list, all_payment_amount, business_initiation_channel, is_emerg, is_vip,
+        entrust, employee_name, identityNo, operator, detail, submission_list, track_record, track_records,
+        operator_sign, progress_status, progress_feedback, return_list, return_sign, have_fund_approval,
+        payment_amount_all, enjoy_feedback, enjoy_feedbacks, track_record_hide, enjoy_feedback_hide, city, province,
+        first_level_client_name, second_level_client_name, business_type, business_item)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner}, #{item.ownerDeptId},
+            #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId}, #{item.sequenceNo},
+            #{item.sequenceStatus}, #{item.ownerDeptQueryCode}, #{item.have_submission_list}, #{item.have_return_list},
+            #{item.all_payment_amount}, #{item.business_initiation_channel}, #{item.is_emerg}, #{item.is_vip},
+            #{item.entrust}, #{item.employee_name}, #{item.identityNo}, #{item.operator}, #{item.detail},
+            #{item.submission_list}, #{item.track_record}, #{item.track_records}, #{item.operator_sign},
+            #{item.progress_status}, #{item.progress_feedback}, #{item.return_list}, #{item.return_sign},
+            #{item.have_fund_approval}, #{item.payment_amount_all}, #{item.enjoy_feedback}, #{item.enjoy_feedbacks},
+            #{item.track_record_hide}, #{item.enjoy_feedback_hide}, #{item.city}, #{item.province},
+            #{item.first_level_client_name}, #{item.second_level_client_name}, #{item.business_type},
+            #{item.business_item})
+        </foreach>
+    </select>
 </mapper>

@@ -23,50 +23,10 @@ public class CollectionRuleServiceImpl implements CollectionRuleService {
     private CollectionRuleMapper collectionRuleMapper;
 
     @Override
-    public CollectionRule getCollectionRuleByCity(String city) throws Exception {
-        List<CollectionRule> collectionRules = collectionRuleMapper.getCollectionRulesByCity(city);
-        return collectionRules != null && collectionRules.size() > 0 ? collectionRules.get(0) : null;
-    }
-
-    @Override
-    public CollectionRule getCollectionRuleByCity(String socialSecurityCity, String providentFundCity) throws Exception {
-        CollectionRule collectionRule = new CollectionRule();
-        if (StringUtils.isNotBlank(socialSecurityCity)) {
-            if (socialSecurityCity.equals(providentFundCity)) {
-                // 社保公积金福利地相同
-                List<CollectionRule> collectionRules = collectionRuleMapper.getCollectionRulesByCity(socialSecurityCity);
-                return collectionRules != null && collectionRules.size() > 0 ? collectionRules.get(0) : null;
-            } else if (StringUtils.isNotBlank(providentFundCity)) {
-                // 社保公积金福利地不相同
-                List<CollectionRule> sRules = collectionRuleMapper.getSbCollectionRulesByCity(socialSecurityCity);
-                if (sRules != null && sRules.size() > 0) {
-                    collectionRule = sRules.get(0);
-                }
-                List<CollectionRule> gRules = collectionRuleMapper.getGjjCollectionRulesByCity(socialSecurityCity);
-                if (gRules != null && gRules.size() > 0) {
-                    CollectionRule gRule = gRules.get(0);
-                    collectionRule.setProvidentFund(gRule.getProvidentFund());
-                    List<CollectionRuleDetails> details = collectionRule.getCollectionRuleDetails();
-                    if (details != null && details.size() > 0) {
-                        List<CollectionRuleDetails> gDetails = gRule.getCollectionRuleDetails();
-                        if (gDetails != null && gDetails.size() > 0) {
-                            details.addAll(gDetails);
-                            collectionRule.setCollectionRuleDetails(details);
-                        }
-                    } else {
-                        collectionRule.setCollectionRuleDetails(gRule.getCollectionRuleDetails());
-                    }
-                }
-            } else {
-                // 公积金福利地为空
-                List<CollectionRule> collectionRules = collectionRuleMapper.getSbCollectionRulesByCity(socialSecurityCity);
-                return collectionRules != null && collectionRules.size() > 0 ? collectionRules.get(0) : null;
-            }
-        } else if (StringUtils.isNotBlank(providentFundCity)) {
-            List<CollectionRule> collectionRules = collectionRuleMapper.getGjjCollectionRulesByCity(socialSecurityCity);
-            return collectionRules != null && collectionRules.size() > 0 ? collectionRules.get(0) : null;
-        }
-        return collectionRule;
+    public void moveCollectionRuleDataToHistory() throws Exception {
+        // 将有效终止月<当前时间的汇缴规则数据转移到历史数据中
+        collectionRuleMapper.moveCollectionRuleDataToHistory();
+        collectionRuleMapper.deleteOvertimeCollectionRuleData();
     }
 
     /**

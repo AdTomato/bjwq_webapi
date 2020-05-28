@@ -2,14 +2,56 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
 <mapper namespace="com.authine.cloudpivot.web.api.mapper.CityTimeNodeMapper">
+    <insert id="addCurCityTimeNode">
+        INSERT INTO id34a_city_time_node(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier,
+                                         modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus,
+                                         ownerDeptQueryCode, time_node, city, province, business_year, start_time,
+                                         end_time)
+        SELECT MD5(UUID()),
+               name,
+               creater,
+               createdDeptId,
+               owner,
+               ownerDeptId,
+               SYSDATE(),
+               modifier,
+               SYSDATE(),
+               workflowInstanceId,
+               NULL,
+               sequenceStatus,
+               ownerDeptQueryCode,
+               time_node,
+               city,
+               province,
+               #{curBusinessYear},
+               DATE_ADD(start_time, INTERVAL 1 MONTH),
+               DATE_ADD(end_time, INTERVAL 1 MONTH)
+        FROM id34a_city_time_node
+        WHERE business_year = #{lastBusinessYear}
+    </insert>
 
-    <select id="getCityTimeNodeByBusinessYearAndCity" resultType="com.authine.cloudpivot.web.api.entity.CityTimeNode">
+    <select id="getAnhuiCityTimeNode" resultType="com.authine.cloudpivot.web.api.entity.CityTimeNode">
         SELECT *
         FROM id34a_city_time_node
         WHERE city = #{city}
           AND business_year = #{businessYear}
+        ORDER BY createdTime DESC
+        LIMIT 0,1
     </select>
 
+    <select id="getCityTimeNodeSwDetails" resultType="com.authine.cloudpivot.web.api.entity.CityTimeNodeSwDetails">
+        SELECT *
+        FROM i080j_city_time_node_sw_details
+        WHERE city = #{city}
+          AND parentId IN (SELECT id FROM i080j_city_time_node_sw WHERE business_year = #{businessYear})
+        LIMIT 0,1
+    </select>
+
+    <select id="getCityTimeNodeByBusinessYearAndCity" resultType="com.authine.cloudpivot.web.api.entity.CityTimeNode">
+        SELECT MIN(start_time) AS startTime, MIN(end_time) AS endTime
+        FROM id34a_city_time_node
+        WHERE city = #{city}
+          AND business_year = #{businessYear}
+    </select>
 </mapper>

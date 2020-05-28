@@ -225,4 +225,13 @@ public interface EmployeeFilesMapper {
      */
     List <EmployeeFiles> getEmployeeFilesByIdNoAndClientName(String identityNo, String firstLevelClientName,
                                                              String secondLevelClientName);
+
+    /**
+     * 方法说明：根据证件号码查询未离职的最新一个员工档案数据
+     * @param identityNo
+     * @return com.authine.cloudpivot.web.api.entity.EmployeeFiles
+     * @author liulei
+     * @Date 2020/5/6 14:14
+     */
+    EmployeeFiles getEmployeeFilesByIdentityNo(String identityNo);
 }

@@ -20,6 +20,11 @@ public class Constants {
     public static final String SOCIAL_SECURITY_CARD = "social_security_card";
 
     /**
+     * 五险一金享受模型code: insurance_and_housing_fund
+     */
+    public static final String INSURANCE_AND_HOUSING_FUND = "insurance_and_housing_fund";
+
+    /**
      * 社保卡办理流程code: social_security_card_process
      */
     public static final String SOCIAL_SECURITY_CARD_PROCESS = "social_security_card_process";
@@ -35,14 +40,14 @@ public class Constants {
     public static final String SOCIAL_SECURITY_CARD_PROCESS_NODE_GIVE_OUT = "give_out";
 
     /**
-     * 办理社保卡流程>>业务递交办卡材料或办理失败时跟进节点CODE:track_records
+     * 办理社保卡流程>>业务递交办卡材料或办理失败时跟进节点CODE:upload_info
      */
     public static final String SOCIAL_SECURITY_CARD_PROCESS_NODE_UPLOAD_INFO = "upload_info";
 
     /**
      * 业务员角色id
      */
-    public static final String SALESMAN_ROLE_ID = "";// TODO 根据业务角色获取所有业务员信息,角色id待定
+    public static final String SALESMAN_ROLE_ID = "";
 
     /**
      * 上海增员表单Schema
@@ -282,7 +287,7 @@ public class Constants {
      */
     public static final String SUBMIT_COLLECT_SCHEMA = "submit_collect";
 
-    public static final String[] GENDER = {"男", "女", "未知性别"};
+	public static final String[] GENDER = {"男", "女", "未知性别"};
 
     public static final String[] ACCOUNT_CHARACTER = {"本地非农业户口（本地城镇）","外地非农业户口（外地城镇）","本地农业户口（本地农村）","外地农业户口（外地农村）","失地农工"," 农村(农民工) ","香港特别行政区居民"," 澳门特别行政区居民"," 台湾地区居民","华侨", "未取得永久居留权的外国人","取得永久居留权的外国人", "本地居民户口", "外地居民户口"};
 
@@ -309,9 +314,5 @@ public class Constants {
 
     //合同解除原因
     public static final String[] CONTRACT_TERMINATE_REASON = {"劳动者提前30天书面通知解除或试用期提案前3天通知解除","未按照劳动合同约定提供劳动保护或者劳动条件的","未及时足额支付劳动报酬的","未依法为劳动者缴纳社会保险费的","用人单位的规章制度违反法律、法规的规定，损害劳动者权益的","因《劳动合同法》第二十六条第一款规定的情形致使劳动合同无效的","法律、行政法规规定劳动者可以解除劳动合同的其他情形","用人单位以暴力、威胁或者非法限制人身自由的手段强迫劳动，或者作业危及人身安全的","在试用期间被证明不符合录用条件的","严重违反用人单位的规章制度的","严重失职，营私舞弊，给用人单位造成重大损害的","劳动者同时与其他用人单位建立劳动关系，对完成本单位的工作任务造成严重影响的","因《劳动合同法》第二十六条第一款第一项规定的情形致使劳动合同无效的","被依法追究刑事责任的","劳动者患病或者非因公负伤，在规定的医疗期满后不能从事原工作，也不能从事另行安排的","劳动者不能胜任工作，经过培训或者调整工作岗位，仍不能胜任工作的","劳动合同订立时所依据的客观情况发生重大变化，致使劳动合同无法履行","依照企业破产法规定进行重整的（裁员）","生产经营发生严重困难的（裁员）","企业转产、重大技术革新或者经营方式调整，经变更劳动合同后，仍需裁减人员的。（裁员）","其他因劳动合同订立时所依据的客观经济情况发生重大变化，致使劳动合同无法履行的（裁员）"};
-
-
-
-
-
+    
 }

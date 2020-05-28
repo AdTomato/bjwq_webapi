@@ -1,9 +1,16 @@
 package com.authine.cloudpivot.web.api.controller;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.authine.cloudpivot.engine.api.model.organization.DepartmentModel;
 import com.authine.cloudpivot.engine.api.model.organization.UserModel;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
+import com.authine.cloudpivot.web.api.entity.EmployeeFiles;
+import com.authine.cloudpivot.web.api.entity.QueryInfo;
+import com.authine.cloudpivot.web.api.entity.Unit;
+import com.authine.cloudpivot.web.api.entity.WelfareSet;
 import com.authine.cloudpivot.web.api.service.BusinessInsuranceService;
+import com.authine.cloudpivot.web.api.service.EmployeeFilesService;
 import com.authine.cloudpivot.web.api.utils.ExcelUtils;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 
 /**
  * @author liulei
@@ -27,7 +35,10 @@ import javax.annotation.Resource;
 public class BusinessInsuranceController extends BaseController {
 
     @Resource
-    BusinessInsuranceService businessInsuranceService;
+    private BusinessInsuranceService businessInsuranceService;
+
+    @Resource
+    private EmployeeFilesService employeeFilesService;
 
     /**
      * 方法说明：商保增员提交时生成人员信息表单
@@ -96,17 +107,16 @@ public class BusinessInsuranceController extends BaseController {
     }
 
     /**
-     * 方法说明：商保增员导入
-     *  导入模板：公司；姓名；身份证号码；银行卡号；开户行；账号所有人姓名；被保险人手机号；商保套餐等级；商保服务费；
-     *            商保生效日；商保套餐内容；子女姓名；子女证件号码
+     * 方法说明：商保导入
      * @param fileName 导入文件名称
+     * @param code 流程编码（增员导入：add_business_insurance_wf；减员导入：delete_business_insurance_wf；变更导入：update_business_insurance_wf）
      * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
      * @author liulei
      * @Date 2020/3/13 17:12
      */
-    @GetMapping("/addImport")
+    @GetMapping("/importData")
     @ResponseBody
-    public ResponseResult <String> addImport(String fileName) {
+    public ResponseResult <String> importData(String fileName, String code) {
         if (StringUtils.isBlank(fileName)) {
             return this.getErrResponseResult("error", 404l, "没有获取上传文件!");
         }
@@ -117,7 +127,7 @@ public class BusinessInsuranceController extends BaseController {
             // 判断文件类型
             ExcelUtils.checkFileType(fileName);
             // 导入
-            businessInsuranceService.addImport(this.getWorkflowInstanceFacade(), fileName, user, dept);
+            businessInsuranceService.importData(fileName, user, dept, code, this.getWorkflowInstanceFacade());
             return this.getOkResponseResult("success", "导入成功!");
         } catch (Exception e) {
             log.info(e.getMessage());
@@ -126,31 +136,37 @@ public class BusinessInsuranceController extends BaseController {
     }
 
     /**
-     * 方法说明：商保增员导入
-     *  导入模板：公司；姓名；身份证号码；福利截止时间；备注
-     * @param fileName 导入文件名称
-     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * 方法说明：根据证件号码,客户名称查询相关信息
+     * @param identityNo 证件号码
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<com.authine.cloudpivot.web.api.entity.QueryInfo>
      * @author liulei
-     * @Date 2020/3/13 17:12
+     * @Date 2020/5/6 15:12
      */
-    @GetMapping("/deleteImport")
+    @GetMapping("/queryInfo")
     @ResponseBody
-    public ResponseResult <String> deleteImport(String fileName) {
-        if (StringUtils.isBlank(fileName)) {
-            return this.getErrResponseResult("error", 404l, "没有获取上传文件!");
+    public ResponseResult<QueryInfo> queryInfo(String identityNo) {
+        QueryInfo queryInfo = new QueryInfo();
+        if (StringUtils.isBlank(identityNo)) {
+            log.error("证件号码为空！");
+            return this.getOkResponseResult(queryInfo, "证件号码为空！");
         }
         try {
-            // 当前用户
-            UserModel user = this.getOrganizationFacade().getUser("402881c16f63e980016f798408060d3f");
-            DepartmentModel dept = this.getOrganizationFacade().getDepartment(user.getDepartmentId());
-            // 判断文件类型
-            ExcelUtils.checkFileType(fileName);
-            // 导入
-            businessInsuranceService.deleteImport(this.getWorkflowInstanceFacade(), fileName, user, dept);
-            return this.getOkResponseResult("success", "导入成功!");
+
+            queryInfo = businessInsuranceService.getQueryInfo(identityNo);
+            // 根据证件号码查询员工档案数据
+            EmployeeFiles employeeFiles = employeeFilesService.getEmployeeFilesByIdentityNo(identityNo);
+            if (employeeFiles == null) {
+                return this.getOkResponseResult(queryInfo, "没有查询到对应的员工档案！");
+            }
+            queryInfo.setFirstLevelClientName(employeeFiles.getFirstLevelClientName());
+            queryInfo.setSecondLevelClientName(employeeFiles.getSecondLevelClientName());
+
+
+            log.info(queryInfo.toString());
+            return this.getOkResponseResult(queryInfo, "success");
         } catch (Exception e) {
-            log.info(e.getMessage());
-            return this.getErrResponseResult("error", 404l, e.getMessage());
+            log.error(e.getMessage());
+            return this.getOkResponseResult(queryInfo, e.getMessage());
         }
     }
 }

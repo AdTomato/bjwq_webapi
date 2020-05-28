@@ -466,4 +466,8 @@
         </where>
         ORDER BY createdTime desc
     </select>
+
+    <select id="getEmployeeFilesByIdentityNo" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
+        SELECT * FROM i4fvb_employee_files WHERE id_no = #{identityNo} AND (quit_date is null OR date_format(quit_date, '%Y-%m-%d') > date_format(SYSDATE(), '%Y-%m-%d')) ORDER BY createdTime DESC LIMIT 0, 1
+    </select>
 </mapper>

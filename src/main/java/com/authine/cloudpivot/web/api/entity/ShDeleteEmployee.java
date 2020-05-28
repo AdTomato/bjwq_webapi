@@ -18,103 +18,60 @@ import java.util.Date;
 public class ShDeleteEmployee extends BaseEntity {
     String shDeleteEmployeeId;
 
-    /**
-     * 姓名
-     */
+    /** 姓名*/
     String employeeName;
 
-    /**
-     * 证件类型
-     */
+    /** 证件类型*/
     String identityNoType;
 
-    /**
-     * 证件号码
-     */
+    /** 证件号码*/
     String identityNo;
 
-    /**
-     * 客户编号
-     */
+    /** 客户编号*/
     String clientNum;
 
-    /**
-     * 一级客户名称
-     */
+    /** 客户名称*/
     String firstLevelClientName;
-
-    /**
-     * 二级客户名称
-     */
     String secondLevelClientName;
-
-    /**
-     * 所属部门
-     */
     String subordinateDepartment;
-
-    /**
-     * 性别
-     */
     String gender;
-
-    /**
-     * 出生年月
-     */
     Date birthday;
 
-    /**
-     * 客户简称
-     */
+    /** 客户简称*/
     String clientShortName;
 
-    /**
-     * OS发起离职时间
-     */
+    /** OS发起离职时间*/
     Date osInitiatedDepartureTime;
 
-    /**
-     * 离职日期
-     */
+    /** 离职日期*/
     Date departureTime;
 
-    /**
-     * 收费结束时间
-     */
+    /** 收费结束时间*/
     Date chargeEndTime;
 
-    /**
-     * 离职原因
-     */
+    /** 离职原因*/
     String leaveReason;
 
-    /**
-     * 离职备注
-     */
+    /** 离职备注*/
     String leaveRemark;
 
-    /**
-     * 公积金转移方式
-     */
+    /** 公积金转移方式*/
     String providentFundTransferMode;
 
-    /**
-     * 退档地
-     */
+    /** 退档地*/
     String backtrack;
 
-    /**
-     * GE离职原因
-     */
+    /** GE离职原因*/
     String geLeaveReason;
 
-    /**
-     * 客户方编号
-     */
+    /** 客户方编号*/
     String customerNum;
 
-    /**
-     * 是否离职E化
-     */
+    /** 是否离职E化*/
     String weatherLeaveE;
+
+    String returnReason;
+
+    String operator;
+    String inquirer;
 }

@@ -3,6 +3,7 @@ package com.authine.cloudpivot.web.api.service;
 import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
 import com.authine.cloudpivot.engine.api.model.organization.DepartmentModel;
 import com.authine.cloudpivot.engine.api.model.organization.UserModel;
+import com.authine.cloudpivot.web.api.entity.QueryInfo;
 
 /**
  * @author liulei
@@ -40,41 +41,30 @@ public interface BusinessInsuranceService {
 
     /**
      * 方法说明：根据客户名称，身份证号码修改员工补充福利（商保，体检，代发福利）的员工状态
-     * @param clientName 客户名称
+     * @param firstLevelClientName 客户名称
+     * @param secondLevelClientName 客户名称
      * @param identityNo 身份证号码
      * @param status 修改后的员工状态（在职，已离职）
      * @return void
      * @author liulei
      * @Date 2020/3/10 10:15
      */
-    void updateEmployeeStatus(String clientName, String identityNo, String status) throws Exception;
+    void updateEmployeeStatus(String firstLevelClientName, String secondLevelClientName, String identityNo,
+                              String status) throws Exception;
 
     /**
-     * 方法说明：商保增员导入
-     *  导入模板：
-     *  公司	姓名	身份证号码	银行卡号	开户行	账号所有人姓名	被保险人手机号	商保套餐等级	商保服务费
-     *  商保生效日	商保套餐内容  子女姓名	子女证件号码
+     * 方法说明：导入商保数据
+     * @param fileName
+     * @param user
+     * @param dept
+     * @param wfCode
      * @param workflowInstanceFacade
-     * @param fileName  文件名称
-     * @param user 当前人即业务员
-     * @param dept 当前部门
      * @return void
      * @author liulei
-     * @Date 2020/3/13 17:15
+     * @Date 2020/5/7 15:55
      */
-    void addImport(WorkflowInstanceFacade workflowInstanceFacade, String fileName, UserModel user,
-                   DepartmentModel dept) throws Exception;
+    void importData(String fileName, UserModel user, DepartmentModel dept, String wfCode,
+                    WorkflowInstanceFacade workflowInstanceFacade) throws Exception;
 
-    /**
-     * 方法说明：商保减员导入
-     * @param workflowInstanceFacade
-     * @param fileName  文件名称
-     * @param user 当前人即业务员
-     * @param dept 当前部门
-     * @return void
-     * @author liulei
-     * @Date 2020/3/14 17:33
-     */
-    void deleteImport(WorkflowInstanceFacade workflowInstanceFacade, String fileName, UserModel user,
-                      DepartmentModel dept) throws Exception;
+    QueryInfo getQueryInfo(String identityNo) throws Exception;
 }

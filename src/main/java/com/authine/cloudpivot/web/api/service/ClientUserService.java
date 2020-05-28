@@ -1,5 +1,7 @@
 package com.authine.cloudpivot.web.api.service;
 
+import com.authine.cloudpivot.web.api.entity.Client;
+
 /**
  * @author liulei
  * @Description
@@ -41,4 +43,6 @@ public interface ClientUserService {
      * @Date 2020/1/19 13:51
      */
     void updateEndTime(String id, String sbCityId, String gjjCityId, String clientNumber) throws Exception;
+
+    Client getClientByUserId(String userId) throws Exception;
 }

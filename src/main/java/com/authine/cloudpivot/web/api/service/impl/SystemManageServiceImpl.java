@@ -2,6 +2,7 @@ package com.authine.cloudpivot.web.api.service.impl;
 
 import com.authine.cloudpivot.web.api.entity.OrgUser;
 import com.authine.cloudpivot.web.api.entity.SmsHistory;
+import com.authine.cloudpivot.web.api.entity.WelfareSet;
 import com.authine.cloudpivot.web.api.mapper.SystemManageMapper;
 import com.authine.cloudpivot.web.api.service.SystemManageService;
 import org.springframework.stereotype.Service;
@@ -41,7 +42,7 @@ public class SystemManageServiceImpl implements SystemManageService {
      * @Description: 成员实体类
      */
     @Override
-    public OrgUser getOrgUserByMobile(String mobile) {
+    public List<OrgUser> getOrgUserByMobile(String mobile) {
         return systemManageMapper.getOrgUserByMobile(mobile);
     }
 
@@ -68,5 +69,15 @@ public class SystemManageServiceImpl implements SystemManageService {
     public List<Map<String, String>> getNameAndUserNameByMobile(String mobile) {
 
         return systemManageMapper.getNameAndUserNameByMobile(mobile);
+    }
+
+    @Override
+    public WelfareSet getWelfareSet(String city) {
+        return systemManageMapper.getWelfareSet(city);
+    }
+
+    @Override
+    public List <String> getAllCity() throws Exception {
+        return systemManageMapper.getAllCity();
     }
 }

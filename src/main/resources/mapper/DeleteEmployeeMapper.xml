@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.DeleteEmployeeMapper">
+    <!--根据id,查询减员客户数据-->
+    <select id="getDeleteEmployeeById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
+        SELECT * FROM i4fvb_delete_employee WHERE id = #{id}
+    </select>
+
+    <!--根据id,查询减员上海数据-->
+    <select id="getShDeleteEmployeeById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.ShDeleteEmployee">
+        SELECT * FROM i4fvb_sh_delete_employee WHERE id = #{id}
+    </select>
+
+    <!--根据id,查询减员全国数据-->
+    <select id="getQgDeleteEmployeeById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
+        SELECT * FROM i4fvb_nationwide_dispatch_delete WHERE id = #{id}
+    </select>
+
+    <select id="getGjjEmployeeOrderFormDetails" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.EmployeeOrderFormDetails">
+        SELECT *
+        FROM i4fvb_order_details_remittance
+        WHERE parentId = #{parentId}
+          AND product_name IN ('省直公积金', '市直公积金')
+          AND date_format(start_charge_time, '%Y%m') <![CDATA[<=]]> date_format(SYSDATE(), '%Y%m')
+          AND (effective_termination_month IS NULL OR DATE_FORMAT(effective_termination_month, '%Y%m') <![CDATA[>=]]> date_format(SYSDATE(), '%Y%m'))
+        ORDER BY start_charge_time LIMIT 0,1
+    </select>
+
+    <select id="getEmployeeFilesByDelEmployeeId" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
+        SELECT * FROM i4fvb_employee_files WHERE sb_del_employee_id = #{delEmployeeId} OR gjj_del_employee_id  = #{delEmployeeId} ORDER BY createdTime DESC LIMIT 0,1
+    </select>
+
+    <select id="getSocialSecurityCloseByDelEmployeeId" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityClose">
+        SELECT * FROM i4fvb_social_security_close WHERE del_employee_id = #{delEmployeeId} ORDER BY createdTime DESC LIMIT 0,1
+    </select>
+
+    <select id="getProvidentFundCloseByDelEmployeeId" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityClose">
+        SELECT * FROM i4fvb_provident_fund_close WHERE del_employee_id = #{delEmployeeId} ORDER BY createdTime DESC LIMIT 0,1
+    </select>
+
+    <update id="updateDeleteEmployee" parameterType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
+        UPDATE i4fvb_delete_employee
+        SET name                     = #{employeeName},
+            employee_name            = #{employeeName},
+            identityNo               = #{identityNo},
+            leave_reason             = #{leaveReason},
+            leave_time               = #{leaveTime},
+            social_security_end_time = #{socialSecurityEndTime},
+            remark                   = #{remark},
+            identityNo_type          = #{identityNoType},
+            provident_fund_end_time  = #{providentFundEndTime},
+            first_level_client_name  = #{firstLevelClientName},
+            second_level_client_name = #{secondLevelClientName},
+            social_security_city     = #{socialSecurityCity},
+            provident_fund_city      = #{providentFundCity},
+            s_welfare_handler        = #{sWelfareHandler},
+            g_welfare_handler        = #{gWelfareHandler},
+            gender                   = #{gender},
+            birthday                 = #{birthday},
+            operator                 = #{operator},
+            inquirer                 = #{inquirer},
+            sb_status                = #{sbStatus},
+            gjj_status               = #{gjjStatus},
+            return_reason            = #{returnReason},
+            subordinate_department   = #{subordinateDepartment}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateShDeleteEmployee" parameterType="com.authine.cloudpivot.web.api.entity.ShDeleteEmployee">
+        UPDATE i4fvb_sh_delete_employee
+        SET name                         = #{employeeName},
+            employee_name                = #{employeeName},
+            identityNo_type              = #{identityNoType},
+            identityNo                   = #{identityNo},
+            client_num                   = #{clientNum},
+            client_short_name            = #{clientShortName},
+            OS_initiated_departure_time  = #{osInitiatedDepartureTime},
+            departure_time               = #{departureTime},
+            charge_end_time              = #{chargeEndTime},
+            leave_reason                 = #{leaveReason},
+            leave_remark                 = #{leaveRemark},
+            provident_fund_transfer_mode = #{providentFundTransferMode},
+            backtrack                    = #{backtrack},
+            GE_leave_reason              = #{geLeaveReason},
+            customer_num                 = #{customerNum},
+            weather_leave_E              = #{weatherLeaveE},
+            first_level_client_name      = #{firstLevelClientName},
+            second_level_client_name     = #{secondLevelClientName},
+            subordinate_department       = #{subordinateDepartment},
+            gender                       = #{gender},
+            birthday                     = #{birthday},
+            operator                     = #{operator},
+            inquirer                     = #{inquirer},
+            return_reason                = #{returnReason}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateQgDeleteEmployee" parameterType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
+        UPDATE i4fvb_nationwide_dispatch_delete
+        SET name                         = #{employeeName},
+            unique_num                   = #{uniqueNum},
+            employee_name                = #{employeeName},
+            contact_number               = #{contactNumber},
+            identityNo_type              = #{identityNoType},
+            identityNo                   = #{identityNo},
+            national_business_wf_flag    = #{nationalBusinessWfFlag},
+            involved                     = #{involved},
+            business_customer_num        = #{businessCustomerNum},
+            business_wf_status           = #{businessWfStatus},
+            order_type                   = #{orderType},
+            processing_status            = #{processingStatus},
+            contracting_supplier         = #{contractingSupplier},
+            contracting_representative   = #{contractingRepresentative},
+            contracting_party_department = #{contractingPartyDepartment},
+            into_pending_date            = #{intoPendingDate},
+            task_list_update_date        = #{taskListUpdateDate},
+            entry_date                   = #{entryDate},
+            employee_email               = #{employeeEmail},
+            order_id                     = #{orderId},
+            order_start_date             = #{orderStartDate},
+            assignment_date              = #{assignmentDate},
+            entry_procedures_num         = #{entryProceduresNum},
+            business_tips                = #{businessTips},
+            order_end_date               = #{orderEndDate},
+            withdrawal_date              = #{withdrawalDate},
+            social_insurance_amount      = #{socialInsuranceAmount},
+            provident_fund_amount        = #{providentFundAmount},
+            supple_provident_fund_amount = #{suppleProvidentFundAmount},
+            revocation_reason            = #{revocationReason},
+            social_security_stop_reason  = #{socialSecurityStopReason},
+            departure_date               = #{departureDate},
+            departure_remark             = #{departureRemark},
+            change_details               = #{changeDetails},
+            change_take_effect_date      = #{changeTakeEffectDate},
+            business_unit                = #{businessUnit},
+            salesman                     = #{salesman},
+            social_security_pay_method   = #{socialSecurityPayMethod},
+            provident_fund_pay_method    = #{providentFundPayMethod},
+            supplier_agreement_name      = #{supplierAgreementName},
+            provident_fund_ratio         = #{providentFundRatio},
+            supple_provident_fund_ratio  = #{suppleProvidentFundRatio},
+            social_security_standard     = #{socialSecurityStandard},
+            s_service_fee_start_date     = #{sServiceFeeStartDate},
+            s_service_fee_end_date       = #{sServiceFeeEndDate},
+            g_service_fee_start_date     = #{gServiceFeeStartDate},
+            g_service_fee_end_date       = #{gServiceFeeEndDate},
+            remark                       = #{remark},
+            first_level_client_name      = #{firstLevelClientName},
+            second_level_client_name     = #{secondLevelClientName},
+            subordinate_department       = #{subordinateDepartment},
+            gender                       = #{gender},
+            birthday                     = #{birthday},
+            welfare_handler              = #{welfareHandler},
+            employee_internal_num        = #{employeeInternalNum},
+            is_retired_soldier           = #{isRetiredSoldier},
+            is_poor_archivists           = #{isPoorArchivists},
+            is_disabled                  = #{isDisabled},
+            workplace                    = #{workplace},
+            household_register_remarks   = #{householdRegisterRemarks},
+            operator                     = #{operator},
+            inquirer                     = #{inquirer},
+            return_reason                = #{returnReason}
+        WHERE id = #{id}
+    </update>
+</mapper>

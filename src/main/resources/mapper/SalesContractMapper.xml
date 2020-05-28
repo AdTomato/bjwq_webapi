@@ -6,47 +6,29 @@
 
     <resultMap id="salesContractDto" type="com.authine.cloudpivot.web.api.dto.SalesContractDto">
         <id column="id" property="id"></id>
-        <collection property="serviceChargeUnitPrices"
-                    select="com.authine.cloudpivot.web.api.mapper.SalesContractMapper.getServiceChargeUnitPricesById"
-                    column="id"></collection>
-        <collection property="clientName"
-                    select="com.authine.cloudpivot.web.api.mapper.SalesContractMapper.getClientNameById"
-                    column="client_name"></collection>
+        <collection property="serviceChargeUnitPrices" select="com.authine.cloudpivot.web.api.mapper.SalesContractMapper.getServiceChargeUnitPricesById" column="id"></collection>
+        <collection property="clientName" select="com.authine.cloudpivot.web.api.mapper.SalesContractMapper.getClientNameById" column="client_name"></collection>
     </resultMap>
 
     <select id="getSalesContractByBillDay" parameterType="java.lang.String" resultMap="salesContractDto">
-        SELECT *
-        FROM i8c71_sales_contract
-        WHERE bill_day = #{billDay}
-          AND (business_type = '派遣业务' OR business_type = '专项外包' OR business_type = '代理业务')
+        SELECT * FROM i8c71_sales_contract WHERE bill_day = #{billDay} AND (business_type = '派遣业务' OR business_type = '专项外包' OR business_type = '代理业务')
     </select>
 
     <select id="getSalesContractByGenerateBillDate" resultMap="salesContractDto">
-        SELECT *
-        FROM i8c71_sales_contract
-        WHERE generate_bill_date = #{startDate}
+        SELECT * FROM i8c71_sales_contract WHERE generate_bill_date = #{startDate}
     </select>
 
     <select id="getClientNameById" parameterType="java.lang.String" resultType="java.lang.String">
-        SELECT company_name AS clientName
-        FROM id34a_first_level_client
-        WHERE id = #{client_name}
+        SELECT company_name AS clientName FROM id34a_first_level_client WHERE id = #{client_name}
     </select>
 
     <select id="getSalesContractDto" resultMap="salesContractDto">
-        SELECT *
-        FROM i8c71_sales_contract
-        WHERE client_name = #{clientName}
-          AND business_type LIKE CONCAT('%', #{businessType}, '%')
-        LIMIT 0, 1
+        SELECT * FROM i8c71_sales_contract WHERE client_name = #{clientName} AND business_type LIKE CONCAT('%', #{businessType}, '%') LIMIT 0, 1
     </select>
 
     <!-- 根据父id获取销售合同中的销售单单价列表 -->
-    <select id="getServiceChargeUnitPricesById" parameterType="java.lang.String"
-            resultType="com.authine.cloudpivot.web.api.entity.ServiceChargeUnitPrice">
-        SELECT *
-        FROM i8c71_service_charge_unit_price
-        WHERE parentId = #{id}
+    <select id="getServiceChargeUnitPricesById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ServiceChargeUnitPrice">
+        SELECT * FROM i8c71_service_charge_unit_price WHERE parentId = #{id}
     </select>
 
 </mapper>

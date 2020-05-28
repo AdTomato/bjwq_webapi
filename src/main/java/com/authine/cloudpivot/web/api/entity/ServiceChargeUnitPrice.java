@@ -80,4 +80,5 @@ public class ServiceChargeUnitPrice {
      */
     private String payCycle;
 
+    String orderFormId;
 }
