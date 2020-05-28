@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.ClientManagementMapper">
+
+    <select id="getClientNameByUserId" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.ClientManagement">
+        SELECT first_level_client_name, second_level_client_name
+        FROM id34a_client_management
+        WHERE user_id = #{userId}
+    </select>
+
+</mapper>

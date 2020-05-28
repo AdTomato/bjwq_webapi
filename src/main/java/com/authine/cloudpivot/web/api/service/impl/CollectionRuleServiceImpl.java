@@ -62,10 +62,23 @@ public class CollectionRuleServiceImpl implements CollectionRuleService {
                 List<CollectionRule> collectionRules = collectionRuleMapper.getSbCollectionRulesByCity(socialSecurityCity);
                 return collectionRules != null && collectionRules.size() > 0 ? collectionRules.get(0) : null;
             }
-        } else if (StringUtils.isNotBlank(providentFundCity)){
+        } else if (StringUtils.isNotBlank(providentFundCity)) {
             List<CollectionRule> collectionRules = collectionRuleMapper.getGjjCollectionRulesByCity(socialSecurityCity);
             return collectionRules != null && collectionRules.size() > 0 ? collectionRules.get(0) : null;
         }
         return collectionRule;
+    }
+
+    /**
+     * 根据城市、公司公积金比例查询最新的有效起始月中是否有满足条件的数据
+     *
+     * @param city         城市
+     * @param companyRadio 公司比例
+     * @return true 存在， false，不存在
+     * @author wangyong
+     */
+    @Override
+    public boolean isHaveCompanyRatioInMaxStartMonth(String city, Double companyRadio) {
+        return collectionRuleMapper.isHaveCompanyRatioInMaxStartMonth(city, companyRadio).isEmpty() ? false : true;
     }
 }
