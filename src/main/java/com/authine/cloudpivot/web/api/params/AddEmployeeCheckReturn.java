@@ -1,10 +1,12 @@
 package com.authine.cloudpivot.web.api.params;
 
+import com.authine.cloudpivot.web.api.entity.Unit;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * 增员客户提交校验返回值
@@ -29,17 +31,32 @@ public class AddEmployeeCheckReturn {
     /**
      * 查询人
      */
-    private String look;
+    private List<Unit> look;
+
+    /**
+     * 查询人str
+     */
+    private String lookStr;
 
     /**
      * 操作人
      */
-    private String edit;
+    private List<Unit> edit;
+
+    /**
+     * 操作人str
+     */
+    private String editStr;
 
     /**
      * 所属部门
      */
-    private String dept;
+    private List<Unit> dept;
+
+    /**
+     * 所属部门str
+     */
+    private String deptStr;
 
     /**
      * 出生日期

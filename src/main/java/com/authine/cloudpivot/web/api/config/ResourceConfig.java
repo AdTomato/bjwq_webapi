@@ -165,6 +165,8 @@ public class ResourceConfig extends ResourceServerConfigurerAdapter {
                     .antMatchers("/controller/test/**").permitAll()
                     // 提交校验
                     .antMatchers("/controller/submitCheckout/**").permitAll()
+                    // 下拉关联的时候查询接口
+                    .antMatchers("/api/runtime/query/**").permitAll()
                     //test
                     .antMatchers("/api/licenseExt/**").permitAll()
                     .antMatchers("/v1/dashboard/**").permitAll()

@@ -30,10 +30,14 @@ import java.util.UUID;
 @Slf4j
 public class ClientUserController extends BaseController {
 
-    /** 客户部门ID */
+    /**
+     * 客户部门ID
+     */
     public static final String CLIENT_DEPARTMENT_ID = "402881a16f7412d4016f741a56b60000";
 
-    /** 新增用户时初始化密码 */
+    /**
+     * 新增用户时初始化密码
+     */
     public static final String INITIALIZATION_PASSWORD = "123456";
 
     @Resource
@@ -41,14 +45,15 @@ public class ClientUserController extends BaseController {
 
     /**
      * 方法说明：新增客户用户
-     * @Param userModel  客户用户
+     *
      * @return java.lang.String
      * @throws
+     * @Param userModel  客户用户
      * @author liulei
      * @Date 2019/12/10 19:37
      */
     @PostMapping("/addClientUser")
-    public ResponseResult <String> addClientUser(@RequestBody Client client) {
+    public ResponseResult<String> addClientUser(@RequestBody Client client) {
         /** 对应用户表的id */
         String userId = client.getUserId();
         // 根据手机号判断是否有重复用户
@@ -91,9 +96,10 @@ public class ClientUserController extends BaseController {
 
     /**
      * 方法说明：自动赋值
-     * @Param newUser
+     *
      * @return com.authine.cloudpivot.engine.api.model.organization.UserModel
      * @throws
+     * @Param newUser
      * @author liulei
      * @Date 2020/1/3 17:28
      */
@@ -117,14 +123,15 @@ public class ClientUserController extends BaseController {
 
     /**
      * 方法说明：新增部门用户表数据
-     * @Param userModel
+     *
      * @return void
      * @throws
+     * @Param userModel
      * @author liulei
      * @Date 2020/1/6 12:53
      */
-    private void addClientDepartmentUserModel(UserModel userModel) throws Exception{
-        DepartmentUserModel  deptUserModel = new DepartmentUserModel();
+    private void addClientDepartmentUserModel(UserModel userModel) throws Exception {
+        DepartmentUserModel deptUserModel = new DepartmentUserModel();
         deptUserModel.setUserId(userModel.getId());
         deptUserModel.setDeptId(CLIENT_DEPARTMENT_ID);
         deptUserModel.setMain(true);
@@ -142,15 +149,16 @@ public class ClientUserController extends BaseController {
 
     /**
      * 方法说明：客户用户重置密码
-     * @Param ids 用户管理业务id
+     *
      * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
      * @throws
+     * @Param ids 用户管理业务id
      * @author liulei
      * @Date 2020/1/14 14:47
      */
     @GetMapping("/clientResetPassword")
     @ResponseBody
-    public ResponseResult <String> clientResetPassword(String ids) {
+    public ResponseResult<String> clientResetPassword(String ids) {
         if (StringUtils.isBlank(ids)) {
             log.info("没有获取到ids,重置密码出错!");
             return this.getOkResponseResult("error", "没有获取到ids,重置密码出错!");
@@ -167,18 +175,19 @@ public class ClientUserController extends BaseController {
 
     /**
      * 方法说明：客户导入员工信息，提交后维护修改截止时间
+     *
+     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
+     * @throws
      * @Param id
      * @Param sbCityId 社保缴纳城市id
      * @Param gjjCityId 公积金缴纳城市id
      * @Param clientNumber 客户编码
-     * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
-     * @throws
      * @author liulei
      * @Date 2020/1/19 13:43
      */
     @GetMapping("/updateEndTime")
     @ResponseBody
-    public ResponseResult <String> updateEndTime(String id, String sbCityId, String gjjCityId, String clientNumber) {
+    public ResponseResult<String> updateEndTime(String id, String sbCityId, String gjjCityId, String clientNumber) {
         if (StringUtils.isBlank(id)) {
             log.info("没有获取到id,维护截止时间出错!");
             return this.getOkResponseResult("error", "没有获取到id,维护截止时间出错!");

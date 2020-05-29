@@ -6,19 +6,25 @@
     <!--根据id,查询减员客户数据-->
     <select id="getDeleteEmployeeById" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
-        SELECT * FROM i4fvb_delete_employee WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_delete_employee
+        WHERE id = #{id}
     </select>
 
     <!--根据id,查询减员上海数据-->
     <select id="getShDeleteEmployeeById" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.ShDeleteEmployee">
-        SELECT * FROM i4fvb_sh_delete_employee WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_sh_delete_employee
+        WHERE id = #{id}
     </select>
 
     <!--根据id,查询减员全国数据-->
     <select id="getQgDeleteEmployeeById" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
-        SELECT * FROM i4fvb_nationwide_dispatch_delete WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_nationwide_dispatch_delete
+        WHERE id = #{id}
     </select>
 
     <select id="getGjjEmployeeOrderFormDetails" parameterType="java.lang.String"
@@ -28,20 +34,37 @@
         WHERE parentId = #{parentId}
           AND product_name IN ('省直公积金', '市直公积金')
           AND date_format(start_charge_time, '%Y%m') <![CDATA[<=]]> date_format(SYSDATE(), '%Y%m')
-          AND (effective_termination_month IS NULL OR DATE_FORMAT(effective_termination_month, '%Y%m') <![CDATA[>=]]> date_format(SYSDATE(), '%Y%m'))
-        ORDER BY start_charge_time LIMIT 0,1
+          AND (end_charge_time IS NULL OR DATE_FORMAT(end_charge_time, '%Y%m') <![CDATA[>=]]> date_format(SYSDATE(), '%Y%m'))
+        ORDER BY start_charge_time
+        LIMIT 0,1
     </select>
 
-    <select id="getEmployeeFilesByDelEmployeeId" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
-        SELECT * FROM i4fvb_employee_files WHERE sb_del_employee_id = #{delEmployeeId} OR gjj_del_employee_id  = #{delEmployeeId} ORDER BY createdTime DESC LIMIT 0,1
+    <select id="getEmployeeFilesByDelEmployeeId" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
+        SELECT *
+        FROM i4fvb_employee_files
+        WHERE sb_del_employee_id = #{delEmployeeId}
+           OR gjj_del_employee_id = #{delEmployeeId}
+        ORDER BY createdTime DESC
+        LIMIT 0,1
     </select>
 
-    <select id="getSocialSecurityCloseByDelEmployeeId" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityClose">
-        SELECT * FROM i4fvb_social_security_close WHERE del_employee_id = #{delEmployeeId} ORDER BY createdTime DESC LIMIT 0,1
+    <select id="getSocialSecurityCloseByDelEmployeeId" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityClose">
+        SELECT *
+        FROM i4fvb_social_security_close
+        WHERE del_employee_id = #{delEmployeeId}
+        ORDER BY createdTime DESC
+        LIMIT 0,1
     </select>
 
-    <select id="getProvidentFundCloseByDelEmployeeId" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityClose">
-        SELECT * FROM i4fvb_provident_fund_close WHERE del_employee_id = #{delEmployeeId} ORDER BY createdTime DESC LIMIT 0,1
+    <select id="getProvidentFundCloseByDelEmployeeId" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityClose">
+        SELECT *
+        FROM i4fvb_provident_fund_close
+        WHERE del_employee_id = #{delEmployeeId}
+        ORDER BY createdTime DESC
+        LIMIT 0,1
     </select>
 
     <update id="updateDeleteEmployee" parameterType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">

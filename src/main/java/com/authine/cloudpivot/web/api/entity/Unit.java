@@ -20,4 +20,14 @@ public class Unit {
      * 类型
      */
     Integer type;
+
+    /**
+     * 名称
+     */
+    String name;
+
+    /**
+     * 头像url
+     */
+    String imgUrl;
 }

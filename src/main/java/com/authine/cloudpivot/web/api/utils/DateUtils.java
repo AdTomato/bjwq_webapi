@@ -95,8 +95,9 @@ public class DateUtils {
         }
         return TimeNode;
     }
+
     //获取时间节点封装
-    public static Map<String,Date> getLastAndNowTimeNode(Integer timeNode){
+    public static Map<String, Date> getLastAndNowTimeNode(Integer timeNode) {
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
@@ -132,5 +133,16 @@ public class DateUtils {
         int day = calendar.get(Calendar.DATE);
         sb.append(day < 10 ? "0" + day : day + "");
         return sb.toString();
+    }
+
+    /**
+     * 将时间中的年月日转换成字符串
+     *
+     * @param calendar
+     * @return 年-月-日
+     * @author wangyong
+     */
+    public static final String getYearMonthDate(Calendar calendar) {
+        return calendar != null ? calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH) + 1) + "-" + calendar.get(Calendar.DATE) : null;
     }
 }

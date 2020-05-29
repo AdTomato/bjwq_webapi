@@ -44,4 +44,15 @@ public class SystemDataSetUtils {
         baseEntity.setOwnerDeptQueryCode(department.getQueryCode());
     }
 
+    public static boolean isCanShowAllData(String schemaCode) {
+        boolean result = false;
+        switch (schemaCode) {
+            case "identityNo_type":
+            case "welfare_set":
+                result = true;
+                break;
+        }
+        return result;
+    }
+
 }

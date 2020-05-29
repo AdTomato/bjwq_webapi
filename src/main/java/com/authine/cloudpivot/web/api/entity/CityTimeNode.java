@@ -29,6 +29,11 @@ public class CityTimeNode extends BaseEntity {
     private String city;
 
     /**
+     * 供应商名称
+     */
+    private String supplierName;
+
+    /**
      * 时间节点
      */
     private Integer timeNode;

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.UnitMapper">
+
+    <resultMap id="org" type="com.authine.cloudpivot.web.api.entity.Unit">
+        <id property="id" column="id"/>
+        <id property="name" column="name"/>
+        <id property="type" column="type"/>
+        <id property="imgUrl" column="imgUrl"/>
+    </resultMap>
+    <select id="getOrgUnitByIds" parameterType="java.lang.String" resultMap="org">
+        SELECT id, name, imgUrl, 3 AS type
+        FROM h_org_user
+        WHERE id IN(
+        <foreach collection="list" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+    </select>
+
+    <resultMap id="dept" type="com.authine.cloudpivot.web.api.entity.Unit">
+        <id property="id" column="id"/>
+        <id property="name" column="name"/>
+        <id property="type" column="type"/>
+    </resultMap>
+    <select id="getDeptUnitByIds" parameterType="java.lang.String" resultMap="dept">
+        SELECT id, name, 1 AS type FROM h_org_department
+        WHERE id IN (
+        <foreach collection="list" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+    </select>
+
+</mapper>
