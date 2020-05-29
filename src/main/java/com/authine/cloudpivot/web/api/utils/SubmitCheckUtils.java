@@ -69,7 +69,7 @@ public class SubmitCheckUtils {
         String creater = params.getCreater();
         ClientManagement clientManagement = clientManagementService.getClientNameByUserId(creater);
         AddEmployeeCheckReturn result = new AddEmployeeCheckReturn();
-        result.setCanSubmit(true);
+        result.setIsCanSubmit(true);
 
         if ("身份证".equals(params.getIdentityNoType())) {
             ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(params.getIdentityNo());
@@ -135,7 +135,7 @@ public class SubmitCheckUtils {
                     endTime.setTime(cityTimeNode.getEndTime());
                     endTime.set(endTime.get(Calendar.YEAR), endTime.get(Calendar.MONTH), endTime.get(Calendar.DATE), 23, 59, 59);
                     if (!(notTime.getTime() > startTime.getTimeInMillis() && notTime.getTime() < endTime.getTimeInMillis())) {
-                        result.setCanSubmit(false);
+                        result.setIsCanSubmit(false);
                         result.setMessage(StringUtils.isEmpty(result.getMessage()) ?
                                 welfare + "的申报时间范围为：" + DateUtils.getYearMonthDate(startTime) + "至" + DateUtils.getYearMonthDate(endTime) + ",不在申报时间范围内，无法申报\n" :
                                 result.getMessage() + welfare + "的申报时间范围为：" + DateUtils.getYearMonthDate(startTime) + "至" + DateUtils.getYearMonthDate(endTime) + ",不在申报时间范围内，无法申报\n");
@@ -146,12 +146,12 @@ public class SubmitCheckUtils {
             if (companyRadio != 0) {
                 boolean isHave = collectionRuleService.isHaveCompanyRatioInMaxStartMonth(welfare, companyRadio);
                 if (!isHave) {
-                    result.setCanSubmit(false);
+                    result.setIsCanSubmit(false);
                     result.setMessage(StringUtils.isEmpty(result.getMessage()) ? "公积金单位比例：" + companyRadio + "在" + welfare + "无法申报\n" : result.getMessage() + "公积金单位比例：" + companyRadio + "在" + welfare + "无法申报\n");
                 }
             }
         } else {
-            result.setCanSubmit(false);
+            result.setIsCanSubmit(false);
             result.setMessage("一级客户名称/二级客户名称未查询到");
         }
         return result;

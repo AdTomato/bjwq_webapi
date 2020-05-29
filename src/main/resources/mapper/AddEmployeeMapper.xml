@@ -6,19 +6,25 @@
     <!--根据id,查询增员客户数据-->
     <select id="getAddEmployeeById" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.AddEmployee">
-        SELECT * FROM i4fvb_add_employee WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_add_employee
+        WHERE id = #{id}
     </select>
 
     <!--根据id,查询增员上海数据-->
     <select id="getShAddEmployeeById" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.ShAddEmployee">
-        SELECT * FROM i4fvb_sh_add_employee WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_sh_add_employee
+        WHERE id = #{id}
     </select>
 
     <!--根据id,查询增员全国数据-->
     <select id="getQgAddEmployeeById" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
-        SELECT * FROM i4fvb_nationwide_dispatch WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_nationwide_dispatch
+        WHERE id = #{id}
     </select>
 
     <!--根据客户名称和证件号码获取员工档案数据-->
@@ -30,26 +36,42 @@
           AND second_level_client_name = #{secondLevelClientName}
           AND id_no = #{identityNo}
           AND (quit_date IS NULL OR date_format(quit_date, '%Y-%m-%d') > date_format(SYSDATE(), '%Y-%m-%d'))
-        ORDER BY createdTime DESC LIMIT 0, 1
+        ORDER BY createdTime DESC
+        LIMIT 0, 1
     </select>
 
     <select id="getSocialSecurityDeclareByAddEmployeeId" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare">
-        SELECT * FROM i4fvb_social_security_declare WHERE add_employee_id = #{addEmployeeId} ORDER BY createdTime DESC LIMIT 0,1
+        SELECT *
+        FROM i4fvb_social_security_declare
+        WHERE add_employee_id = #{addEmployeeId}
+        ORDER BY createdTime DESC
+        LIMIT 0,1
     </select>
 
     <select id="getProvidentFundDeclareByAddEmployeeId" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.ProvidentFundDeclare">
-        SELECT * FROM i4fvb_provident_fund_declare WHERE add_employee_id = #{addEmployeeId} ORDER BY createdTime DESC LIMIT 0,1
+        SELECT *
+        FROM i4fvb_provident_fund_declare
+        WHERE add_employee_id = #{addEmployeeId}
+        ORDER BY createdTime DESC
+        LIMIT 0,1
     </select>
 
     <select id="getEmployeeFilesByAddEmployeeId" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
-        SELECT * FROM i4fvb_employee_files WHERE sb_add_employee_id = #{addEmployeeId} OR gjj_add_employee_id = #{addEmployeeId} ORDER BY createdTime DESC LIMIT 0,1
+        SELECT *
+        FROM i4fvb_employee_files
+        WHERE sb_add_employee_id = #{addEmployeeId}
+           OR gjj_add_employee_id = #{addEmployeeId}
+        ORDER BY createdTime DESC
+        LIMIT 0,1
     </select>
 
     <select id="getEmployeeOrderFormById" resultType="com.authine.cloudpivot.web.api.entity.EmployeeOrderForm">
-        SELECT * FROM i4fvb_employee_order_form WHERE id =#{id}
+        SELECT *
+        FROM i4fvb_employee_order_form
+        WHERE id = #{id}
     </select>
 
     <update id="updateEmployeeFiles" parameterType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
@@ -178,11 +200,11 @@
         SELECT handler
         FROM id34a_hs_levy
         WHERE welfare_handler = #{welfareHandler}
-          <if test="welfareHandler == '单立户'">
-              AND client_name like concat('%',#{clientName},'%')
-          </if>
-          AND business_type like concat('%',#{businessType},'%')
-          AND parentId IN (SELECT id FROM id34a_handler_set WHERE city = #{city})
+        <if test="welfareHandler == '单立户'">
+            AND client_name like concat('%',#{clientName},'%')
+        </if>
+        AND business_type like concat('%',#{businessType},'%')
+        AND parentId IN (SELECT id FROM id34a_handler_set WHERE city = #{city})
         LIMIT 0,1
     </select>
 

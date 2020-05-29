@@ -71,7 +71,7 @@ public class AddEmployeeCheckReturn {
     /**
      * 是否能够提交
      */
-    private boolean isCanSubmit;
+    private Boolean isCanSubmit;
 
     /**
      * 不能提交的理由
