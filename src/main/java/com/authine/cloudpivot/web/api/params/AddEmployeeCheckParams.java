@@ -1,5 +1,6 @@
 package com.authine.cloudpivot.web.api.params;
 
+import com.authine.cloudpivot.web.api.entity.AddEmployee;
 import com.sun.istack.NotNull;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
@@ -58,7 +59,7 @@ public class AddEmployeeCheckParams {
      * 公积金基数
      */
     @NotNull
-    private String providentFundBase;
+    private Double providentFundBase;
 
     /**
      * 公积金单位比例
@@ -66,4 +67,19 @@ public class AddEmployeeCheckParams {
     @NotNull
     private Double companyProvidentFundBl;
 
+    public AddEmployeeCheckParams(AddEmployee addEmployee) {
+        this.creater = addEmployee.getCreater();
+        this.businessType = addEmployee.getEmployeeNature();
+        if (addEmployee.getSocialSecurityBase() - 0d > 0d) {
+            this.welfare = addEmployee.getSocialSecurityCity();
+            this.welfareHandler = addEmployee.getSWelfareHandler();
+        } else {
+            this.welfare = addEmployee.getProvidentFundCity();
+            this.welfareHandler = addEmployee.getGWelfareHandler();
+        }
+        this.identityNoType = addEmployee.getIdentityNoType();
+        this.identityNo = addEmployee.getIdentityNo();
+        this.providentFundBase = addEmployee.getProvidentFundBase();
+        this.companyProvidentFundBl = addEmployee.getCompanyProvidentFundBl();
+    }
 }

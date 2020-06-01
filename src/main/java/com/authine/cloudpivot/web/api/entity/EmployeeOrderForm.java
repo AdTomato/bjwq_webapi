@@ -73,11 +73,11 @@ public class EmployeeOrderForm extends BaseEntity {
     /**
      * 社保基数
      */
-    Double socialSecurityBase;
+    Double socialSecurityBase = 0d;
     /**
      * 公积金基数
      */
-    Double providentFundBase;
+    Double providentFundBase = 0d;
     /**
      * 社保起做时间
      */

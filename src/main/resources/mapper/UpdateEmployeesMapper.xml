@@ -3,36 +3,60 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.authine.cloudpivot.web.api.mapper.UpdateEmployeesMapper">
-    <select id="getAddEmployeeUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.AddEmployee">
-        SELECT * FROM i4fvb_add_employee_update WHERE id = #{id}
+    <select id="getAddEmployeeUpdateById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.AddEmployee">
+        SELECT *
+        FROM i4fvb_add_employee_update
+        WHERE id = #{id}
     </select>
 
-    <select id="getShAddEmployeeUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ShAddEmployee">
-        SELECT * FROM i4fvb_sh_add_employee_update WHERE id = #{id}
+    <select id="getShAddEmployeeUpdateById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.ShAddEmployee">
+        SELECT *
+        FROM i4fvb_sh_add_employee_update
+        WHERE id = #{id}
     </select>
 
-    <select id="getQgAddEmployeeUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
-        SELECT * FROM i4fvb_nationwide_dispatch_update WHERE id = #{id}
+    <select id="getQgAddEmployeeUpdateById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
+        SELECT *
+        FROM i4fvb_nationwide_dispatch_update
+        WHERE id = #{id}
     </select>
 
-    <select id="getDeleteEmployeeUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
-        SELECT * FROM i4fvb_add_employee_update WHERE id = #{id}
+    <select id="getDeleteEmployeeUpdateById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
+        SELECT *
+        FROM i4fvb_add_employee_update
+        WHERE id = #{id}
     </select>
 
-    <select id="getShDeleteEmployeeUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ShDeleteEmployee">
-        SELECT * FROM i4fvb_sh_add_employee_update WHERE id = #{id}
+    <select id="getShDeleteEmployeeUpdateById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.ShDeleteEmployee">
+        SELECT *
+        FROM i4fvb_sh_add_employee_update
+        WHERE id = #{id}
     </select>
 
-    <select id="getQgDeleteEmployeeUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
-        SELECT * FROM i4fvb_nationwide_dispatch_update WHERE id = #{id}
+    <select id="getQgDeleteEmployeeUpdateById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
+        SELECT *
+        FROM i4fvb_nationwide_dispatch_update
+        WHERE id = #{id}
     </select>
 
-    <select id="getEmployeeFilesUpdateById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
-        SELECT * FROM i4fvb_employee_files_update WHERE id = #{id}
+    <select id="getEmployeeFilesUpdateById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
+        SELECT *
+        FROM i4fvb_employee_files_update
+        WHERE id = #{id}
     </select>
 
-    <select id="getEmployeeFilesById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
-        SELECT * FROM i4fvb_employee_files WHERE id = #{id}
+    <select id="getEmployeeFilesById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
+        SELECT *
+        FROM i4fvb_employee_files
+        WHERE id = #{id}
     </select>
 
     <delete id="delEmployeeOrderFormDetails">
@@ -46,15 +70,23 @@
     </delete>
 
     <select id="getStartChargeTime" resultType="java.lang.Integer">
-        SELECT distinct date_format(start_charge_time, '%Y%m') from ${tableName} WHERE parentId = #{parentId} ORDER BY start_charge_time
+        SELECT distinct date_format(start_charge_time, '%Y%m')
+        from ${tableName}
+        WHERE parentId = #{parentId}
+        ORDER BY start_charge_time
     </select>
 
     <select id="getEndChargeTime" resultType="java.lang.Integer">
-        SELECT distinct date_format(end_charge_time, '%Y%m') from ${tableName} WHERE parentId = #{parentId} ORDER BY end_charge_time is null, end_charge_time
+        SELECT distinct date_format(end_charge_time, '%Y%m')
+        from ${tableName}
+        WHERE parentId = #{parentId}
+        ORDER BY end_charge_time is null, end_charge_time
     </select>
 
     <select id="getMaxSortKey" resultType="java.lang.Double">
-        SELECT MAX(sortKey) FROM ${tableName} WHERE parentId = #{parentId}
+        SELECT MAX(sortKey)
+        FROM ${tableName}
+        WHERE parentId = #{parentId}
     </select>
 
     <insert id="addEmployeeOrderFormFixedValueDetails">
@@ -72,7 +104,8 @@
     </insert>
 
     <select id="getSumInTimeRange" resultType="java.lang.Double">
-        SELECT SUM(sum) FROM ${tableName} WHERE parentId = #{parentId} AND date_format(start_charge_time, '%Y%m') <![CDATA[<=]]> #{startChargeTime}
+        SELECT SUM(sum) FROM ${tableName} WHERE parentId = #{parentId} AND date_format(start_charge_time, '%Y%m')
+        <![CDATA[<=]]> #{startChargeTime}
         <if test="endChargeTime != null">
             AND (end_charge_time is null or date_format(end_charge_time, '%Y%m')>= #{endChargeTime})
         </if>
@@ -81,62 +114,61 @@
         </if>
     </select>
 
-    <update id="updateSocialSecurityDeclare" parameterType="com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare">
+    <update id="updateSocialSecurityDeclare"
+            parameterType="com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare">
         UPDATE i4fvb_social_security_declare
-        SET name = #{employeeName},
-            start_month = #{startMonth},
-            employee_name = #{employeeName},
-            gender = #{gender},
-            identityNo = #{identityNo},
-            contract_signing_date = #{contractSigningDate},
-            contract_deadline = #{contractDeadline},
-            positive_salary = #{positiveSalary},
-            base_pay = #{basePay},
-            mobile = #{mobile},
-            welfare_handler = #{welfareHandler},
-            birthday = #{birthday},
-            identityNo_type = #{identityNoType},
-            operate_leader = #{operateLeader},
-            employee_order_form_id = #{employeeOrderFormId},
-            first_level_client_name = #{firstLevelClientName},
+        SET name                     = #{employeeName},
+            start_month              = #{startMonth},
+            employee_name            = #{employeeName},
+            gender                   = #{gender},
+            identityNo               = #{identityNo},
+            contract_signing_date    = #{contractSigningDate},
+            contract_deadline        = #{contractDeadline},
+            positive_salary          = #{positiveSalary},
+            base_pay                 = #{basePay},
+            mobile                   = #{mobile},
+            welfare_handler          = #{welfareHandler},
+            birthday                 = #{birthday},
+            identityNo_type          = #{identityNoType},
+            operate_leader           = #{operateLeader},
+            employee_order_form_id   = #{employeeOrderFormId},
+            first_level_client_name  = #{firstLevelClientName},
             second_level_client_name = #{secondLevelClientName},
-            city = #{city},
-            remark = #{remark},
-            operator = #{operator},
-            inquirer = #{inquirer},
-            employee_files_id = #{employeeFilesId},
-            add_employee_id = #{addEmployeeId},
-            subordinate_department = #{subordinateDepartment}
-        WHERE
-            id = #{id}
+            city                     = #{city},
+            remark                   = #{remark},
+            operator                 = #{operator},
+            inquirer                 = #{inquirer},
+            employee_files_id        = #{employeeFilesId},
+            add_employee_id          = #{addEmployeeId},
+            subordinate_department   = #{subordinateDepartment}
+        WHERE id = #{id}
     </update>
 
     <update id="updateProvidentFundDeclare" parameterType="com.authine.cloudpivot.web.api.entity.ProvidentFundDeclare">
         UPDATE i4fvb_provident_fund_declare
-        SET name = #{employeeName},
-            employee_name = #{employeeName},
-            gender = #{gender},
-            identityNo = #{identityNo},
-            start_month = #{startMonth},
-            provident_fund_base =#{providentFundBase},
-            corporate_payment = #{corporatePayment},
-            personal_deposit = #{personalDeposit},
-            total_deposit = #{totalDeposit},
-            welfare_handler = #{welfareHandler},
-            birthday = #{birthday},
-            identityNo_type = #{identityNoType},
-            operate_leader = #{operateLeader},
-            employee_order_form_id = #{employeeOrderFormId},
-            first_level_client_name = #{firstLevelClientName},
+        SET name                     = #{employeeName},
+            employee_name            = #{employeeName},
+            gender                   = #{gender},
+            identityNo               = #{identityNo},
+            start_month              = #{startMonth},
+            provident_fund_base      =#{providentFundBase},
+            corporate_payment        = #{corporatePayment},
+            personal_deposit         = #{personalDeposit},
+            total_deposit            = #{totalDeposit},
+            welfare_handler          = #{welfareHandler},
+            birthday                 = #{birthday},
+            identityNo_type          = #{identityNoType},
+            operate_leader           = #{operateLeader},
+            employee_order_form_id   = #{employeeOrderFormId},
+            first_level_client_name  = #{firstLevelClientName},
             second_level_client_name = #{secondLevelClientName},
-            city = #{city},
-            operator = #{operator},
-            inquirer = #{inquirer},
-            employee_files_id = #{employeeFilesId},
-            add_employee_id = #{addEmployeeId},
-            subordinate_department = #{subordinateDepartment}
-        WHERE
-            id = #{id}
+            city                     = #{city},
+            operator                 = #{operator},
+            inquirer                 = #{inquirer},
+            employee_files_id        = #{employeeFilesId},
+            add_employee_id          = #{addEmployeeId},
+            subordinate_department   = #{subordinateDepartment}
+        WHERE id = #{id}
     </update>
 
     <update id="updateDeleteEmployee" parameterType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
@@ -169,30 +201,30 @@
 
     <update id="updateShDeleteEmployee" parameterType="com.authine.cloudpivot.web.api.entity.ShDeleteEmployee">
         UPDATE i4fvb_sh_delete_employee
-        SET name = #{employeeName},
-            employee_name = #{employeeName},
-            identityNo_type = #{identityNoType},
-            identityNo = #{identityNo},
-            client_num = #{clientNum},
-            client_short_name = #{clientShortName},
-            OS_initiated_departure_time = #{osInitiatedDepartureTime},
-            departure_time = #{departureTime},
-            charge_end_time = #{chargeEndTime},
-            leave_reason = #{leaveReason},
-            leave_remark = #{leaveRemark},
+        SET name                         = #{employeeName},
+            employee_name                = #{employeeName},
+            identityNo_type              = #{identityNoType},
+            identityNo                   = #{identityNo},
+            client_num                   = #{clientNum},
+            client_short_name            = #{clientShortName},
+            OS_initiated_departure_time  = #{osInitiatedDepartureTime},
+            departure_time               = #{departureTime},
+            charge_end_time              = #{chargeEndTime},
+            leave_reason                 = #{leaveReason},
+            leave_remark                 = #{leaveRemark},
             provident_fund_transfer_mode = #{providentFundTransferMode},
-            backtrack = #{backtrack},
-            GE_leave_reason = #{geLeaveReason},
-            customer_num = #{customerNum},
-            weather_leave_E = #{weatherLeaveE},
-            first_level_client_name = #{firstLevelClientName},
-            second_level_client_name = #{secondLevelClientName},
-            subordinate_department = #{subordinateDepartment},
-            gender = #{gender},
-            birthday = #{birthday},
-            operator = #{operator},
-            inquirer = #{inquirer},
-            return_reason = #{returnReason}
+            backtrack                    = #{backtrack},
+            GE_leave_reason              = #{geLeaveReason},
+            customer_num                 = #{customerNum},
+            weather_leave_E              = #{weatherLeaveE},
+            first_level_client_name      = #{firstLevelClientName},
+            second_level_client_name     = #{secondLevelClientName},
+            subordinate_department       = #{subordinateDepartment},
+            gender                       = #{gender},
+            birthday                     = #{birthday},
+            operator                     = #{operator},
+            inquirer                     = #{inquirer},
+            return_reason                = #{returnReason}
         WHERE id = #{shDeleteEmployeeId}
     </update>
 
@@ -298,7 +330,7 @@
             is_disabled                = #{isDisabled},
             s_welfare_handler          = #{sWelfareHandler},
             g_welfare_handler          = #{gWelfareHandler},
-            operator                   = #{gWelfareHandler},
+            operator                   = #{operator},
             inquirer                   = #{inquirer},
             sb_status                  = #{sbStatus},
             gjj_status                 = #{gjjStatus},
@@ -451,9 +483,9 @@
             is_disabled                  = #{isDisabled},
             workplace                    = #{workplace},
             household_register_remarks   = #{householdRegisterRemarks},
-            operator = #{operator},
-            inquirer = #{inquirer},
-            return_reason = #{returnReason}
+            operator                     = #{operator},
+            inquirer                     = #{inquirer},
+            return_reason                = #{returnReason}
         WHERE id = #{nationwideDispatchId}
     </update>
 

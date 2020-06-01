@@ -80,4 +80,8 @@ public interface AddEmployeeMapper {
     void updateQgAddEmployee(NationwideDispatch nationwideDispatch);
 
     void delOrderFormServiceChargeUnitPrice(String parentId, String tableName);
+
+    void updateWorkflowInstanceId(String workflowInstanceId, String id,String tableName);
+
+    String getWorkItemIdByInstanceIdAndUserId(String instanceId, String userId);
 }

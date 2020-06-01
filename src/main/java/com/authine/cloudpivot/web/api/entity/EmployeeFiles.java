@@ -171,11 +171,11 @@ public class EmployeeFiles extends BaseEntity {
     /**
      * 社保基数
      */
-    Double socialSecurityBase;
+    Double socialSecurityBase = 0d;
     /**
      * 公积金基数
      */
-    Double providentFundBase;
+    Double providentFundBase = 0d;
     /**
      * 社保福利办理方
      */
@@ -262,14 +262,14 @@ public class EmployeeFiles extends BaseEntity {
         this.isDisabled = addEmployee.getIsDisabled();
         this.operator = addEmployee.getOperator();
         this.inquirer = addEmployee.getInquirer();
-        if (addEmployee.getSocialSecurityBase() > 0d) {
+        if (addEmployee.getSocialSecurityBase() - 0d > 0d) {
             this.sbAddEmployeeId = addEmployee.getId();
             this.socialSecurityBase = addEmployee.getSocialSecurityBase();
             this.sWelfareHandler = addEmployee.getSWelfareHandler();
             this.socialSecurityCity = addEmployee.getSocialSecurityCity();
             this.socialSecurityChargeStart = addEmployee.getSocialSecurityStartTime();
         }
-        if (addEmployee.getProvidentFundBase() > 0d) {
+        if (addEmployee.getProvidentFundBase() - 0d > 0d) {
             this.gjjAddEmployeeId = addEmployee.getId();
             this.providentFundBase = addEmployee.getProvidentFundBase();
             this.gWelfareHandler = addEmployee.getGWelfareHandler();
@@ -384,4 +384,5 @@ public class EmployeeFiles extends BaseEntity {
         }
         this.subordinateDepartment = addEmployee.getSubordinateDepartment();
     }
+
 }

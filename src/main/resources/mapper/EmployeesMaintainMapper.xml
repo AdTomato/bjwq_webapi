@@ -45,8 +45,8 @@
         company_money, employee_money, company_surcharge_value, employee_surcharge_value, MD5(UUID()), #{parentId},
         sortKey
         FROM
-        <if test="tableName = 'i4fvb_order_details_pay_back'">i4fvb_order_details_pay_back_sb</if>
-        <if test="tableName = 'i4fvb_order_details_remittance'">i4fvb_order_details_remittance_sb</if>
+        <if test="tableName == 'i4fvb_order_details_pay_back'">i4fvb_order_details_pay_back_sb</if>
+        <if test="tableName == 'i4fvb_order_details_remittance'">i4fvb_order_details_remittance_sb</if>
         WHERE parentId IN (SELECT id FROM i4fvb_social_security_declare WHERE employee_order_form_id = #{parentId})
     </insert>
 
@@ -58,8 +58,8 @@
         company_money, employee_money, company_surcharge_value, employee_surcharge_value, MD5(UUID()), #{parentId},
         sortKey
         FROM
-        <if test="tableName = 'i4fvb_order_details_pay_back'">i4fvb_order_details_pay_back_gjj</if>
-        <if test="tableName = 'i4fvb_order_details_remittance'">i4fvb_order_details_remittance_gjj</if>
+        <if test="tableName == 'i4fvb_order_details_pay_back'">i4fvb_order_details_pay_back_gjj</if>
+        <if test="tableName == 'i4fvb_order_details_remittance'">i4fvb_order_details_remittance_gjj</if>
         WHERE parentId IN (SELECT id FROM i4fvb_provident_fund_declare WHERE employee_order_form_id = #{parentId})
     </insert>
 </mapper>

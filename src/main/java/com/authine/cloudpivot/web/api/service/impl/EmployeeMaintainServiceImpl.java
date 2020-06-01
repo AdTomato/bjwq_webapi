@@ -236,7 +236,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_declare", "status", status);
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(addEmployeeId, "i4fvb_add_employee", "sb_status",
-                        "在办".equals(status) ? "待办" : status);
+                        "在办".equals(status) ? null : status);
                 employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
                         "social_security_status", "在办".equals(status) ? "待办" : status);
             } else {
@@ -244,7 +244,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_declare", "status", status);
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(addEmployeeId, "i4fvb_add_employee", "gjj_status",
-                        "在办".equals(status) ? "待办" : status);
+                        "在办".equals(status) ? null : status);
                 employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
                         "provident_fund_status", "在办".equals(status) ? "待办" : status);
             }
@@ -299,7 +299,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_close", "status", status);
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(delEmployeeId, "i4fvb_delete_employee", "sb_status",
-                        "在办".equals(status) ? "待办" : status);
+                        "在办".equals(status) ? null : status);
                 if ("停缴".equals(status)) {
                     employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
                             "social_security_status", "停缴");
@@ -309,7 +309,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_close", "status", status);
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(delEmployeeId, "i4fvb_delete_employee", "gjj_status",
-                        "在办".equals(status) ? "待办" : status);
+                        "在办".equals(status) ? null : status);
                 if ("停缴".equals(status)) {
                     employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
                             "provident_fund_status", "停缴");
@@ -331,9 +331,9 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
      */
     private String getWorkItemId(String workflowInstanceId, boolean isFinish, String userId,
                                  WorkflowInstanceFacade workflowInstanceFacade) {
-        List <WorkItemModel> models = workflowInstanceFacade.getWorkItems(workflowInstanceId, true);
-        String workItemId = "";
-        if (models != null && models.size() > 0) {
+        /*List <WorkItemModel> models = workflowInstanceFacade.getWorkItems(workflowInstanceId, true);*/
+        String workItemId = addEmployeeMapper.getWorkItemIdByInstanceIdAndUserId(workflowInstanceId, userId);
+        /*if (models != null && models.size() > 0) {
             for (int j = 0; j < models.size(); j++) {
                 WorkItemModel model = models.get(j);
                 if (userId.equals(model.getParticipant())) {
@@ -341,15 +341,12 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                     workItemId = model.getId();
                 }
             }
-        }
+        }*/
         return workItemId;
     }
 
     @Override
     public void batchReject(WorkflowInstanceFacade workflowInstanceFacade, String userId, List<String> idList, String code) throws Exception {
-        if (idList == null && idList.size() == 0) {
-            return;
-        }
         String message = "";
         if (Constants.SOCIAL_SECURITY_DECLARE_SCHEMA.equals(code)) {
             // 社保申报提交
@@ -461,24 +458,28 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     private void updateStatusToReject(String type, String id, String employeeId, String employeeOrderFormId,
                                       String workflowType) throws Exception {
         if ("社保".equals(type)) {
-            // 更新当前申报数据状态
-            employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_close", "status", "驳回");
             if ("declare".equals(workflowType)) {
+                // 更新当前申报数据状态
+                employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_declare", "status", "驳回");
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(employeeId, "i4fvb_add_employee", "sb_status", "驳回");
             } else {
+                // 更新当前停缴数据状态
+                employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_close", "status", "驳回");
                 // 更新减员表单社保状态
                 employeesMaintainMapper.updateStatus(employeeId, "i4fvb_delete_employee", "sb_status", "驳回");
             }
             employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
                     "social_security_status", "驳回");
         } else {
-            // 更新当前申报数据状态
-            employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_close", "status", "驳回");
             if ("declare".equals(workflowType)) {
+                // 更新当前申报数据状态
+                employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_declare", "status", "驳回");
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(employeeId, "i4fvb_add_employee", "gjj_status", "驳回");
             } else {
+                // 更新当前申报数据状态
+                employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_close", "status", "驳回");
                 // 更新减员表单社保状态
                 employeesMaintainMapper.updateStatus(employeeId, "i4fvb_delete_employee", "gjj_status", "驳回");
             }
@@ -622,7 +623,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
      * @Date 2020/5/22 15:04
      */
     private void closeWorkflow(List<String> ids, String schemaCode, String status) throws Exception {
-        boolean needChangeAddStatus = "在办".equals(status) ? false : true;
+
         List <String> orderFromIds = new ArrayList <>();
         List <String> delIds = new ArrayList <>();
 
@@ -631,15 +632,11 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
             if (Constants.SOCIAL_SECURITY_CLOSE_SCHEMA.equals(schemaCode)) {
                 SocialSecurityClose close = employeesMaintainMapper.getSocialSecurityCloseById(id);
                 orderFromIds.add(close.getEmployeeOrderFormId());
-                if (needChangeAddStatus) {
-                    delIds.add(id);
-                }
+                delIds.add(id);
             } else if (Constants.PROVIDENT_FUND_DECLARE_SCHEMA.equals(schemaCode)) {
                 ProvidentFundClose close = employeesMaintainMapper.getProvidentFundCloseById(id);
                 orderFromIds.add(close.getEmployeeOrderFormId());
-                if (needChangeAddStatus) {
-                    delIds.add(id);
-                }
+                delIds.add(id);
             }
         }
         if (orderFromIds != null && orderFromIds.size() > 0) {
@@ -649,7 +646,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         }
         if (delIds != null && delIds.size() > 0) {
             employeesMaintainMapper.updateTableStatus(delIds, "i4fvb_delete_employee",
-                    Constants.SOCIAL_SECURITY_CLOSE_SCHEMA.equals(schemaCode) ? "sb_status" : "gjj_status", status);
+                    Constants.SOCIAL_SECURITY_CLOSE_SCHEMA.equals(schemaCode) ? "sb_status" : "gjj_status", "在办".equals(status) ? null : status);
         }
     }
 
@@ -663,7 +660,6 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
      * @Date 2020/5/22 13:59
      */
     private void declareWorkflow(List <String> ids, String schemaCode, String status) throws Exception{
-        boolean needChangeAddStatus = "在办".equals(status) ? false : true;
         List <String> orderFromIds = new ArrayList <>();
         List <String> addIds = new ArrayList <>();
         // 社保申报
@@ -686,14 +682,12 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 orderFormId = pDeclare.getEmployeeOrderFormId();
                 addId = pDeclare.getAddEmployeeId();
             }
-            if ("预点".equals(status) && "在办".equals(curStatus)) {
+            if ("预点".equals(status) && !"在办".equals(curStatus)) {
                 // 只有在办才可以预点
                 throw new RuntimeException(employeeName + "的办理状态不是在办，无法预点！");
             }
             orderFromIds.add(orderFormId);
-            if (needChangeAddStatus) {
-                addIds.add(addId);
-            }
+            addIds.add(addId);
         }
 
         if (orderFromIds != null && orderFromIds.size() > 0) {
@@ -708,7 +702,10 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         }
         if (addIds != null && addIds.size() > 0) {
             employeesMaintainMapper.updateTableStatus(addIds, "i4fvb_add_employee",
-                    Constants.SOCIAL_SECURITY_DECLARE_SCHEMA.equals(schemaCode) ? "sb_status" : "gjj_status", status);
+                    Constants.SOCIAL_SECURITY_DECLARE_SCHEMA.equals(schemaCode) ? "sb_status" : "gjj_status", "在办".equals(status) ? null : status);
+        }
+        if ("预点".equals(status)) {
+            employeesMaintainMapper.updateTableStatus(ids, "i4fvb_" + schemaCode, "status", "预点");
         }
     }
 

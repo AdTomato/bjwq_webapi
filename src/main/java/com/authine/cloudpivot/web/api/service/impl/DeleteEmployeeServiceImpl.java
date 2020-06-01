@@ -96,6 +96,7 @@ public class DeleteEmployeeServiceImpl implements DeleteEmployeeService {
         String id = bizObjectFacade.saveBizObjectModel(delEmployee.getCreater(), model, "id");
         String modelWfId = workflowInstanceFacade.startWorkflowInstance(delEmployee.getCreatedDeptId(),
                 delEmployee.getCreater(), Constants.SOCIAL_SECURITY_CLOSE_SCHEMA_WF, id, true);
+        addEmployeeMapper.updateWorkflowInstanceId(modelWfId, id, "i4fvb_social_security_close");
         System.out.println("创建社保停缴业务对象成功：" + id + "; 启动社保停缴流程成功:" + modelWfId);
     }
 
@@ -118,6 +119,7 @@ public class DeleteEmployeeServiceImpl implements DeleteEmployeeService {
         String id = bizObjectFacade.saveBizObjectModel(delEmployee.getCreater(), model, "id");
         String modelWfId = workflowInstanceFacade.startWorkflowInstance(delEmployee.getCreatedDeptId(),
                 delEmployee.getCreater(), Constants.PROVIDENT_FUND_CLOSE_SCHEMA_WF, id, true);
+        addEmployeeMapper.updateWorkflowInstanceId(modelWfId, id, "i4fvb_provident_fund_close");
         System.out.println("创建公积金停缴业务对象成功：" + id + "; 启动公积金停缴流程成功:" + modelWfId);
     }
 

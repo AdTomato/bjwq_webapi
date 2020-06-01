@@ -305,7 +305,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
         // 生成公积金申报信息
         if (addEmployee.getProvidentFundBase() - 0d > 0d && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(addEmployee.getProvidentFundCity())  >= 0) {
             if (addEmployee.getProvidentFundCity().equals(addEmployee.getProvidentFundCity())
-                    && addEmployee.getGWelfareHandler().equals(addEmployee.getSWelfareHandler())){
+                    && addEmployee.getGWelfareHandler().equals(addEmployee.getSWelfareHandler()) && sCollectionRule != null){
                 gCollectionRule = sCollectionRule;
             } else {
                 gCollectionRule = collectionRuleMapper.getCollectionRuleMaintain(addEmployee.getProvidentFundCity(),
@@ -482,6 +482,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
             addEmployeeMapper.createEmployeeOrderFormDetails(pDeclare.getRemittanceList(), id,
                     "i4fvb_order_details_remittance_gjj");
         }
+        addEmployeeMapper.updateWorkflowInstanceId(modelWfId, id, "i4fvb_provident_fund_declare");
         System.out.println("创建公积金申报业务对象成功：" + id + "; 启动公积金申报流程成功:" + modelWfId);
     }
 
@@ -500,6 +501,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
             addEmployeeMapper.createEmployeeOrderFormDetails(sDeclare.getRemittanceList(), id,
                     "i4fvb_order_details_remittance_sb");
         }
+        addEmployeeMapper.updateWorkflowInstanceId(modelWfId, id, "i4fvb_social_security_declare");
         System.out.println("创建社保申报业务对象成功：" + id + "; 启动社保申报流程成功:" + modelWfId);
     }
 

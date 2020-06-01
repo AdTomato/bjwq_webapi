@@ -7,10 +7,13 @@ import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
 import com.authine.cloudpivot.web.api.dto.UpdateAddEmployeeDto;
 import com.authine.cloudpivot.web.api.entity.*;
+import com.authine.cloudpivot.web.api.params.AddEmployeeCheckParams;
+import com.authine.cloudpivot.web.api.params.AddEmployeeCheckReturn;
 import com.authine.cloudpivot.web.api.service.*;
 import com.authine.cloudpivot.web.api.utils.CommonUtils;
 import com.authine.cloudpivot.web.api.utils.ExcelUtils;
 import com.authine.cloudpivot.web.api.utils.GetBizObjectModelUntils;
+import com.authine.cloudpivot.web.api.utils.SubmitCheckUtils;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -428,7 +431,6 @@ public class EmployeeMaintainController extends BaseController {
                 addEmployeeService.getEmployeeFilesByClientNameAndIdentityNo(shAddEmployee.getFirstLevelClientName(),
                         shAddEmployee.getSecondLevelClientName(), shAddEmployee.getIdentityNo());
         if (employeeFiles != null) {
-            boolean needAdd = false;
             if (shAddEmployee.getSocialSecurityBase() - 0d > 0d) {
                 if(StringUtils.isBlank(employeeFiles.getSbAddEmployeeId())) {
                     // 此时是社保申报数据
@@ -439,7 +441,6 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFiles.setSWelfareHandler(shAddEmployee.getWelfareHandler());
                 } else {
                     // 改员工档案对应的社保申报数据不是该增员数据，此时是新增
-                    needAdd = true;
                     throw new RuntimeException("员工档案已经存在了该员工的社保申报信息！");
                 }
             }
@@ -452,7 +453,6 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFiles.setGWelfareHandler(shAddEmployee.getWelfareHandler());
                 } else {
                     // 改员工档案对应的公积金申报数据不是该增员数据，此时是新增
-                    needAdd = true;
                     throw new RuntimeException("员工档案已经存在了该员工的公积金申报信息！");
                 }
             }
@@ -501,7 +501,6 @@ public class EmployeeMaintainController extends BaseController {
                 addEmployeeService.getEmployeeFilesByClientNameAndIdentityNo(nationwideDispatch.getFirstLevelClientName(),
                         nationwideDispatch.getSecondLevelClientName(), nationwideDispatch.getIdentityNo());
         if (employeeFiles != null) {
-            boolean needAdd = false;
             if (nationwideDispatch.getSocialInsuranceAmount() - 0d > 0d) {
                 if(StringUtils.isBlank(employeeFiles.getSbAddEmployeeId())) {
                     // 此时是社保申报数据
@@ -512,7 +511,6 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFiles.setSWelfareHandler(nationwideDispatch.getWelfareHandler());
                 } else {
                     // 改员工档案对应的社保申报数据不是该增员数据，此时是新增
-                    needAdd = true;
                     throw new RuntimeException("员工档案已经存在了该员工的社保申报信息！");
                 }
             }
@@ -525,7 +523,6 @@ public class EmployeeMaintainController extends BaseController {
                     employeeFiles.setGWelfareHandler(nationwideDispatch.getWelfareHandler());
                 } else {
                     // 改员工档案对应的公积金申报数据不是该增员数据，此时是新增
-                    needAdd = true;
                     throw new RuntimeException("员工档案已经存在了该员工的公积金申报信息！");
                 }
             }
@@ -867,7 +864,6 @@ public class EmployeeMaintainController extends BaseController {
                 orderForm.setIdType(updateAddEmployee.getIdentityNoType());
                 orderForm.setDetail(updateAddEmployee.getRemark());
             }
-            // 根据当前表单生成增员数据
             UpdateAddEmployeeDto dto = addEmployeeService.getAddEmployeeData(updateAddEmployee, employeeFiles.getId());
             EmployeeOrderForm newOrderForm = dto.getOrderForm();
             SocialSecurityDeclare newSDeclare = dto.getSDeclare();
@@ -875,8 +871,10 @@ public class EmployeeMaintainController extends BaseController {
             if (newSDeclare == null && newPDeclare == null) {
                 newOrderForm = null;
             }
-            if (addEmployee.getId().equals(employeeFiles.getSbAddEmployeeId()) &&
-                    addEmployee.getId().equals(employeeFiles.getGjjAddEmployeeId())) {
+
+            if ((addEmployee.getId().equals(employeeFiles.getSbAddEmployeeId()) || StringUtils.isBlank(employeeFiles.getSbAddEmployeeId()))
+                    && (addEmployee.getId().equals(employeeFiles.getGjjAddEmployeeId()) || StringUtils.isBlank(employeeFiles.getGjjAddEmployeeId()))) {
+                // 增员对应员工档案的社保，公积金；增员对应社保，档案的公积金是null；增员对应公积金，档案的社保是null
                 String employeeOrderFormId = updateEmployeeOrderForm(newOrderForm, orderForm, true, true, newSDeclare, newPDeclare);
                 updateSocialSecurityDeclare(newSDeclare, sDeclare, employeeOrderFormId);
                 updateProvidentFundDeclare(newPDeclare, pDeclare, employeeOrderFormId);
@@ -890,6 +888,9 @@ public class EmployeeMaintainController extends BaseController {
                 // 该增员表单对应公积金数据
                 updateProvidentFundDeclare(newPDeclare, pDeclare, employeeOrderFormId);
             }
+            // 更新员工档案数据
+            employeeFiles = employeeFilesSetValue(employeeFiles, updateAddEmployee);
+            addEmployeeService.updateEmployeeFiles(employeeFiles);
             // 更新增员表单
             updateEmployeeService.updateAddEmployee(updateAddEmployee);
 
@@ -898,6 +899,48 @@ public class EmployeeMaintainController extends BaseController {
             log.info(e.getMessage());
             return this.getErrResponseResult("error", 404l, e.getMessage());
         }
+    }
+
+    private EmployeeFiles employeeFilesSetValue(EmployeeFiles employeeFiles, AddEmployee addEmployee) {
+        employeeFiles.setEmployeeName(addEmployee.getEmployeeName());
+        employeeFiles.setIdType(addEmployee.getIdentityNoType());
+        employeeFiles.setIdNo(addEmployee.getIdentityNo());
+        employeeFiles.setGender(addEmployee.getGender());
+        employeeFiles.setBirthDate(addEmployee.getBirthday());
+        employeeFiles.setEmployeeNature(addEmployee.getEmployeeNature());
+        employeeFiles.setHouseholdRegisterNature(addEmployee.getFamilyRegisterNature());
+        employeeFiles.setMobile(addEmployee.getMobile());
+        /*employeeFiles.setReportEntryTime(addEmployee.getCreatedTime());
+        employeeFiles.setreportRecruits("[{\"id\":\"" + addEmployee.getCreater() + "\",\"type\":3}]");*/
+        employeeFiles.setEntryTime(addEmployee.getEntryTime());
+        employeeFiles.setEntryDescription(addEmployee.getRemark());
+        employeeFiles.setEmail(addEmployee.getEmail());
+        /*employeeFiles.setStopGenerateBill(0);
+        employeeFiles.setIsOldEmployee(0);*/
+        employeeFiles.setFirstLevelClientName(addEmployee.getFirstLevelClientName());
+        employeeFiles.setSecondLevelClientName(addEmployee.getSecondLevelClientName());
+        employeeFiles.setHouseholdRegisterRemarks(addEmployee.getHouseholdRegisterRemarks());
+        employeeFiles.setIsRetiredSoldier(addEmployee.getIsRetiredSoldier());
+        employeeFiles.setIsPoorArchivists(addEmployee.getIsPoorArchivists());
+        employeeFiles.setIsDisabled(addEmployee.getIsDisabled());
+        employeeFiles.setOperator(addEmployee.getOperator());
+        employeeFiles.setInquirer(addEmployee.getInquirer());
+        if (addEmployee.getSocialSecurityBase() - 0d > 0d) {
+            employeeFiles.setSbAddEmployeeId(addEmployee.getAddEmployeeId());
+            employeeFiles.setSocialSecurityBase(addEmployee.getSocialSecurityBase());
+            employeeFiles.setSWelfareHandler(addEmployee.getSWelfareHandler());
+            employeeFiles.setSocialSecurityCity(addEmployee.getSocialSecurityCity());
+            employeeFiles.setSocialSecurityChargeStart(addEmployee.getSocialSecurityStartTime());
+        }
+        if (addEmployee.getProvidentFundBase() - 0d > 0d) {
+            employeeFiles.setGjjAddEmployeeId(addEmployee.getAddEmployeeId());
+            employeeFiles.setProvidentFundBase(addEmployee.getProvidentFundBase());
+            employeeFiles.setGWelfareHandler(addEmployee.getGWelfareHandler());
+            employeeFiles.setProvidentFundCity(addEmployee.getProvidentFundCity());
+            employeeFiles.setProvidentFundChargeStart(addEmployee.getProvidentFundStartTime());
+        }
+        employeeFiles.setSubordinateDepartment(addEmployee.getSubordinateDepartment());
+        return employeeFiles;
     }
 
     private String updateEmployeeOrderForm(EmployeeOrderForm newOrderForm, EmployeeOrderForm orderForm, boolean sb,
@@ -936,6 +979,11 @@ public class EmployeeMaintainController extends BaseController {
                 if (newSDeclare != null) {
                     updateEmployeeService.addEmployeeOrderFormDetails(orderForm.getId(), newSDeclare.getPayBackList(),
                             newSDeclare.getRemittanceList());
+                } else if (orderForm.getProvidentFundBase() - 0d == 0d) {
+                    // 订单没有公积金数据
+                    this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
+                            employeeOrderFormId);
+                    return employeeOrderFormId;
                 }
             } else if (gjj) {
                 // 更新订单的公积金数据
@@ -945,6 +993,11 @@ public class EmployeeMaintainController extends BaseController {
                 if (newPDeclare != null) {
                     updateEmployeeService.addEmployeeOrderFormDetails(orderForm.getId(), newPDeclare.getPayBackList(),
                             newPDeclare.getRemittanceList());
+                } else if (orderForm.getSocialSecurityBase() - 0d == 0d) {
+                    // 订单没有公积金数据
+                    this.getBizObjectFacade().removeBizObject(this.getUserId(), Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
+                            employeeOrderFormId);
+                    return employeeOrderFormId;
                 }
             }
         } else if (orderForm != null && newOrderForm == null){
@@ -1078,7 +1131,8 @@ public class EmployeeMaintainController extends BaseController {
             // 获取原员工档案
             EmployeeFiles employeeFiles = addEmployeeService.getEmployeeFilesByAddEmployeeId(addEmployee.getId());
 
-            if (updateAddEmployee.getSocialSecurityBase() - 0d > 0d) {
+            employeeFiles = employeeFilesSetValue(employeeFiles, updateAddEmployee);
+            /*if (updateAddEmployee.getSocialSecurityBase() - 0d > 0d) {
                 if(StringUtils.isBlank(employeeFiles.getSbAddEmployeeId()) || addEmployee.getId().equals(employeeFiles.getSbAddEmployeeId())) {
                     // 此时是社保申报数据,员工档案原来没有社保数据，或者有当前表单饿数据
                     employeeFiles.setSbAddEmployeeId(updateAddEmployee.getId());
@@ -1102,7 +1156,7 @@ public class EmployeeMaintainController extends BaseController {
                     // 改员工档案对应的公积金申报数据不是该增员数据，此时是新增
                     throw new RuntimeException("员工档案已经存在了该员工的公积金申报信息！");
                 }
-            }
+            }*/
             addEmployeeService.updateEmployeeFiles(employeeFiles);
 
             updateEmployeeService.updateShAddEmployee(updateAddEmployee);
@@ -1111,6 +1165,47 @@ public class EmployeeMaintainController extends BaseController {
             log.info(e.getMessage());
             return this.getErrResponseResult("error", 404l, e.getMessage());
         }
+    }
+
+    private EmployeeFiles employeeFilesSetValue(EmployeeFiles employeeFiles, ShAddEmployee addEmployee) {
+        employeeFiles.setEmployeeName(addEmployee.getEmployeeName());
+        employeeFiles.setIdType(addEmployee.getIdentityNoType());
+        employeeFiles.setIdNo(addEmployee.getIdentityNo());
+        employeeFiles.setGender(addEmployee.getGender());
+        employeeFiles.setBirthDate(addEmployee.getBirthday());
+        employeeFiles.setEmployeeNature("代理");
+        employeeFiles.setMobile(addEmployee.getMobile());
+        /*employeeFiles.setReportEntryTime(addEmployee.getCreatedTime());
+        employeeFiles.setReportRecruits("[{\"id\":\"" + addEmployee.getCreater() + "\",\"type\":3}]");*/
+        employeeFiles.setEntryTime(addEmployee.getEntryTime());
+        employeeFiles.setEntryDescription(addEmployee.getInductionRemark());
+        employeeFiles.setEmail(addEmployee.getMail());
+        /*employeeFiles.setStopGenerateBill(0);
+        employeeFiles.setIsOldEmployee(0);*/
+        employeeFiles.setFirstLevelClientName(addEmployee.getFirstLevelClientName());
+        employeeFiles.setSecondLevelClientName(addEmployee.getSecondLevelClientName());
+        employeeFiles.setHouseholdRegisterRemarks(addEmployee.getHouseholdRegisterRemarks());
+        employeeFiles.setIsRetiredSoldier(addEmployee.getIsRetiredSoldier());
+        employeeFiles.setIsPoorArchivists(addEmployee.getIsPoorArchivists());
+        employeeFiles.setIsDisabled(addEmployee.getIsDisabled());
+        employeeFiles.setOperator(addEmployee.getOperator());
+        employeeFiles.setInquirer(addEmployee.getInquirer());
+        if (addEmployee.getSocialSecurityBase() - 0d > 0d) {
+            employeeFiles.setSbAddEmployeeId(addEmployee.getId());
+            employeeFiles.setSocialSecurityCity(addEmployee.getCityName());
+            employeeFiles.setSocialSecurityChargeStart(addEmployee.getBenefitStartTime());
+            employeeFiles.setSocialSecurityBase(addEmployee.getSocialSecurityBase());
+            employeeFiles.setSWelfareHandler(addEmployee.getWelfareHandler());
+        }
+        if (addEmployee.getProvidentFundBase() - 0d > 0d) {
+            employeeFiles.setGjjAddEmployeeId(addEmployee.getId());
+            employeeFiles.setProvidentFundCity(addEmployee.getCityName());
+            employeeFiles.setProvidentFundChargeStart(addEmployee.getProvidentFundStartTime());
+            employeeFiles.setProvidentFundBase(addEmployee.getProvidentFundBase());
+            employeeFiles.setGWelfareHandler(addEmployee.getWelfareHandler());
+        }
+        employeeFiles.setSubordinateDepartment(addEmployee.getSubordinateDepartment());
+        return employeeFiles;
     }
 
     /**
@@ -1134,8 +1229,8 @@ public class EmployeeMaintainController extends BaseController {
 
             //获取员工档案
             EmployeeFiles employeeFiles = addEmployeeService.getEmployeeFilesByAddEmployeeId(addEmployee.getId());
-
-            if (updateAddEmployee.getSocialInsuranceAmount() - 0d > 0d) {
+            employeeFiles = employeeFilesSetValue(employeeFiles, updateAddEmployee);
+            /*if (updateAddEmployee.getSocialInsuranceAmount() - 0d > 0d) {
                 if(StringUtils.isBlank(employeeFiles.getSbAddEmployeeId()) || addEmployee.getId().equals(employeeFiles.getSbAddEmployeeId())) {
                     // 此时是社保申报数据,员工档案原来没有社保数据，或者有当前表单饿数据
                     employeeFiles.setSbAddEmployeeId(updateAddEmployee.getId());
@@ -1159,7 +1254,7 @@ public class EmployeeMaintainController extends BaseController {
                     // 改员工档案对应的公积金申报数据不是该增员数据，此时是新增
                     throw new RuntimeException("员工档案已经存在了该员工的公积金申报信息！");
                 }
-            }
+            }*/
             addEmployeeService.updateEmployeeFiles(employeeFiles);
 
             updateEmployeeService.updateQgAddEmployee(updateAddEmployee);
@@ -1169,6 +1264,47 @@ public class EmployeeMaintainController extends BaseController {
             log.info(e.getMessage());
             return this.getErrResponseResult("error", 404l, e.getMessage());
         }
+    }
+
+    private EmployeeFiles employeeFilesSetValue(EmployeeFiles employeeFiles, NationwideDispatch addEmployee) {
+        employeeFiles.setEmployeeName(addEmployee.getEmployeeName());
+        employeeFiles.setIdType(addEmployee.getIdentityNoType());
+        employeeFiles.setIdNo(addEmployee.getIdentityNo());
+        employeeFiles.setGender(addEmployee.getGender());
+        employeeFiles.setBirthDate(addEmployee.getBirthday());
+        employeeFiles.setEmployeeNature("代理");
+        employeeFiles.setMobile(addEmployee.getContactNumber());
+        /*employeeFiles.setReportEntryTime(addEmployee.getCreatedTime());
+        employeeFiles.setReportRecruits("[{\"id\":\"" + addEmployee.getCreater() + "\",\"type\":3}]");*/
+        employeeFiles.setEntryTime(addEmployee.getEntryDate());
+        employeeFiles.setEntryDescription(addEmployee.getRemark());
+        employeeFiles.setEmail(addEmployee.getEmployeeEmail());
+        /*employeeFiles.setStopGenerateBill(0);
+        employeeFiles.setIsOldEmployee(0);*/
+        employeeFiles.setFirstLevelClientName(addEmployee.getFirstLevelClientName());
+        employeeFiles.setSecondLevelClientName(addEmployee.getSecondLevelClientName());
+        employeeFiles.setHouseholdRegisterRemarks(addEmployee.getHouseholdRegisterRemarks());
+        employeeFiles.setIsRetiredSoldier(addEmployee.getIsRetiredSoldier());
+        employeeFiles.setIsPoorArchivists(addEmployee.getIsPoorArchivists());
+        employeeFiles.setIsDisabled(addEmployee.getIsDisabled());
+        employeeFiles.setOperator(addEmployee.getOperator());
+        employeeFiles.setInquirer(addEmployee.getInquirer());
+        if (addEmployee.getSocialInsuranceAmount() - 0d > 0d) {
+            employeeFiles.setSbAddEmployeeId(addEmployee.getId());
+            employeeFiles.setSocialSecurityCity(addEmployee.getInvolved());
+            employeeFiles.setSocialSecurityChargeStart(addEmployee.getSServiceFeeStartDate());
+            employeeFiles.setSocialSecurityBase(addEmployee.getSocialInsuranceAmount());
+            employeeFiles.setSWelfareHandler(addEmployee.getWelfareHandler());
+        }
+        if (addEmployee.getProvidentFundAmount() - 0d > 0d) {
+            employeeFiles.setGjjAddEmployeeId(addEmployee.getId());
+            employeeFiles.setProvidentFundCity(addEmployee.getInvolved());
+            employeeFiles.setProvidentFundChargeStart(addEmployee.getGServiceFeeStartDate());
+            employeeFiles.setProvidentFundBase(addEmployee.getProvidentFundAmount());
+            employeeFiles.setGWelfareHandler(addEmployee.getWelfareHandler());
+        }
+        employeeFiles.setSubordinateDepartment(addEmployee.getSubordinateDepartment());
+        return employeeFiles;
     }
 
     /**
@@ -1211,32 +1347,29 @@ public class EmployeeMaintainController extends BaseController {
                 for (int i = 0; i < list.size(); i ++) {
                     String id = list.get(i).get("id").toString();
                     String workItemId = list.get(i).get("workItemId").toString();
-                    // 提交流程
-                    this.getWorkflowInstanceFacade().submitWorkItem(this.getUserId(), workItemId, true);
                     if ("add".equals(type)) {
-                        /*AddEmployee addEmployee = addEmployeeService.getAddEmployeeById(id);
-                        ResponseResult <QueryInfo> result = queryInfo(addEmployee.getCreater(),
-                                addEmployee.getIdentityNo(), addEmployee.getIdentityNoType(),
-                                addEmployee.getEmployeeNature(), addEmployee.getSocialSecurityBase() - 0d > 0d ?
-                                        addEmployee.getSocialSecurityCity() : null, addEmployee.getSWelfareHandler(),
-                                addEmployee.getProvidentFundBase() - 0d > 0d ? addEmployee.getProvidentFundCity() :
-                                        null, addEmployee.getGWelfareHandler());
-                        QueryInfo queryInfo = result.getData();
-                        if ("error".equals(result.getErrmsg())) {
-                            addEmployee.setReturnReason(queryInfo.getReturnReason());
+                        AddEmployee addEmployee = addEmployeeService.getAddEmployeeById(id);
+                        AddEmployeeCheckParams params = new AddEmployeeCheckParams(addEmployee);
+                        AddEmployeeCheckReturn result = SubmitCheckUtils.addEmployeeCheck(params);
+                        if (result.getIsCanSubmit()) {
+                            addEmployee.setFirstLevelClientName(result.getFirstLevelClientName());
+                            addEmployee.setSecondLevelClientName(result.getSecondLevelClientName());
+                            addEmployee.setOperator(result.getEditStr());
+                            addEmployee.setInquirer(result.getLookStr());
+                            addEmployee.setSubordinateDepartment(result.getDeptStr());
+                            if ("身份证".equals(addEmployee.getIdentityNoType())) {
+                                addEmployee.setGender(result.getGender());
+                                addEmployee.setBirthday(result.getBirthday());
+                            }
+                            addEmployeeService.updateAddEmployee(addEmployee);
+                            // 提交流程
+                            this.getWorkflowInstanceFacade().submitWorkItem(this.getUserId(), workItemId, true);
+                            addEmployeeSubmit(addEmployee);
+                        } else {
+                            addEmployee.setReturnReason(result.getMessage());
                             addEmployeeService.updateAddEmployee(addEmployee);
                             continue;
-                        } else {
-                            addEmployee.setGender(queryInfo.getGender());
-                            addEmployee.setBirthday(queryInfo.getBirthday());
-                            addEmployee.setFirstLevelClientName(queryInfo.getFirstLevelClientName());
-                            addEmployee.setSecondLevelClientName(queryInfo.getSecondLevelClientName());
-                            addEmployee.setOperator(queryInfo.getOperator());
-                            addEmployee.setInquirer(queryInfo.getInquirer());
-                            addEmployee.setSubordinateDepartment(queryInfo.getSubordinateDepartment());
-                            addEmployeeService.updateAddEmployee(addEmployee);
-                            addEmployeeSubmit(addEmployee);
-                        }*/
+                        }
                     } else if ("shAdd".equals(type)) {
                         /*ShAddEmployee shAddEmployee = addEmployeeService.getShAddEmployeeById(id);
                         ResponseResult <QueryInfo> result = queryInfoShQgAdd(shAddEmployee.getIdentityNo(),
