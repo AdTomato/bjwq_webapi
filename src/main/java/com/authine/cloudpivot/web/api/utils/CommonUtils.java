@@ -122,7 +122,7 @@ public class CommonUtils {
         if(value == null) {
             return null;
         }
-        Double returnValue = 0.0;
+        Double returnValue = 0d;
         if ("四舍五入".equals(rounding)) {
             NumberFormat nf = NumberFormat.getNumberInstance();
             // 如果不需要四舍五入，可以使用RoundingMode.DOWN
@@ -133,11 +133,11 @@ public class CommonUtils {
             } else if ("1".equals(precision)) {
                 // 保留两位小数
                 nf.setMaximumFractionDigits(1);
-                String companyStr = nf.format(value);
+                String companyStr = nf.format(value).trim().replaceAll(",", "");
                 returnValue = Double.parseDouble(companyStr);
             } else if ("2".equals(precision)) {
                 nf.setMaximumFractionDigits(2);
-                String companyStr = nf.format(value);
+                String companyStr = nf.format(value).trim().replaceAll(",", "");
                 returnValue = Double.parseDouble(companyStr);
             }
         } else if ("单边见角进元取整".equals(rounding)) {

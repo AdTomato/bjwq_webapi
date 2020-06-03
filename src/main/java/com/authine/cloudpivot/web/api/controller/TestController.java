@@ -70,8 +70,9 @@ public class TestController extends BaseController {
     public Object myTest() {
 
 //        return clientMapper.getSecondLevelClientDtoByClientName("宝鸡新城万博房地产开发有限公司-商业开发事业部-客服部");
-        Map<String, String> lookAndEditPerson = clientService.getLookAndEditPerson("北京外企人力资源服务有限公司", "", "","芜湖市", "");
-        return lookAndEditPerson;
+//        Map<String, String> lookAndEditPerson = clientService.getLookAndEditPerson("北京外企人力资源服务有限公司", "", "","芜湖市", "");
+        ServiceChargeUnitPrice serviceChargeUnitPrice = salesContractService.getServiceChargeUnitPrice("百丽鞋业(上海)有限公司", "派遣", "省内", "蚌埠市");
+        return serviceChargeUnitPrice;
     }
 
     @RequestMapping("/getProperty")

@@ -48,22 +48,22 @@ public class ServiceChargeUnitPrice {
     /**
      * 服务费单价
      */
-    private Double serviceChargeUnitPrice;
+    private Double serviceChargeUnitPrice = 0d;
 
     /**
      * 风险管理费
      */
-    private Double riskManagementFee;
+    private Double riskManagementFee = 0d;
 
     /**
      * 增值税税费
      */
-    private Double vatTaxes;
+    private Double vatTaxes = 0d;
 
     /**
      * 福利产品总额
      */
-    private Double totalWelfareProducts;
+    private Double totalWelfareProducts = 0d;
 
     /**
      * 备注

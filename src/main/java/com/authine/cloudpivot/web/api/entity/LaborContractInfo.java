@@ -17,10 +17,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LaborContractInfo extends BaseEntity{
-    /**
-     * 业务部
-     */
-    String businessUnit;
+    String operator;
+    String inquirer;
+    String subordinateDepartment;
     /**
      * 姓名
      */
@@ -147,7 +146,9 @@ public class LaborContractInfo extends BaseEntity{
         this.modifiedTime = addEmployee.getModifiedTime();
         this.name = addEmployee.getEmployeeName();
 
-        this.businessUnit = addEmployee.getSubordinateDepartment();
+        this.operator = addEmployee.getOperator();
+        this.inquirer = addEmployee.getInquirer();
+        this.subordinateDepartment = addEmployee.getSubordinateDepartment();
         this.firstLevelClientName = addEmployee.getFirstLevelClientName();
         this.secondLevelClientName = addEmployee.getSecondLevelClientName();
         this.personnelName = addEmployee.getEmployeeName();

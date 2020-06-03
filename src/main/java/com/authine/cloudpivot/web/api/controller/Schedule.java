@@ -32,7 +32,7 @@ public class Schedule extends BaseController {
      * @author liulei
      * @Date 2020/5/8 14:06
      */
-    @Scheduled(cron = "0 0 1 1/1 * ?")
+    @Scheduled(cron = "0 0 1 1 * ?")
     public void insertCityTimeNode() {
         try {
             String curBusinessYear = cityTimeNodeService.insertCityTimeNode();
@@ -49,7 +49,7 @@ public class Schedule extends BaseController {
      * @author liulei
      * @Date 2020/5/9 16:47
      */
-    @Scheduled(cron = "0 30 1 1/1 * ?")
+    @Scheduled(cron = "0 30 1 1 * ?")
     public void collectionRuleMaintain() {
         try {
             collectionRuleService.moveCollectionRuleDataToHistory();

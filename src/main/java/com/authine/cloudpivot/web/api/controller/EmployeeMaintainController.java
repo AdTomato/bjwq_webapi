@@ -7,8 +7,7 @@ import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
 import com.authine.cloudpivot.web.api.dto.UpdateAddEmployeeDto;
 import com.authine.cloudpivot.web.api.entity.*;
-import com.authine.cloudpivot.web.api.params.AddEmployeeCheckParams;
-import com.authine.cloudpivot.web.api.params.AddEmployeeCheckReturn;
+import com.authine.cloudpivot.web.api.params.*;
 import com.authine.cloudpivot.web.api.service.*;
 import com.authine.cloudpivot.web.api.utils.CommonUtils;
 import com.authine.cloudpivot.web.api.utils.ExcelUtils;
@@ -1349,8 +1348,8 @@ public class EmployeeMaintainController extends BaseController {
                     String workItemId = list.get(i).get("workItemId").toString();
                     if ("add".equals(type)) {
                         AddEmployee addEmployee = addEmployeeService.getAddEmployeeById(id);
-                        AddEmployeeCheckParams params = new AddEmployeeCheckParams(addEmployee);
-                        AddEmployeeCheckReturn result = SubmitCheckUtils.addEmployeeCheck(params);
+                        AddEmployeeCheckReturn result =
+                                SubmitCheckUtils.addEmployeeCheck(new AddEmployeeCheckParams(addEmployee));
                         if (result.getIsCanSubmit()) {
                             addEmployee.setFirstLevelClientName(result.getFirstLevelClientName());
                             addEmployee.setSecondLevelClientName(result.getSecondLevelClientName());
@@ -1371,111 +1370,110 @@ public class EmployeeMaintainController extends BaseController {
                             continue;
                         }
                     } else if ("shAdd".equals(type)) {
-                        /*ShAddEmployee shAddEmployee = addEmployeeService.getShAddEmployeeById(id);
-                        ResponseResult <QueryInfo> result = queryInfoShQgAdd(shAddEmployee.getIdentityNo(),
-                                shAddEmployee.getIdentityNoType(), shAddEmployee.getFirstLevelClientName(),
-                                shAddEmployee.getSecondLevelClientName(), shAddEmployee.getCityName(),
-                                shAddEmployee.getWelfareHandler());
-                        QueryInfo queryInfo = result.getData();
-                        if ("error".equals(result.getErrmsg())) {
-                            shAddEmployee.setReturnReason(queryInfo.getReturnReason());
-                            addEmployeeService.updateShAddEmployee(shAddEmployee);
-                            continue;
-                        } else {
-                            shAddEmployee.setGender(queryInfo.getGender());
-                            shAddEmployee.setBirthday(queryInfo.getBirthday());
-                            shAddEmployee.setBirthday(queryInfo.getBirthday());
-                            shAddEmployee.setOperator(queryInfo.getOperator());
-                            shAddEmployee.setInquirer(queryInfo.getInquirer());
-                            shAddEmployee.setSubordinateDepartment(queryInfo.getSubordinateDepartment());
-                            addEmployeeService.updateShAddEmployee(shAddEmployee);
-                            shAddEmployeeSubmit(shAddEmployee);
-                        }*/
+                        ShAddEmployee shAddEmployee = addEmployeeService.getShAddEmployeeById(id);
+                        // 获取校验
+                        AddEmployeeCheckReturn result =
+                                SubmitCheckUtils.employeeCheck(new OtherAddEmployeeCheckParams(shAddEmployee));
+                        shAddEmployee.setFirstLevelClientName(result.getFirstLevelClientName());
+                        shAddEmployee.setSecondLevelClientName(result.getSecondLevelClientName());
+                        shAddEmployee.setOperator(result.getEditStr());
+                        shAddEmployee.setInquirer(result.getLookStr());
+                        shAddEmployee.setSubordinateDepartment(result.getDeptStr());
+                        if ("身份证".equals(shAddEmployee.getIdentityNoType())) {
+                            shAddEmployee.setGender(result.getGender());
+                            shAddEmployee.setBirthday(result.getBirthday());
+                        }
+                        addEmployeeService.updateShAddEmployee(shAddEmployee);
+                        // 提交流程
+                        this.getWorkflowInstanceFacade().submitWorkItem(this.getUserId(), workItemId, true);
+                        shAddEmployeeSubmit(shAddEmployee);
                     } else if ("qgAdd".equals(type)) {
-                        /*NationwideDispatch qgAddEmployee = addEmployeeService.getQgAddEmployeeById(id);
-                        ResponseResult <QueryInfo> result = queryInfoShQgAdd(qgAddEmployee.getIdentityNo(),
-                                qgAddEmployee.getIdentityNoType(), qgAddEmployee.getFirstLevelClientName(),
-                                qgAddEmployee.getSecondLevelClientName(), qgAddEmployee.getInvolved(),
-                                qgAddEmployee.getWelfareHandler());
-                        QueryInfo queryInfo = result.getData();
-                        if ("error".equals(result.getErrmsg())) {
-                            qgAddEmployee.setReturnReason(queryInfo.getReturnReason());
-                            addEmployeeService.updateQgAddEmployee(qgAddEmployee);
-                            continue;
-                        } else {
-                            qgAddEmployee.setGender(queryInfo.getGender());
-                            qgAddEmployee.setBirthday(queryInfo.getBirthday());
-                            qgAddEmployee.setBirthday(queryInfo.getBirthday());
-                            qgAddEmployee.setOperator(queryInfo.getOperator());
-                            qgAddEmployee.setInquirer(queryInfo.getInquirer());
-                            qgAddEmployee.setSubordinateDepartment(queryInfo.getSubordinateDepartment());
-                            addEmployeeService.updateQgAddEmployee(qgAddEmployee);
-                            qgAddEmployeeSubmit(qgAddEmployee);
-                        }*/
+                        NationwideDispatch qgAddEmployee = addEmployeeService.getQgAddEmployeeById(id);
+                        // 获取校验
+                        AddEmployeeCheckReturn result =
+                                SubmitCheckUtils.employeeCheck(new OtherAddEmployeeCheckParams(qgAddEmployee));
+                        qgAddEmployee.setFirstLevelClientName(result.getFirstLevelClientName());
+                        qgAddEmployee.setSecondLevelClientName(result.getSecondLevelClientName());
+                        qgAddEmployee.setOperator(result.getEditStr());
+                        qgAddEmployee.setInquirer(result.getLookStr());
+                        qgAddEmployee.setSubordinateDepartment(result.getDeptStr());
+                        if ("身份证".equals(qgAddEmployee.getIdentityNoType())) {
+                            qgAddEmployee.setGender(result.getGender());
+                            qgAddEmployee.setBirthday(result.getBirthday());
+                        }
+                        addEmployeeService.updateQgAddEmployee(qgAddEmployee);
+                        // 提交流程
+                        this.getWorkflowInstanceFacade().submitWorkItem(this.getUserId(), workItemId, true);
+                        qgAddEmployeeSubmit(qgAddEmployee);
                     } else if ("del".equals(type)) {
-                        /*DeleteEmployee deleteEmployee = deleteEmployeeService.getDeleteEmployeeById(id);
-                        ResponseResult <QueryInfo> result = queryInfoDel(deleteEmployee.getCreater(),
-                                deleteEmployee.getIdentityNo(), deleteEmployee.getSocialSecurityEndTime() == null ?
-                                        null : deleteEmployee.getSocialSecurityCity(),
-                                deleteEmployee.getSWelfareHandler(),
-                                deleteEmployee.getProvidentFundEndTime() == null ? null :
-                                        deleteEmployee.getProvidentFundCity(), deleteEmployee.getGWelfareHandler());
-                        QueryInfo queryInfo = result.getData();
-                        if ("error".equals(result.getErrmsg())) {
-                            deleteEmployee.setReturnReason(queryInfo.getReturnReason());
+                        DeleteEmployee deleteEmployee = deleteEmployeeService.getDeleteEmployeeById(id);
+                        AddEmployeeCheckReturn result =
+                                SubmitCheckUtils.delEmployeeCheck(new DelEmployeeCheckParams(deleteEmployee));
+                        if (result.getIsCanSubmit()) {
+                            deleteEmployee.setFirstLevelClientName(result.getFirstLevelClientName());
+                            deleteEmployee.setSecondLevelClientName(result.getSecondLevelClientName());
+                            deleteEmployee.setOperator(result.getEditStr());
+                            deleteEmployee.setInquirer(result.getLookStr());
+                            deleteEmployee.setSubordinateDepartment(result.getDeptStr());
+                            if ("身份证".equals(deleteEmployee.getIdentityNoType())) {
+                                deleteEmployee.setGender(result.getGender());
+                                deleteEmployee.setBirthday(result.getBirthday());
+                            }
                             deleteEmployeeService.updateDeleteEmployee(deleteEmployee);
-                            continue;
-                        } else {
-                            deleteEmployee.setGender(queryInfo.getGender());
-                            deleteEmployee.setBirthday(queryInfo.getBirthday());
-                            deleteEmployee.setFirstLevelClientName(queryInfo.getFirstLevelClientName());
-                            deleteEmployee.setSecondLevelClientName(queryInfo.getSecondLevelClientName());
-                            deleteEmployee.setOperator(queryInfo.getOperator());
-                            deleteEmployee.setInquirer(queryInfo.getInquirer());
-                            deleteEmployee.setSubordinateDepartment(queryInfo.getSubordinateDepartment());
-                            deleteEmployeeService.updateDeleteEmployee(deleteEmployee);
+                            // 提交流程
+                            this.getWorkflowInstanceFacade().submitWorkItem(this.getUserId(), workItemId, true);
                             deleteEmployeeSubmit(deleteEmployee);
-                        }*/
+                        } else {
+                            deleteEmployee.setReturnReason(result.getMessage());
+                            deleteEmployeeService.updateDeleteEmployee(deleteEmployee);
+                            continue;
+                        }
                     } else if ("shDel".equals(type)) {
-                        /*ShDeleteEmployee shDeleteEmployee = deleteEmployeeService.getShDeleteEmployeeById(id);
-                        ResponseResult <QueryInfo> result = queryInfoShQgDel(shDeleteEmployee.getFirstLevelClientName(),
-                                shDeleteEmployee.getSecondLevelClientName(), shDeleteEmployee.getIdentityNo());
-                        QueryInfo queryInfo = result.getData();
-                        if ("error".equals(result.getErrmsg())) {
-                            shDeleteEmployee.setReturnReason(queryInfo.getReturnReason());
+                        ShDeleteEmployee shDeleteEmployee = deleteEmployeeService.getShDeleteEmployeeById(id);
+                        AddEmployeeCheckReturn result =
+                                SubmitCheckUtils.otherDelEmployeeCheck(new OtherDelEmployeeCheckParams(shDeleteEmployee));
+                        if (result.getIsCanSubmit()) {
+                            shDeleteEmployee.setFirstLevelClientName(result.getFirstLevelClientName());
+                            shDeleteEmployee.setSecondLevelClientName(result.getSecondLevelClientName());
+                            shDeleteEmployee.setOperator(result.getEditStr());
+                            shDeleteEmployee.setInquirer(result.getLookStr());
+                            shDeleteEmployee.setSubordinateDepartment(result.getDeptStr());
+                            if ("身份证".equals(shDeleteEmployee.getIdentityNoType())) {
+                                shDeleteEmployee.setGender(result.getGender());
+                                shDeleteEmployee.setBirthday(result.getBirthday());
+                            }
                             deleteEmployeeService.updateShDeleteEmployee(shDeleteEmployee);
-                            continue;
-                        } else {
-                            shDeleteEmployee.setGender(queryInfo.getGender());
-                            shDeleteEmployee.setBirthday(queryInfo.getBirthday());
-                            shDeleteEmployee.setFirstLevelClientName(queryInfo.getFirstLevelClientName());
-                            shDeleteEmployee.setSecondLevelClientName(queryInfo.getSecondLevelClientName());
-                            shDeleteEmployee.setOperator(queryInfo.getOperator());
-                            shDeleteEmployee.setInquirer(queryInfo.getInquirer());
-                            shDeleteEmployee.setSubordinateDepartment(queryInfo.getSubordinateDepartment());
-                            deleteEmployeeService.updateShDeleteEmployee(shDeleteEmployee);
+                            // 提交流程
+                            this.getWorkflowInstanceFacade().submitWorkItem(this.getUserId(), workItemId, true);
                             shDeleteEmployeeSubmit(shDeleteEmployee);
-                        }*/
+                        } else {
+                            shDeleteEmployee.setReturnReason(result.getMessage());
+                            deleteEmployeeService.updateShDeleteEmployee(shDeleteEmployee);
+                            continue;
+                        }
                     } else if ("qgDel".equals(type)) {
-                        /*NationwideDispatch qgDeleteEmployee = deleteEmployeeService.getQgDeleteEmployeeById(id);
-                        ResponseResult <QueryInfo> result = queryInfoShQgDel(qgDeleteEmployee.getFirstLevelClientName(),
-                                qgDeleteEmployee.getSecondLevelClientName(), qgDeleteEmployee.getIdentityNo());
-                        QueryInfo queryInfo = result.getData();
-                        if ("error".equals(result.getErrmsg())) {
-                            qgDeleteEmployee.setReturnReason(queryInfo.getReturnReason());
+                        NationwideDispatch qgDeleteEmployee = deleteEmployeeService.getQgDeleteEmployeeById(id);
+                        AddEmployeeCheckReturn result =
+                                SubmitCheckUtils.otherDelEmployeeCheck(new OtherDelEmployeeCheckParams(qgDeleteEmployee));
+                        if (result.getIsCanSubmit()) {
+                            qgDeleteEmployee.setFirstLevelClientName(result.getFirstLevelClientName());
+                            qgDeleteEmployee.setSecondLevelClientName(result.getSecondLevelClientName());
+                            qgDeleteEmployee.setOperator(result.getEditStr());
+                            qgDeleteEmployee.setInquirer(result.getLookStr());
+                            qgDeleteEmployee.setSubordinateDepartment(result.getDeptStr());
+                            if ("身份证".equals(qgDeleteEmployee.getIdentityNoType())) {
+                                qgDeleteEmployee.setGender(result.getGender());
+                                qgDeleteEmployee.setBirthday(result.getBirthday());
+                            }
+                            deleteEmployeeService.updateQgDeleteEmployee(qgDeleteEmployee);
+                            // 提交流程
+                            this.getWorkflowInstanceFacade().submitWorkItem(this.getUserId(), workItemId, true);
+                            qgDeleteEmployeeSubmit(qgDeleteEmployee);
+                        } else {
+                            qgDeleteEmployee.setReturnReason(result.getMessage());
                             deleteEmployeeService.updateQgDeleteEmployee(qgDeleteEmployee);
                             continue;
-                        } else {
-                            qgDeleteEmployee.setGender(queryInfo.getGender());
-                            qgDeleteEmployee.setBirthday(queryInfo.getBirthday());
-                            qgDeleteEmployee.setFirstLevelClientName(queryInfo.getFirstLevelClientName());
-                            qgDeleteEmployee.setSecondLevelClientName(queryInfo.getSecondLevelClientName());
-                            qgDeleteEmployee.setOperator(queryInfo.getOperator());
-                            qgDeleteEmployee.setInquirer(queryInfo.getInquirer());
-                            qgDeleteEmployee.setSubordinateDepartment(queryInfo.getSubordinateDepartment());
-                            deleteEmployeeService.updateQgDeleteEmployee(qgDeleteEmployee);
-                            qgDeleteEmployeeSubmit(qgDeleteEmployee);
-                        }*/
+                        }
                     }
                 }
             }

@@ -7,7 +7,7 @@
         INSERT INTO id34a_city_time_node(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime, modifier,
                                          modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus,
                                          ownerDeptQueryCode, time_node, city, province, business_year, start_time,
-                                         end_time)
+                                         end_time, supplier_name)
         SELECT MD5(UUID()),
                name,
                creater,
@@ -26,30 +26,14 @@
                province,
                #{curBusinessYear},
                DATE_ADD(start_time, INTERVAL 1 MONTH),
-               DATE_ADD(end_time, INTERVAL 1 MONTH)
+               DATE_ADD(end_time, INTERVAL 1 MONTH),
+               supplier_name
         FROM id34a_city_time_node
         WHERE business_year = #{lastBusinessYear}
     </insert>
 
-    <select id="getAnhuiCityTimeNode" resultType="com.authine.cloudpivot.web.api.entity.CityTimeNode">
-        SELECT *
-        FROM id34a_city_time_node
-        WHERE city = #{city}
-          AND business_year = #{businessYear}
-        ORDER BY createdTime DESC
-        LIMIT 0,1
-    </select>
-
-    <select id="getCityTimeNodeSwDetails" resultType="com.authine.cloudpivot.web.api.entity.CityTimeNodeSwDetails">
-        SELECT *
-        FROM i080j_city_time_node_sw_details
-        WHERE city = #{city}
-          AND parentId IN (SELECT id FROM i080j_city_time_node_sw WHERE business_year = #{businessYear})
-        LIMIT 0,1
-    </select>
-
     <select id="getCityTimeNodeByBusinessYearAndCity" resultType="com.authine.cloudpivot.web.api.entity.CityTimeNode">
-        SELECT MIN(start_time) AS startTime, MIN(end_time) AS endTime
+        SELECT *
         FROM id34a_city_time_node
         WHERE city = #{city}
           AND business_year = #{businessYear}

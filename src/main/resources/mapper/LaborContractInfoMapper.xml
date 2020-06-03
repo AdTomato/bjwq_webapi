@@ -6,7 +6,8 @@
     <insert id="saveLaborContractInfo" parameterType="com.authine.cloudpivot.web.api.entity.LaborContractInfo">
         INSERT INTO ibkct_labor_contract_info(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
                                               modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus,
-                                              ownerDeptQueryCode, business_unit, personnel_name, idnumber,
+                                              ownerDeptQueryCode, operator, inquirer, subordinate_department,
+                                              personnel_name, idnumber,
                                               employee_status, phone, email, employee_type, entry_time, education,
                                               graduated_school, graduated_time, major, domicile_place, current_address,
                                               contract_num, contract_end_time, contract_start_time, probation_end_time,
@@ -16,7 +17,8 @@
                                               second_level_client_name)
         VALUES (#{id}, #{name}, #{creater}, #{createdDeptId}, #{owner}, #{ownerDeptId}, #{createdTime}, #{modifier},
                 #{modifiedTime}, #{workflowInstanceId}, #{sequenceNo}, #{sequenceStatus}, #{ownerDeptQueryCode},
-                #{businessUnit}, #{personnelName}, #{idnumber}, #{employeeStatus}, #{phone}, #{email},
+                #{operator}, #{inquirer}, #{subordinateDepartment}, #{personnelName}, #{idnumber}, #{employeeStatus},
+                #{phone}, #{email},
                 #{employeeType}, #{entryTime}, #{education}, #{graduatedSchool}, #{graduatedTime}, #{major},
                 #{domicilePlace}, #{currentAddress}, #{contractNum}, #{contractEndTime}, #{contractStartTime},
                 #{probationEndTime}, #{probationStartTime}, #{employmentForms}, #{workhoursCategory},
