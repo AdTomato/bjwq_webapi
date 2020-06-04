@@ -34,4 +34,15 @@
         )
     </select>
 
+    <select id="getDeptUnitByUserIds" parameterType="java.lang.System" resultMap="dept">
+        SELECT id, name, 1 AS type FROM h_org_department
+        WHERE id IN(
+        SELECT departmentId FROM h_org_user WHERE id IN(
+        <foreach collection="list" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+        ) GROUP BY id
+    </select>
+
 </mapper>

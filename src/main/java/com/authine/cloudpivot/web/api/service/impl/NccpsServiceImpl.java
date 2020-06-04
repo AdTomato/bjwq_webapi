@@ -24,51 +24,19 @@ public class NccpsServiceImpl implements NccpsService {
     @Resource
     private NccpsMapper nccpsMapper;
 
-    @Override
-    public Nccps getNccps(String firstLevelClientName, String secondLevelClientName, String sCity,
-                                      String sWelfareHandler, String gCity, String gWelfareHandler) throws Exception {
-        Nccps nccps = nccpsMapper.getNccpsByClientName(firstLevelClientName, secondLevelClientName);
-        if (nccps == null) {
-            return null;
-        }
-        // 城市时间节点数据
-        List <NccpsOrderCutOffTime> nccpsOrderCutOffTimes = new ArrayList <>();
-        // 公积金比例
-        List <NccpsProvidentFundRatio> nccpsProvidentFundRatios = new ArrayList <>();
-        // 工伤比例
-        List <NccpsWorkInjuryRatio> nccpsWorkInjuryRatios = new ArrayList <>();
-        if (StringUtils.isNotBlank(sCity)) {
-            // 查询社保城市时间节点数据
-            NccpsOrderCutOffTime sTime =
-                    nccpsMapper.getNccpsOrderCutOffTimeByParentIdAndCity(nccps.getId(), sCity, sWelfareHandler);
-            if (sTime != null) {
-                nccpsOrderCutOffTimes.add(sTime);
-            }
-            // 查询工伤信息
-            NccpsWorkInjuryRatio nccpsWorkInjuryRatio =
-                    nccpsMapper.getNccpsWorkInjuryRatioByParentIdAndCity(nccps.getId(), sCity, sWelfareHandler);
-            if (nccpsWorkInjuryRatio != null) {
-                nccpsWorkInjuryRatios.add(nccpsWorkInjuryRatio);
-            }
-        }
-        if (StringUtils.isNotBlank(gCity)) {
-            if (!gCity.equals(sCity) || !gWelfareHandler.equals(sWelfareHandler)) {
-                // 社保城市和公积金城市不一致
-                NccpsOrderCutOffTime gTime =
-                        nccpsMapper.getNccpsOrderCutOffTimeByParentIdAndCity(nccps.getId(), gCity, gWelfareHandler);
-                if (gTime != null) {
-                    nccpsOrderCutOffTimes.add(gTime);
-                }
-            }
-            // 查询公积金比例
-            nccpsProvidentFundRatios = nccpsMapper.getNccpsProvidentFundRatioByParentIdAndCity(nccps.getId(), gCity,
-                    gWelfareHandler);
-        }
 
-        nccps.setNccpsOrderCutOffTimes(nccpsOrderCutOffTimes);
-        nccps.setNccpsProvidentFundRatios(nccpsProvidentFundRatios);
-        nccps.setNccpsWorkInjuryRatios(nccpsWorkInjuryRatios);
-
-        return nccps;
+    /**
+     * 根据一级客户名称、二级客户名称、城市、福利办理方获取客户征缴个性化里面的公积金比例
+     *
+     * @param firstClientName  一级客户名称
+     * @param secondClientName 二级客户名称
+     * @param city             城市
+     * @param welfareHandler   福利办理方
+     * @return 公积金比例
+     * @author wangyong
+     */
+    public List<NccpsProvidentFundRatio> getNccpsProvidentFoundRatioByFirstOrSecondClientName(String firstClientName, String secondClientName, String city, String welfareHandler) {
+        return nccpsMapper.getNccpsProvidentFoundRatioByFirstOrSecondClientName(firstClientName, secondClientName, city, welfareHandler);
     }
+
 }

@@ -34,11 +34,12 @@ public class CollectionRuleServiceImpl implements CollectionRuleService {
      *
      * @param city         城市
      * @param companyRadio 公司比例
+     * @param welfareHandler 福利办理方（大库、单立户）
      * @return true 存在， false，不存在
      * @author wangyong
      */
     @Override
-    public boolean isHaveCompanyRatioInMaxStartMonth(String city, Double companyRadio) {
-        return collectionRuleMapper.isHaveCompanyRatioInMaxStartMonth(city, companyRadio).isEmpty() ? false : true;
+    public boolean isHaveCompanyRatioInMaxStartMonth(String city, Double companyRadio, String welfareHandler) {
+        return collectionRuleMapper.isHaveCompanyRatioInMaxStartMonth(city, companyRadio, welfareHandler).isEmpty() ? false : true;
     }
 }

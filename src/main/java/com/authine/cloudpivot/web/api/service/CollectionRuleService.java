@@ -23,8 +23,9 @@ public interface CollectionRuleService {
      *
      * @param city         城市
      * @param companyRadio 公司比例
+     * @param welfareHandler 福利办理方（大库、单立户）
      * @return true 存在， false，不存在
      * @author wangyong
      */
-    boolean isHaveCompanyRatioInMaxStartMonth(String city, Double companyRadio);
+    boolean isHaveCompanyRatioInMaxStartMonth(String city, Double companyRadio, String welfareHandler);
 }

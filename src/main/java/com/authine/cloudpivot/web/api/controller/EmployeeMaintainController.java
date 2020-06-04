@@ -9,10 +9,7 @@ import com.authine.cloudpivot.web.api.dto.UpdateAddEmployeeDto;
 import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.params.*;
 import com.authine.cloudpivot.web.api.service.*;
-import com.authine.cloudpivot.web.api.utils.CommonUtils;
-import com.authine.cloudpivot.web.api.utils.ExcelUtils;
-import com.authine.cloudpivot.web.api.utils.GetBizObjectModelUntils;
-import com.authine.cloudpivot.web.api.utils.SubmitCheckUtils;
+import com.authine.cloudpivot.web.api.utils.*;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -161,17 +158,29 @@ public class EmployeeMaintainController extends BaseController {
                 delEmployee.getLeaveReason(), delEmployee.getRemark(), delEmployee.getId());
 
         boolean sIsOut = StringUtils.isNotBlank(delEmployee.getSocialSecurityCity()) &&
-                Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delEmployee.getSocialSecurityCity()) < 0 ? true : false;
+                !AreaUtils.isAnhuiCity(delEmployee.getSocialSecurityCity()) ? true : false;
         boolean gIsOut = StringUtils.isNotBlank(delEmployee.getProvidentFundCity()) &&
-                Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delEmployee.getProvidentFundCity()) < 0 ? true : false;
+                !AreaUtils.isAnhuiCity(delEmployee.getProvidentFundCity()) ? true : false;
 
         if (sIsOut || gIsOut) {
             // 判断批量撤离（省外）
             List<BatchEvacuation> batchEvacuations = new ArrayList <>();
-            if (Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(employeeFiles.getSocialSecurityCity()) < 0) {
+            if (sIsOut && gIsOut) {
                 BatchEvacuation batchEvacuation = new BatchEvacuation(employeeFiles.getEmployeeName(),
                         employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getReportQuitDate(),
                         employeeFiles.getSocialSecurityChargeEnd(), employeeFiles.getProvidentFundChargeEnd(),
+                        employeeFiles.getQuitReason(), employeeFiles.getQuitRemark());
+                batchEvacuations.add(batchEvacuation);
+            } else if (sIsOut) {
+                BatchEvacuation batchEvacuation = new BatchEvacuation(employeeFiles.getEmployeeName(),
+                        employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getReportQuitDate(),
+                        employeeFiles.getSocialSecurityChargeEnd(), null,
+                        employeeFiles.getQuitReason(), employeeFiles.getQuitRemark());
+                batchEvacuations.add(batchEvacuation);
+            } else if (gIsOut) {
+                BatchEvacuation batchEvacuation = new BatchEvacuation(employeeFiles.getEmployeeName(),
+                        employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getReportQuitDate(),
+                        null, employeeFiles.getProvidentFundChargeEnd(),
                         employeeFiles.getQuitReason(), employeeFiles.getQuitRemark());
                 batchEvacuations.add(batchEvacuation);
             }
@@ -355,9 +364,9 @@ public class EmployeeMaintainController extends BaseController {
             String employeeFilesId = createEmployeeFiles(employeeFiles, addEmployee.getCreater());
 
             boolean sIsOut = addEmployee.getSocialSecurityBase() - 0d > 0d &&
-                    Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(addEmployee.getSocialSecurityCity()) < 0 ? true : false;
+                    !AreaUtils.isAnhuiCity(addEmployee.getSocialSecurityCity()) ? true : false;
             boolean gIsOut = addEmployee.getProvidentFundBase() - 0d > 0d &&
-                    Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(addEmployee.getProvidentFundCity()) < 0 ? true : false;
+                    !AreaUtils.isAnhuiCity(addEmployee.getProvidentFundCity()) ? true : false;
 
             if (sIsOut || gIsOut) {
                 // 批量生成预派
@@ -652,7 +661,7 @@ public class EmployeeMaintainController extends BaseController {
             updateEmployeeService.upateEmployeeOrderForm(orderForm);
 
             if (delUpdate.getSocialSecurityEndTime() != null  && employeeFiles.getSocialSecurityBase() - 0d > 0d &&
-                    Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delUpdate.getSocialSecurityCity()) >= 0) {
+                    AreaUtils.isAnhuiCity(delUpdate.getSocialSecurityCity())) {
                 // 需要生成社保停缴
                 if (sClose == null) {
                     deleteEmployeeService.createSocialSecurityClose(delUpdate, employeeFiles, orderForm.getId(),
@@ -688,7 +697,7 @@ public class EmployeeMaintainController extends BaseController {
             }
 
             if (delUpdate.getProvidentFundEndTime() != null  && employeeFiles.getProvidentFundBase() - 0d > 0d &&
-                    Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delUpdate.getProvidentFundCity()) >= 0) {
+                    AreaUtils.isAnhuiCity(delUpdate.getProvidentFundCity())) {
                 // 需要生成社保停缴
                 if (gClose == null) {
                     deleteEmployeeService.createProvidentFundClose(delUpdate, employeeFiles, orderForm.getId(),
@@ -1044,7 +1053,7 @@ public class EmployeeMaintainController extends BaseController {
         String city = StringUtils.isNotBlank(newOrderForm.getSocialSecurityCity()) ? newOrderForm.getSocialSecurityCity() :
                 newOrderForm.getProvidentFundCity();
         ServiceChargeUnitPrice price = salesContractService.getServiceChargeUnitPrice(newOrderForm.getFirstLevelClientName(),
-                newOrderForm.getBusinessType(), Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(city) < 0 ? "省外" : "省内", city);
+                newOrderForm.getBusinessType(), !AreaUtils.isAnhuiCity(city) ? "省外" : "省内", city);
         return  price;
     }
 

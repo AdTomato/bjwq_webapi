@@ -8,6 +8,7 @@ import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.mapper.AddEmployeeMapper;
 import com.authine.cloudpivot.web.api.mapper.DeleteEmployeeMapper;
 import com.authine.cloudpivot.web.api.service.DeleteEmployeeService;
+import com.authine.cloudpivot.web.api.utils.AreaUtils;
 import com.authine.cloudpivot.web.api.utils.GetBizObjectModelUntils;
 import org.springframework.stereotype.Service;
 
@@ -64,7 +65,7 @@ public class DeleteEmployeeServiceImpl implements DeleteEmployeeService {
         EmployeeOrderForm orderForm = addEmployeeMapper.getEmployeeOrderFormByEmployeeFilesId(employeeFiles.getId());
         if (orderForm != null) {
             if (delEmployee.getSocialSecurityEndTime() != null && employeeFiles.getSocialSecurityBase() - 0d > 0d &&
-                    Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delEmployee.getSocialSecurityCity()) >= 0) {
+                    AreaUtils.isAnhuiCity(delEmployee.getSocialSecurityCity())) {
                 // 有社保停缴
                 createSocialSecurityClose(delEmployee, employeeFiles, orderForm.getId(), bizObjectFacade,
                         workflowInstanceFacade);
@@ -72,7 +73,7 @@ public class DeleteEmployeeServiceImpl implements DeleteEmployeeService {
             }
 
             if (delEmployee.getProvidentFundEndTime() != null && employeeFiles.getProvidentFundBase() - 0d > 0d &&
-                    Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(delEmployee.getProvidentFundCity()) >= 0) {
+                    AreaUtils.isAnhuiCity(delEmployee.getProvidentFundCity())) {
                 // 有公积金停缴
                 createProvidentFundClose(delEmployee, employeeFiles, orderForm.getId(), bizObjectFacade,
                         workflowInstanceFacade);

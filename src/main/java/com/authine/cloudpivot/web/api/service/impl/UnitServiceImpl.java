@@ -42,4 +42,17 @@ public class UnitServiceImpl implements UnitService {
     public List<Unit> getDeptUnitByIds(List<String> ids) {
         return unitMapper.getDeptUnitByIds(ids);
     }
+
+
+    /**
+     * 根据用户id集合获取部门实体
+     *
+     * @param userIds 部门id集合
+     * @return 部门实体
+     * @author wangyong
+     */
+    @Override
+    public List<Unit> getDeptUnitByUserIds(List<String> userIds) {
+        return unitMapper.getDeptUnitByUserIds(userIds);
+    }
 }

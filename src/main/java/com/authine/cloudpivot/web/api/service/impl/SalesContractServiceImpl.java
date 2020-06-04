@@ -85,6 +85,8 @@ public class SalesContractServiceImpl implements SalesContractService {
                         if (serviceChargeUnitPrice.getAreaDetails().contains(areaDetails)) {
                             if ("预收".equals(salesContractDto.getBillType())) {
                                 serviceChargeUnitPrice.setPrecollected("是");
+                            } else {
+                                serviceChargeUnitPrice.setPrecollected("否");
                             }
                             serviceChargeUnitPrice.setPayCycle(salesContractDto.getBillCycle());
                             return serviceChargeUnitPrice;
@@ -100,6 +102,8 @@ public class SalesContractServiceImpl implements SalesContractService {
                             if (serviceChargeUnitPrice.getServiceArea().contains(serviceArea)) {
                                 if ("预收".equals(salesContractDto.getBillType())) {
                                     serviceChargeUnitPrice.setPrecollected("是");
+                                } else {
+                                    serviceChargeUnitPrice.setPrecollected("否");
                                 }
                                 serviceChargeUnitPrice.setPayCycle(salesContractDto.getBillCycle());
                                 return serviceChargeUnitPrice;
@@ -111,6 +115,8 @@ public class SalesContractServiceImpl implements SalesContractService {
                     ServiceChargeUnitPrice serviceChargeUnitPrice = allNullData.get(0);
                     if ("预收".equals(salesContractDto.getBillType())) {
                         serviceChargeUnitPrice.setPrecollected("是");
+                    } else {
+                        serviceChargeUnitPrice.setPrecollected("否");
                     }
                     serviceChargeUnitPrice.setPayCycle(salesContractDto.getBillCycle());
                     return serviceChargeUnitPrice;

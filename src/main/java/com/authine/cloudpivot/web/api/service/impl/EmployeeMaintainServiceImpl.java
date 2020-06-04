@@ -14,6 +14,7 @@ import com.authine.cloudpivot.web.api.service.DeleteEmployeeService;
 import com.authine.cloudpivot.web.api.service.EmployeeMaintainService;
 import com.authine.cloudpivot.web.api.service.SalesContractService;
 import com.authine.cloudpivot.web.api.service.UpdateEmployeeService;
+import com.authine.cloudpivot.web.api.utils.AreaUtils;
 import com.authine.cloudpivot.web.api.utils.CommonUtils;
 import com.authine.cloudpivot.web.api.utils.ExcelUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -729,7 +730,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 orderForm.getProvidentFundCity();
         ServiceChargeUnitPrice price =
                 salesContractService.getServiceChargeUnitPrice(orderForm.getFirstLevelClientName(),
-                        orderForm.getBusinessType(), Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(city) < 0 ? "省外" : "省内", city);
+                        orderForm.getBusinessType(), !AreaUtils.isAnhuiCity(city) ? "省外" : "省内", city);
         if (price != null) {
             updateEmployeeService.addEmployeeOrderFormDetails(price, orderFromId);
         }
@@ -775,7 +776,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                     String city = sDeclare == null ? orderForm.getProvidentFundCity() : orderForm.getSocialSecurityCity();
                     ServiceChargeUnitPrice price =
                             salesContractService.getServiceChargeUnitPrice(orderForm.getFirstLevelClientName(),
-                                    orderForm.getBusinessType(), Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(city) < 0 ? "省外" : "省内", city);
+                                    orderForm.getBusinessType(), !AreaUtils.isAnhuiCity(city) ? "省外" : "省内", city);
                     if (employeeFiles == null) {
                         throw new RuntimeException("表单：" + id + " 对应的员工档案没有查询到");
                     }

@@ -56,6 +56,11 @@ public class AddEmployeeCheckParams {
     private String identityNo;
 
     /**
+     * 社保基数
+     */
+    private Double socialSecurityBase;
+
+    /**
      * 公积金基数
      */
     @NotNull

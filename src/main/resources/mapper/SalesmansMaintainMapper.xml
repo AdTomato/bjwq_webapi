@@ -25,6 +25,7 @@
           AND business_type LIKE concat('%', #{businessType}, '%')
           AND (welfare IS NULL OR welfare LIKE concat('%', #{city}, '%'))
           AND welfare_operator LIKE concat('%', #{welfareHandler}, '%')
-        ORDER BY IF(ISNULL(welfare), 1, 0),createdTime DESC LIMIT 0,1
+        ORDER BY IF(ISNULL(welfare), 1, 0), createdTime DESC
+        LIMIT 0,1
     </select>
 </mapper>

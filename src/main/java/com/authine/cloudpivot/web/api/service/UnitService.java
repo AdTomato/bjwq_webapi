@@ -30,4 +30,14 @@ public interface UnitService {
      */
     List<Unit> getDeptUnitByIds(List<String> ids);
 
+
+    /**
+     * 根据用户id集合获取部门实体
+     *
+     * @param userIds 部门id集合
+     * @return 部门实体
+     * @author wangyong
+     */
+    List<Unit> getDeptUnitByUserIds(List<String> userIds);
+
 }

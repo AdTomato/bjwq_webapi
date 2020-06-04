@@ -150,7 +150,7 @@ public class SubmitCheckUtils {
             }
             Double companyRadio = params.getCompanyProvidentFundBl();
             if (companyRadio != null && companyRadio != 0) {
-                boolean isHave = collectionRuleService.isHaveCompanyRatioInMaxStartMonth(welfare, companyRadio);
+                boolean isHave = collectionRuleService.isHaveCompanyRatioInMaxStartMonth(welfare, companyRadio, welfareHandler);
                 if (!isHave) {
                     result.setIsCanSubmit(false);
                     result.setMessage(StringUtils.isEmpty(result.getMessage()) ? "公积金单位比例：" + companyRadio + "在" + welfare + "无法申报\n" : result.getMessage() + "公积金单位比例：" + companyRadio + "在" + welfare + "无法申报\n");

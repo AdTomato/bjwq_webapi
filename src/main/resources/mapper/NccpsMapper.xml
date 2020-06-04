@@ -9,36 +9,37 @@
         FROM i080j_nccps
         WHERE first_level_client_name = #{firstLevelClientName}
           AND second_level_client_name = #{secondLevelClientName}
-        ORDER BY createdTime DESC LIMIT 0,1
-    </select>
-
-    <!--根据父级id和城市查询城市时间节点数据-->
-    <select id="getNccpsOrderCutOffTimeByParentIdAndCity"
-            resultType="com.authine.cloudpivot.web.api.entity.NccpsOrderCutOffTime">
-        SELECT *
-        FROM i080j_nccps_order_cut_off_time
-        WHERE parentId = #{parentId}
-          AND city = #{city}
-          AND welfare_handler #{welfareHandler}
-        ORDER BY sortKey LIMIT 0,1
-    </select>
-
-    <!--根据父级id和城市查询公积金比例数据-->
-    <select id="getNccpsProvidentFundRatioByParentIdAndCity"
-            resultType="com.authine.cloudpivot.web.api.entity.NccpsProvidentFundRatio">
-        SELECT *
-        FROM i080j_nccps_provident_fund_ratio
-        WHERE parentId = #{parentId}
-          AND city = #{city}
-          AND welfare_handler #{welfareHandler}
+        ORDER BY createdTime DESC
+        LIMIT 0,1
     </select>
 
     <!--根据父级id和城市查询工伤比例数据-->
-    <select id="getNccpsWorkInjuryRatioByParentIdAndCity" resultType="com.authine.cloudpivot.web.api.entity.NccpsWorkInjuryRatio">
+    <select id="getNccpsWorkInjuryRatioByParentIdAndCity"
+            resultType="com.authine.cloudpivot.web.api.entity.NccpsWorkInjuryRatio">
         SELECT *
         FROM i080j_nccps_work_injury_ratio
         WHERE parentId = #{parentId}
           AND city = #{city}
-          AND welfare_handler #{welfareHandler} ORDER BY sortKey LIMIT 0,1
+          AND welfare_handler = #{welfareHandler}
+        ORDER BY sortKey
+        LIMIT 0,1
+    </select>
+
+    <select id="getNccpsProvidentFoundRatioByFirstOrSecondClientName"
+            resultType="com.authine.cloudpivot.web.api.entity.NccpsProvidentFundRatio">
+        SELECT *
+        FROM i080j_nccps_provident_fund_ratio
+        WHERE parentId IN (SELECT id
+                           FROM i080j_nccps
+                           WHERE (first_level_client_name = (SELECT id
+                                                             FROM id34a_first_level_client
+                                                             WHERE company_name = #{firstClientName}
+                                                             ORDER BY createdTime DESC) OR second_level_client_name =
+                                                                                           (SELECT id
+                                                                                            FROM ibkct_second_level_client
+                                                                                            WHERE company_name = #{secondClientName}
+                                                                                            ORDER BY createdTime DESC))
+                             AND city = #{city}
+                             AND welfare_handler = #{welfareHandler})
     </select>
 </mapper>

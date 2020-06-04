@@ -12,6 +12,7 @@ import com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper;
 import com.authine.cloudpivot.web.api.mapper.NccpsMapper;
 import com.authine.cloudpivot.web.api.service.AddEmployeeService;
 import com.authine.cloudpivot.web.api.service.SalesContractService;
+import com.authine.cloudpivot.web.api.utils.AreaUtils;
 import com.authine.cloudpivot.web.api.utils.CommonUtils;
 import com.authine.cloudpivot.web.api.utils.GetBizObjectModelUntils;
 import org.apache.commons.lang3.StringUtils;
@@ -88,7 +89,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
         String city = StringUtils.isNotBlank(orderForm.getSocialSecurityCity()) ? orderForm.getSocialSecurityCity() :
                 orderForm.getProvidentFundCity();
         ServiceChargeUnitPrice price = salesContractService.getServiceChargeUnitPrice(orderForm.getFirstLevelClientName(),
-                orderForm.getBusinessType(), Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(city) < 0 ? "省外" : "省内", city);
+                orderForm.getBusinessType(), !AreaUtils.isAnhuiCity(city) ? "省外" : "省内", city);
         if (price != null) {
             orderForm.setPrecollected(price.getPrecollected());
             orderForm.setPayCycle(price.getPayCycle());
@@ -142,7 +143,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
             CollectionRuleMaintain sCollectionRule = null, gCollectionRule = null;
             // 汇缴订单明细排序,补缴订单明细排序
             Double remittanceSortKey = orderForm.getRemittanceSortKey(), payBackSortKey = orderForm.getPayBackSortKey();
-            if (addEmployee.getSocialSecurityBase() - 0d > 0d && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(addEmployee.getSocialSecurityCity()) >= 0) {
+            if (addEmployee.getSocialSecurityBase() - 0d > 0d && AreaUtils.isAnhuiCity(addEmployee.getSocialSecurityCity())) {
                 // 更新订单数据
                 orderForm.setSocialSecurityStatus("待办");
                 orderForm.setSocialSecurityCity(addEmployee.getSocialSecurityCity());
@@ -173,7 +174,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
                             "i4fvb_order_details_remittance");
                 }
             }
-            if (addEmployee.getProvidentFundBase() - 0d > 0d && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(addEmployee.getProvidentFundCity()) >= 0) {
+            if (addEmployee.getProvidentFundBase() - 0d > 0d && AreaUtils.isAnhuiCity(addEmployee.getProvidentFundCity())) {
                 // 更新订单数据
                 orderForm.setProvidentFundStatus("待办");
                 orderForm.setProvidentFundCity(addEmployee.getProvidentFundCity());
@@ -210,7 +211,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
             String city = StringUtils.isNotBlank(orderForm.getSocialSecurityCity()) ? orderForm.getSocialSecurityCity() :
                     orderForm.getProvidentFundCity();
             price = salesContractService.getServiceChargeUnitPrice(orderForm.getFirstLevelClientName(),
-                    orderForm.getBusinessType(), Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(city) < 0 ? "省外" : "省内", city);
+                    orderForm.getBusinessType(), !AreaUtils.isAnhuiCity(city) ? "省外" : "省内", city);
             if (price != null) {
                 price.setOrderFormId(orderForm.getId());
             }
@@ -284,7 +285,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
         // 汇缴订单明细
         List <EmployeeOrderFormDetails> remittanceList = new ArrayList <>();
         // 生成社保申报信息
-        if (addEmployee.getSocialSecurityBase() - 0d > 0d && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(addEmployee.getSocialSecurityCity()) >= 0) {
+        if (addEmployee.getSocialSecurityBase() - 0d > 0d && AreaUtils.isAnhuiCity(addEmployee.getSocialSecurityCity())) {
             sCollectionRule = collectionRuleMapper.getCollectionRuleMaintain(addEmployee.getSocialSecurityCity(),
                     addEmployee.getSWelfareHandler());
             if (sCollectionRule == null) {
@@ -303,7 +304,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
         }
 
         // 生成公积金申报信息
-        if (addEmployee.getProvidentFundBase() - 0d > 0d && Constants.ALL_CITIES_IN_ANHUI_PROVINCE.indexOf(addEmployee.getProvidentFundCity())  >= 0) {
+        if (addEmployee.getProvidentFundBase() - 0d > 0d && AreaUtils.isAnhuiCity(addEmployee.getProvidentFundCity())) {
             if (addEmployee.getProvidentFundCity().equals(addEmployee.getProvidentFundCity())
                     && addEmployee.getGWelfareHandler().equals(addEmployee.getSWelfareHandler()) && sCollectionRule != null){
                 gCollectionRule = sCollectionRule;

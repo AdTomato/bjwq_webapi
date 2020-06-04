@@ -118,11 +118,17 @@
     <select id="isHaveCompanyRatioInMaxStartMonth" resultType="com.authine.cloudpivot.web.api.entity.CrmCollectionRule">
         SELECT *
         FROM i080j_crm_collection_rule
-        WHERE parentId = (SELECT id FROM i080j_n_collection_rule_maintain WHERE city = #{city})
+        WHERE parentId IN (SELECT id
+                           FROM i080j_n_collection_rule_maintain
+                           WHERE city = #{city}
+                             AND welfare_handler = #{welfareHandler})
         HAVING effective_start_month = (SELECT MAX(effective_start_month)
                                         FROM i080j_crm_collection_rule
-                                        WHERE parentId =
-                                              (SELECT id FROM i080j_n_collection_rule_maintain WHERE city = #{city})
+                                        WHERE parentId IN
+                                              (SELECT id
+                                               FROM i080j_n_collection_rule_maintain
+                                               WHERE city = #{city}
+                                                 AND welfare_handler = #{welfareHandler})
                                           AND product_name LIKE '%公积金%')
            AND company_ratio = #{companyRadio}
     </select>

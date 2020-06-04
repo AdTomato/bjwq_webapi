@@ -53,5 +53,5 @@ public interface CollectionRuleMapper {
      * @return 满足条件的汇缴数据
      * @author wangyong
      */
-    List<CrmCollectionRule> isHaveCompanyRatioInMaxStartMonth(String city, Double companyRadio);
+    List<CrmCollectionRule> isHaveCompanyRatioInMaxStartMonth(String city, Double companyRadio, String welfareHandler);
 }
