@@ -84,4 +84,14 @@ public interface AddEmployeeMapper {
     void updateWorkflowInstanceId(String workflowInstanceId, String id,String tableName);
 
     String getWorkItemIdByInstanceIdAndUserId(String instanceId, String userId);
+
+    /**
+     * 根据客户名称以及证件号码查询增员客户
+     * @param firstClientName 一级客户名称
+     * @param secondClientName 二级客户名称
+     * @param identityNo 证件号码
+     * @return 增员客户数据
+     * @author wangyong
+     */
+    List<AddEmployee> getAddEmployeeByClientNameAndIdCard(String firstClientName, String secondClientName, String identityNo);
 }

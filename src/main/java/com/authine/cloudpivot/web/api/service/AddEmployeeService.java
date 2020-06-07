@@ -5,6 +5,8 @@ import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
 import com.authine.cloudpivot.web.api.dto.UpdateAddEmployeeDto;
 import com.authine.cloudpivot.web.api.entity.*;
 
+import java.util.List;
+
 /**
  * @author liulei
  * @Description
@@ -110,4 +112,14 @@ public interface AddEmployeeService {
     void updateShAddEmployee(ShAddEmployee shAddEmployee) throws Exception;
 
     void updateQgAddEmployee(NationwideDispatch nationwideDispatch) throws Exception;
+
+    /**
+     * 根据客户名称以及证件号码查询增员客户
+     * @param firstClientName 一级客户名称
+     * @param secondClientName 二级客户名称
+     * @param identityNo 证件号码
+     * @return 增员客户数据
+     * @author wangyong
+     */
+    List<AddEmployee> getAddEmployeeByClientNameAndIdCard(String firstClientName, String secondClientName, String identityNo);
 }

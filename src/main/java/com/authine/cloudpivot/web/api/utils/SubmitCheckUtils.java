@@ -1,9 +1,7 @@
 package com.authine.cloudpivot.web.api.utils;
 
-import com.authine.cloudpivot.web.api.entity.CityTimeNode;
-import com.authine.cloudpivot.web.api.entity.ClientManagement;
-import com.authine.cloudpivot.web.api.entity.EmployeeFiles;
-import com.authine.cloudpivot.web.api.entity.ProcessIdentityNo;
+import com.authine.cloudpivot.web.api.dto.SalesContractDto;
+import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.params.*;
 import com.authine.cloudpivot.web.api.service.*;
 import org.apache.commons.lang3.StringUtils;
@@ -30,6 +28,11 @@ public class SubmitCheckUtils {
     ClientManagementService clientManagementServiceOne;
 
     static ClientManagementService clientManagementService;
+
+    @Autowired
+    SalesContractService salesContractServiceOne;
+
+    static SalesContractService salesContractService;
 
     @Autowired
     ClientService clientServiceOne;
@@ -64,6 +67,7 @@ public class SubmitCheckUtils {
         collectionRuleService = collectionRuleServiceOne;
         unitService = unitServiceOne;
         addEmployeeService = addEmployeeServiceOne;
+        salesContractService = salesContractServiceOne;
     }
 
     /**
@@ -105,6 +109,34 @@ public class SubmitCheckUtils {
             // 福利办理方
             String welfareHandler = params.getWelfareHandler();
 
+            // 判断是否能重复申报
+            List<AddEmployee> addEmployeeList = addEmployeeService.getAddEmployeeByClientNameAndIdCard(firstLevelClientName, secondLevelClientName, params.getIdentityNo());
+            if (addEmployeeList != null && !addEmployeeList.isEmpty()) {
+
+                if ((addEmployeeList.size() == 2) || (params.getProvidentFundBase() != null && params.getProvidentFundBase() != 0 && params.getSocialSecurityBase() != null && params.getSocialSecurityBase() != 0)) {
+                    result.setIsCanSubmit(false);
+                    if (addEmployeeList.size() == 2) {
+                        result.setMessage("社保、公积金已经申报过，无法重复申报");
+                    } else if (addEmployeeList.size() == 1) {
+                        AddEmployee addEmployee = addEmployeeList.get(0);
+                        if (addEmployee.getProvidentFundBase() != null) {
+                            result.setMessage("公积金已经申报过，无法重复申报");
+                        } else {
+                            result.setMessage("社保已经申报过，无法重复申报");
+                        }
+                    }
+                    return result;
+                }
+            }
+
+            // 判断销售合同是否存在
+            SalesContractDto salesContractDto = salesContractService.getSalesContractDto(firstLevelClientName, businessType);
+            if (salesContractDto == null) {
+                result.setIsCanSubmit(false);
+                result.setMessage("员工性质不存在");
+                return result;
+            }
+
             // 查看人、操作人、所属部门
             Map<String, String> lookAndEditPerson = clientService.getLookAndEditPerson(firstLevelClientName, secondLevelClientName, businessType, welfare, welfareHandler);
             result.setLookStr(lookAndEditPerson.get("look"));
@@ -129,6 +161,7 @@ public class SubmitCheckUtils {
                 result.setDept(null);
             }
 
+            // 城市时间节点在不在范围内
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMM");
             Date notTime = new Date();
             String businessYear = sdf.format(notTime);
@@ -148,6 +181,8 @@ public class SubmitCheckUtils {
                     }
                 }
             }
+
+            // 公积金比例是否存在于征缴规则中
             Double companyRadio = params.getCompanyProvidentFundBl();
             if (companyRadio != null && companyRadio != 0) {
                 boolean isHave = collectionRuleService.isHaveCompanyRatioInMaxStartMonth(welfare, companyRadio, welfareHandler);

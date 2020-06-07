@@ -448,4 +448,12 @@
         WHERE InstanceId = #{instanceId}
           AND participant = #{userId}
     </select>
+
+    <select id="getAddEmployeeByClientNameAndIdCard" resultType="com.authine.cloudpivot.web.api.entity.AddEmployee">
+        SELECT *
+        FROM i4fvb_add_employee
+        WHERE first_level_client_name = #{firstClientName}
+          AND second_level_client_name = #{secondClientName}
+          AND identityNo = #{identityNo}
+    </select>
 </mapper>
