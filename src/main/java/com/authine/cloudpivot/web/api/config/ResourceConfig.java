@@ -171,6 +171,8 @@ public class ResourceConfig extends ResourceServerConfigurerAdapter {
                     .antMatchers("/controller/unit/**").permitAll()
                     // 客户个性化设置
                     .antMatchers("/controller/nccps/**").permitAll()
+                    // 调基调比
+                    .antMatchers("/controller/adjustBaseAndRatio/**").permitAll()
                     //test
                     .antMatchers("/api/licenseExt/**").permitAll()
                     .antMatchers("/v1/dashboard/**").permitAll()

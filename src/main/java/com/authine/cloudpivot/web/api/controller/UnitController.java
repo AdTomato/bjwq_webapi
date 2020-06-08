@@ -29,7 +29,7 @@ public class UnitController extends BaseController {
     @Autowired
     UnitService unitService;
 
-    @GetMapping("/getDeptByUserIds")
+    @RequestMapping("/getDeptByUserIds")
     public ResponseResult<Object> getDeptByUserIds(@RequestBody(required = true) List<String> users) {
         log.info("获取部门组织");
         if (users == null || users.isEmpty()) {
