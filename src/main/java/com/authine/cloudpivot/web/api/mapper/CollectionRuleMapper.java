@@ -41,9 +41,9 @@ public interface CollectionRuleMapper {
 
     List<PaymentRules> getGjjPaymentRules(String parentId, String startMonth, String productName, Double companyRatio, Double employeeRatio);
 
-    List<CollectionRule> getSbCollectionRules(String parentId, String startMonth);
+    List<CollectionRule> getSbCollectionRules(String parentId);
 
-    List<CollectionRule> getGjjCollectionRules(String parentId, String startMonth, String productName, Double companyRatio, Double employeeRatio);
+    List<CollectionRule> getGjjCollectionRules(String parentId, String productName, Double companyRatio, Double employeeRatio);
 
     /**
      * 根据城市、公司公积金比例查询最新的有效起始月中是否有满足条件的数据

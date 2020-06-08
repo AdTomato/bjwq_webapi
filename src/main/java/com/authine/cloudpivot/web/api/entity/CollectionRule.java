@@ -36,7 +36,7 @@ public class CollectionRule {
     /**
      * 公司最高基数
      */
-    Double companyMaxBaseNum = 0d;
+    Double companyMaxBaseNum = Double.MAX_VALUE;
     /**
      * 公司最低基数
      */
@@ -44,7 +44,7 @@ public class CollectionRule {
     /**
      * 个人最高基数
      */
-    Double employeeMaxBaseNum = 0d;
+    Double employeeMaxBaseNum = Double.MAX_VALUE;
     /**
      * 个人最低基数
      */

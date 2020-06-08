@@ -104,8 +104,8 @@
     </insert>
 
     <select id="getSumInTimeRange" resultType="java.lang.Double">
-        SELECT SUM(sum) FROM ${tableName} WHERE parentId = #{parentId} AND date_format(start_charge_time, '%Y%m')
-        <![CDATA[<=]]> #{startChargeTime}
+        SELECT SUM(company_money) FROM ${tableName} WHERE parentId = #{parentId} AND date_format(start_charge_time,
+        '%Y%m') <![CDATA[<=]]> #{startChargeTime}
         <if test="endChargeTime != null">
             AND (end_charge_time is null or date_format(end_charge_time, '%Y%m')>= #{endChargeTime})
         </if>

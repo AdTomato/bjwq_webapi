@@ -237,7 +237,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_declare", "status", status);
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(addEmployeeId, "i4fvb_add_employee", "sb_status",
-                        "在办".equals(status) ? null : status);
+                        "在办".equals(status) ? "待办" : status);
                 employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
                         "social_security_status", "在办".equals(status) ? "待办" : status);
             } else {
@@ -245,7 +245,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_declare", "status", status);
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(addEmployeeId, "i4fvb_add_employee", "gjj_status",
-                        "在办".equals(status) ? null : status);
+                        "在办".equals(status) ? "待办" : status);
                 employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
                         "provident_fund_status", "在办".equals(status) ? "待办" : status);
             }
@@ -300,7 +300,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_close", "status", status);
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(delEmployeeId, "i4fvb_delete_employee", "sb_status",
-                        "在办".equals(status) ? null : status);
+                        "在办".equals(status) ? "待办" : status);
                 if ("停缴".equals(status)) {
                     employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
                             "social_security_status", "停缴");
@@ -310,7 +310,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_close", "status", status);
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(delEmployeeId, "i4fvb_delete_employee", "gjj_status",
-                        "在办".equals(status) ? null : status);
+                        "在办".equals(status) ? "待办" : status);
                 if ("停缴".equals(status)) {
                     employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
                             "provident_fund_status", "停缴");
@@ -647,7 +647,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         }
         if (delIds != null && delIds.size() > 0) {
             employeesMaintainMapper.updateTableStatus(delIds, "i4fvb_delete_employee",
-                    Constants.SOCIAL_SECURITY_CLOSE_SCHEMA.equals(schemaCode) ? "sb_status" : "gjj_status", "在办".equals(status) ? null : status);
+                    Constants.SOCIAL_SECURITY_CLOSE_SCHEMA.equals(schemaCode) ? "sb_status" : "gjj_status", "在办".equals(status) ? "待办" : status);
         }
     }
 
@@ -703,7 +703,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         }
         if (addIds != null && addIds.size() > 0) {
             employeesMaintainMapper.updateTableStatus(addIds, "i4fvb_add_employee",
-                    Constants.SOCIAL_SECURITY_DECLARE_SCHEMA.equals(schemaCode) ? "sb_status" : "gjj_status", "在办".equals(status) ? null : status);
+                    Constants.SOCIAL_SECURITY_DECLARE_SCHEMA.equals(schemaCode) ? "sb_status" : "gjj_status", "在办".equals(status) ? "待办" : status);
         }
         if ("预点".equals(status)) {
             employeesMaintainMapper.updateTableStatus(ids, "i4fvb_" + schemaCode, "status", "预点");
@@ -753,8 +753,17 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 SocialSecurityDeclare sDeclare = addEmployeeMapper.getSocialSecurityDeclareByAddEmployeeId(id);
                 // 公积金申报数据
                 ProvidentFundDeclare pDeclare = addEmployeeMapper.getProvidentFundDeclareByAddEmployeeId(id);
+                EmployeeFiles employeeFiles = addEmployeeMapper.getEmployeeFilesByAddEmployeeId(id);
+                if (employeeFiles == null) {
+                    throw new RuntimeException("表单：" + id + " 没有查询到员工档案");
+                }
                 if (sDeclare == null && pDeclare == null) {
                     // 没有对应的申报数据
+                    if ((StringUtils.isBlank(employeeFiles.getSbAddEmployeeId()) || id.equals(employeeFiles.getSbAddEmployeeId())) &&
+                        (StringUtils.isBlank(employeeFiles.getGjjAddEmployeeId()) || id.equals(employeeFiles.getGjjAddEmployeeId())) ){
+                        // 员工订单只关联当前增员
+                        bizObjectFacade.removeBizObject(userId, Constants.EMPLOYEE_FILES_SCHEMA, employeeFiles.getId());
+                    }
                     successIds.add(id);
                     continue;
                 } else if (sDeclare != null && pDeclare != null) {
@@ -770,7 +779,6 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                     bizObjectFacade.removeBizObject(userId, Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
                             sDeclare.getEmployeeOrderFormId());
                 } else {
-                    EmployeeFiles employeeFiles = addEmployeeMapper.getEmployeeFilesByAddEmployeeId(id);
                     EmployeeOrderForm orderForm = addEmployeeMapper.getEmployeeOrderFormById(sDeclare != null ?
                             sDeclare.getEmployeeOrderFormId() : pDeclare.getEmployeeOrderFormId());
                     String city = sDeclare == null ? orderForm.getProvidentFundCity() : orderForm.getSocialSecurityCity();
@@ -802,7 +810,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                     if (sDeclare != null) {
                         bizObjectFacade.removeBizObject(userId, Constants.SOCIAL_SECURITY_DECLARE_SCHEMA,
                                 sDeclare.getId());
-                        if (StringUtils.isNotBlank(employeeFiles.getGjjAddEmployeeId())) {
+                        if (StringUtils.isBlank(employeeFiles.getGjjAddEmployeeId())) {
                             // 员工档案没有公积金申报,即员工订单只有社保数据
                             bizObjectFacade.removeBizObject(userId, Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
                                     sDeclare.getEmployeeOrderFormId());
@@ -821,7 +829,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                     } else if (pDeclare != null) {
                         bizObjectFacade.removeBizObject(userId, Constants.PROVIDENT_FUND_DECLARE_SCHEMA,
                                 pDeclare.getId());
-                        if (StringUtils.isNotBlank(employeeFiles.getSbAddEmployeeId())) {
+                        if (StringUtils.isBlank(employeeFiles.getSbAddEmployeeId())) {
                             // 员工档案没有社保申报,即员工订单只有公积金数据
                             bizObjectFacade.removeBizObject(userId, Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
                                     sDeclare.getEmployeeOrderFormId());
@@ -838,6 +846,26 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                             }
                         }
                     }
+                }
+
+                if ((StringUtils.isBlank(employeeFiles.getSbAddEmployeeId()) || id.equals(employeeFiles.getSbAddEmployeeId())) &&
+                        (StringUtils.isBlank(employeeFiles.getGjjAddEmployeeId()) || id.equals(employeeFiles.getGjjAddEmployeeId())) ){
+                    // 员工订单只关联当前增员
+                    bizObjectFacade.removeBizObject(userId, Constants.EMPLOYEE_FILES_SCHEMA, employeeFiles.getId());
+                } else if (StringUtils.isBlank(employeeFiles.getSbAddEmployeeId()) || id.equals(employeeFiles.getSbAddEmployeeId())) {
+                    employeeFiles.setSbAddEmployeeId(null);
+                    employeeFiles.setSocialSecurityBase(null);
+                    employeeFiles.setSWelfareHandler(null);
+                    employeeFiles.setSocialSecurityCity(null);
+                    employeeFiles.setSocialSecurityChargeStart(null);
+                    addEmployeeMapper.updateEmployeeFiles(employeeFiles);
+                } else if (StringUtils.isBlank(employeeFiles.getGjjAddEmployeeId()) || id.equals(employeeFiles.getGjjAddEmployeeId())) {
+                    employeeFiles.setGjjAddEmployeeId(null);
+                    employeeFiles.setProvidentFundBase(null);
+                    employeeFiles.setGWelfareHandler(null);
+                    employeeFiles.setProvidentFundCity(null);
+                    employeeFiles.setProvidentFundChargeStart(null);
+                    addEmployeeMapper.updateEmployeeFiles(employeeFiles);
                 }
                 successIds.add(id);
             }
@@ -863,6 +891,24 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 if (gClose != null) {
                     bizObjectFacade.removeBizObject(userId, Constants.PROVIDENT_FUND_CLOSE_SCHEMA, gClose.getId());
                 }
+                if ((StringUtils.isBlank(employeeFiles.getSbDelEmployeeId()) || id.equals(employeeFiles.getSbDelEmployeeId())) &&
+                        (StringUtils.isBlank(employeeFiles.getGjjDelEmployeeId()) || id.equals(employeeFiles.getGjjDelEmployeeId()))) {
+                    // 原工档案对应减员的社保，公积金
+                    employeeFiles.setReportQuitDate(null);
+                    employeeFiles.setReportSeveranceOfficer(null);
+                    employeeFiles.setQuitDate(null);
+                    employeeFiles.setQuitReason(null);
+                    employeeFiles.setQuitRemark(null);
+                }
+                if (StringUtils.isBlank(employeeFiles.getSbDelEmployeeId()) || id.equals(employeeFiles.getSbDelEmployeeId())) {
+                    employeeFiles.setSbDelEmployeeId(null);
+                    employeeFiles.setSocialSecurityChargeEnd(null);
+                }
+                if (StringUtils.isBlank(employeeFiles.getGjjDelEmployeeId()) || id.equals(employeeFiles.getGjjDelEmployeeId())) {
+                    employeeFiles.setGjjDelEmployeeId(null);
+                    employeeFiles.setProvidentFundChargeEnd(null);
+                }
+                addEmployeeMapper.updateEmployeeFiles(employeeFiles);
             }
             employeesMaintainMapper.updateAddOrDelEmployeeStatus(successIds, "i4fvb_delete_employee", status);
         }

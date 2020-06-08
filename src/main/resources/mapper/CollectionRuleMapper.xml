@@ -14,27 +14,11 @@
                                                       company_rounding_policy, employee_rounding_policy,
                                                       company_precision, employee_precision, product_description, id,
                                                       parentId, sortKey)
-        SELECT product_name,
-               acquisition_cycle,
-               payment_frequency,
-               company_max_base_num,
-               company_min_base_num,
-               employee_max_base_num,
-               employee_min_base_num,
-               company_surcharge_value,
-               employee_surcharge_value,
-               company_ratio,
-               employee_ratio,
-               effective_start_month,
-               effective_termination_month,
-               company_rounding_policy,
-               employee_rounding_policy,
-               company_precision,
-               employee_precision,
-               product_description,
-               id,
-               parentId,
-               sortKey
+        SELECT product_name, acquisition_cycle, payment_frequency, company_max_base_num, company_min_base_num,
+               employee_max_base_num, employee_min_base_num, company_surcharge_value, employee_surcharge_value,
+               company_ratio, employee_ratio, effective_start_month, effective_termination_month,
+               company_rounding_policy, employee_rounding_policy, company_precision, employee_precision,
+               product_description, id, parentId, sortKey
         FROM i080j_crm_collection_rule
         WHERE effective_termination_month IS NOT NULL
           AND DATE_FORMAT(effective_termination_month, '%Y%m') <![CDATA[ < ]]> DATE_FORMAT(SYSDATE(), '%Y%m')
@@ -53,8 +37,7 @@
         FROM i080j_n_collection_rule_maintain
         WHERE city = #{city}
           AND welfare_handler = #{welfareHandler}
-        ORDER BY createdTime DESC
-        LIMIT 0,1
+        ORDER BY createdTime DESC LIMIT 0,1
     </select>
 
     <select id="getSbPaymentRules" resultType="com.authine.cloudpivot.web.api.entity.PaymentRules">
@@ -69,7 +52,7 @@
             OR (DATE_FORMAT(effective_start_month, '%Y%m') <![CDATA[<=]]> DATE_FORMAT(SYSDATE(), '%Y%m') AND
                 (effective_termination_month IS NULL OR
                  DATE_FORMAT(effective_termination_month, '%Y%m') <![CDATA[>=]]> DATE_FORMAT(SYSDATE(), '%Y%m'))))
-        ORDER BY product_name, effective_start_month DESC
+        ORDER BY product_name,effective_start_month DESC
     </select>
 
     <select id="getGjjPaymentRules" resultType="com.authine.cloudpivot.web.api.entity.PaymentRules">
@@ -86,7 +69,7 @@
             OR (DATE_FORMAT(effective_start_month, '%Y%m') <![CDATA[<=]]> DATE_FORMAT(SYSDATE(), '%Y%m') AND
                 (effective_termination_month IS NULL OR
                  DATE_FORMAT(effective_termination_month, '%Y%m') <![CDATA[>=]]> DATE_FORMAT(SYSDATE(), '%Y%m'))))
-        ORDER BY product_name, effective_start_month DESC
+        ORDER BY product_name,effective_start_month DESC
     </select>
 
     <select id="getSbCollectionRules" resultType="com.authine.cloudpivot.web.api.entity.CollectionRule">
@@ -95,10 +78,7 @@
         WHERE parentId = #{parentId}
           AND product_name IN ('养老保险', '医疗保险', '失业保险', '工伤保险', '生育保险', '大病保险', '综合保险', '补充工伤')
           AND effective_start_month IS NOT NULL
-          AND DATE_FORMAT(effective_start_month, '%Y%m') <![CDATA[<=]]> #{startMonth}
-          AND (effective_termination_month IS NULL OR
-               DATE_FORMAT(effective_termination_month, '%Y%m') <![CDATA[>=]]> #{startMonth})
-        ORDER BY product_name, effective_start_month
+        ORDER BY product_name,effective_start_month
     </select>
 
     <select id="getGjjCollectionRules" resultType="com.authine.cloudpivot.web.api.entity.CollectionRule">
@@ -109,10 +89,7 @@
           AND effective_start_month IS NOT NULL
           AND company_ratio = #{companyRatio}
           AND employee_ratio = #{employeeRatio}
-          AND DATE_FORMAT(effective_start_month, '%Y%m') <![CDATA[<=]]> #{startMonth}
-          AND (effective_termination_month IS NULL OR
-               DATE_FORMAT(effective_termination_month, '%Y%m') <![CDATA[>=]]> #{startMonth})
-        ORDER BY product_name, effective_start_month
+        ORDER BY product_name,effective_start_month
     </select>
 
     <select id="isHaveCompanyRatioInMaxStartMonth" resultType="com.authine.cloudpivot.web.api.entity.CrmCollectionRule">

@@ -1369,6 +1369,13 @@ public class EmployeeMaintainController extends BaseController {
                                 addEmployee.setGender(result.getGender());
                                 addEmployee.setBirthday(result.getBirthday());
                             }
+
+                            if (addEmployee.getSocialSecurityBase() - 0d > 0d) {
+                                addEmployee.setSbStatus("待办");
+                            }
+                            if (addEmployee.getProvidentFundBase() - 0d > 0d) {
+                                addEmployee.setGjjStatus("待办");
+                            }
                             addEmployeeService.updateAddEmployee(addEmployee);
                             // 提交流程
                             this.getWorkflowInstanceFacade().submitWorkItem(this.getUserId(), workItemId, true);
@@ -1427,6 +1434,13 @@ public class EmployeeMaintainController extends BaseController {
                             if ("身份证".equals(deleteEmployee.getIdentityNoType())) {
                                 deleteEmployee.setGender(result.getGender());
                                 deleteEmployee.setBirthday(result.getBirthday());
+                            }
+
+                            if (deleteEmployee.getSocialSecurityEndTime() != null) {
+                                deleteEmployee.setSbStatus("待办");
+                            }
+                            if (deleteEmployee.getProvidentFundEndTime() != null) {
+                                deleteEmployee.setGjjStatus("待办");
                             }
                             deleteEmployeeService.updateDeleteEmployee(deleteEmployee);
                             // 提交流程

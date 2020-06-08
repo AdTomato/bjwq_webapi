@@ -67,49 +67,6 @@ public class CommonUtils {
     }
 
     /**
-     * 方法说明：提交流程
-     * @Param workflowInstanceFacade
-     * @Param userId
-     * @Param workItemSuccessIds 待办任务id
-     * @Param agree 是否同意
-     * @return void
-     * @throws
-     * @author liulei
-     * @Date 2020/1/21 10:51
-     */
-    public static void submitWorkItem(WorkflowInstanceFacade workflowInstanceFacade, String userId,
-                                      List <String> workItemSuccessIds, boolean agree) throws Exception {
-        //  提交办理成功的流程
-        for (int i = 0; i < workItemSuccessIds.size(); i++) {
-            boolean flag = workflowInstanceFacade.submitWorkItem(userId, workItemSuccessIds.get(i), agree);
-            log.info(workItemSuccessIds.get(i) + "提交：" + flag);
-        }
-    }
-
-    /**
-     * 方法说明：驳回流程
-     * @Param workflowInstanceFacade
-     * @Param userId
-     * @Param workItemErrorIds 待办任务id
-     * @Param rejectToActivityCode 驳回到指定的节点
-     * @Param submitToReject 是否可以直接提交到驳回的节点
-     * @return void
-     * @throws
-     * @author liulei
-     * @Date 2020/1/21 10:51
-     */
-    public static void rejectWorkItem(WorkflowInstanceFacade workflowInstanceFacade, String userId,
-                                      List <String> workItemErrorIds, String rejectToActivityCode,
-                                      boolean submitToReject) throws Exception {
-        //  提交办理成功的流程
-        for (int i = 0; i < workItemErrorIds.size(); i++) {
-            boolean flag = workflowInstanceFacade.rejectWorkItem(userId, workItemErrorIds.get(i),
-                    rejectToActivityCode, submitToReject);
-            log.info(workItemErrorIds.get(i) + "驳回：" + flag);
-        }
-    }
-
-    /**
      * 方法说明：资金数据处理
      * @param value 处理前的值
      * @param rounding 舍入规则（四舍五入，单边见角进元取整，单边见角舍元取整）
@@ -233,15 +190,6 @@ public class CommonUtils {
         return nationwideDispatch;
     }
 
-    public static DeleteEmployee processingIdentityNo(DeleteEmployee delEmployee) throws Exception{
-        if(checkIdentityNo(delEmployee.getIdentityNoType(), delEmployee.getIdentityNo())) {
-            ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(delEmployee.getIdentityNo());
-            delEmployee.setGender(processIdentityNo.getGender());
-            delEmployee.setBirthday(processIdentityNo.getBirthday());
-        }
-        return delEmployee;
-    }
-
     public static ShDeleteEmployee processingIdentityNo(ShDeleteEmployee delEmployee)  throws Exception{
         if(checkIdentityNo(delEmployee.getIdentityNoType(), delEmployee.getIdentityNo())) {
             ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(delEmployee.getIdentityNo());
@@ -291,5 +239,32 @@ public class CommonUtils {
         String temp = sf.format(new Date());
         int random=(int) (Math.random()*10000);
         return temp + random;
+    }
+
+
+    public static Integer getLastMonth(Integer time) {
+        int year = time/100;
+        int month = time%100;
+        // 此时endTime有值,即有上一条数据，此时开始时间在上一数据结束时间的基础上加一个月
+        if(month == 1) {
+            year--;
+            month = 12;
+        } else {
+            month--;
+        }
+        return year*100 + month;
+    }
+
+    public static Integer getNextMonth(Integer time) {
+        int year = time/100;
+        int month = time%100;
+        // 此时endTime有值,即有上一条数据，此时开始时间在上一数据结束时间的基础上加一个月
+        if(month == 12) {
+            year++;
+            month = 1;
+        } else {
+            month++;
+        }
+        return year*100 + month;
     }
 }

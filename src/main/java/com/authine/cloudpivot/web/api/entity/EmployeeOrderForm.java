@@ -18,6 +18,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EmployeeOrderForm extends BaseEntity {
+    String employeeName;
     /**
      * 备注
      */
@@ -145,6 +146,7 @@ public class EmployeeOrderForm extends BaseEntity {
             this.providentFundBase = addEmployee.getProvidentFundBase();
             this.providentFundChargeStart = addEmployee.getProvidentFundStartTime();
         }
+        this.employeeName = addEmployee.getEmployeeName();
         this.employeeFilesId = employeeFilesId;
         this.firstLevelClientName = addEmployee.getFirstLevelClientName();
         this.secondLevelClientName = addEmployee.getSecondLevelClientName();

@@ -5,6 +5,7 @@ import com.authine.cloudpivot.web.api.mapper.AddEmployeeMapper;
 import com.authine.cloudpivot.web.api.mapper.UpdateEmployeesMapper;
 import com.authine.cloudpivot.web.api.service.UpdateEmployeeService;
 import com.authine.cloudpivot.web.api.utils.CommonUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -144,6 +145,11 @@ public class UpdateEmployeeServiceImpl implements UpdateEmployeeService {
             sortKey += 1;
             EmployeeOrderFormDetails detail = new EmployeeOrderFormDetails(orderFormId, sortKey, "服务费",
                     minStartChargeTime, maxEndChargeTime, price.getServiceChargeUnitPrice());
+            if ("i4fvb_order_details_pay_back".equals(tableName)) {
+                price.setServiceMaxPayBack(endChargeTimes.get(endChargeTimes.size() -1) == null ? null : endChargeTimes.get(endChargeTimes.size() -1));
+            } else if (startChargeTimes.get(0) == null ? null : startChargeTimes.get(0) <= price.getServiceMaxPayBack()){
+                detail.setStartChargeTime(sdf.parse(String.valueOf(CommonUtils.getNextMonth(price.getServiceMaxPayBack()))));
+            }
             details.add(detail);
         }
         if (price.getTotalWelfareProducts() - 0d > 0d) {
@@ -151,31 +157,40 @@ public class UpdateEmployeeServiceImpl implements UpdateEmployeeService {
             sortKey += 1;
             EmployeeOrderFormDetails detail = new EmployeeOrderFormDetails(orderFormId, sortKey, "福利产品",
                     minStartChargeTime, maxEndChargeTime, price.getTotalWelfareProducts());
+            if ("i4fvb_order_details_pay_back".equals(tableName)) {
+                price.setWelfareMaxPayBack(endChargeTimes.get(endChargeTimes.size() -1) == null ? null : endChargeTimes.get(endChargeTimes.size() -1));
+            } else if (startChargeTimes.get(0) == null ? null : startChargeTimes.get(0) <= price.getWelfareMaxPayBack()){
+                detail.setStartChargeTime(sdf.parse(String.valueOf(CommonUtils.getNextMonth(price.getWelfareMaxPayBack()))));
+            }
             details.add(detail);
         }
         Double riskManagementFee = price.getRiskManagementFee();
         if (riskManagementFee - 0d > 0d && riskManagementFee.intValue() < 1) {
             // 风险管理费有值 && 风险管理费<1
-            List<Map <String, Date>> timeRanges = getTimeRanges(startChargeTimes, endChargeTimes);
+            List<StartAndEndTime> timeRanges = getTimeRanges(startChargeTimes, endChargeTimes);
             if (timeRanges != null && timeRanges.size() > 0) {
                 for (int i = 0; i < timeRanges.size(); i++) {
-                    Map <String, Date> timeRange = timeRanges.get(i);
-                    String start = timeRange.get("startChargeTime") == null ? null : sdf.format(timeRange.get("startChargeTime"));
-                    String end = timeRange.get("endChargeTime") == null ? null : sdf.format(timeRange.get("endChargeTime"));
+                    StartAndEndTime timeRange = timeRanges.get(i);
+                    String start = String.valueOf(timeRange.getStartChargeTime());
+                    String end = null;
+                    if (timeRange.getEndChargeTime() != Integer.MAX_VALUE && timeRange.getEndChargeTime() != null) {
+                        end = String.valueOf(timeRange.getEndChargeTime());
+                    }
                     Double total = updateEmployeeMapper.getSumInTimeRange(tableName, start, end, orderFormId);
                     if (total == null || total == 0d) {
                         continue;
                     }
                     sortKey += 1;
-                    EmployeeOrderFormDetails riskManagementFeeDetail = new EmployeeOrderFormDetails(orderFormId, sortKey, "风险管理费",
-                            timeRange.get("startChargeTime"), timeRange.get("endChargeTime"), riskManagementFee*total);
+                    EmployeeOrderFormDetails riskManagementFeeDetail = new EmployeeOrderFormDetails(orderFormId,
+                            sortKey, "风险管理费", sdf.parse(start), end == null ? null : sdf.parse(end),
+                            riskManagementFee * total);
                     details.add(riskManagementFeeDetail);
 
                     Double vatTaxes = price.getVatTaxes() * (price.getServiceChargeUnitPrice() + riskManagementFee*total);
                     if (vatTaxes - 0d > 0d) {
                         sortKey += 1;
-                        EmployeeOrderFormDetails vatTaxesDetails = new EmployeeOrderFormDetails(orderFormId, sortKey, "增值税费",
-                                timeRange.get("startChargeTime"), timeRange.get("endChargeTime"), vatTaxes);
+                        EmployeeOrderFormDetails vatTaxesDetails = new EmployeeOrderFormDetails(orderFormId, sortKey,
+                                "增值税费", sdf.parse(start), end == null ? null : sdf.parse(end), vatTaxes);
                         details.add(vatTaxesDetails);
                     }
                 }
@@ -186,6 +201,11 @@ public class UpdateEmployeeServiceImpl implements UpdateEmployeeService {
                 sortKey += 1;
                 EmployeeOrderFormDetails detail = new EmployeeOrderFormDetails(orderFormId, sortKey, "风险管理费",
                         minStartChargeTime, maxEndChargeTime, riskManagementFee);
+                if ("i4fvb_order_details_pay_back".equals(tableName)) {
+                    price.setRiskMaxPayBack(endChargeTimes.get(endChargeTimes.size() -1) == null ? null : endChargeTimes.get(endChargeTimes.size() -1));
+                } else if (startChargeTimes.get(0) == null ? null : startChargeTimes.get(0) <= price.getRiskMaxPayBack()){
+                    detail.setStartChargeTime(sdf.parse(String.valueOf(CommonUtils.getNextMonth(price.getRiskMaxPayBack()))));
+                }
                 details.add(detail);
             }
             Double vatTaxes = price.getVatTaxes() * (price.getServiceChargeUnitPrice() + riskManagementFee);
@@ -193,6 +213,12 @@ public class UpdateEmployeeServiceImpl implements UpdateEmployeeService {
                 sortKey += 1;
                 EmployeeOrderFormDetails detail = new EmployeeOrderFormDetails(orderFormId, sortKey, "增值税费",
                         minStartChargeTime, maxEndChargeTime, vatTaxes);
+                if ("i4fvb_order_details_pay_back".equals(tableName)) {
+                    price.setVatMaxPayBack(endChargeTimes.get(endChargeTimes.size() -1) == null ? null : endChargeTimes.get(endChargeTimes.size() -1));
+                } else if (startChargeTimes.get(0) == null ? null : startChargeTimes.get(0) <= price.getVatMaxPayBack()){
+                    detail.setStartChargeTime(sdf.parse(String.valueOf(CommonUtils.getNextMonth(price.getVatMaxPayBack()))));
+                }
+
                 details.add(detail);
             }
         }
@@ -282,94 +308,70 @@ public class UpdateEmployeeServiceImpl implements UpdateEmployeeService {
         updateEmployeeMapper.updateProvidentFundClose(close);
     }
 
-    private List<Map<String, Date>> getTimeRanges(List<Integer> startChargeTimes, List<Integer> endChargeTimes) throws Exception{
-        List<Map<String, Date>> timeRanges = new ArrayList <>();
-        int j = 0;
-        int min = 0;
-        int max = 0;
-        Integer startTime = startChargeTimes.get(0), endTime = 0;
-        for (int i = 0; i < startChargeTimes.size(); i++) {
-            if (endTime == null) {
-                // endTime 是null,结束
-                break;
-            }
-            if(endTime > 0){
-                startTime = getStartTime(endTime);
-            }
-            min = startChargeTimes.get(i);
-            if (startTime > min) {
-                // 当前数据预设的开始时间 > 查询到的开始时间
-                continue;
-            }
-            if (i + 1 < startChargeTimes.size()) {
-                // 开始时间未遍历结束
-                min = startChargeTimes.get(i + 1);
-                max = endChargeTimes.get(j) == null ? Integer.MAX_VALUE : endChargeTimes.get(j);
-                if (min < max) {
-                    endTime = min;
+    private List<StartAndEndTime> getTimeRanges(List<Integer> startChargeTimes, List<Integer> endChargeTimes) throws Exception{
+        List<StartAndEndTime> times = new ArrayList <>();
+        if (startChargeTimes.size() == 1 && endChargeTimes.size()==1) {
+            StartAndEndTime time = new StartAndEndTime(startChargeTimes.get(0), endChargeTimes.get(0) == null ?
+                    Integer.MAX_VALUE : endChargeTimes.get(0), null);
+            times.add(time);
+        } else if (startChargeTimes.size() == 1 && endChargeTimes.size()>1) {
+            for (int i = 0; i < endChargeTimes.size(); i++) {
+                if (i == 0) {
+                    StartAndEndTime time = new StartAndEndTime(startChargeTimes.get(0), endChargeTimes.get(0), null);
+                    times.add(time);
                 } else {
-                    if (j < endChargeTimes.size() -1) {
-                        j++;
-                    }
-                    endTime = max == Integer.MAX_VALUE ? null : max;
+                    StartAndEndTime time = new StartAndEndTime(CommonUtils.getNextMonth(endChargeTimes.get(i - 1)),
+                            endChargeTimes.get(i) == null ? Integer.MAX_VALUE : endChargeTimes.get(i), null);
+                    times.add(time);
                 }
-            } else {
-                max = endChargeTimes.get(j) == null ? Integer.MAX_VALUE : endChargeTimes.get(j);
-                if (j < endChargeTimes.size() -1) {
-                    j++;
-                }
-                endTime = max;
             }
-            Map<String, Date> map = new HashMap <>();
-            map.put("startChargeTime", sdf.parse(String.valueOf(startTime)));
-            if (endTime < Integer.MAX_VALUE) {
-                map.put("endChargeTime", sdf.parse(String.valueOf(endTime)));
-            } else {
-                endTime = null;
-            }
-            timeRanges.add(map);
-        }
-        if (j < endChargeTimes.size()) {
-            for (int i = j; i < endChargeTimes.size(); i++) {
-                if (endTime == null) {
-                    // endTime 是null,结束
-                    break;
-                }
-                if(endTime > 0){
-                    startTime = getStartTime(endTime);
-                }
-                min = endChargeTimes.get(i)== null ? Integer.MAX_VALUE : endChargeTimes.get(i);
-                if (startTime > min) {
-                    continue;
+        } else if (startChargeTimes.size() > 0 && endChargeTimes.size()==1) {
+            for (int i = 0; i < startChargeTimes.size(); i++) {
+                if (i < startChargeTimes.size() -1) {
+                    StartAndEndTime time = new StartAndEndTime(startChargeTimes.get(i), CommonUtils.getLastMonth(startChargeTimes.get(i+1)), null);
+                    times.add(time);
                 } else {
-                    endTime = min == Integer.MAX_VALUE ? null : min;
+                    StartAndEndTime time = new StartAndEndTime(startChargeTimes.get(i),
+                            endChargeTimes.get(0) == null ? Integer.MAX_VALUE : endChargeTimes.get(0), null);
+                    times.add(time);
                 }
-                if (i + 1 < endChargeTimes.size()) {
-                    max = endChargeTimes.get(i+1) == null ? Integer.MAX_VALUE : endChargeTimes.get(j);
-                    if (max < startTime){
-                        continue;
-                    }
-                    endTime = max == Integer.MAX_VALUE ? null : max;
-                }
-                Map<String, Date> map = new HashMap <>();
-                map.put("startChargeTime", sdf.parse(String.valueOf(startTime)));
-                map.put("endChargeTime", endTime == null  ? null : sdf.parse(String.valueOf(endTime)));
-                timeRanges.add(map);
             }
-        }
-        return timeRanges;
-    }
-
-    private Integer getStartTime(Integer endTime) {
-        int year = endTime/100;
-        int month = endTime%100;
-        // 此时endTime有值,即有上一条数据，此时开始时间在上一数据结束时间的基础上加一个月
-        if(month == 12) {
-            year++;
-            month = 1;
         } else {
-            month++;
+            for (int i = 0; i < startChargeTimes.size(); i++) {
+                if (i < startChargeTimes.size() -1) {
+                    StartAndEndTime time = new StartAndEndTime(startChargeTimes.get(i), CommonUtils.getLastMonth(startChargeTimes.get(i+1)), null);
+                    times.add(time);
+                } else {
+                    StartAndEndTime time = new StartAndEndTime(startChargeTimes.get(i),
+                            endChargeTimes.get(endChargeTimes.size() - 1) == null ? Integer.MAX_VALUE :
+                                    endChargeTimes.get(endChargeTimes.size() - 1), null);
+                    times.add(time);
+                }
+            }
+            for (int i = 0; i < endChargeTimes.size() -1; i++) {
+                Integer endChargeTime = endChargeTimes.get(i);
+                for (int j = 0; j < times.size(); j++) {
+                    StartAndEndTime time = times.get(j);
+                    if (endChargeTime > time.getEndChargeTime()) {
+                        continue;
+                    } else if (endChargeTime == time.getStartChargeTime() && endChargeTime == time.getEndChargeTime()) {
+                        break;
+                    } else if (endChargeTime >= time.getStartChargeTime() && endChargeTime <= time.getEndChargeTime()){
+                        StartAndEndTime nextTime = new StartAndEndTime(CommonUtils.getNextMonth(endChargeTime), time.getEndChargeTime(), null);
+                        times.get(j).setEndChargeTime(endChargeTime);
+                        times.add(j+1, nextTime);
+
+                    }
+                }
+            }
         }
-        return year*100 + month;
+        /*List <Map <String, Date>> timeRanges = new ArrayList <>();
+        Map <String, Date> map = null;
+        for (int i = 0; i < times.size(); i++) {
+            StartAndEndTime time = times.get(i);
+            map.put("startChargeTime", sdf.parse(String.valueOf(time.getStartChargeTime())));
+            map.put("endChargeTime", time.getEndChargeTime() == Integer.MAX_VALUE ? null : sdf.parse(String.valueOf(time.getEndChargeTime())));
+        }*/
+        return times;
     }
 }

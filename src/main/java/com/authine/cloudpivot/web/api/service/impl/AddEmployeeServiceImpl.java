@@ -82,7 +82,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
 
     @Override
     public ServiceChargeUnitPrice createAddEmployeeData(AddEmployee addEmployee, String employeeFilesId,
-                                                        BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade) throws Exception {
+                                      BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade) throws Exception {
         UpdateAddEmployeeDto dto = getAddEmployeeData(addEmployee, employeeFilesId);
         // 创建员工订单
         EmployeeOrderForm orderForm = dto.getOrderForm();
@@ -134,9 +134,9 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
 
     @Override
     public ServiceChargeUnitPrice addAddEmployeeData(AddEmployee addEmployee, EmployeeFiles employeeFiles,
-                                                     BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade) throws Exception {
+                                   BizObjectFacade bizObjectFacade, WorkflowInstanceFacade workflowInstanceFacade) throws Exception{
         ServiceChargeUnitPrice price = null;
-        // 查询员工订单数据
+                // 查询员工订单数据
         EmployeeOrderForm orderForm = addEmployeeMapper.getEmployeeOrderFormByEmployeeFilesId(employeeFiles.getId());
         if (orderForm != null) {
             // 查询征缴规则
@@ -217,8 +217,11 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
             }
             addEmployeeMapper.updateEmployeeOrderFrom(orderForm);
         } else {
-            // 没有查询到员工档案数据
-            price = createAddEmployeeData(addEmployee, employeeFiles.getId(), bizObjectFacade, workflowInstanceFacade);
+            if ((addEmployee.getSocialSecurityBase() - 0d > 0d && AreaUtils.isAnhuiCity(addEmployee.getSocialSecurityCity())) ||
+                    (addEmployee.getProvidentFundBase() - 0d > 0d && AreaUtils.isAnhuiCity(addEmployee.getProvidentFundCity())) ) {
+                // 没有查询到员工档案数据
+                price = createAddEmployeeData(addEmployee, employeeFiles.getId(), bizObjectFacade, workflowInstanceFacade);
+            }
         }
         // 更新员工档案数据
         if (addEmployee.getSocialSecurityBase() - 0d > 0d) {
@@ -281,9 +284,9 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
         // 汇缴订单明细排序,补缴订单明细排序
         Double remittanceSortKey = 0d, payBackSortKey = 0d;
         // 补缴订单明细
-        List<EmployeeOrderFormDetails> payBackList = new ArrayList<>();
+        List <EmployeeOrderFormDetails> payBackList = new ArrayList <>();
         // 汇缴订单明细
-        List<EmployeeOrderFormDetails> remittanceList = new ArrayList<>();
+        List <EmployeeOrderFormDetails> remittanceList = new ArrayList <>();
         // 生成社保申报信息
         if (addEmployee.getSocialSecurityBase() - 0d > 0d && AreaUtils.isAnhuiCity(addEmployee.getSocialSecurityCity())) {
             sCollectionRule = collectionRuleMapper.getCollectionRuleMaintain(addEmployee.getSocialSecurityCity(),
@@ -306,7 +309,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
         // 生成公积金申报信息
         if (addEmployee.getProvidentFundBase() - 0d > 0d && AreaUtils.isAnhuiCity(addEmployee.getProvidentFundCity())) {
             if (addEmployee.getProvidentFundCity().equals(addEmployee.getProvidentFundCity())
-                    && addEmployee.getGWelfareHandler().equals(addEmployee.getSWelfareHandler()) && sCollectionRule != null) {
+                    && addEmployee.getGWelfareHandler().equals(addEmployee.getSWelfareHandler()) && sCollectionRule != null){
                 gCollectionRule = sCollectionRule;
             } else {
                 gCollectionRule = collectionRuleMapper.getCollectionRuleMaintain(addEmployee.getProvidentFundCity(),
@@ -315,16 +318,16 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
             if (gCollectionRule == null) {
                 throw new RuntimeException("没有查询到公积金对应的征缴规则数据");
             }
-            remittanceSortKey = remittanceList == null || remittanceList.size() == 0 ? 0d : remittanceList.size() * 1.0;
-            payBackSortKey = payBackList == null || payBackList.size() == 0 ? 0d : payBackList.size() * 1.0;
+            remittanceSortKey = remittanceList == null || remittanceList.size()==0 ? 0d : remittanceList.size()*1.0;
+            payBackSortKey  = payBackList == null || payBackList.size()==0 ? 0d : payBackList.size()*1.0;
 
             pDeclare = getProvidentFundDeclareData(addEmployee, employeeFilesId, curMonth, entryNotice,
                     gCollectionRule, remittanceSortKey, payBackSortKey);
 
-            if (pDeclare.getPayBackList() != null && pDeclare.getPayBackList().size() > 0) {
+            if(pDeclare.getPayBackList() != null && pDeclare.getPayBackList().size() > 0) {
                 payBackList.addAll(pDeclare.getPayBackList());
             }
-            if (pDeclare.getRemittanceList() != null && pDeclare.getRemittanceList().size() > 0) {
+            if(pDeclare.getRemittanceList() != null && pDeclare.getRemittanceList().size() > 0) {
                 remittanceList.addAll(pDeclare.getRemittanceList());
             }
             String handler = addEmployeeMapper.getHsLevyHandler(pDeclare.getCity(), pDeclare.getWelfareHandler(),
@@ -344,7 +347,6 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
 
     /**
      * 方法说明：根据增员数据获取公积金申报数据
-     *
      * @param addEmployee
      * @param employeeFilesId
      * @param curMonth
@@ -359,19 +361,19 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
     private ProvidentFundDeclare getProvidentFundDeclareData(AddEmployee addEmployee, String employeeFilesId,
                                                              int curMonth, EntryNotice entryNotice,
                                                              CollectionRuleMaintain sCollectionRule,
-                                                             Double remittanceSortKey, Double payBackSortKey) throws Exception {
+                                                             Double remittanceSortKey, Double payBackSortKey) throws Exception{
         // 判断当前月是否为补缴月
-        Map<String, String> curMonthCanPayBack = new HashMap<>();
+        Map <String, String> curMonthCanPayBack = new HashMap <>();
         ProvidentFundDeclare declare = new ProvidentFundDeclare(addEmployee, employeeFilesId);
         // 查询补缴开始申报月
         int sbMonth = Integer.parseInt(sdf.format(addEmployee.getProvidentFundStartTime()));
         if (sbMonth <= curMonth) {
             // 查询补缴规则数据,按产品名称，开始时间倒序排列
-            List<PaymentRules> paymentRules = collectionRuleMapper.getGjjPaymentRules(sCollectionRule.getId(),
+            List <PaymentRules> paymentRules = collectionRuleMapper.getGjjPaymentRules(sCollectionRule.getId(),
                     sdf.format(addEmployee.getProvidentFundStartTime()), addEmployee.getProvidentFundName(),
                     addEmployee.getCompanyProvidentFundBl(), addEmployee.getEmployeeProvidentFundBl());
             // 创建补缴订单数据
-            List<EmployeeOrderFormDetails> gPayBack = createPayBackData(paymentRules, curMonthCanPayBack,
+            List <EmployeeOrderFormDetails> gPayBack = createPayBackData(paymentRules, curMonthCanPayBack,
                     sbMonth, curMonth, addEmployee.getProvidentFundBase(), null, payBackSortKey);
             if (gPayBack != null && gPayBack.size() > 0) {
                 // 有公积金补缴，赋值入职通知数据
@@ -381,13 +383,12 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
             }
         }
         // 汇缴订单明细
-        List<CollectionRule> collectionRule =
-                collectionRuleMapper.getGjjCollectionRules(sCollectionRule.getId(), sbMonth <= curMonth ?
-                                String.valueOf(curMonth) : String.valueOf(sbMonth), addEmployee.getProvidentFundName(),
+        List <CollectionRule> collectionRule =
+                collectionRuleMapper.getGjjCollectionRules(sCollectionRule.getId(), addEmployee.getProvidentFundName(),
                         addEmployee.getCompanyProvidentFundBl(), addEmployee.getEmployeeProvidentFundBl());
         // 汇缴开始时间初始化为开始申报时间和当前时间最大的一个
-        List<EmployeeOrderFormDetails> gRemittance = createRemittanceData(collectionRule, curMonthCanPayBack,
-                sbMonth, curMonth, addEmployee.getSocialSecurityBase(), null, remittanceSortKey, declare);
+        List <EmployeeOrderFormDetails> gRemittance = createRemittanceData(collectionRule, curMonthCanPayBack,
+                sbMonth, curMonth , addEmployee.getSocialSecurityBase(), null, remittanceSortKey, declare);
         if (gRemittance != null && gRemittance.size() > 0) {
             declare.setRemittanceList(gRemittance);
         }
@@ -396,7 +397,6 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
 
     /**
      * 方法说明：根据增员数据获取社保申报数据
-     *
      * @param addEmployee
      * @param employeeFilesId
      * @param curMonth
@@ -413,7 +413,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
                                                                CollectionRuleMaintain sCollectionRule,
                                                                Double remittanceSortKey, Double payBackSortKey) throws Exception {
         // 判断当前月是否为补缴月
-        Map<String, String> curMonthCanPayBack = new HashMap<>();
+        Map <String, String> curMonthCanPayBack = new HashMap <>();
         SocialSecurityDeclare declare = new SocialSecurityDeclare(addEmployee, employeeFilesId);
         Nccps nccps = nccpsMapper.getNccpsByClientName(addEmployee.getFirstLevelClientName(), addEmployee.getSecondLevelClientName());
         NccpsWorkInjuryRatio workInjuryRatio = new NccpsWorkInjuryRatio();
@@ -429,10 +429,10 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
         int sbMonth = Integer.parseInt(sdf.format(addEmployee.getSocialSecurityStartTime()));
         if (sbMonth <= curMonth) {
             // 查询补缴规则数据,按产品名称，开始时间倒序排列
-            List<PaymentRules> paymentRules = collectionRuleMapper.getSbPaymentRules(sCollectionRule.getId(),
+            List <PaymentRules> paymentRules = collectionRuleMapper.getSbPaymentRules(sCollectionRule.getId(),
                     sdf.format(addEmployee.getSocialSecurityStartTime()));
             // 创建补缴订单数据
-            List<EmployeeOrderFormDetails> sPayBack = createPayBackData(paymentRules, curMonthCanPayBack,
+            List <EmployeeOrderFormDetails> sPayBack = createPayBackData(paymentRules, curMonthCanPayBack,
                     sbMonth, curMonth, addEmployee.getSocialSecurityBase(), workInjuryRatio, payBackSortKey);
             if (sPayBack != null && sPayBack.size() > 0) {
                 // 有社保补缴，赋值入职通知数据
@@ -442,12 +442,11 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
             }
         }
         // 汇缴订单明细
-        List<CollectionRule> collectionRule =
-                collectionRuleMapper.getSbCollectionRules(sCollectionRule.getId(), sbMonth <= curMonth ?
-                        String.valueOf(curMonth) : String.valueOf(sbMonth));
+        List <CollectionRule> collectionRule =
+                collectionRuleMapper.getSbCollectionRules(sCollectionRule.getId());
         // 汇缴开始时间初始化为开始申报时间和当前时间最大的一个
-        List<EmployeeOrderFormDetails> sRemittance = createRemittanceData(collectionRule, curMonthCanPayBack,
-                sbMonth, curMonth, addEmployee.getSocialSecurityBase(), workInjuryRatio, remittanceSortKey, null);
+        List <EmployeeOrderFormDetails> sRemittance = createRemittanceData(collectionRule, curMonthCanPayBack,
+                sbMonth, curMonth , addEmployee.getSocialSecurityBase(), workInjuryRatio, remittanceSortKey, null);
         if (sRemittance != null && sRemittance.size() > 0) {
             declare.setRemittanceList(sRemittance);
         }
@@ -463,7 +462,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
 
     private void createEntryNotice(EntryNotice entryNotice, BizObjectFacade bizObjectFacade,
                                    WorkflowInstanceFacade workflowInstanceFacade) throws Exception {
-        BizObjectModel model = GetBizObjectModelUntils.getEntryNotice(entryNotice);
+        BizObjectModel model =  GetBizObjectModelUntils.getEntryNotice(entryNotice);
         String id = bizObjectFacade.saveBizObjectModel(entryNotice.getCreater(), model, "id");
         String modelWfId = workflowInstanceFacade.startWorkflowInstance(entryNotice.getCreatedDeptId(),
                 entryNotice.getCreater(), Constants.ENTRY_NOTICE_SCHEMA_WF, id, true);
@@ -472,8 +471,8 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
 
     @Override
     public void createProvidentFundDeclare(ProvidentFundDeclare pDeclare, BizObjectFacade bizObjectFacade,
-                                           WorkflowInstanceFacade workflowInstanceFacade) throws Exception {
-        BizObjectModel model = GetBizObjectModelUntils.getProvidentFundDeclare(pDeclare);
+                                            WorkflowInstanceFacade workflowInstanceFacade) throws Exception{
+        BizObjectModel model =  GetBizObjectModelUntils.getProvidentFundDeclare(pDeclare);
         String id = bizObjectFacade.saveBizObjectModel(pDeclare.getCreater(), model, "id");
         String modelWfId = workflowInstanceFacade.startWorkflowInstance(pDeclare.getCreatedDeptId(),
                 pDeclare.getCreater(), Constants.PROVIDENT_FUND_DECLARE_SCHEMA_WF, id, true);
@@ -491,8 +490,8 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
 
     @Override
     public void createSocialSecurityDeclare(SocialSecurityDeclare sDeclare, BizObjectFacade bizObjectFacade,
-                                            WorkflowInstanceFacade workflowInstanceFacade) throws Exception {
-        BizObjectModel model = GetBizObjectModelUntils.getSocialSecurityDeclare(sDeclare);
+                                             WorkflowInstanceFacade workflowInstanceFacade) throws Exception{
+        BizObjectModel model =  GetBizObjectModelUntils.getSocialSecurityDeclare(sDeclare);
         String id = bizObjectFacade.saveBizObjectModel(sDeclare.getCreater(), model, "id");
         String modelWfId = workflowInstanceFacade.startWorkflowInstance(sDeclare.getCreatedDeptId(),
                 sDeclare.getCreater(), Constants.SOCIAL_SECURITY_DECLARE_SCHEMA_WF, id, true);
@@ -509,13 +508,15 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
     }
 
     @Override
-    public String createEmployeeOrderForm(EmployeeOrderForm orderForm, BizObjectFacade bizObjectFacade) throws Exception {
+    public String createEmployeeOrderForm(EmployeeOrderForm orderForm, BizObjectFacade bizObjectFacade) throws Exception{
         // 生成员工订单BizObjectModel
         BizObjectModel model = GetBizObjectModelUntils.getBizObjectModel(Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
                 orderForm.getSequenceStatus(), orderForm.getOwner(), orderForm.getOwnerDeptId(),
                 orderForm.getOwnerDeptQueryCode(), orderForm.getCreater(), orderForm.getCreatedDeptId(),
                 orderForm.getCreatedTime());
-        Map<String, Object> data = new HashMap<>();
+        model.setName(orderForm.getName());
+        Map <String, Object> data = new HashMap <>();
+        data.put("employee_name", orderForm.getEmployeeName());
         // 	详细
         data.put("detail", orderForm.getDetail());
         // 	社保状态
@@ -594,12 +595,12 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
         addEmployeeMapper.updateQgAddEmployee(nationwideDispatch);
     }
 
-    private List<EmployeeOrderFormDetails> createRemittanceData(List<CollectionRule> rules,
-                                                                Map<String, String> curMonthCanPayBack, int sbMonth,
-                                                                int curMonth, Double base,
-                                                                NccpsWorkInjuryRatio workInjuryRatio,
-                                                                Double sortKey, ProvidentFundDeclare declare) throws Exception {
-        List<EmployeeOrderFormDetails> remittances = new ArrayList<>();
+    private List <EmployeeOrderFormDetails> createRemittanceData(List <CollectionRule> rules,
+                                                                 Map <String, String> curMonthCanPayBack, int sbMonth,
+                                                                 int curMonth, Double base,
+                                                                 NccpsWorkInjuryRatio workInjuryRatio,
+                                                                 Double sortKey, ProvidentFundDeclare declare) throws Exception {
+        List <EmployeeOrderFormDetails> remittances = new ArrayList <>();
         if (rules == null || rules.size() == 0) {
             return remittances;
         }
@@ -611,9 +612,12 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
             if (StringUtils.isBlank(curMonthCanPayBack.get(rule.getProductName())) ||
                     "是".equals(curMonthCanPayBack.get(rule.getProductName()))) {
                 // 申报当月是补缴月，判断客户设置的开始缴纳时间与当前月+1比较大小
-                curSb = sbMonth > curMonth + 1 ? sbMonth : curMonth + 1;
+                curSb = sbMonth > CommonUtils.getNextMonth(curMonth) ? sbMonth : CommonUtils.getNextMonth(curMonth);
             } else {
                 curSb = sbMonth > curMonth ? sbMonth : curMonth;
+            }
+            if (rule.getEffectiveTerminationMonth() != null && Integer.parseInt(sdf.format(rule.getEffectiveTerminationMonth())) < curSb) {
+                continue;
             }
             // 当前开始时间
             int startMonth = Integer.parseInt(sdf.format(rule.getEffectiveStartMonth()));
@@ -639,33 +643,34 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
         return remittances;
     }
 
-    private List<EmployeeOrderFormDetails> createPayBackData(List<PaymentRules> paymentRules,
-                                                             Map<String, String> curMonthCanPayBack, int sbMonth,
-                                                             int curMonth, Double base,
-                                                             NccpsWorkInjuryRatio workInjuryRatio, Double sortKey) throws Exception {
-        List<EmployeeOrderFormDetails> payBacks = new ArrayList<>();
+    private List <EmployeeOrderFormDetails> createPayBackData(List <PaymentRules> paymentRules,
+                                                              Map <String, String> curMonthCanPayBack, int sbMonth,
+                                                              int curMonth, Double base,
+                                                              NccpsWorkInjuryRatio workInjuryRatio, Double sortKey) throws Exception {
+        List <EmployeeOrderFormDetails> payBacks = new ArrayList <>();
         if (paymentRules == null || paymentRules.size() == 0) {
             return payBacks;
         }
         String productName = "";
-        String canCrossYearPayBack = "";
         // 待补缴结束时间
         int payEnd = curMonth;
+        boolean isContinuity = true;
         for (int i = 0; i < paymentRules.size(); i++) {
             PaymentRules rules = paymentRules.get(i);
             if (!rules.getProductName().equals(productName)) {
                 // 险种第一次出现, 此时通过判断申报当月是否为补缴月来确定当前险种的补缴最末一个月
                 productName = rules.getProductName();
-                canCrossYearPayBack = rules.getCanCrossYearPayBack();
                 // 记录当前月是否为补缴月
                 curMonthCanPayBack.put(productName, rules.getCurMonthCanPayBack());
-                payEnd = "是".equals(rules.getCurMonthCanPayBack()) ? curMonth : curMonth - 1;
+                payEnd = "是".equals(rules.getCurMonthCanPayBack()) ? curMonth : CommonUtils.getLastMonth(curMonth);
                 if (payEnd < sbMonth) {
                     // 如果最末一个月 < 申报月，则不补缴(只补缴申报月的情况，此时申报月是汇缴月)
                     continue;
                 }
-            } else if (!"是".equals(canCrossYearPayBack)) {
-                // 不可以跨年补缴
+                isContinuity = true;
+            }
+            if (!isContinuity) {
+                // 补缴不连续
                 continue;
             }
             if ("是".equals(rules.getCanPayBack())) {
@@ -679,16 +684,20 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
                 // 当前创建的补缴数据的结束时间（补缴规则的结束时间与补缴结束月最小的一个）
                 int curDateEnd = endMonth <= payEnd ? endMonth : payEnd;
                 // 当前险种周期内补缴月份
-                int payMonth = curDateEnd - curDateStart + 1;
+                int payMonth = (curDateEnd/100 - curDateStart/100)*12 + (curDateEnd%100 - curDateStart%100) + 1;
                 if (payMonth >= rules.getPaymentBackMinMonth() && payMonth < rules.getPaymentBackMaxMonth()) {
                     sortKey = sortKey + 1;
                     EmployeeOrderFormDetails details = new EmployeeOrderFormDetails(rules, base, workInjuryRatio, sortKey);
                     details.setStartChargeTime(sdf.parse(String.valueOf(curDateStart)));
                     details.setEndChargeTime(sdf.parse(String.valueOf(curDateEnd)));
                     payBacks.add(details);
-                } else if (payMonth < rules.getPaymentBackMinMonth()) {
+                    if (curDateStart != startMonth) {
+                        isContinuity = false;
+                    }
+                } else if (payMonth < rules.getPaymentBackMinMonth()){
+                    isContinuity = false;
                     continue;
-                } else if (payMonth >= rules.getPaymentBackMaxMonth()) {
+                } else if (payMonth >= rules.getPaymentBackMaxMonth()){
                     Date endTime = sdf.parse(String.valueOf(curDateEnd));
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTime(endTime);
@@ -699,11 +708,16 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
                     details.setStartChargeTime(startTime);
                     details.setEndChargeTime(endTime);
                     payBacks.add(details);
+                    if (Integer.parseInt(sdf.format(startTime)) != startMonth) {
+                        isContinuity = false;
+                    }
                 } else {
                     continue;
                 }
+
             } else {
                 // 当前产品周期不可以补缴
+                isContinuity = false;
                 continue;
             }
         }

@@ -45,7 +45,8 @@ public class EmployeeOrderFormDetails {
     /**
      * 基数
      */
-    Double baseNum;
+    Double companyBase;
+    Double employeeBase;
     /**
      * 企业比例
      */
@@ -81,11 +82,18 @@ public class EmployeeOrderFormDetails {
         this.productName = rules.getProductName();
         this.endChargeTime = rules.getEffectiveTerminationMonth();
         if(base > rules.getCompanyMaxBaseNum()) {
-            this.baseNum = rules.getCompanyMaxBaseNum();
+            this.companyBase = rules.getCompanyMaxBaseNum();
         } else if (base < rules.getCompanyMinBaseNum()) {
-            this.baseNum = rules.getCompanyMinBaseNum();
+            this.companyBase = rules.getCompanyMinBaseNum();
         } else {
-            this.baseNum = base;
+            this.companyBase = base;
+        }
+        if(base > rules.getEmployeeMaxBaseNum()) {
+            this.employeeBase = rules.getEmployeeMaxBaseNum();
+        } else if (base < rules.getEmployeeMinBaseNum()) {
+            this.employeeBase = rules.getEmployeeMinBaseNum();
+        } else {
+            this.employeeBase = base;
         }
         if (rules.getProductName().indexOf("工伤") >= 0 && rules.getProductName().indexOf("补充") < 0
                 && workInjuryRatio != null && workInjuryRatio.getWorkInjuryUnitRatio() != null) {
@@ -98,9 +106,9 @@ public class EmployeeOrderFormDetails {
         this.companySurchargeValue = rules.getCompanySurchargeValue();
         this.employeeSurchargeValue = rules.getEmployeeSurchargeValue();
 
-        this.companyMoney = CommonUtils.processingData(this.baseNum * this.companyRatio + this.companySurchargeValue,
+        this.companyMoney = CommonUtils.processingData(this.companyBase * this.companyRatio + this.companySurchargeValue,
                 rules.getCompanyRoundingPolicy(), rules.getCompanyPrecision());
-        this.employeeMoney = CommonUtils.processingData(this.baseNum * this.employeeRatio + this.employeeSurchargeValue,
+        this.employeeMoney = CommonUtils.processingData(this.employeeBase * this.employeeRatio + this.employeeSurchargeValue,
                 rules.getEmployeeRoundingPolicy(), rules.getEmployeePrecision());
         this.sum = this.companyMoney + this.employeeMoney;
     }
@@ -110,11 +118,18 @@ public class EmployeeOrderFormDetails {
         this.sortKey = sortKey;
         this.productName = rules.getProductName();
         if(base > rules.getCompanyMaxBaseNum()) {
-            this.baseNum = rules.getCompanyMaxBaseNum();
+            this.companyBase = rules.getCompanyMaxBaseNum();
         } else if (base < rules.getCompanyMinBaseNum()) {
-            this.baseNum = rules.getCompanyMinBaseNum();
+            this.companyBase = rules.getCompanyMinBaseNum();
         } else {
-            this.baseNum = base;
+            this.companyBase = base;
+        }
+        if(base > rules.getEmployeeMaxBaseNum()) {
+            this.employeeBase = rules.getEmployeeMaxBaseNum();
+        } else if (base < rules.getEmployeeMinBaseNum()) {
+            this.employeeBase = rules.getEmployeeMinBaseNum();
+        } else {
+            this.employeeBase = base;
         }
         if (rules.getProductName().indexOf("工伤") >= 0 && rules.getProductName().indexOf("补充") < 0
                 && workInjuryRatio != null && workInjuryRatio.getWorkInjuryUnitRatio() != null) {
@@ -127,9 +142,9 @@ public class EmployeeOrderFormDetails {
         this.companySurchargeValue = rules.getCompanySurchargeValue();
         this.employeeSurchargeValue = rules.getEmployeeSurchargeValue();
 
-        this.companyMoney = CommonUtils.processingData(this.baseNum * this.companyRatio + this.companySurchargeValue,
+        this.companyMoney = CommonUtils.processingData(this.companyBase * this.companyRatio + this.companySurchargeValue,
                 rules.getCompanyRoundingPolicy(), rules.getCompanyPrecision());
-        this.employeeMoney = CommonUtils.processingData(this.baseNum * this.employeeRatio + this.employeeSurchargeValue,
+        this.employeeMoney = CommonUtils.processingData(this.employeeBase * this.employeeRatio + this.employeeSurchargeValue,
                 rules.getEmployeeRoundingPolicy(), rules.getEmployeePrecision());
         this.sum = this.companyMoney + this.employeeMoney;
     }

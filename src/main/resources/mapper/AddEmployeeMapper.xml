@@ -186,11 +186,13 @@
     </insert>
 
     <insert id="createEmployeeOrderFormDetails">
-        INSERT INTO ${tableName} (product_name, start_charge_time, end_charge_time, base_num, company_ratio,
+        INSERT INTO ${tableName} (product_name, start_charge_time, end_charge_time, company_base, employee_base,
+        company_ratio,
         employee_ratio, sum, company_money, employee_money, company_surcharge_value, employee_surcharge_value, id,
         parentId, sortKey) VALUES
         <foreach item="item" collection="list" index="index" separator=",">
-            (#{item.productName}, #{item.startChargeTime}, #{item.endChargeTime}, #{item.baseNum}, #{item.companyRatio},
+            (#{item.productName}, #{item.startChargeTime}, #{item.endChargeTime}, #{item.companyBase},
+            #{item.employeeBase}, #{item.companyRatio},
             #{item.employeeRatio}, #{item.sum}, #{item.companyMoney}, #{item.employeeMoney},
             #{item.companySurchargeValue}, #{item.employeeSurchargeValue}, #{item.id}, #{parentId}, #{item.sortKey})
         </foreach>
@@ -210,7 +212,8 @@
 
     <update id="updateEmployeeOrderFrom" parameterType="com.authine.cloudpivot.web.api.entity.EmployeeOrderForm">
         UPDATE i4fvb_employee_order_form
-        SET name=#{name},
+        SET name=#{employeeName},
+            employee_name = #{employeeName},
             detail=#{detail},
             social_security_status=#{socialSecurityStatus},
             provident_fund_status=#{providentFundStatus},

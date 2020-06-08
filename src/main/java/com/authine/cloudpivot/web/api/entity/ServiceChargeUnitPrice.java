@@ -81,4 +81,12 @@ public class ServiceChargeUnitPrice {
     private String payCycle;
 
     String orderFormId;
+
+    Integer serviceMaxPayBack = 0;
+
+    Integer riskMaxPayBack = 0;
+
+    Integer vatMaxPayBack = 0;
+
+    Integer welfareMaxPayBack = 0;
 }
