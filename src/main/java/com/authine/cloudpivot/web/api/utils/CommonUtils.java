@@ -7,6 +7,7 @@ import com.authine.cloudpivot.web.api.entity.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -81,21 +82,23 @@ public class CommonUtils {
         }
         Double returnValue = 0d;
         if ("四舍五入".equals(rounding)) {
-            NumberFormat nf = NumberFormat.getNumberInstance();
+            /*NumberFormat nf = NumberFormat.getNumberInstance();
             // 如果不需要四舍五入，可以使用RoundingMode.DOWN
-            nf.setRoundingMode(RoundingMode.UP);
+            nf.setRoundingMode(RoundingMode.UP);*/
             if ("0".equals(precision)) {
                 // 四舍五入取整
                 returnValue = (double)Math.round(value);
             } else if ("1".equals(precision)) {
                 // 保留两位小数
-                nf.setMaximumFractionDigits(1);
+                /*nf.setMaximumFractionDigits(1);
                 String companyStr = nf.format(value).trim().replaceAll(",", "");
-                returnValue = Double.parseDouble(companyStr);
+                returnValue = Double.parseDouble(companyStr);*/
+                returnValue = new BigDecimal(value).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue();
             } else if ("2".equals(precision)) {
-                nf.setMaximumFractionDigits(2);
+                /*nf.setMaximumFractionDigits(2);
                 String companyStr = nf.format(value).trim().replaceAll(",", "");
-                returnValue = Double.parseDouble(companyStr);
+                returnValue = Double.parseDouble(companyStr);*/
+                returnValue = new BigDecimal(value).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
             }
         } else if ("单边见角进元取整".equals(rounding)) {
             // 向上取整

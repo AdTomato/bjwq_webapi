@@ -4,6 +4,28 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.authine.cloudpivot.web.api.mapper.AnnouncementMapper">
     <select id="getAnnouncementContent" resultType="java.lang.String">
-        SELECT announcement_content FROM id34a_announcement_setting WHERE is_close = 0 ORDER BY createdTime DESC
+        SELECT announcement_content
+        FROM id34a_announcement_setting
+        WHERE is_close = 0
+        ORDER BY createdTime DESC
+        LIMIT 0, 1
     </select>
+
+    <resultMap id="announcementContentList" type="java.util.Map">
+        <id column="id" property="id"/>
+        <id column="title" property="title"/>
+    </resultMap>
+    <select id="getAnnouncementContentList" parameterType="java.lang.String" resultMap="announcementContentList">
+        SELECT id, CONCAT(title, DATE_FORMAT(modifiedTime, '%Y-%m-%d')) AS title
+        FROM id34a_announcement_setting
+        WHERE is_close = 0
+        ORDER BY createdTime DESC
+    </select>
+
+    <select id="getAnnouncementContentById" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT announcement_content
+        FROM id34a_announcement_setting
+        WHERE id = #{id}
+    </select>
+
 </mapper>

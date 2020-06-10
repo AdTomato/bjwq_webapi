@@ -54,7 +54,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     private SalesContractService salesContractService;
 
     @Resource
-    private DeleteEmployeeService deleteEmployeeService;
+    private DeleteEmployeeMapper deleteEmployeeMapper;
 
     @Override
     public void addEmployee(WorkflowInstanceFacade workflowInstanceFacade, String fileName, UserModel user,
@@ -749,23 +749,27 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         if (Constants.ADD_EMPLOYEE_SCHEMA.equals(schemaCode)) {
             for (int i = 0; i < ids.size(); i++) {
                 String id = ids.get(i);
+                AddEmployee addEmployee = addEmployeeMapper.getAddEmployeeById(id);
+                if (addEmployee == null) {
+                    throw new RuntimeException("表单：" + id + "没有查询到对应的增员数据！");
+                }
+                if ("草稿".equals(addEmployee.getSbStatus()) || "草稿".equals(addEmployee.getGjjStatus())) {
+                    successIds.add(id);
+                    continue;
+                }
+                EmployeeFiles employeeFiles = addEmployeeMapper.getEmployeeFilesByAddEmployeeId(id);
+                if (employeeFiles == null) {
+                    // 此时是草稿状态
+                    successIds.add(id);
+                    continue;
+                }
                 // 社保申报数据
                 SocialSecurityDeclare sDeclare = addEmployeeMapper.getSocialSecurityDeclareByAddEmployeeId(id);
                 // 公积金申报数据
                 ProvidentFundDeclare pDeclare = addEmployeeMapper.getProvidentFundDeclareByAddEmployeeId(id);
-                EmployeeFiles employeeFiles = addEmployeeMapper.getEmployeeFilesByAddEmployeeId(id);
-                if (employeeFiles == null) {
-                    throw new RuntimeException("表单：" + id + " 没有查询到员工档案");
-                }
+
                 if (sDeclare == null && pDeclare == null) {
-                    // 没有对应的申报数据
-                    if ((StringUtils.isBlank(employeeFiles.getSbAddEmployeeId()) || id.equals(employeeFiles.getSbAddEmployeeId())) &&
-                        (StringUtils.isBlank(employeeFiles.getGjjAddEmployeeId()) || id.equals(employeeFiles.getGjjAddEmployeeId())) ){
-                        // 员工订单只关联当前增员
-                        bizObjectFacade.removeBizObject(userId, Constants.EMPLOYEE_FILES_SCHEMA, employeeFiles.getId());
-                    }
                     successIds.add(id);
-                    continue;
                 } else if (sDeclare != null && pDeclare != null) {
                     if (!sDeclare.getEmployeeFilesId().equals(pDeclare.getEmployeeFilesId())) {
                         throw new RuntimeException("表单：" + id + " 对应社保，公积金申报的员工档案不一致");
@@ -778,79 +782,74 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                     bizObjectFacade.removeBizObject(userId, Constants.PROVIDENT_FUND_DECLARE_SCHEMA, pDeclare.getId());
                     bizObjectFacade.removeBizObject(userId, Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
                             sDeclare.getEmployeeOrderFormId());
-                } else {
-                    EmployeeOrderForm orderForm = addEmployeeMapper.getEmployeeOrderFormById(sDeclare != null ?
-                            sDeclare.getEmployeeOrderFormId() : pDeclare.getEmployeeOrderFormId());
-                    String city = sDeclare == null ? orderForm.getProvidentFundCity() : orderForm.getSocialSecurityCity();
-                    ServiceChargeUnitPrice price =
-                            salesContractService.getServiceChargeUnitPrice(orderForm.getFirstLevelClientName(),
-                                    orderForm.getBusinessType(), !AreaUtils.isAnhuiCity(city) ? "省外" : "省内", city);
-                    if (employeeFiles == null) {
-                        throw new RuntimeException("表单：" + id + " 对应的员工档案没有查询到");
-                    }
+                } else if (sDeclare != null) {
+                    EmployeeOrderForm orderForm =
+                            addEmployeeMapper.getEmployeeOrderFormById(sDeclare.getEmployeeOrderFormId());
                     if (orderForm == null) {
                         throw new RuntimeException("表单：" + id + " 对应的员工订单没有查询到");
                     }
-                    if (sDeclare != null && !sDeclare.getEmployeeFilesId().equals(employeeFiles.getId())) {
-                        throw new RuntimeException("表单：" + id + " 查询到的员工档案和社保申报对应员工档案不一致");
-                    }
-                    if (pDeclare != null && !pDeclare.getEmployeeFilesId().equals(employeeFiles.getId())) {
-                        throw new RuntimeException("表单：" + id + " 查询到的员工档案和公积金申报对应员工档案不一致");
-                    }
-                    if (sDeclare != null && !orderForm.getEmployeeFilesId().equals(sDeclare.getEmployeeFilesId())) {
-                        throw new RuntimeException("表单：" + id + " 查询到的社保申报和员工订单对应员工档案不一致");
-                    }
-                    if (pDeclare != null && !orderForm.getEmployeeFilesId().equals(pDeclare.getEmployeeFilesId())) {
-                        throw new RuntimeException("表单：" + id + " 查询到的公积金申报和员工订单对应员工档案不一致");
-                    }
+                    ServiceChargeUnitPrice price =
+                            salesContractService.getServiceChargeUnitPrice(orderForm.getFirstLevelClientName(),
+                                    orderForm.getBusinessType(),
+                                    !AreaUtils.isAnhuiCity(orderForm.getSocialSecurityCity()) ? "省外" : "省内",
+                                    orderForm.getSocialSecurityCity());
                     if (price != null) {
                         orderForm.setPrecollected(price.getPrecollected());
                         orderForm.setPayCycle(price.getPayCycle());
                     }
-                    if (sDeclare != null) {
-                        bizObjectFacade.removeBizObject(userId, Constants.SOCIAL_SECURITY_DECLARE_SCHEMA,
-                                sDeclare.getId());
-                        if (StringUtils.isBlank(employeeFiles.getGjjAddEmployeeId())) {
-                            // 员工档案没有公积金申报,即员工订单只有社保数据
-                            bizObjectFacade.removeBizObject(userId, Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
-                                    sDeclare.getEmployeeOrderFormId());
-                        } else {
-                            orderForm.setSocialSecurityStatus(null);
-                            orderForm.setSocialSecurityCity(null);
-                            orderForm.setSWelfareHandler(null);
-                            orderForm.setSocialSecurityBase(null);
-                            orderForm.setSocialSecurityChargeStart(null);
-                            updateEmployeeService.delEmployeeOrderFormDetails(sDeclare.getEmployeeOrderFormId(), "1");
-                            updateEmployeeService.upateEmployeeOrderForm(orderForm);
-                            if (price != null) {
-                                updateEmployeeService.addEmployeeOrderFormDetails(price, orderForm.getId());
-                            }
+                    bizObjectFacade.removeBizObject(userId, Constants.SOCIAL_SECURITY_DECLARE_SCHEMA,
+                            sDeclare.getId());
+                    if (StringUtils.isBlank(employeeFiles.getGjjAddEmployeeId()) && orderForm.getProvidentFundBase() - 0d > 0d) {
+                        // 员工档案没有公积金申报,即员工订单只有社保数据
+                        bizObjectFacade.removeBizObject(userId, Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
+                                sDeclare.getEmployeeOrderFormId());
+                    } else {
+                        orderForm.setSocialSecurityStatus(null);
+                        orderForm.setSocialSecurityCity(null);
+                        orderForm.setSWelfareHandler(null);
+                        orderForm.setSocialSecurityBase(null);
+                        orderForm.setSocialSecurityChargeStart(null);
+                        updateEmployeeService.delEmployeeOrderFormDetails(sDeclare.getEmployeeOrderFormId(), "1");
+                        addEmployeeMapper.updateEmployeeOrderFrom(orderForm);
+                        if (price != null) {
+                            updateEmployeeService.addEmployeeOrderFormDetails(price, orderForm.getId());
                         }
-                    } else if (pDeclare != null) {
-                        bizObjectFacade.removeBizObject(userId, Constants.PROVIDENT_FUND_DECLARE_SCHEMA,
-                                pDeclare.getId());
-                        if (StringUtils.isBlank(employeeFiles.getSbAddEmployeeId())) {
-                            // 员工档案没有社保申报,即员工订单只有公积金数据
-                            bizObjectFacade.removeBizObject(userId, Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
-                                    sDeclare.getEmployeeOrderFormId());
-                        } else {
-                            orderForm.setProvidentFundStatus(null);
-                            orderForm.setProvidentFundCity(null);
-                            orderForm.setGWelfareHandler(null);
-                            orderForm.setProvidentFundBase(null);
-                            orderForm.setProvidentFundChargeStart(null);
-                            updateEmployeeService.delEmployeeOrderFormDetails(sDeclare.getEmployeeOrderFormId(), "2");
-                            updateEmployeeService.upateEmployeeOrderForm(orderForm);
-                            if (price != null) {
-                                updateEmployeeService.addEmployeeOrderFormDetails(price, orderForm.getId());
-                            }
+                    }
+                } else if (pDeclare != null) {
+                    EmployeeOrderForm orderForm =
+                            addEmployeeMapper.getEmployeeOrderFormById(pDeclare.getEmployeeOrderFormId());
+                    ServiceChargeUnitPrice price =
+                            salesContractService.getServiceChargeUnitPrice(orderForm.getFirstLevelClientName(),
+                                    orderForm.getBusinessType(),
+                                    !AreaUtils.isAnhuiCity(orderForm.getProvidentFundCity()) ? "省外" : "省内",
+                                    orderForm.getProvidentFundCity());
+                    if (price != null) {
+                        orderForm.setPrecollected(price.getPrecollected());
+                        orderForm.setPayCycle(price.getPayCycle());
+                    }
+                    bizObjectFacade.removeBizObject(userId, Constants.PROVIDENT_FUND_DECLARE_SCHEMA,
+                            pDeclare.getId());
+                    if (StringUtils.isBlank(employeeFiles.getSbAddEmployeeId()) && orderForm.getSocialSecurityBase() - 0d > 0d) {
+                        // 员工档案没有社保申报,即员工订单只有公积金数据
+                        bizObjectFacade.removeBizObject(userId, Constants.EMPLOYEE_ORDER_FORM_SCHEMA,
+                                sDeclare.getEmployeeOrderFormId());
+                    } else {
+                        orderForm.setProvidentFundStatus(null);
+                        orderForm.setProvidentFundCity(null);
+                        orderForm.setGWelfareHandler(null);
+                        orderForm.setProvidentFundBase(null);
+                        orderForm.setProvidentFundChargeStart(null);
+                        updateEmployeeService.delEmployeeOrderFormDetails(sDeclare.getEmployeeOrderFormId(), "2");
+                        updateEmployeeService.upateEmployeeOrderForm(orderForm);
+                        if (price != null) {
+                            updateEmployeeService.addEmployeeOrderFormDetails(price, orderForm.getId());
                         }
                     }
                 }
 
                 if ((StringUtils.isBlank(employeeFiles.getSbAddEmployeeId()) || id.equals(employeeFiles.getSbAddEmployeeId())) &&
                         (StringUtils.isBlank(employeeFiles.getGjjAddEmployeeId()) || id.equals(employeeFiles.getGjjAddEmployeeId())) ){
-                    // 员工订单只关联当前增员
+                    // 员工档案只关联当前增员
                     bizObjectFacade.removeBizObject(userId, Constants.EMPLOYEE_FILES_SCHEMA, employeeFiles.getId());
                 } else if (StringUtils.isBlank(employeeFiles.getSbAddEmployeeId()) || id.equals(employeeFiles.getSbAddEmployeeId())) {
                     employeeFiles.setSbAddEmployeeId(null);
@@ -873,15 +872,23 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
         } else if (Constants.DELETE_EMPLOYEE_SCHEMA.equals(schemaCode)) {
             for (int i = 0; i < ids.size(); i++) {
                 String id = ids.get(i);
-                EmployeeFiles employeeFiles = deleteEmployeeService.getEmployeeFilesByDelEmployeeId(id);
-                if (employeeFiles == null) {
-                    throw new Exception("表单：" + id + "没有查询到员工档案！");
+                DeleteEmployee deleteEmployee = deleteEmployeeMapper.getDeleteEmployeeById(id);
+                if (deleteEmployee == null) {
+                    throw new RuntimeException("表单：" + id + "没有查询到对应的减员数据！");
                 }
-                SocialSecurityClose sClose = deleteEmployeeService.getSocialSecurityCloseByDelEmployeeId(id);
+                if ("草稿".equals(deleteEmployee.getSbStatus()) || "草稿".equals(deleteEmployee.getGjjStatus())) {
+                    successIds.add(id);
+                    continue;
+                }
+                EmployeeFiles employeeFiles = deleteEmployeeMapper.getEmployeeFilesByDelEmployeeId(id);
+                if (employeeFiles == null) {
+                    throw new RuntimeException("表单：" + id + "没有查询到对应的员工档案不一致！");
+                }
+                SocialSecurityClose sClose = deleteEmployeeMapper.getSocialSecurityCloseByDelEmployeeId(id);
                 if(sClose != null && !sClose.getEmployeeFilesId().equals(employeeFiles.getId())) {
                     throw new RuntimeException("表单：" + id + "社保停缴对应的员工档案和减员对应的员工档案不一致！");
                 }
-                ProvidentFundClose gClose = deleteEmployeeService.getProvidentFundCloseByDelEmployeeId(id);
+                ProvidentFundClose gClose = deleteEmployeeMapper.getProvidentFundCloseByDelEmployeeId(id);
                 if(gClose != null && !gClose.getEmployeeFilesId().equals(employeeFiles.getId())) {
                     throw new RuntimeException("表单：" + id + "社保停缴对应的员工档案和减员对应的员工档案不一致！");
                 }
@@ -891,6 +898,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 if (gClose != null) {
                     bizObjectFacade.removeBizObject(userId, Constants.PROVIDENT_FUND_CLOSE_SCHEMA, gClose.getId());
                 }
+                EmployeeOrderForm orderForm = addEmployeeMapper.getEmployeeOrderFormByEmployeeFilesId(employeeFiles.getId());
                 if ((StringUtils.isBlank(employeeFiles.getSbDelEmployeeId()) || id.equals(employeeFiles.getSbDelEmployeeId())) &&
                         (StringUtils.isBlank(employeeFiles.getGjjDelEmployeeId()) || id.equals(employeeFiles.getGjjDelEmployeeId()))) {
                     // 原工档案对应减员的社保，公积金
@@ -899,14 +907,27 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                     employeeFiles.setQuitDate(null);
                     employeeFiles.setQuitReason(null);
                     employeeFiles.setQuitRemark(null);
+                    if (orderForm != null) {
+                        orderForm.setSocialSecurityChargeEnd(null);
+                        orderForm.setProvidentFundChargeEnd(null);
+                    }
                 }
                 if (StringUtils.isBlank(employeeFiles.getSbDelEmployeeId()) || id.equals(employeeFiles.getSbDelEmployeeId())) {
                     employeeFiles.setSbDelEmployeeId(null);
                     employeeFiles.setSocialSecurityChargeEnd(null);
+                    if (orderForm != null) {
+                        orderForm.setSocialSecurityChargeEnd(null);
+                    }
                 }
                 if (StringUtils.isBlank(employeeFiles.getGjjDelEmployeeId()) || id.equals(employeeFiles.getGjjDelEmployeeId())) {
                     employeeFiles.setGjjDelEmployeeId(null);
                     employeeFiles.setProvidentFundChargeEnd(null);
+                    if (orderForm != null) {
+                        orderForm.setProvidentFundChargeEnd(null);
+                    }
+                }
+                if (orderForm != null) {
+                    addEmployeeMapper.updateEmployeeOrderFrom(orderForm);
                 }
                 addEmployeeMapper.updateEmployeeFiles(employeeFiles);
             }

@@ -388,7 +388,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
                         addEmployee.getCompanyProvidentFundBl(), addEmployee.getEmployeeProvidentFundBl());
         // 汇缴开始时间初始化为开始申报时间和当前时间最大的一个
         List <EmployeeOrderFormDetails> gRemittance = createRemittanceData(collectionRule, curMonthCanPayBack,
-                sbMonth, curMonth , addEmployee.getSocialSecurityBase(), null, remittanceSortKey, declare);
+                sbMonth, curMonth , addEmployee.getProvidentFundBase(), null, remittanceSortKey, declare);
         if (gRemittance != null && gRemittance.size() > 0) {
             declare.setRemittanceList(gRemittance);
         }
