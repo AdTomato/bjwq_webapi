@@ -1554,26 +1554,26 @@ public class EmployeeMaintainController extends BaseController {
             batchPreDispatch = new BatchPreDispatch(addEmployee.getEmployeeName(), addEmployee.getIdentityNo(),
                     addEmployee.getMobile(), addEmployee.getSocialSecurityBase(), providentFundRatio, null,
                     addEmployee.getProvidentFundBase(), addEmployee.getEntryTime(), addEmployee.getCreatedTime(),
-                    addEmployee.getSocialSecurityCity(), addEmployee.getProvidentFundCity(), addEmployee.getRemark());
+                    addEmployee.getSocialSecurityCity(), addEmployee.getRemark());
             batchPreDispatches.add(batchPreDispatch);
         } else if (sIsOut && !gIsOut) {
             // 社保省外，公积金省内
             batchPreDispatch = new BatchPreDispatch(addEmployee.getEmployeeName(), addEmployee.getIdentityNo(),
                     addEmployee.getMobile(), addEmployee.getSocialSecurityBase(), null, null, null,
                     addEmployee.getEntryTime(), addEmployee.getCreatedTime(), addEmployee.getSocialSecurityCity(),
-                    null, addEmployee.getRemark());
+                    addEmployee.getRemark());
             batchPreDispatches.add(batchPreDispatch);
         } else if (!sIsOut && gIsOut) {
             // 社保省内，公积金省外
             batchPreDispatch = new BatchPreDispatch(addEmployee.getEmployeeName(), addEmployee.getIdentityNo(),
                     addEmployee.getMobile(), null, providentFundRatio, null, addEmployee.getProvidentFundBase(),
-                    addEmployee.getEntryTime(), addEmployee.getCreatedTime(), null, addEmployee.getProvidentFundCity(),
+                    addEmployee.getEntryTime(), addEmployee.getCreatedTime(), addEmployee.getProvidentFundCity(),
                     addEmployee.getRemark());
             batchPreDispatches.add(batchPreDispatch);
 
         }
         // 生成批量预派
-        batchPreDispatchService.addBatchPreDispatchs(getUserId(), this.getOrganizationFacade(),
+        batchPreDispatchService.addBatchPreDispatchs(addEmployee.getCreater(), this.getOrganizationFacade(),
                 batchPreDispatches);
     }
 
