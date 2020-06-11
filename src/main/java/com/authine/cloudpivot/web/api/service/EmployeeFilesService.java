@@ -1,5 +1,6 @@
 package com.authine.cloudpivot.web.api.service;
 
+import com.authine.cloudpivot.web.api.dto.AddEmployeeDto;
 import com.authine.cloudpivot.web.api.dto.EmployeeFilesDto;
 import com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto;
 import com.authine.cloudpivot.web.api.entity.*;
@@ -30,6 +31,15 @@ public interface EmployeeFilesService {
      * @return 增员_客户数据
      */
     AddEmployee getAddEmployeeData(String id);
+
+    /**
+     * 根据增员客户数据id获取增员客户数据
+     *
+     * @param id 数据id
+     * @return 增员客户数据
+     * @author wangyong
+     */
+    AddEmployeeDto getAddEmployeeDtoData(String id);
 
     /**
      * 获取增员_客户修改数据
@@ -207,6 +217,7 @@ public interface EmployeeFilesService {
 
     /**
      * 方法说明：根据证件号码查询未离职的最新一个员工档案数据
+     *
      * @param identityNo
      * @return com.authine.cloudpivot.web.api.entity.EmployeeFiles
      * @author liulei

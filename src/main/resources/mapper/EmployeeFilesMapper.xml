@@ -176,72 +176,100 @@
 
     <select id="getAddEmployeeData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.AddEmployee">
-        SELECT * FROM i4fvb_add_employee WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_add_employee
+        WHERE id = #{id}
     </select>
 
     <select id="getAddEmployeeUpdateData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.AddEmployee">
-        SELECT * FROM i4fvb_add_employee_update WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_add_employee_update
+        WHERE id = #{id}
     </select>
 
     <select id="getDeleteEmployeeData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
-        SELECT * FROM i4fvb_delete_employee WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_delete_employee
+        WHERE id = #{id}
     </select>
 
     <select id="getDeleteEmployeeUpdateData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.DeleteEmployee">
-        SELECT * FROM i4fvb_delete_employee_update WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_delete_employee_update
+        WHERE id = #{id}
     </select>
 
     <select id="getShAddEmployeeData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.ShAddEmployee">
-        SELECT * FROM i4fvb_sh_add_employee WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_sh_add_employee
+        WHERE id = #{id}
     </select>
 
     <select id="getShAddEmployeeUpdateData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.ShAddEmployee">
-        SELECT * FROM i4fvb_sh_add_employee_update WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_sh_add_employee_update
+        WHERE id = #{id}
     </select>
 
     <select id="getShDeleteEmployeeData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.ShDeleteEmployee">
-        SELECT * FROM i4fvb_sh_delete_employee WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_sh_delete_employee
+        WHERE id = #{id}
     </select>
 
     <select id="getShDeleteEmployeeUpdateData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.ShDeleteEmployee">
-        SELECT * FROM i4fvb_sh_delete_employee_update WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_sh_delete_employee_update
+        WHERE id = #{id}
     </select>
 
     <select id="getNationwideAddEmployeeData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
-        SELECT * FROM i4fvb_nationwide_dispatch WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_nationwide_dispatch
+        WHERE id = #{id}
     </select>
 
     <select id="getNationwideAddEmployeeUpdateData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
-        SELECT * FROM i4fvb_nationwide_dispatch_update WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_nationwide_dispatch_update
+        WHERE id = #{id}
     </select>
 
     <select id="getNationwideDeleteEmployeeData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
-        SELECT * FROM i4fvb_nationwide_dispatch_delete WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_nationwide_dispatch_delete
+        WHERE id = #{id}
     </select>
 
     <select id="getNationwideDeleteEmployeeUpdateData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.NationwideDispatch">
-        SELECT * FROM i4fvb_nationwide_dispatch_update WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_nationwide_dispatch_update
+        WHERE id = #{id}
     </select>
 
     <select id="getEmployeeFilesData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
-        SELECT * FROM i4fvb_employee_files WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_employee_files
+        WHERE id = #{id}
     </select>
 
     <select id="getEmployeeFilesUpdateData" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
-        SELECT * FROM i4fvb_employee_files_update WHERE id = #{id}
+        SELECT *
+        FROM i4fvb_employee_files_update
+        WHERE id = #{id}
     </select>
 
     <insert id="addEmployeeUpdateDetail" parameterType="java.util.List">
@@ -316,11 +344,19 @@
         <!--<collection property="clientName" select="com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper.getClientNameById" column="client_name"></collection>-->
     </resultMap>
     <select id="getEmployeeFilesCanGenerateBillByClientName" resultMap="employeeFilesDto">
-        SELECT * FROM i4fvb_employee_files WHERE client_name = #{clientName} AND stop_generate_bill = 0 AND employee_nature = #{employeeNature} AND social_security_city REGEXP "合肥|巢湖|芜湖|蚌埠|淮南|马鞍山|铜陵|安庆|黄山|滁州|阜阳|宿州|六安|亳州|池州|宣城"
+        SELECT *
+        FROM i4fvb_employee_files
+        WHERE client_name = #{clientName}
+          AND stop_generate_bill = 0
+          AND employee_nature = #{employeeNature}
+          AND social_security_city REGEXP "合肥|巢湖|芜湖|蚌埠|淮南|马鞍山|铜陵|安庆|黄山|滁州|阜阳|宿州|六安|亳州|池州|宣城"
     </select>
 
     <select id="getClientNameById" parameterType="java.lang.String" resultType="java.lang.String">
-        SELECT company_name AS clientName FROM id34a_first_level_client WHERE id = #{client_name} LIMIT 0, 1
+        SELECT company_name AS clientName
+        FROM id34a_first_level_client
+        WHERE id = #{client_name}
+        LIMIT 0, 1
     </select>
 
     <resultMap id="employeeOrderFormDto" type="com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto">
@@ -330,21 +366,32 @@
                     column="id"></collection>
     </resultMap>
     <select id="getEmployeeOrderFormByEmployeeFilesId" resultMap="employeeOrderFormDto">
-        SELECT * FROM i4fvb_employee_order_form WHERE employee_files_id = #{id} AND is_history = '否'
+        SELECT *
+        FROM i4fvb_employee_order_form
+        WHERE employee_files_id = #{id}
+          AND is_history = '否'
     </select>
 
     <select id="getSocialSecurityFundDetailByParentId"
             resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityFundDetail">
-        SELECT * FROM i4fvb_social_security_fund_detail WHERE parentId = #{id}
+        SELECT *
+        FROM i4fvb_social_security_fund_detail
+        WHERE parentId = #{id}
     </select>
     <select id="getNoCompareBills" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.Bill">
-        SELECT * FROM i4fvb_bill_details WHERE id_no = #{idNo}
+        SELECT *
+        FROM i4fvb_bill_details
+        WHERE id_no = #{idNo}
     </select>
 
     <!-- 根据账单年月，证件号码获取信息收费账单 -->
     <select id="getPayrollBills" resultType="com.authine.cloudpivot.web.api.entity.PayrollBill">
-        SELECT * FROM i4fvb_payroll_bill WHERE bill_year = #{billYear} AND id_no = #{idNo} ORDER BY createdTime DESC
+        SELECT *
+        FROM i4fvb_payroll_bill
+        WHERE bill_year = #{billYear}
+          AND id_no = #{idNo}
+        ORDER BY createdTime DESC
     </select>
 
     <!-- 更新员工档案 -->
@@ -416,38 +463,64 @@
             #{item.owner},#{item.ownerDeptId},
             #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId},
             #{item.sequenceNo}, #{item.sequenceStatus}, #{item.ownerDeptQueryCode},
-            #{item.supplier}, #{item.businessYear}, #{item.clientName}, #{item.employeeName}, #{item.idNo}, #{item.uniqueNum}, #{item.delegatedArea},
-            #{item.pensionEnterpriseBase}, #{item.pensionEnterpriseRatio}, #{item.pensionEnterpriseAttach}, #{item.pensionEnterprisePay},
-            #{item.pensionPersonalBase}, #{item.pensionPersonalRatio}, #{item.pensionPersonalAttach}, #{item.pensionPersonalPay},
-            #{item.pensionSubtotal}, #{item.pensionPaymentMethod}, #{item.medicalEnterpriseBase}, #{item.medicalEnterpriseRatio},
-            #{item.medicalEnterpriseAttach}, #{item.medicalEnterprisePay}, #{item.medicalPersonalBase}, #{item.medicalPersonalRatio},
-            #{item.medicalPersonalAttach}, #{item.medicalPersonalPay}, #{item.medicalSubtotal}, #{item.medicalPaymentMethod},
-            #{item.unempEnterpriseBase}, #{item.unempEnterpriseRatio}, #{item.unempEnterpriseAttach}, #{item.unempEnterprisePay},
-            #{item.unempPersonalBase}, #{item.unempPersonalRatio}, #{item.unempPersonalAttach}, #{item.unempPersonalPay},
-            #{item.unempSubtotal}, #{item.unempPaymentMethod}, #{item.injuryEnterpriseBase}, #{item.injuryEnterpriseRatio},
-            #{item.injuryEnterpriseAttach}, #{item.injuryEnterprisePay}, #{item.injurySubtotal}, #{item.injuryPaymentMethod},
+            #{item.supplier}, #{item.businessYear}, #{item.clientName}, #{item.employeeName}, #{item.idNo},
+            #{item.uniqueNum}, #{item.delegatedArea},
+            #{item.pensionEnterpriseBase}, #{item.pensionEnterpriseRatio}, #{item.pensionEnterpriseAttach},
+            #{item.pensionEnterprisePay},
+            #{item.pensionPersonalBase}, #{item.pensionPersonalRatio}, #{item.pensionPersonalAttach},
+            #{item.pensionPersonalPay},
+            #{item.pensionSubtotal}, #{item.pensionPaymentMethod}, #{item.medicalEnterpriseBase},
+            #{item.medicalEnterpriseRatio},
+            #{item.medicalEnterpriseAttach}, #{item.medicalEnterprisePay}, #{item.medicalPersonalBase},
+            #{item.medicalPersonalRatio},
+            #{item.medicalPersonalAttach}, #{item.medicalPersonalPay}, #{item.medicalSubtotal},
+            #{item.medicalPaymentMethod},
+            #{item.unempEnterpriseBase}, #{item.unempEnterpriseRatio}, #{item.unempEnterpriseAttach},
+            #{item.unempEnterprisePay},
+            #{item.unempPersonalBase}, #{item.unempPersonalRatio}, #{item.unempPersonalAttach},
+            #{item.unempPersonalPay},
+            #{item.unempSubtotal}, #{item.unempPaymentMethod}, #{item.injuryEnterpriseBase},
+            #{item.injuryEnterpriseRatio},
+            #{item.injuryEnterpriseAttach}, #{item.injuryEnterprisePay}, #{item.injurySubtotal},
+            #{item.injuryPaymentMethod},
             #{item.fertilityEnterpriseBase}, #{item.fertilityEnterpriseRatio}, #{item.fertilityEnterpriseAttach},
-            #{item.fertilityEnterprisePay}, #{item.fertilitySubtotal}, #{item.fertilityPaymentMethod}, #{item.dMedicalEnterpriseBase},
+            #{item.fertilityEnterprisePay}, #{item.fertilitySubtotal}, #{item.fertilityPaymentMethod},
+            #{item.dMedicalEnterpriseBase},
             #{item.dMedicalEnterpriseRatio}, #{item.dMedicalEnterpriseAttach}, #{item.dMedicalEnterprisePay},
-            #{item.dMedicalPersonalBase}, #{item.dMedicalPersonalRatio}, #{item.dMedicalPersonalAttach}, #{item.dMedicalPersonalPay},
-            #{item.dMedicalSubtotal}, #{item.dMedicalPaymentMethod}, #{item.complexEnterpriseBase}, #{item.complexEnterpriseRatio},
-            #{item.complexEnterpriseAttach}, #{item.complexEnterprisePay}, #{item.complexPersonalBase}, #{item.complexPersonalRatio},
-            #{item.complexPersonalAttach}, #{item.complexPersonalPay}, #{item.complexSubtotal}, #{item.complexPaymentMethod},
+            #{item.dMedicalPersonalBase}, #{item.dMedicalPersonalRatio}, #{item.dMedicalPersonalAttach},
+            #{item.dMedicalPersonalPay},
+            #{item.dMedicalSubtotal}, #{item.dMedicalPaymentMethod}, #{item.complexEnterpriseBase},
+            #{item.complexEnterpriseRatio},
+            #{item.complexEnterpriseAttach}, #{item.complexEnterprisePay}, #{item.complexPersonalBase},
+            #{item.complexPersonalRatio},
+            #{item.complexPersonalAttach}, #{item.complexPersonalPay}, #{item.complexSubtotal},
+            #{item.complexPaymentMethod},
             #{item.bInjuryEnterpriseBase}, #{item.bInjuryEnterpriseRatio}, #{item.bInjuryEnterpriseAttach},
-            #{item.bInjuryEnterprisePay}, #{item.bInjurySubtotal}, #{item.bInjuryPaymentMethod}, #{item.socialSecurityEnterprise},
-            #{item.socialSecurityPersonal}, #{item.socialSecurityTotal}, #{item.providentEnterpriseBase}, #{item.providentEnterpriseRatio},
-            #{item.providentEnterprisePay}, #{item.providentPersonalBase}, #{item.providentPersonalRatio}, #{item.providentPersonalPay},
-            #{item.providentSubtotal}, #{item.providentPaymentMethod}, #{item.bProvidentEnterpriseBase}, #{item.bProvidentEnterpriseRatio},
+            #{item.bInjuryEnterprisePay}, #{item.bInjurySubtotal}, #{item.bInjuryPaymentMethod},
+            #{item.socialSecurityEnterprise},
+            #{item.socialSecurityPersonal}, #{item.socialSecurityTotal}, #{item.providentEnterpriseBase},
+            #{item.providentEnterpriseRatio},
+            #{item.providentEnterprisePay}, #{item.providentPersonalBase}, #{item.providentPersonalRatio},
+            #{item.providentPersonalPay},
+            #{item.providentSubtotal}, #{item.providentPaymentMethod}, #{item.bProvidentEnterpriseBase},
+            #{item.bProvidentEnterpriseRatio},
             #{item.bProvidentEnterprisePay}, #{item.bProvidentPersonalBase}, #{item.bProvidentPersonalRatio},
-            #{item.bProvidentPersonalPay}, #{item.bProvidentSubtotal}, #{item.bProvidentPaymentMethod}, #{item.providentEnterprise},
-            #{item.providentPersonal}, #{item.providentTotal}, #{item.yTollTotal}, #{item.yTollRemark}, #{item.ySocialEnterpriseD},
+            #{item.bProvidentPersonalPay}, #{item.bProvidentSubtotal}, #{item.bProvidentPaymentMethod},
+            #{item.providentEnterprise},
+            #{item.providentPersonal}, #{item.providentTotal}, #{item.yTollTotal}, #{item.yTollRemark},
+            #{item.ySocialEnterpriseD},
             #{item.ySocialPersonalD}, #{item.ySocialTotalD}, #{item.yProvidentEnterpriseD}, #{item.yProvidentPersonalD},
             #{item.yProvidentTotalD}, #{item.ySocialEnterpriseT}, #{item.ySocialPersonalT}, #{item.ySocialTotalT},
-            #{item.yProvidentEnterpriseT}, #{item.yProvidentPersonalT}, #{item.yProvidentTotalT}, #{item.socialProvidentTotal},
-            #{item.totalCharge}, #{item.vatTax}, #{item.totalWelfareProducts}, #{item.riskManageFee}, #{item.outsourcingManageFee}, #{item.businessTax},
-            #{item.relationEnquiryReceivable}, #{item.isLock}, #{item.whetherCompare}, #{item.billYear}, #{item.whetherDefine},
-            #{item.relationEmployeeFiles}, #{item.whetherDifferenceData}, #{item.serviceFee}, #{item.salesman}, #{item.businessUnit}, #{item.employeeNature},
-            #{item.businessType}, #{item.tax}, #{item.paidWages}, #{item.chargeType}, #{item.enterprisePayment}, #{item.individualPayment})
+            #{item.yProvidentEnterpriseT}, #{item.yProvidentPersonalT}, #{item.yProvidentTotalT},
+            #{item.socialProvidentTotal},
+            #{item.totalCharge}, #{item.vatTax}, #{item.totalWelfareProducts}, #{item.riskManageFee},
+            #{item.outsourcingManageFee}, #{item.businessTax},
+            #{item.relationEnquiryReceivable}, #{item.isLock}, #{item.whetherCompare}, #{item.billYear},
+            #{item.whetherDefine},
+            #{item.relationEmployeeFiles}, #{item.whetherDifferenceData}, #{item.serviceFee}, #{item.salesman},
+            #{item.businessUnit}, #{item.employeeNature},
+            #{item.businessType}, #{item.tax}, #{item.paidWages}, #{item.chargeType}, #{item.enterprisePayment},
+            #{item.individualPayment})
         </foreach>
     </insert>
 
@@ -467,7 +540,56 @@
         ORDER BY createdTime desc
     </select>
 
-    <select id="getEmployeeFilesByIdentityNo" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
-        SELECT * FROM i4fvb_employee_files WHERE id_no = #{identityNo} AND (quit_date is null OR date_format(quit_date, '%Y-%m-%d') > date_format(SYSDATE(), '%Y-%m-%d')) ORDER BY createdTime DESC LIMIT 0, 1
+    <select id="getEmployeeFilesByIdentityNo" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.EmployeeFiles">
+        SELECT *
+        FROM i4fvb_employee_files
+        WHERE id_no = #{identityNo}
+          AND (quit_date is null OR date_format(quit_date, '%Y-%m-%d') > date_format(SYSDATE(), '%Y-%m-%d'))
+        ORDER BY createdTime DESC
+        LIMIT 0, 1
+    </select>
+
+    <select id="getAddEmployeeDtoData" resultType="com.authine.cloudpivot.web.api.dto.AddEmployeeDto">
+        SELECT id,
+               name,
+               employee_name,
+               identityNo,
+               mobile,
+               email,
+               family_register_nature,
+               employee_nature,
+               entry_time,
+               contract_start_time,
+               contract_end_time,
+               contract_salary,
+               social_security_start_time,
+               remark,
+               social_security_city,
+               social_security_base,
+               provident_fund_city,
+               provident_fund_start_time,
+               provident_fund_base,
+               identityNo_type,
+               company_provident_fund_bl,
+               employee_provident_fund_bl,
+               first_level_client_name,
+               second_level_client_name,
+               household_register_remarks,
+               gender,
+               birthday,
+               workplace,
+               is_retired_soldier,
+               is_poor_archivists,
+               is_disabled,
+               s_welfare_handler,
+               g_welfare_handler,
+               operator,
+               inquirer,
+               return_reason,
+               provident_fund_name,
+               subordinate_department
+        FROM i4fvb_add_employee
+        WHERE id = #{id}
     </select>
 </mapper>

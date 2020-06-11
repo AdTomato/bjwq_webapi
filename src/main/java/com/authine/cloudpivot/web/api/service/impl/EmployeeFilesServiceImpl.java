@@ -1,15 +1,24 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.deserializer.AbstractDateDeserializer;
+import com.authine.cloudpivot.web.api.dto.AddEmployeeDto;
 import com.authine.cloudpivot.web.api.dto.EmployeeFilesDto;
 import com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto;
 import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper;
+import com.authine.cloudpivot.web.api.mapper.UnitMapper;
 import com.authine.cloudpivot.web.api.service.EmployeeFilesService;
+import com.authine.cloudpivot.web.api.utils.UnitUtils;
 import com.sun.istack.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,6 +32,9 @@ public class EmployeeFilesServiceImpl implements EmployeeFilesService {
 
     @Resource
     EmployeeFilesMapper employeeFilesMapper;
+
+    @Resource
+    UnitMapper unitMapper;
 
     /**
      * @param idNo       : 身份证
@@ -40,6 +52,37 @@ public class EmployeeFilesServiceImpl implements EmployeeFilesService {
     @Override
     public AddEmployee getAddEmployeeData(String id) {
         return employeeFilesMapper.getAddEmployeeData(id);
+    }
+
+    @Override
+    public AddEmployeeDto getAddEmployeeDtoData(String id) {
+        AddEmployeeDto addEmployeeDtoData = employeeFilesMapper.getAddEmployeeDtoData(id);
+        String operator = addEmployeeDtoData.getOperator();  // 操作人
+        List<String> ids = new ArrayList<>();
+        if (!StringUtils.isEmpty(operator)) {
+            ids.addAll(UnitUtils.getUnitIds(operator));
+            if (!ids.isEmpty()) {
+                addEmployeeDtoData.setOperatorList(unitMapper.getOrgUnitByIds(ids));
+            }
+        }
+        String inquirer = addEmployeeDtoData.getInquirer();  // 查询人
+        ids.clear();
+        if (!StringUtils.isEmpty(inquirer)) {
+            ids.addAll(UnitUtils.getUnitIds(inquirer));
+            if (!ids.isEmpty()) {
+                addEmployeeDtoData.setInquirerList(unitMapper.getOrgUnitByIds(ids));
+            }
+        }
+
+        String subordinateDepartment = addEmployeeDtoData.getSubordinateDepartment();  // 所属部门
+        ids.clear();
+        if (!StringUtils.isEmpty(subordinateDepartment)) {
+            ids.addAll(UnitUtils.getUnitIds(subordinateDepartment));
+            if (!ids.isEmpty()) {
+                addEmployeeDtoData.setSubordinateDepartmentList(unitMapper.getDeptUnitByIds(ids));
+            }
+        }
+        return employeeFilesMapper.getAddEmployeeDtoData(id);
     }
 
     @Override

@@ -416,7 +416,7 @@ public class DataModifyController extends BaseController {
 //        checkString(nationwideDispatch.getBusinessCustomerName(), nationwideDispatchUpdate.getBusinessCustomerName(), "业务客户名称", id, data);
         checkString(nationwideDispatch.getFirstLevelClientName(), nationwideDispatchUpdate.getFirstLevelClientName(), "一级客户名称", id, data);
         checkString(nationwideDispatch.getSecondLevelClientName(), nationwideDispatchUpdate.getSecondLevelClientName(), "二级客户名称", id, data);
-        checkUnit(nationwideDispatch.getSubordinateDepartment(), nationwideDispatch.getSubordinateDepartment(), "所属部门",id, 1, data);
+        checkUnit(nationwideDispatch.getSubordinateDepartment(), nationwideDispatch.getSubordinateDepartment(), "所属部门", id, 1, data);
         checkString(nationwideDispatch.getIsRetiredSoldier(), nationwideDispatch.getIsRetiredSoldier(), "是否退役士兵", id, data);
         checkString(nationwideDispatch.getIsPoorArchivists(), nationwideDispatch.getIsPoorArchivists(), "是否贫困建档人员", id, data);
         checkString(nationwideDispatch.getIsDisabled(), nationwideDispatch.getIsDisabled(), "是否残疾人", id, data);
@@ -545,7 +545,7 @@ public class DataModifyController extends BaseController {
      * @param data         数据
      */
     private void checkString(String beforeModify, String nextModify, String field, String parentId, List<ChangeValue> data) {
-        if(null == beforeModify && null == nextModify) {
+        if (null == beforeModify && null == nextModify) {
             return;
         }
         if (null == beforeModify || null == nextModify) {
@@ -624,7 +624,7 @@ public class DataModifyController extends BaseController {
     private Object data(String id, String schema) {
         switch (schema) {
             case Constants.ADD_EMPLOYEE_SCHEMA:
-                return employeeFilesService.getAddEmployeeData(id);
+                return employeeFilesService.getAddEmployeeDtoData(id);
             case Constants.DELETE_EMPLOYEE_SCHEMA:
                 return employeeFilesService.getDeleteEmployeeData(id);
             case Constants.SH_ADD_EMPLOYEE_SCHEMA:

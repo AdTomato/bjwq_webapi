@@ -141,6 +141,7 @@ public class AddEmployee extends BaseEntity {
      * 公积金利办理方
      */
     String gWelfareHandler;
+
     /**
      * 操作人
      */
@@ -149,6 +150,7 @@ public class AddEmployee extends BaseEntity {
      * 查询人
      */
     String inquirer;
+
     /**
      * 社保状态
      */
@@ -163,6 +165,7 @@ public class AddEmployee extends BaseEntity {
     String returnReason;
     /** 公积金种类（省直公积金、市直公积金）*/
     String providentFundName;
+
     /**
      * 所属部门
      */
