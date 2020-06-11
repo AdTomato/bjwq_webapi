@@ -89,6 +89,8 @@ public class SubmitCheckUtils {
         }
 
         if (clientManagement != null && !StringUtils.isEmpty(clientManagement.getFirstLevelClientName()) && !StringUtils.isEmpty(clientManagement.getSecondLevelClientName())) {
+            String id = params.getId();
+
             // 一级客户名称
             String firstLevelClientName = clientManagement.getFirstLevelClientName();
             firstLevelClientName = firstLevelClientName.trim();
@@ -110,10 +112,23 @@ public class SubmitCheckUtils {
             String welfareHandler = params.getWelfareHandler();
 
             // 判断是否能重复申报
-            List<AddEmployee> addEmployeeList = addEmployeeService.getAddEmployeeByClientNameAndIdCard(firstLevelClientName, secondLevelClientName, params.getIdentityNo());
+            List<AddEmployee> addEmployeeList = addEmployeeService.getAddEmployeeByClientNameAndIdCard(id, firstLevelClientName, secondLevelClientName, params.getIdentityNo());
             if (addEmployeeList != null && !addEmployeeList.isEmpty()) {
 
-                if ((addEmployeeList.size() == 2) || (params.getProvidentFundBase() != null && params.getProvidentFundBase() != 0 && params.getSocialSecurityBase() != null && params.getSocialSecurityBase() != 0)) {
+                if ((addEmployeeList.size() == 2)
+                        || (addEmployeeList.size() == 1
+                                && params.getProvidentFundBase() != null
+                                && params.getProvidentFundBase() != 0
+                                && params.getSocialSecurityBase() != null
+                                && params.getSocialSecurityBase() != 0)
+                        || (params.getProvidentFundBase() != null
+                                && params.getProvidentFundBase() != 0
+                                && addEmployeeList.get(0).getProvidentFundBase() != null
+                                && addEmployeeList.get(0).getProvidentFundBase() != 0)
+                        || (params.getSocialSecurityBase() != null
+                                && params.getSocialSecurityBase() != 0
+                                && addEmployeeList.get(0).getSocialSecurityBase() != null
+                                && addEmployeeList.get(0).getSocialSecurityBase() != 0)) {
                     result.setIsCanSubmit(false);
                     if (addEmployeeList.size() == 2) {
                         result.setMessage("社保、公积金已经申报过，无法重复申报");

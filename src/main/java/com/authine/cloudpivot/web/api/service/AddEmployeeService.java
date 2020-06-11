@@ -121,5 +121,5 @@ public interface AddEmployeeService {
      * @return 增员客户数据
      * @author wangyong
      */
-    List<AddEmployee> getAddEmployeeByClientNameAndIdCard(String firstClientName, String secondClientName, String identityNo);
+    List<AddEmployee> getAddEmployeeByClientNameAndIdCard(String id, String firstClientName, String secondClientName, String identityNo);
 }

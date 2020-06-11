@@ -458,5 +458,6 @@
         WHERE first_level_client_name = #{firstClientName}
           AND second_level_client_name = #{secondClientName}
           AND identityNo = #{identityNo}
+          AND id != #{id}
     </select>
 </mapper>

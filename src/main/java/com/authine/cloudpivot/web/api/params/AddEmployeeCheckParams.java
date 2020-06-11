@@ -20,6 +20,11 @@ import lombok.NoArgsConstructor;
 public class AddEmployeeCheckParams {
 
     /**
+     * 数据id
+     */
+    String id;
+
+    /**
      * 创建人
      */
     @NotNull

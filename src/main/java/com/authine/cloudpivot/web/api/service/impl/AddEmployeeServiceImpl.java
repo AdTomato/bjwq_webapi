@@ -734,7 +734,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
      * @return 增员客户数据
      * @author wangyong
      */
-    public List<AddEmployee> getAddEmployeeByClientNameAndIdCard(String firstClientName, String secondClientName, String identityNo) {
-        return addEmployeeMapper.getAddEmployeeByClientNameAndIdCard(firstClientName, secondClientName, identityNo);
+    public List<AddEmployee> getAddEmployeeByClientNameAndIdCard(String id, String firstClientName, String secondClientName, String identityNo) {
+        return addEmployeeMapper.getAddEmployeeByClientNameAndIdCard(id, firstClientName, secondClientName, identityNo);
     }
 }
