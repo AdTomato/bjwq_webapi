@@ -51,11 +51,13 @@ public interface EmployeeMaintainService {
      * @param idList 表单idList
      * @param code 表单编码（社保申报：social_security_declare；公积金申报：provident_fund_declare；
      *             社保停缴：social_security_close；公积金停缴：provident_fund_close。）
+     * @param billYear 账单年月（社保申报，公积金申报提交时填写的值）
      * @return java.lang.String
      * @author liulei
      * @Date 2020/3/12 13:22
      */
-    void batchSubmit(WorkflowInstanceFacade workflowInstanceFacade, String userId, List<String> idList, String code) throws Exception;
+    void batchSubmit(WorkflowInstanceFacade workflowInstanceFacade, String userId, List <String> idList, String code,
+                     String billYear) throws Exception;
 
     /**
      * 方法说明：批量驳回申报，停缴接口
@@ -64,11 +66,13 @@ public interface EmployeeMaintainService {
      * @param idList 表单idList
      * @param code 表单编码（社保申报：social_security_declare；公积金申报：provident_fund_declare；
      *             社保停缴：social_security_close；公积金停缴：provident_fund_close。）
+     * @param returnReasonAlready 驳回原因
      * @return void
      * @author liulei
      * @Date 2020/3/12 14:42
      */
-    void batchReject(WorkflowInstanceFacade workflowInstanceFacade, String userId, List<String> idList, String code) throws Exception;
+    void batchReject(WorkflowInstanceFacade workflowInstanceFacade, String userId, List <String> idList, String code,
+                     String returnReasonAlready) throws Exception;
 
     /**
      * 方法说明：获取增减员的任务id

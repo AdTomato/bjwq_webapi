@@ -112,6 +112,8 @@ public class DeleteEmployeeServiceImpl implements DeleteEmployeeService {
             close.setPersonalDeposit(details.getEmployeeMoney());
             close.setEnterpriseDeposit(details.getCompanyMoney());
             close.setTotalDeposit(details.getSum());
+            close.setCompanyProvidentFundBl(details.getCompanyRatio());
+            close.setEmployeeProvidentFundBl(details.getEmployeeRatio());
         }
         String handler = addEmployeeMapper.getHsLevyHandler(close.getCity(), close.getWelfareHandler(),
                 "公积金", close.getSecondLevelClientName());

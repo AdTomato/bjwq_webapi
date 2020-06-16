@@ -291,6 +291,7 @@ public class GetBizObjectModelUntils {
         data.put("add_employee_id", sDeclare.getAddEmployeeId());
         // 	所属部门
         data.put("subordinate_department", sDeclare.getSubordinateDepartment());
+        data.put("employee_nature", sDeclare.getEmployeeNature());
         model.put(data);
         return model;
     }
@@ -353,6 +354,9 @@ public class GetBizObjectModelUntils {
         data.put("add_employee_id", gDeclare.getAddEmployeeId());
         // 	所属部门
         data.put("subordinate_department", gDeclare.getSubordinateDepartment());
+        data.put("company_provident_fund_bl", gDeclare.getCompanyProvidentFundBl());
+        data.put("employee_provident_fund_bl", gDeclare.getEmployeeProvidentFundBl());
+        data.put("employee_nature", gDeclare.getEmployeeNature());
         model.put(data);
         return model;
     }
@@ -414,6 +418,8 @@ public class GetBizObjectModelUntils {
         data.put("inquirer", gClose.getInquirer());
         data.put("employee_files_id", gClose.getEmployeeFilesId());
         data.put("del_employee_id", gClose.getDelEmployeeId());
+        data.put("company_provident_fund_bl", gClose.getCompanyProvidentFundBl());
+        data.put("employee_provident_fund_bl", gClose.getEmployeeProvidentFundBl());
         model.put(data);
         return model;
     }

@@ -169,19 +169,19 @@ public class EmployeeMaintainController extends BaseController {
                 BatchEvacuation batchEvacuation = new BatchEvacuation(employeeFiles.getEmployeeName(),
                         employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getReportQuitDate(),
                         employeeFiles.getSocialSecurityChargeEnd(), employeeFiles.getProvidentFundChargeEnd(),
-                        employeeFiles.getQuitReason(), employeeFiles.getQuitRemark());
+                        employeeFiles.getQuitReason(), employeeFiles.getQuitRemark(), employeeFiles.getEmployeeNature());
                 batchEvacuations.add(batchEvacuation);
             } else if (sIsOut) {
                 BatchEvacuation batchEvacuation = new BatchEvacuation(employeeFiles.getEmployeeName(),
                         employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getReportQuitDate(),
-                        employeeFiles.getSocialSecurityChargeEnd(), null,
-                        employeeFiles.getQuitReason(), employeeFiles.getQuitRemark());
+                        employeeFiles.getSocialSecurityChargeEnd(), null, employeeFiles.getQuitReason(),
+                        employeeFiles.getQuitRemark(), employeeFiles.getEmployeeNature());
                 batchEvacuations.add(batchEvacuation);
             } else if (gIsOut) {
                 BatchEvacuation batchEvacuation = new BatchEvacuation(employeeFiles.getEmployeeName(),
-                        employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getReportQuitDate(),
-                        null, employeeFiles.getProvidentFundChargeEnd(),
-                        employeeFiles.getQuitReason(), employeeFiles.getQuitRemark());
+                        employeeFiles.getIdType(), employeeFiles.getIdNo(), employeeFiles.getReportQuitDate(), null,
+                        employeeFiles.getProvidentFundChargeEnd(), employeeFiles.getQuitReason(),
+                        employeeFiles.getQuitRemark(), employeeFiles.getEmployeeNature());
                 batchEvacuations.add(batchEvacuation);
             }
             // 生成批量撤离
@@ -372,14 +372,13 @@ public class EmployeeMaintainController extends BaseController {
                 // 批量生成预派
                 addBatchPreDispatch(addEmployee, sIsOut, gIsOut);
             }
-            if (sIsOut && gIsOut) {
-                return this.getOkResponseResult("success", "增员提交成功!");
-            }
             // 如果员工性质是“派遣”，“外包”需要创建劳动合同
             if ("派遣".equals(addEmployee.getEmployeeNature()) || "外包".equals(addEmployee.getEmployeeNature())) {
-                LaborContractInfo laborContractInfo = new LaborContractInfo(addEmployee);
-                laborContractInfo.setEmployeeFilesId(employeeFilesId);
-                laborContractInfoService.saveLaborContractInfo(laborContractInfo);
+                laborContractInfoService.saveLaborContractInfo(new LaborContractInfo(addEmployee, employeeFilesId));
+            }
+
+            if (sIsOut && gIsOut) {
+                return this.getOkResponseResult("success", "增员提交成功!");
             }
 
             ServiceChargeUnitPrice price = addEmployeeService.createAddEmployeeData(addEmployee, employeeFilesId,
@@ -548,16 +547,21 @@ public class EmployeeMaintainController extends BaseController {
      * @param ids 表单id,多个id使用“,”隔开
      * @param code 表单编码（社保申报：social_security_declare；公积金申报：provident_fund_declare；
      *             社保停缴：social_security_close；公积金停缴：provident_fund_close。）
+     * @param billYear 账单年月（社保申报，公积金申报提交时填写的值）
      * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
      * @author liulei
      * @Date 2020/3/12 13:22
      */
     @GetMapping("/batchSubmit")
     @ResponseBody
-    public ResponseResult<String> batchSubmit(String ids, String code) {
+    public ResponseResult<String> batchSubmit(String ids, String code, String billYear) {
         try {
             List<String> idList = getListByIds(ids);
-            employeeMaintainService.batchSubmit(this.getWorkflowInstanceFacade(), this.getUserId(), idList, code);
+            if (StringUtils.isNotBlank(billYear)) {
+                billYear = billYear.trim();
+            }
+            employeeMaintainService.batchSubmit(this.getWorkflowInstanceFacade(), this.getUserId(), idList, code,
+                    billYear);
             return this.getOkResponseResult("success", "操作成功！");
         } catch (Exception e) {
             log.info(e.getMessage());
@@ -581,16 +585,17 @@ public class EmployeeMaintainController extends BaseController {
      * @param ids 表单id，多个id使用“,”隔开
      * @param code 表单编码（社保申报：social_security_declare；公积金申报：provident_fund_declare；
      *             社保停缴：social_security_close；公积金停缴：provident_fund_close。）
+     * @param returnReasonAlready 驳回原因（社保申报，公积金申报驳回时填写）
      * @return com.authine.cloudpivot.web.api.view.ResponseResult<java.lang.String>
      * @author liulei
      * @Date 2020/3/12 13:22
      */
     @GetMapping("/batchReject")
     @ResponseBody
-    public ResponseResult<String> batchReject(String ids, String code) {
+    public ResponseResult<String> batchReject(String ids, String code, String returnReasonAlready) {
         try {
             List<String> idList = getListByIds(ids);
-            employeeMaintainService.batchReject(this.getWorkflowInstanceFacade(), this.getUserId(), idList, code);
+            employeeMaintainService.batchReject(this.getWorkflowInstanceFacade(), this.getUserId(), idList, code, returnReasonAlready);
             return this.getOkResponseResult("success", "操作成功！");
         } catch (Exception e) {
             log.info(e.getMessage());
@@ -1554,21 +1559,21 @@ public class EmployeeMaintainController extends BaseController {
             batchPreDispatch = new BatchPreDispatch(addEmployee.getEmployeeName(), addEmployee.getIdentityNo(),
                     addEmployee.getMobile(), addEmployee.getSocialSecurityBase(), providentFundRatio, null,
                     addEmployee.getProvidentFundBase(), addEmployee.getEntryTime(), addEmployee.getCreatedTime(),
-                    addEmployee.getSocialSecurityCity(), addEmployee.getRemark());
+                    addEmployee.getSocialSecurityCity(), addEmployee.getRemark(), addEmployee.getEmployeeNature());
             batchPreDispatches.add(batchPreDispatch);
         } else if (sIsOut && !gIsOut) {
             // 社保省外，公积金省内
             batchPreDispatch = new BatchPreDispatch(addEmployee.getEmployeeName(), addEmployee.getIdentityNo(),
                     addEmployee.getMobile(), addEmployee.getSocialSecurityBase(), null, null, null,
                     addEmployee.getEntryTime(), addEmployee.getCreatedTime(), addEmployee.getSocialSecurityCity(),
-                    addEmployee.getRemark());
+                    addEmployee.getRemark(), addEmployee.getEmployeeNature());
             batchPreDispatches.add(batchPreDispatch);
         } else if (!sIsOut && gIsOut) {
             // 社保省内，公积金省外
             batchPreDispatch = new BatchPreDispatch(addEmployee.getEmployeeName(), addEmployee.getIdentityNo(),
                     addEmployee.getMobile(), null, providentFundRatio, null, addEmployee.getProvidentFundBase(),
                     addEmployee.getEntryTime(), addEmployee.getCreatedTime(), addEmployee.getProvidentFundCity(),
-                    addEmployee.getRemark());
+                    addEmployee.getRemark(), addEmployee.getEmployeeNature());
             batchPreDispatches.add(batchPreDispatch);
 
         }

@@ -110,6 +110,20 @@ public class ProvidentFundDeclare extends BaseEntity {
      * 所属部门
      */
     String subordinateDepartment;
+
+    /**
+     * 单位公积金比例
+     */
+    Double companyProvidentFundBl;
+    /**
+     * 个人公积金比例
+     */
+    Double employeeProvidentFundBl;
+
+    String employeeNature;
+
+    String billYear;
+
     /**
      * 汇缴订单明细
      */
@@ -158,5 +172,8 @@ public class ProvidentFundDeclare extends BaseEntity {
         this.subordinateDepartment = addEmployee.getSubordinateDepartment();
         /*this.remittanceList = remittanceList;
         this.payBackList = payBackList;*/
+        this.employeeNature = addEmployee.getEmployeeNature();
+        this.companyProvidentFundBl = addEmployee.getCompanyProvidentFundBl();
+        this.employeeProvidentFundBl = addEmployee.getEmployeeProvidentFundBl();
     }
 }

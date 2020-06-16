@@ -17,15 +17,20 @@ public class AddEmployeeDto extends AddEmployee {
      * 操作人
      */
     List<Unit> operatorList;
+
     /**
      * 查询人
      */
     List<Unit> inquirerList;
 
-
     /**
      * 所属部门
      */
     List<Unit> subordinateDepartmentList;
+
+    /**
+     * 运行经办人
+     */
+    List<Unit> operateLeaderList;
 
 }

@@ -96,10 +96,12 @@ public class BatchEvacuation extends BaseEntity{
      */
     private String endEmploymentAgreement;
 
+    private String employeeNature;
+
 
     public BatchEvacuation(String employeeName, String identityNoType, String identityNo, Date orderEndDate,
                            Date socialSecurityEndTime, Date providentFundEndTime, String socialSecurityStopReason,
-                           String remark) {
+                           String remark, String employeeNature) {
         this.employeeName = employeeName;
         this.identityNoType = identityNoType;
         this.identityNo = identityNo;
@@ -108,5 +110,6 @@ public class BatchEvacuation extends BaseEntity{
         this.providentFundEndTime = providentFundEndTime;
         this.socialSecurityStopReason = socialSecurityStopReason;
         this.remark = remark;
+        this.employeeNature = employeeNature;
     }
 }

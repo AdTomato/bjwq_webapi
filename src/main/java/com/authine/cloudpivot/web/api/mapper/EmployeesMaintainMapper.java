@@ -38,7 +38,7 @@ public interface EmployeesMaintainMapper {
     void updateTableStatus(@Param("ids") List <String> ids, @Param("tableName") String tableName,
                            @Param("field") String field, @Param("status") String status);
 
-    void updateStatus(String id, String tableName, String field, String status);
+    void updateStatus(String id, String tableName, String field, String status, String billYear, String returnReasonAlready);
 
     void insertEmployeeOrderFormDetailsFromSb(String parentId, String tableName);
 

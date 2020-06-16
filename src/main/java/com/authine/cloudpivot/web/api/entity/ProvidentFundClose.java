@@ -85,6 +85,15 @@ public class ProvidentFundClose extends BaseEntity {
     String employeeFilesId;
     String delEmployeeId;
 
+    /**
+     * 单位公积金比例
+     */
+    Double companyProvidentFundBl;
+    /**
+     * 个人公积金比例
+     */
+    Double employeeProvidentFundBl;
+
     public ProvidentFundClose(DeleteEmployee delEmployee, EmployeeFiles employeeFiles, String employeeOrderFormId) {
         this.name = delEmployee.getName();
         this.creater = delEmployee.getCreater();

@@ -3,20 +3,32 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.authine.cloudpivot.web.api.mapper.EmployeesMaintainMapper">
-    <select id="getSocialSecurityDeclareById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare">
-        SELECT * FROM i4fvb_social_security_declare WHERE id = #{id}
+    <select id="getSocialSecurityDeclareById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityDeclare">
+        SELECT *
+        FROM i4fvb_social_security_declare
+        WHERE id = #{id}
     </select>
 
-    <select id="getProvidentFundDeclareById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ProvidentFundDeclare">
-        SELECT * FROM i4fvb_provident_fund_declare WHERE id = #{id}
+    <select id="getProvidentFundDeclareById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.ProvidentFundDeclare">
+        SELECT *
+        FROM i4fvb_provident_fund_declare
+        WHERE id = #{id}
     </select>
 
-    <select id="getSocialSecurityCloseById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityClose">
-        SELECT * FROM i4fvb_social_security_close WHERE id = #{id}
+    <select id="getSocialSecurityCloseById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.SocialSecurityClose">
+        SELECT *
+        FROM i4fvb_social_security_close
+        WHERE id = #{id}
     </select>
 
-    <select id="getProvidentFundCloseById" parameterType="java.lang.String" resultType="com.authine.cloudpivot.web.api.entity.ProvidentFundClose">
-        SELECT * FROM i4fvb_provident_fund_close WHERE id = #{id}
+    <select id="getProvidentFundCloseById" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.ProvidentFundClose">
+        SELECT *
+        FROM i4fvb_provident_fund_close
+        WHERE id = #{id}
     </select>
 
     <update id="updateAddOrDelEmployeeStatus">
@@ -34,14 +46,24 @@
     </update>
 
     <update id="updateStatus">
-        UPDATE ${tableName} SET ${field} = #{status} WHERE id = #{id}
+        UPDATE ${tableName}
+        SET ${field} = #{status}
+        <if test="billYear != null">
+            ,bill_year = #{billYear}
+        </if>
+        <if test="returnReasonAlready != null">
+            ,return_reason_already = #{returnReasonAlready}
+        </if>
+        WHERE id = #{id}
     </update>
 
     <insert id="insertEmployeeOrderFormDetailsFromSb">
-        INSERT INTO ${tableName}(product_name, start_charge_time, end_charge_time, base_num, company_ratio,
+        INSERT INTO ${tableName}(product_name, start_charge_time, end_charge_time, company_base, employee_base,
+        company_ratio,
         employee_ratio, sum, company_money, employee_money, company_surcharge_value, employee_surcharge_value, id,
         parentId, sortKey)
-        SELECT product_name, start_charge_time, end_charge_time, base_num, company_ratio, employee_ratio, sum,
+        SELECT product_name, start_charge_time, end_charge_time, company_base, employee_base, company_ratio,
+        employee_ratio, sum,
         company_money, employee_money, company_surcharge_value, employee_surcharge_value, MD5(UUID()), #{parentId},
         sortKey
         FROM
@@ -51,10 +73,12 @@
     </insert>
 
     <insert id="insertEmployeeOrderFormDetailsFromGjj">
-        INSERT INTO ${tableName}(product_name, start_charge_time, end_charge_time, base_num, company_ratio,
+        INSERT INTO ${tableName}(product_name, start_charge_time, end_charge_time, company_base, employee_base,
+        company_ratio,
         employee_ratio, sum, company_money, employee_money, company_surcharge_value, employee_surcharge_value, id,
         parentId, sortKey)
-        SELECT product_name, start_charge_time, end_charge_time, base_num, company_ratio, employee_ratio, sum,
+        SELECT product_name, start_charge_time, end_charge_time, company_base, employee_base, company_ratio,
+        employee_ratio, sum,
         company_money, employee_money, company_surcharge_value, employee_surcharge_value, MD5(UUID()), #{parentId},
         sortKey
         FROM

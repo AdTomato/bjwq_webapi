@@ -122,6 +122,9 @@ public class SocialSecurityDeclare extends BaseEntity {
      * 增员表单id
      */
     String addEmployeeId;
+
+    String employeeNature;
+
     /**
      * 汇缴订单明细
      */
@@ -174,5 +177,6 @@ public class SocialSecurityDeclare extends BaseEntity {
         this.addEmployeeId = addEmployee.getId();
         /*this.remittanceList = remittanceList;
         this.payBackList = payBackList;*/
+        this.employeeNature = addEmployee.getEmployeeNature();
     }
 }

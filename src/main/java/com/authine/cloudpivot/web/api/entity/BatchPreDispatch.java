@@ -136,9 +136,11 @@ public class BatchPreDispatch extends BaseEntity {
      */
     private String remark;
 
+    private String employeeNature;
+
     public BatchPreDispatch(String employeeName, String identityNo, String mobile, Double socialInsuranceAmount,
                             String providentFundRatio, String suppleProvidentFundRatio, Double providentFundAmount,
-                            Date entryDate, Date orderStartDate, String delegatedArea, String remark) {
+                            Date entryDate, Date orderStartDate, String delegatedArea, String remark, String employeeNature) {
         this.employeeName = employeeName;
         this.identityNo = identityNo;
         this.mobile = mobile;
@@ -150,5 +152,6 @@ public class BatchPreDispatch extends BaseEntity {
         this.orderStartDate = orderStartDate;
         this.delegatedArea = delegatedArea;
         this.remark = remark;
+        this.employeeNature = employeeNature;
     }
 }

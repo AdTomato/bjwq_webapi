@@ -8,6 +8,7 @@ import com.authine.cloudpivot.web.api.dto.AddEmployeeDto;
 import com.authine.cloudpivot.web.api.dto.EmployeeFilesDto;
 import com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto;
 import com.authine.cloudpivot.web.api.entity.*;
+import com.authine.cloudpivot.web.api.mapper.AddEmployeeMapper;
 import com.authine.cloudpivot.web.api.mapper.EmployeeFilesMapper;
 import com.authine.cloudpivot.web.api.mapper.UnitMapper;
 import com.authine.cloudpivot.web.api.service.EmployeeFilesService;
@@ -35,6 +36,9 @@ public class EmployeeFilesServiceImpl implements EmployeeFilesService {
 
     @Resource
     UnitMapper unitMapper;
+
+    @Resource
+    AddEmployeeMapper addEmployeeMapperl;
 
     /**
      * @param idNo       : 身份证
@@ -82,7 +86,21 @@ public class EmployeeFilesServiceImpl implements EmployeeFilesService {
                 addEmployeeDtoData.setSubordinateDepartmentList(unitMapper.getDeptUnitByIds(ids));
             }
         }
-        return employeeFilesMapper.getAddEmployeeDtoData(id);
+//        String operateLeader = addEmployeeMapperl.getHsLevyHandler()
+        String operateLeader = null;
+        ids.clear();
+        if (StringUtils.isEmpty(addEmployeeDtoData.getSocialSecurityBase() + "")) {
+            operateLeader = addEmployeeMapperl.getHsLevyHandler(addEmployeeDtoData.getSocialSecurityCity(), addEmployeeDtoData.getSWelfareHandler(), "社保", addEmployeeDtoData.getSecondLevelClientName());
+        } else {
+            operateLeader = addEmployeeMapperl.getHsLevyHandler(addEmployeeDtoData.getProvidentFundCity(), addEmployeeDtoData.getGWelfareHandler(), "公积金", addEmployeeDtoData.getSecondLevelClientName());
+        }
+        if (StringUtils.isEmpty(operateLeader)) {
+            ids.addAll(UnitUtils.getUnitIds(operateLeader));
+            if (!ids.isEmpty()) {
+                addEmployeeDtoData.setOperateLeaderList(unitMapper.getOrgUnitByIds(ids));
+            }
+        }
+        return addEmployeeDtoData;
     }
 
     @Override

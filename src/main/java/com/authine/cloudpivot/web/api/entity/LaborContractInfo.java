@@ -133,7 +133,7 @@ public class LaborContractInfo extends BaseEntity{
      */
     String secondLevelClientName;
 
-    public LaborContractInfo(AddEmployee addEmployee) {
+    public LaborContractInfo(AddEmployee addEmployee, String employeeFilesId) {
         this.id = UUID.randomUUID().toString().replaceAll("-", "");
         this.creater = addEmployee.getCreater();
         this.createdDeptId = addEmployee.getCreatedDeptId();
@@ -159,5 +159,6 @@ public class LaborContractInfo extends BaseEntity{
         this.contractStartTime = addEmployee.getContractStartTime();
         this.contractEndTime = addEmployee.getContractEndTime();
         this.employeeSalary = addEmployee.getContractSalary();
+        this.employeeFilesId = employeeFilesId;
     }
 }

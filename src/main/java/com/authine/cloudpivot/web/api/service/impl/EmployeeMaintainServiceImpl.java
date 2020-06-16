@@ -144,7 +144,8 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     }
 
     @Override
-    public void batchSubmit(WorkflowInstanceFacade workflowInstanceFacade, String userId, List<String> idList, String code) throws Exception {
+    public void batchSubmit(WorkflowInstanceFacade workflowInstanceFacade, String userId, List <String> idList,
+                            String code, String billYear) throws Exception {
         String message = "";
         if (Constants.SOCIAL_SECURITY_DECLARE_SCHEMA.equals(code)) {
             // 社保申报提交
@@ -152,7 +153,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 SocialSecurityDeclare declare = employeesMaintainMapper.getSocialSecurityDeclareById(idList.get(i));
                 message += submitDeclare(declare.getId(), declare.getAddEmployeeId(), declare.getEmployeeOrderFormId(),
                         declare.getEmployeeName(), declare.getStatus(), "社保", declare.getWorkflowInstanceId(),
-                        userId, workflowInstanceFacade);
+                        userId, billYear, workflowInstanceFacade);
             }
         } else if (Constants.PROVIDENT_FUND_DECLARE_SCHEMA.equals(code)) {
             // 公积金申报提交
@@ -160,7 +161,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
                 ProvidentFundDeclare declare = employeesMaintainMapper.getProvidentFundDeclareById(idList.get(i));
                 message += submitDeclare(declare.getId(), declare.getAddEmployeeId(), declare.getEmployeeOrderFormId(),
                         declare.getEmployeeName(), declare.getStatus(), "公积金", declare.getWorkflowInstanceId(),
-                        userId, workflowInstanceFacade);
+                        userId, billYear, workflowInstanceFacade);
             }
         } else if (Constants.SOCIAL_SECURITY_CLOSE_SCHEMA.equals(code)) {
             // 社保停缴提交
@@ -195,13 +196,14 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
      * @param type 申报类型（社保；公积金）
      * @param workflowInstanceId 流程实例id
      * @param userId 当前用户id
+     * @param billYear 账单年月
      * @param workflowInstanceFacade 流程实例接口
      * @return java.lang.String
      * @author liulei
      * @Date 2020/5/25 10:17
      */
     private String submitDeclare(String id, String addEmployeeId, String employeeOrderFormId, String employeeName,
-                                 String status, String type, String workflowInstanceId, String userId,
+                                 String status, String type, String workflowInstanceId, String userId, String billYear,
                                  WorkflowInstanceFacade workflowInstanceFacade) throws Exception {
         String message = "";
         if ("在缴".equals(status)) {
@@ -234,20 +236,20 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
             workflowInstanceFacade.submitWorkItem(userId, workItemId, true);
             if ("社保".equals(type)) {
                 // 更新当前申报数据状态
-                employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_declare", "status", status);
+                employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_declare", "status", status, billYear, null);
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(addEmployeeId, "i4fvb_add_employee", "sb_status",
-                        "在办".equals(status) ? "待办" : status);
+                        "在办".equals(status) ? "待办" : status, null, null);
                 employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
-                        "social_security_status", "在办".equals(status) ? "待办" : status);
+                        "social_security_status", "在办".equals(status) ? "待办" : status, null, null);
             } else {
                 // 更新当前申报数据状态
-                employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_declare", "status", status);
+                employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_declare", "status", status, billYear, null);
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(addEmployeeId, "i4fvb_add_employee", "gjj_status",
-                        "在办".equals(status) ? "待办" : status);
+                        "在办".equals(status) ? "待办" : status, null, null);
                 employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
-                        "provident_fund_status", "在办".equals(status) ? "待办" : status);
+                        "provident_fund_status", "在办".equals(status) ? "待办" : status, null, null);
             }
         }
         return message;
@@ -297,23 +299,23 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
             workflowInstanceFacade.submitWorkItem(userId, workItemId, true);
             if ("社保".equals(type)) {
                 // 更新当前停缴数据状态
-                employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_close", "status", status);
+                employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_close", "status", status, null, null);
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(delEmployeeId, "i4fvb_delete_employee", "sb_status",
-                        "在办".equals(status) ? "待办" : status);
+                        "在办".equals(status) ? "待办" : status, null, null);
                 if ("停缴".equals(status)) {
                     employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
-                            "social_security_status", "停缴");
+                            "social_security_status", "停缴", null, null);
                 }
             } else {
                 // 更新当前申报数据状态
-                employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_close", "status", status);
+                employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_close", "status", status, null, null);
                 // 更新增员表单社保状态
                 employeesMaintainMapper.updateStatus(delEmployeeId, "i4fvb_delete_employee", "gjj_status",
-                        "在办".equals(status) ? "待办" : status);
+                        "在办".equals(status) ? "待办" : status, null, null);
                 if ("停缴".equals(status)) {
                     employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
-                            "provident_fund_status", "停缴");
+                            "provident_fund_status", "停缴", null, null);
                 }
             }
         }
@@ -347,39 +349,40 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
     }
 
     @Override
-    public void batchReject(WorkflowInstanceFacade workflowInstanceFacade, String userId, List<String> idList, String code) throws Exception {
+    public void batchReject(WorkflowInstanceFacade workflowInstanceFacade, String userId, List <String> idList,
+                            String code, String returnReasonAlready) throws Exception {
         String message = "";
         if (Constants.SOCIAL_SECURITY_DECLARE_SCHEMA.equals(code)) {
-            // 社保申报提交
+            // 社保申报
             for (int i = 0; i < idList.size(); i++) {
                 SocialSecurityDeclare declare = employeesMaintainMapper.getSocialSecurityDeclareById(idList.get(i));
                 message += rejectWorkflow(declare.getId(), declare.getAddEmployeeId(), declare.getEmployeeOrderFormId(),
                         declare.getEmployeeName(), declare.getStatus(), "社保", declare.getWorkflowInstanceId(),
-                        userId, workflowInstanceFacade, "declare");
+                        userId, workflowInstanceFacade, "declare", returnReasonAlready);
             }
         } else if (Constants.PROVIDENT_FUND_DECLARE_SCHEMA.equals(code)) {
-            // 公积金申报提交
+            // 公积金申报
             for (int i = 0; i < idList.size(); i++) {
                 ProvidentFundDeclare declare = employeesMaintainMapper.getProvidentFundDeclareById(idList.get(i));
                 message += rejectWorkflow(declare.getId(), declare.getAddEmployeeId(), declare.getEmployeeOrderFormId(),
                         declare.getEmployeeName(), declare.getStatus(), "公积金", declare.getWorkflowInstanceId(),
-                        userId, workflowInstanceFacade, "declare");
+                        userId, workflowInstanceFacade, "declare", returnReasonAlready);
             }
         } else if (Constants.SOCIAL_SECURITY_CLOSE_SCHEMA.equals(code)) {
-            // 社保停缴提交
+            // 社保停缴
             for (int i = 0; i < idList.size(); i++) {
                 SocialSecurityClose close = employeesMaintainMapper.getSocialSecurityCloseById(idList.get(i));
                 message += rejectWorkflow(close.getId(), close.getDelEmployeeId(), close.getEmployeeOrderFormId(),
                         close.getEmployeeName(), close.getStatus(), "社保", close.getWorkflowInstanceId(),
-                        userId, workflowInstanceFacade, "close");
+                        userId, workflowInstanceFacade, "close", null);
             }
         } else if (Constants.PROVIDENT_FUND_CLOSE_SCHEMA.equals(code)) {
-            // 公积金停缴提交
+            // 公积金停缴
             for (int i = 0; i < idList.size(); i++) {
                 ProvidentFundClose close = employeesMaintainMapper.getProvidentFundCloseById(idList.get(i));
                 message += rejectWorkflow(close.getId(), close.getDelEmployeeId(), close.getEmployeeOrderFormId(),
                         close.getEmployeeName(), close.getStatus(), "公积金", close.getWorkflowInstanceId(),
-                        userId, workflowInstanceFacade, "close");
+                        userId, workflowInstanceFacade, "close", null);
             }
         }
         if (StringUtils.isNotBlank(message)) {
@@ -399,13 +402,15 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
      * @param userId 当前用户
      * @param workflowInstanceFacade 流程实例接口
      * @param workflowType 流程类型（申报：declare;停缴：close。）
+     * @param returnReasonAlready 退回原因
      * @return java.lang.String
      * @author liulei
      * @Date 2020/5/25 10:58
      */
     private String rejectWorkflow(String id, String employeeId, String employeeOrderFormId, String employeeName,
-                                 String status, String type, String workflowInstanceId, String userId,
-                                 WorkflowInstanceFacade workflowInstanceFacade, String workflowType) throws Exception {
+                                  String status, String type, String workflowInstanceId, String userId,
+                                  WorkflowInstanceFacade workflowInstanceFacade, String workflowType,
+                                  String returnReasonAlready) throws Exception {
         String message = "";
         if ("待办".equals(status)) {
             message += "表单" + employeeName + "状态是待办，无法驳回;";
@@ -429,7 +434,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
             boolean flag = workflowInstanceFacade.rejectWorkItem(userId, workItemId, "fill_application", true);
             if (flag) {
                 // 驳回时，更新状态
-                updateStatusToReject(type, id, employeeId, employeeOrderFormId, workflowType);
+                updateStatusToReject(type, id, employeeId, employeeOrderFormId, workflowType, returnReasonAlready);
             } else {
                 message += "表单" + employeeName + "驳回失败;";
             }
@@ -437,7 +442,7 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
             boolean flag = workflowInstanceFacade.activateActivity(userId, workflowInstanceId,"fill_application");
             if (flag) {
                 // 驳回时，更新状态
-                updateStatusToReject(type, id, employeeId, employeeOrderFormId, workflowType);
+                updateStatusToReject(type, id, employeeId, employeeOrderFormId, workflowType, returnReasonAlready);
             } else {
                 message += "表单" + employeeName + "驳回失败;";
             }
@@ -457,36 +462,36 @@ public class EmployeeMaintainServiceImpl implements EmployeeMaintainService {
      * @Date 2020/5/25 11:23
      */
     private void updateStatusToReject(String type, String id, String employeeId, String employeeOrderFormId,
-                                      String workflowType) throws Exception {
+                                      String workflowType, String returnReasonAlready) throws Exception {
         if ("社保".equals(type)) {
             if ("declare".equals(workflowType)) {
                 // 更新当前申报数据状态
-                employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_declare", "status", "驳回");
+                employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_declare", "status", "驳回", null, returnReasonAlready);
                 // 更新增员表单社保状态
-                employeesMaintainMapper.updateStatus(employeeId, "i4fvb_add_employee", "sb_status", "驳回");
+                employeesMaintainMapper.updateStatus(employeeId, "i4fvb_add_employee", "sb_status", "驳回", null, null);
             } else {
                 // 更新当前停缴数据状态
-                employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_close", "status", "驳回");
+                employeesMaintainMapper.updateStatus(id, "i4fvb_social_security_close", "status", "驳回", null, null);
                 // 更新减员表单社保状态
-                employeesMaintainMapper.updateStatus(employeeId, "i4fvb_delete_employee", "sb_status", "驳回");
+                employeesMaintainMapper.updateStatus(employeeId, "i4fvb_delete_employee", "sb_status", "驳回", null, null);
             }
             employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
-                    "social_security_status", "驳回");
+                    "social_security_status", "驳回", null, null);
         } else {
             if ("declare".equals(workflowType)) {
                 // 更新当前申报数据状态
-                employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_declare", "status", "驳回");
+                employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_declare", "status", "驳回", null, returnReasonAlready);
                 // 更新增员表单社保状态
-                employeesMaintainMapper.updateStatus(employeeId, "i4fvb_add_employee", "gjj_status", "驳回");
+                employeesMaintainMapper.updateStatus(employeeId, "i4fvb_add_employee", "gjj_status", "驳回", null, null);
             } else {
                 // 更新当前申报数据状态
-                employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_close", "status", "驳回");
+                employeesMaintainMapper.updateStatus(id, "i4fvb_provident_fund_close", "status", "驳回", null, null);
                 // 更新减员表单社保状态
-                employeesMaintainMapper.updateStatus(employeeId, "i4fvb_delete_employee", "gjj_status", "驳回");
+                employeesMaintainMapper.updateStatus(employeeId, "i4fvb_delete_employee", "gjj_status", "驳回", null, null);
             }
             // 更新员工订单状态
             employeesMaintainMapper.updateStatus(employeeOrderFormId, "i4fvb_employee_order_form",
-                    "provident_fund_status", "驳回");
+                    "provident_fund_status", "驳回", null, null);
         }
     }
 
