@@ -127,7 +127,8 @@ public class ResourceConfig extends ResourceServerConfigurerAdapter {
                     // 征缴政策
                     .antMatchers("/controller/product/updateProduct").permitAll()
                     // 增减员
-                    .antMatchers("/controller/employeeMaintain/**").permitAll()
+                    .antMatchers("/controller/addEmployee/**").permitAll()
+                    .antMatchers("/controller/deleteEmployee/**").permitAll()
                     // 上海增员
                     .antMatchers("/controller/shAddEmployee/**").permitAll()
                     // 上海减员
@@ -136,6 +137,8 @@ public class ResourceConfig extends ResourceServerConfigurerAdapter {
                     .antMatchers("/controller/nationalDelivery/**").permitAll()
                     // 商保
                     .antMatchers("/controller/businessInsurance/**").permitAll()
+                    // 调基调比
+                    .antMatchers("/controller/adjustBaseAndRatio/**").permitAll()
                     .antMatchers("/controller/clientController/**").permitAll()
                     .antMatchers("/controller/systemManage/**").permitAll()
                     .antMatchers("/controller/employeeFiles/**").permitAll()
@@ -171,8 +174,6 @@ public class ResourceConfig extends ResourceServerConfigurerAdapter {
                     .antMatchers("/controller/unit/**").permitAll()
                     // 客户个性化设置
                     .antMatchers("/controller/nccps/**").permitAll()
-                    // 调基调比
-                    .antMatchers("/controller/adjustBaseAndRatio/**").permitAll()
                     //test
                     .antMatchers("/api/licenseExt/**").permitAll()
                     .antMatchers("/v1/dashboard/**").permitAll()

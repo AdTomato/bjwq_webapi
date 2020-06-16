@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author liulei
@@ -103,6 +104,8 @@ public class EmployeeOrderForm extends BaseEntity {
      * 收费频率
      */
     String payCycle;
+    String sbBillYear;
+    String gjjBillYear;
     /**
      * 汇缴订单明细
      */
@@ -117,6 +120,7 @@ public class EmployeeOrderForm extends BaseEntity {
     Double payBackSortKey = 0d;
 
     public EmployeeOrderForm(AddEmployee addEmployee, String employeeFilesId) {
+        this.id = UUID.randomUUID().toString().replaceAll("-", "");
         this.name = addEmployee.getName();
         this.creater = addEmployee.getCreater();
         this.createdDeptId = addEmployee.getCreatedDeptId();

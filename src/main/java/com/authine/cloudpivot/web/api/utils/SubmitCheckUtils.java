@@ -117,18 +117,18 @@ public class SubmitCheckUtils {
 
                 if ((addEmployeeList.size() == 2)
                         || (addEmployeeList.size() == 1
-                                && params.getProvidentFundBase() != null
-                                && params.getProvidentFundBase() != 0
-                                && params.getSocialSecurityBase() != null
-                                && params.getSocialSecurityBase() != 0)
+                        && params.getProvidentFundBase() != null
+                        && params.getProvidentFundBase() != 0
+                        && params.getSocialSecurityBase() != null
+                        && params.getSocialSecurityBase() != 0)
                         || (params.getProvidentFundBase() != null
-                                && params.getProvidentFundBase() != 0
-                                && addEmployeeList.get(0).getProvidentFundBase() != null
-                                && addEmployeeList.get(0).getProvidentFundBase() != 0)
+                        && params.getProvidentFundBase() != 0
+                        && addEmployeeList.get(0).getProvidentFundBase() != null
+                        && addEmployeeList.get(0).getProvidentFundBase() != 0)
                         || (params.getSocialSecurityBase() != null
-                                && params.getSocialSecurityBase() != 0
-                                && addEmployeeList.get(0).getSocialSecurityBase() != null
-                                && addEmployeeList.get(0).getSocialSecurityBase() != 0)) {
+                        && params.getSocialSecurityBase() != 0
+                        && addEmployeeList.get(0).getSocialSecurityBase() != null
+                        && addEmployeeList.get(0).getSocialSecurityBase() != 0)) {
                     result.setIsCanSubmit(false);
                     if (addEmployeeList.size() == 2) {
                         result.setMessage("社保、公积金已经申报过，无法重复申报");
@@ -281,12 +281,13 @@ public class SubmitCheckUtils {
 
     /**
      * 方法说明：减员客户提交校验
+     *
      * @param params
      * @return com.authine.cloudpivot.web.api.params.AddEmployeeCheckReturn
      * @author liulei
      * @Date 2020/6/1 11:06
      */
-    public static AddEmployeeCheckReturn delEmployeeCheck(DelEmployeeCheckParams params) throws Exception{
+    public static AddEmployeeCheckReturn delEmployeeCheck(DelEmployeeCheckParams params) throws Exception {
         AddEmployeeCheckReturn result = new AddEmployeeCheckReturn();
         result.setIsCanSubmit(true);
 
@@ -315,12 +316,13 @@ public class SubmitCheckUtils {
 
     /**
      * 方法说明：其他减员提交校验
+     *
      * @param params
      * @return com.authine.cloudpivot.web.api.params.AddEmployeeCheckReturn
      * @author liulei
      * @Date 2020/6/1 11:06
      */
-    public static AddEmployeeCheckReturn otherDelEmployeeCheck(OtherDelEmployeeCheckParams params) throws Exception{
+    public static AddEmployeeCheckReturn otherDelEmployeeCheck(OtherDelEmployeeCheckParams params) throws Exception {
         AddEmployeeCheckReturn result = new AddEmployeeCheckReturn();
         result.setIsCanSubmit(true);
 
@@ -370,8 +372,8 @@ public class SubmitCheckUtils {
             result.setDept(null);
         }
         if ("other".equals(type)) {
-           // 其他增员校验不需要进行时间节点校验
-           return result;
+            // 其他增员校验不需要进行时间节点校验
+            return result;
         }
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMM");
         Date notTime = new Date();

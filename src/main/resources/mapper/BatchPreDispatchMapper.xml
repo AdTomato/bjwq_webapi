@@ -11,7 +11,7 @@
         social_insurance_amount, provident_fund_ratio, supple_provident_fund_ratio, provident_fund_amount, entry_date,
         order_start_date, order_expected_end_date, contract_start_time, contract_end_time, whether_foreign_tax_return,
         whether_service_fee, delegated_area, staffing_type, staffing, position, do_bank_card, whether_beijing_graduate,
-        remark, employee_internal_num, employee_nature)
+        remark, employee_internal_num, employee_nature, add_employee_id)
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">
             (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner}, #{item.ownerDeptId},
@@ -22,7 +22,8 @@
             #{item.entryDate}, #{item.orderStartDate}, #{item.orderExpectedEndDate}, #{item.contractStartTime},
             #{item.contractEndTime}, #{item.whetherForeignTaxReturn}, #{item.whetherServiceFee}, #{item.delegatedArea},
             #{item.staffingType}, #{item.staffing}, #{item.position}, #{item.doBankCard},
-            #{item.whetherBeijingGraduate}, #{item.remark}, #{item.employeeInternalNum}, #{item.employeeNature})
+            #{item.whetherBeijingGraduate}, #{item.remark}, #{item.employeeInternalNum}, #{item.employeeNature},
+            #{item.addEmployeeId})
         </foreach>
     </insert>
 </mapper>

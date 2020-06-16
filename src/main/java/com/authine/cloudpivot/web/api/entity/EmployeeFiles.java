@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * @Author: wangyong
@@ -226,6 +227,7 @@ public class EmployeeFiles extends BaseEntity {
     String subordinateDepartment;
 
     public EmployeeFiles(AddEmployee addEmployee) {
+        this.id = UUID.randomUUID().toString().replaceAll("-", "");
         this.name = addEmployee.getName();
         this.creater = addEmployee.getCreater();
         this.createdDeptId = addEmployee.getCreatedDeptId();
@@ -280,6 +282,7 @@ public class EmployeeFiles extends BaseEntity {
     }
 
     public EmployeeFiles(ShAddEmployee addEmployee) {
+        this.id = UUID.randomUUID().toString().replaceAll("-", "");
         this.name = addEmployee.getName();
         this.creater = addEmployee.getCreater();
         this.createdDeptId = addEmployee.getCreatedDeptId();
@@ -333,6 +336,7 @@ public class EmployeeFiles extends BaseEntity {
     }
 
     public EmployeeFiles(NationwideDispatch addEmployee) {
+        this.id = UUID.randomUUID().toString().replaceAll("-", "");
         this.name = addEmployee.getName();
         this.creater = addEmployee.getCreater();
         this.createdDeptId = addEmployee.getCreatedDeptId();

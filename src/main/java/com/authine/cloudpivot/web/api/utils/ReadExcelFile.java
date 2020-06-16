@@ -76,9 +76,9 @@ public abstract class ReadExcelFile {
             String cellValue = "";
             if (null != cell) {
                 // 不为空
-                CellType cellType = cell.getCellType();
+                int cellType = cell.getCellType();
 
-                if ("NUMERIC".equals(cellType.toString())) {
+                if (CellType.NUMERIC.getCode() == cellType) {
                     // 数字类型
                     if (HSSFDateUtil.isCellDateFormatted(cell)) {
                         // 是时间
@@ -90,8 +90,6 @@ public abstract class ReadExcelFile {
                         cell.setCellType(CellType.STRING);
                         cellValue = cell.getStringCellValue();
                     }
-                } else if ("DATE".equals(cellType.toString())) {
-                    cellValue = cell.getDateCellValue().toString();
                 } else {
                     cellValue = cell.getStringCellValue();
                 }

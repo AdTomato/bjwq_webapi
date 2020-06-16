@@ -138,20 +138,27 @@ public class BatchPreDispatch extends BaseEntity {
 
     private String employeeNature;
 
-    public BatchPreDispatch(String employeeName, String identityNo, String mobile, Double socialInsuranceAmount,
-                            String providentFundRatio, String suppleProvidentFundRatio, Double providentFundAmount,
-                            Date entryDate, Date orderStartDate, String delegatedArea, String remark, String employeeNature) {
-        this.employeeName = employeeName;
-        this.identityNo = identityNo;
-        this.mobile = mobile;
-        this.socialInsuranceAmount = socialInsuranceAmount;
-        this.providentFundRatio = providentFundRatio;
-        this.suppleProvidentFundRatio = suppleProvidentFundRatio;
-        this.providentFundAmount = providentFundAmount;
-        this.entryDate = entryDate;
-        this.orderStartDate = orderStartDate;
-        this.delegatedArea = delegatedArea;
-        this.remark = remark;
-        this.employeeNature = employeeNature;
+    private String addEmployeeId;
+
+    public BatchPreDispatch(AddEmployee addEmployee, boolean sbHave, boolean sbNotInAnhui, boolean gjjHave,
+                            boolean gjjNotInAnhui) {
+        this.addEmployeeId = addEmployee.getId();
+        this.employeeName = addEmployee.getEmployeeName();
+        this.identityNo = addEmployee.getIdentityNo();
+        this.mobile = addEmployee.getMobile();
+        this.entryDate = addEmployee.getEntryTime();
+        this.orderStartDate = addEmployee.getCreatedTime();
+        this.remark = addEmployee.getRemark();
+        this.employeeNature = addEmployee.getEmployeeNature();
+        if (gjjHave && gjjNotInAnhui) {
+            this.providentFundRatio =
+                    addEmployee.getCompanyProvidentFundBl() + "+" + addEmployee.getEmployeeProvidentFundBl();
+            this.providentFundAmount = addEmployee.getProvidentFundBase();
+            this.delegatedArea = addEmployee.getProvidentFundCity();
+        }
+        if (sbHave && sbNotInAnhui) {
+            this.socialInsuranceAmount = addEmployee.getSocialSecurityBase();
+            this.delegatedArea = addEmployee.getSocialSecurityCity();
+        }
     }
 }

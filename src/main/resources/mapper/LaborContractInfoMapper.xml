@@ -3,26 +3,30 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.authine.cloudpivot.web.api.mapper.LaborContractInfoMapper">
-    <insert id="saveLaborContractInfo" parameterType="com.authine.cloudpivot.web.api.entity.LaborContractInfo">
+    <insert id="saveLaborContractInfos" parameterType="java.util.List">
         INSERT INTO ibkct_labor_contract_info(id, name, creater, createdDeptId, owner, ownerDeptId, createdTime,
                                               modifier, modifiedTime, workflowInstanceId, sequenceNo, sequenceStatus,
                                               ownerDeptQueryCode, operator, inquirer, subordinate_department,
-                                              personnel_name, idnumber,
-                                              employee_status, phone, email, employee_type, entry_time, education,
-                                              graduated_school, graduated_time, major, domicile_place, current_address,
-                                              contract_num, contract_end_time, contract_start_time, probation_end_time,
-                                              probation_start_time, employment_forms, workhours_category,
-                                              employee_position, employee_salary, probation_salary, resignation_time,
-                                              resignation_reason, employee_files_id, first_level_client_name,
-                                              second_level_client_name)
-        VALUES (#{id}, #{name}, #{creater}, #{createdDeptId}, #{owner}, #{ownerDeptId}, #{createdTime}, #{modifier},
-                #{modifiedTime}, #{workflowInstanceId}, #{sequenceNo}, #{sequenceStatus}, #{ownerDeptQueryCode},
-                #{operator}, #{inquirer}, #{subordinateDepartment}, #{personnelName}, #{idnumber}, #{employeeStatus},
-                #{phone}, #{email},
-                #{employeeType}, #{entryTime}, #{education}, #{graduatedSchool}, #{graduatedTime}, #{major},
-                #{domicilePlace}, #{currentAddress}, #{contractNum}, #{contractEndTime}, #{contractStartTime},
-                #{probationEndTime}, #{probationStartTime}, #{employmentForms}, #{workhoursCategory},
-                #{employeePosition}, #{employeeSalary}, #{probationSalary}, #{resignationTime},
-                #{resignationReason}, #{employeeFilesId}, #{firstLevelClientName}, #{secondLevelClientName})
+                                              personnel_name, idnumber, employee_status, phone, email, employee_type,
+                                              entry_time, education, graduated_school, graduated_time, major,
+                                              domicile_place, current_address, contract_num, contract_end_time,
+                                              contract_start_time, probation_end_time, probation_start_time,
+                                              employment_forms, workhours_category, employee_position, employee_salary,
+                                              probation_salary, resignation_time, resignation_reason, employee_files_id,
+                                              first_level_client_name, second_level_client_name)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.creater}, #{item.createdDeptId}, #{item.owner}, #{item.ownerDeptId},
+            #{item.createdTime}, #{item.modifier}, #{item.modifiedTime}, #{item.workflowInstanceId}, #{item.sequenceNo},
+            #{item.sequenceStatus}, #{item.ownerDeptQueryCode}, #{item.operator}, #{item.inquirer},
+            #{item.subordinateDepartment}, #{item.personnelName}, #{item.idnumber}, #{item.employeeStatus},
+            #{item.phone}, #{item.email}, #{item.employeeType}, #{item.entryTime}, #{item.education},
+            #{item.graduatedSchool}, #{item.graduatedTime}, #{item.major}, #{item.domicilePlace},
+            #{item.currentAddress}, #{item.contractNum}, #{item.contractEndTime}, #{item.contractStartTime},
+            #{item.probationEndTime}, #{item.probationStartTime}, #{item.employmentForms}, #{item.workhoursCategory},
+            #{item.employeePosition}, #{item.employeeSalary}, #{item.probationSalary}, #{item.resignationTime},
+            #{item.resignationReason}, #{item.employeeFilesId}, #{item.firstLevelClientName},
+            #{item.secondLevelClientName})
+        </foreach>
     </insert>
 </mapper>

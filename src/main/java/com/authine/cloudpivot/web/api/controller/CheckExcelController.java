@@ -121,7 +121,7 @@ public class CheckExcelController extends BaseController {
     private boolean checkIsNumber(Cell cell) {
         boolean result = true;
 
-        if (cell.getCellType() == CellType.NUMERIC) {
+        if (cell.getCellType() == CellType.NUMERIC.getCode()) {
             // 本身为数字
             Double numericCellValue = cell.getNumericCellValue();
             if (numericCellValue == null) {
@@ -133,7 +133,7 @@ public class CheckExcelController extends BaseController {
             }
         }
 
-        if (cell.getCellType() == CellType.STRING) {
+        if (cell.getCellType() == CellType.STRING.getCode()) {
             // 本身为字符串
             String value = cell.getStringCellValue();
             if (StringUtils.isEmpty(value)) {

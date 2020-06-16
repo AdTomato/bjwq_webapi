@@ -1,7 +1,5 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
-import com.authine.cloudpivot.engine.api.model.organization.UserModel;
-import com.authine.cloudpivot.web.api.dao.EmployeesMaintainDao;
 import com.authine.cloudpivot.web.api.dto.EmployeeOrderFormDto;
 import com.authine.cloudpivot.web.api.entity.*;
 import com.authine.cloudpivot.web.api.mapper.AdjustBaseAndRatioMapper;
@@ -30,9 +28,6 @@ public class AdjustBaseAndRatioServiceImpl implements AdjustBaseAndRatioService 
 
     @Resource
     private PolicyCollectPayMapper policyCollectPayMapper;
-
-    @Resource
-    private EmployeesMaintainDao employeesMaintainDao;
 
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyyMM");
 

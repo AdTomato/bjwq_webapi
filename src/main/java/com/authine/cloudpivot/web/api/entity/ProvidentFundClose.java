@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * @author liulei
@@ -95,6 +96,7 @@ public class ProvidentFundClose extends BaseEntity {
     Double employeeProvidentFundBl;
 
     public ProvidentFundClose(DeleteEmployee delEmployee, EmployeeFiles employeeFiles, String employeeOrderFormId) {
+        this.id = UUID.randomUUID().toString().replaceAll("-", "");
         this.name = delEmployee.getName();
         this.creater = delEmployee.getCreater();
         this.createdDeptId = delEmployee.getCreatedDeptId();
@@ -103,9 +105,9 @@ public class ProvidentFundClose extends BaseEntity {
         this.createdTime = delEmployee.getCreatedTime();
         this.modifier = delEmployee.getModifier();
         this.modifiedTime = delEmployee.getModifiedTime();
-        this.workflowInstanceId = null;
-        this.sequenceNo = null;
-        this.sequenceStatus = "PROCESSING";
+        /*this.workflowInstanceId = null;
+        this.sequenceNo = null;*/
+        this.sequenceStatus = "COMPLETED";
         this.ownerDeptQueryCode = delEmployee.getOwnerDeptQueryCode();
 
         this.employeeOrderFormId = employeeOrderFormId;

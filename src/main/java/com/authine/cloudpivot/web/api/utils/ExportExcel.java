@@ -503,7 +503,7 @@ public class ExportExcel {
                 }
                 if (currentRow.getCell(columnNum) != null) {
                     Cell currentCell = currentRow.getCell(columnNum);
-                    if (currentCell.getCellType() == CellType.STRING) {
+                    if (currentCell.getCellType() == CellType.STRING.getCode()) {
                         int length = currentCell.getStringCellValue().getBytes(StandardCharsets.UTF_8).length;
                         if (columnWidth < length) {
                             columnWidth = length;

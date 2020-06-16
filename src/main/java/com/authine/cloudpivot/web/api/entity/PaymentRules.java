@@ -8,7 +8,7 @@ import java.util.Date;
 
 /**
  * @author liulei
- * @Description
+ * @Description 征缴规则补缴明细
  * @ClassName com.authine.cloudpivot.web.api.entity.PaymentRules
  * @Date 2020/5/12 13:28
  **/

@@ -98,18 +98,23 @@ public class BatchEvacuation extends BaseEntity{
 
     private String employeeNature;
 
+    private String deleteEmployeeId;
 
-    public BatchEvacuation(String employeeName, String identityNoType, String identityNo, Date orderEndDate,
-                           Date socialSecurityEndTime, Date providentFundEndTime, String socialSecurityStopReason,
-                           String remark, String employeeNature) {
-        this.employeeName = employeeName;
-        this.identityNoType = identityNoType;
-        this.identityNo = identityNo;
-        this.orderEndDate = orderEndDate;
-        this.socialSecurityEndTime = socialSecurityEndTime;
-        this.providentFundEndTime = providentFundEndTime;
-        this.socialSecurityStopReason = socialSecurityStopReason;
-        this.remark = remark;
-        this.employeeNature = employeeNature;
+    public BatchEvacuation(String deleteEmployeeId, EmployeeFiles employeeFiles, boolean sbHave, boolean sbNotInAnhui,
+                           boolean gjjHave, boolean gjjNotInAnhui) {
+        this.deleteEmployeeId = deleteEmployeeId;
+        this.employeeName = employeeFiles.getEmployeeName();
+        this.identityNoType = employeeFiles.getIdType();
+        this.identityNo = employeeFiles.getIdNo();
+        this.orderEndDate = employeeFiles.getReportQuitDate();
+        if (gjjHave && gjjNotInAnhui) {
+            this.providentFundEndTime = employeeFiles.getProvidentFundChargeEnd();
+        }
+        if (sbHave && sbNotInAnhui) {
+            this.socialSecurityEndTime = employeeFiles.getSocialSecurityChargeEnd();
+        }
+        this.socialSecurityStopReason = employeeFiles.getQuitReason();
+        this.remark = employeeFiles.getQuitRemark();
+        this.employeeNature = employeeFiles.getEmployeeNature();
     }
 }

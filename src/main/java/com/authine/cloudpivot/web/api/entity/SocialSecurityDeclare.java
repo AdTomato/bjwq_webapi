@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author liulei
@@ -134,7 +135,8 @@ public class SocialSecurityDeclare extends BaseEntity {
      */
     List <EmployeeOrderFormDetails> payBackList;
 
-    public SocialSecurityDeclare(AddEmployee addEmployee, String employeeFilesId) {
+    public SocialSecurityDeclare(AddEmployee addEmployee, String employeeFilesId, String orderFormId) {
+        this.id = UUID.randomUUID().toString().replaceAll("-", "");
         this.name = addEmployee.getName();
         this.creater = addEmployee.getCreater();
         this.createdDeptId = addEmployee.getCreatedDeptId();
@@ -145,7 +147,7 @@ public class SocialSecurityDeclare extends BaseEntity {
         this.modifiedTime = addEmployee.getModifiedTime();
         this.workflowInstanceId = null;
         this.sequenceNo = null;
-        this.sequenceStatus = "PROCESSING";
+        this.sequenceStatus = "COMPLETED";
         this.ownerDeptQueryCode = addEmployee.getOwnerDeptQueryCode();
 
         this.startMonth = addEmployee.getSocialSecurityStartTime();
@@ -174,6 +176,7 @@ public class SocialSecurityDeclare extends BaseEntity {
         this.inquirer = addEmployee.getInquirer();
         this.subordinateDepartment = addEmployee.getSubordinateDepartment();
         this.employeeFilesId = employeeFilesId;
+        this.employeeOrderFormId = orderFormId;
         this.addEmployeeId = addEmployee.getId();
         /*this.remittanceList = remittanceList;
         this.payBackList = payBackList;*/

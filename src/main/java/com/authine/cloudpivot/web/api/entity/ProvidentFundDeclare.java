@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author liulei
@@ -133,7 +134,8 @@ public class ProvidentFundDeclare extends BaseEntity {
      */
     List <EmployeeOrderFormDetails> payBackList;
 
-    public ProvidentFundDeclare(AddEmployee addEmployee, String employeeFilesId) {
+    public ProvidentFundDeclare(AddEmployee addEmployee, String employeeFilesId, String orderFormId) {
+        this.id = UUID.randomUUID().toString().replaceAll("-", "");
         this.name = addEmployee.getName();
         this.creater = addEmployee.getCreater();
         this.createdDeptId = addEmployee.getCreatedDeptId();
@@ -144,7 +146,7 @@ public class ProvidentFundDeclare extends BaseEntity {
         this.modifiedTime = addEmployee.getModifiedTime();
         this.workflowInstanceId = null;
         this.sequenceNo = null;
-        this.sequenceStatus = "PROCESSING";
+        this.sequenceStatus = "COMPLETED";
         this.ownerDeptQueryCode = addEmployee.getOwnerDeptQueryCode();
 
         this.employeeName = addEmployee.getEmployeeName();
@@ -168,6 +170,7 @@ public class ProvidentFundDeclare extends BaseEntity {
         this.operator = addEmployee.getOperator();
         this.inquirer = addEmployee.getInquirer();
         this.employeeFilesId = employeeFilesId;
+        this.employeeOrderFormId = orderFormId;
         this.addEmployeeId = addEmployee.getId();
         this.subordinateDepartment = addEmployee.getSubordinateDepartment();
         /*this.remittanceList = remittanceList;

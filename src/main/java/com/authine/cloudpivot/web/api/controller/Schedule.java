@@ -3,7 +3,6 @@ package com.authine.cloudpivot.web.api.controller;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
 import com.authine.cloudpivot.web.api.service.CityTimeNodeService;
 import com.authine.cloudpivot.web.api.service.CollectionRuleService;
-import com.authine.cloudpivot.web.api.service.SendMessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

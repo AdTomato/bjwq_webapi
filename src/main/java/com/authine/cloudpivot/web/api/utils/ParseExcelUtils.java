@@ -5,6 +5,7 @@ import com.alibaba.dubbo.common.utils.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileInputStream;
@@ -90,7 +91,7 @@ public class ParseExcelUtils {
             // return WorkbookFactory.create(in);
             return new XSSFWorkbook(in);
         } else {
-            return WorkbookFactory.create(in);
+            return new HSSFWorkbook(in);
         }
     }
 
@@ -167,7 +168,7 @@ public class ParseExcelUtils {
                                 if (cell != null) {
                                     if (CellType.NUMERIC.equals(cell.getCellType())) {
                                         value = realStringValueOfDouble(cell.getNumericCellValue());
-                                    }else {
+                                    } else {
                                         cell.setCellType(CellType.STRING);
                                         value = cell.getStringCellValue();
                                     }
@@ -300,7 +301,7 @@ public class ParseExcelUtils {
         }
         return doubleStr;
     }
-    
+
 
     /**
      * 导出Excel
@@ -350,13 +351,13 @@ public class ParseExcelUtils {
     }
 
     /**
+     * @param fileName 文件名
+     * @param fis      文件输入流
+     * @return {@link List< String>}
+     * @throws
      * @Author lfh
      * @Description 动态获取表头信息
      * @Date 2020/4/20 9:26
-     * @throws
-     * @param fileName 文件名
-     * @param fis  文件输入流
-     * @return {@link List< String>}
      **/
     public static List<String> getHeadName(String fileName, FileInputStream fis) throws IOException {
         Workbook workBook = null;

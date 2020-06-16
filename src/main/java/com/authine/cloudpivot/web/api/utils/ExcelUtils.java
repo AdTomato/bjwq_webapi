@@ -153,7 +153,7 @@ public class ExcelUtils extends BaseQueryRuntimeController {
         if (cell == null) {
             return "";
         }
-        switch (cell.getCellType().getCode()) {
+        switch (cell.getCellType()) {
             case 1:
                 return cell.getRichStringCellValue().getString().trim();
             case 0:

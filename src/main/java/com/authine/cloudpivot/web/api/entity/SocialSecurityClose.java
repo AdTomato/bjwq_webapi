@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * @author liulei
@@ -112,10 +113,20 @@ public class SocialSecurityClose extends BaseEntity {
     }
 
     public SocialSecurityClose(DeleteEmployee delEmployee, EmployeeFiles employeeFiles, String employeeOrderFormId) {
-        super(null, delEmployee.getName(), delEmployee.getCreater(), delEmployee.getCreatedDeptId(),
-                delEmployee.getOwner(), delEmployee.getOwnerDeptId(), delEmployee.getCreatedTime(),
-                delEmployee.getModifier(), delEmployee.getModifiedTime(), null, null, "PROCESSING",
-                delEmployee.getOwnerDeptQueryCode());
+        this.id = UUID.randomUUID().toString().replaceAll("-", "");
+        this.name = delEmployee.getName();
+        this.creater = delEmployee.getCreater();
+        this.createdDeptId = delEmployee.getCreatedDeptId();
+        this.owner = delEmployee.getOwner();
+        this.ownerDeptId = delEmployee.getOwnerDeptId();
+        this.createdTime = delEmployee.getCreatedTime();
+        this.modifier = delEmployee.getModifier();
+        this.modifiedTime = delEmployee.getModifiedTime();
+        /*this.workflowInstanceId = null;
+        this.sequenceNo = null;*/
+        this.sequenceStatus = "COMPLETED";
+        this.ownerDeptQueryCode = delEmployee.getOwnerDeptQueryCode();
+
         this.employeeOrderFormId = employeeOrderFormId;
         this.employeeName = delEmployee.getEmployeeName();
         this.gender = delEmployee.getGender();

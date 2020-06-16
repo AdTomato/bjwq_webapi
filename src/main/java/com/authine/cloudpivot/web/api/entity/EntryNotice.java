@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * @author liulei
@@ -116,6 +117,7 @@ public class EntryNotice extends BaseEntity {
     String subordinateDepartment;
 
     public EntryNotice(AddEmployee addEmployee) {
+        this.id = UUID.randomUUID().toString().replaceAll("-", "");
         this.name = addEmployee.getName();
         this.creater = addEmployee.getCreater();
         this.createdDeptId = addEmployee.getCreatedDeptId();

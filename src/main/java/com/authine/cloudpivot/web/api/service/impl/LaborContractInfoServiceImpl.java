@@ -1,11 +1,14 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
+import com.authine.cloudpivot.web.api.constants.Constants;
 import com.authine.cloudpivot.web.api.entity.LaborContractInfo;
 import com.authine.cloudpivot.web.api.mapper.LaborContractInfoMapper;
 import com.authine.cloudpivot.web.api.service.LaborContractInfoService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author liulei
@@ -20,7 +23,20 @@ public class LaborContractInfoServiceImpl implements LaborContractInfoService {
     private LaborContractInfoMapper laborContractInfoMapper;
 
     @Override
-    public void saveLaborContractInfo(LaborContractInfo laborContractInfo) throws Exception {
-        laborContractInfoMapper.saveLaborContractInfo(laborContractInfo);
+    public void saveLaborContractInfos(List <LaborContractInfo> laborContractInfos) throws Exception {
+        int insertNum = 0;
+        List<LaborContractInfo> adds = new ArrayList <>();
+        for (LaborContractInfo laborContractInfo : laborContractInfos) {
+            insertNum++;
+            adds.add(laborContractInfo);
+            if (insertNum == Constants.MAX_INSERT_NUM) {
+                insertNum = 0;
+                laborContractInfoMapper.saveLaborContractInfos(adds);
+                adds.clear();
+            }
+        }
+        if (0 != adds.size()) {
+            laborContractInfoMapper.saveLaborContractInfos(adds);
+        }
     }
 }

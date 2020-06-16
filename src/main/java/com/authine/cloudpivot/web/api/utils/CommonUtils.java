@@ -1,5 +1,6 @@
 package com.authine.cloudpivot.web.api.utils;
 
+import com.authine.cloudpivot.engine.api.exceptions.ServiceException;
 import com.authine.cloudpivot.engine.api.facade.BizObjectFacade;
 import com.authine.cloudpivot.engine.api.facade.WorkflowInstanceFacade;
 import com.authine.cloudpivot.engine.api.model.runtime.BizObjectModel;
@@ -24,18 +25,19 @@ public class CommonUtils {
 
     /**
      * 方法说明：批量生成业务数据
+     *
+     * @return java.util.List<java.lang.String>
+     * @throws
      * @Param bizObjectFacade
      * @Param userId 当前用户id
      * @Param models 运行时业务数据对象
      * @Param queryField 查询字段
-     * @return java.util.List<java.lang.String>
-     * @throws
      * @author liulei
      * @Date 2020/2/4 19:11
      */
-    public static List <String> addBizObjects(BizObjectFacade bizObjectFacade, String userId,
-                                              List <BizObjectModel> models, String queryField) throws Exception {
-        List <String> modelIds = new ArrayList <>();
+    public static List<String> addBizObjects(BizObjectFacade bizObjectFacade, String userId,
+                                             List<BizObjectModel> models, String queryField) throws Exception {
+        List<String> modelIds = new ArrayList<>();
         if (models != null && models.size() > 0) {
             modelIds = bizObjectFacade.addBizObjects(userId, models, queryField);
         }
@@ -44,18 +46,19 @@ public class CommonUtils {
 
     /**
      * 方法说明：启动流程节点
+     *
+     * @return void
+     * @throws
      * @Param workflowInstanceFacade
      * @Param userId 当前用户id
      * @Param workflowCode 流程编码
      * @Param modelIds 业务对象id List
      * @Param finishStart 是否结束发起节点
-     * @return void
-     * @throws
      * @author liulei
      * @Date 2019/12/17 19:56
      */
     public static void startWorkflowInstance(WorkflowInstanceFacade workflowInstanceFacade, String departmentId,
-                                             String userId, String workflowCode, List <String> modelIds,
+                                             String userId, String workflowCode, List<String> modelIds,
                                              boolean finishStart) throws Exception {
         if (modelIds != null && modelIds.size() > 0) {
             for (int i = 0; i < modelIds.size(); i++) {
@@ -69,15 +72,16 @@ public class CommonUtils {
 
     /**
      * 方法说明：资金数据处理
-     * @param value 处理前的值
-     * @param rounding 舍入规则（四舍五入，单边见角进元取整，单边见角舍元取整）
+     *
+     * @param value     处理前的值
+     * @param rounding  舍入规则（四舍五入，单边见角进元取整，单边见角舍元取整）
      * @param precision 四舍五入时保留的精度（0,1,2 位小数）
      * @return java.lang.Double
      * @author liulei
      * @Date 2020/3/18 10:04
      */
     public static Double processingData(Double value, String rounding, String precision) {
-        if(value == null) {
+        if (value == null) {
             return null;
         }
         Double returnValue = 0d;
@@ -87,7 +91,7 @@ public class CommonUtils {
             nf.setRoundingMode(RoundingMode.UP);*/
             if ("0".equals(precision)) {
                 // 四舍五入取整
-                returnValue = (double)Math.round(value);
+                returnValue = (double) Math.round(value);
             } else if ("1".equals(precision)) {
                 // 保留两位小数
                 /*nf.setMaximumFractionDigits(1);
@@ -112,13 +116,14 @@ public class CommonUtils {
 
     /**
      * 方法说明：通过第一行获取导入数据的位置
+     *
      * @param list
-     * @return java.util.Map<java.lang.String,java.lang.Integer>
+     * @return java.util.Map<java.lang.String, java.lang.Integer>
      * @author liulei
      * @Date 2020/3/27 13:15
      */
     public static Map<String, Integer> getImportLocation(List<String> list) {
-        Map<String, Integer> locationMap = new HashMap <>();
+        Map<String, Integer> locationMap = new HashMap<>();
         if (list != null && list.size() > 0) {
             for (int i = 0; i < list.size(); i++) {
                 locationMap.put(list.get(i), i + 1);
@@ -129,12 +134,13 @@ public class CommonUtils {
 
     /**
      * 方法说明：通过判断福利地对基数四舍五入取整
+     *
      * @param addEmployee
      * @return com.authine.cloudpivot.web.api.entity.AddEmployee
      * @author liulei
      * @Date 2020/4/16 9:12
      */
-    public static AddEmployee needBaseRounding(AddEmployee addEmployee) throws Exception {
+    public static AddEmployee needBaseRounding(AddEmployee addEmployee) throws ServiceException {
         // 目前仅六安市需要四舍五入取整
         if (StringUtils.isNotBlank(addEmployee.getSocialSecurityCity()) && "六安市".indexOf(addEmployee.getSocialSecurityCity()) >= 0) {
             addEmployee.setSocialSecurityBase(processingData(addEmployee.getSocialSecurityBase(), "四舍五入", "0"));
@@ -147,13 +153,14 @@ public class CommonUtils {
 
     /**
      * 方法说明：增员客户处理身份证号码
+     *
      * @param addEmployee
      * @return com.authine.cloudpivot.web.api.entity.AddEmployee
      * @author liulei
      * @Date 2020/4/17 8:57
      */
     public static AddEmployee processingIdentityNo(AddEmployee addEmployee) throws Exception {
-        if(checkIdentityNo(addEmployee.getIdentityNoType(), addEmployee.getIdentityNo())) {
+        if (checkIdentityNo(addEmployee.getIdentityNoType(), addEmployee.getIdentityNo())) {
             ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(addEmployee.getIdentityNo());
             addEmployee.setGender(processIdentityNo.getGender());
             addEmployee.setBirthday(processIdentityNo.getBirthday());
@@ -163,13 +170,14 @@ public class CommonUtils {
 
     /**
      * 方法说明：增员上海处理身份证号码
+     *
      * @param shAddEmployee
      * @return com.authine.cloudpivot.web.api.entity.AddEmployee
      * @author liulei
      * @Date 2020/4/17 8:57
      */
-    public static ShAddEmployee processingIdentityNo(ShAddEmployee shAddEmployee)  throws Exception{
-        if(checkIdentityNo(shAddEmployee.getIdentityNoType(), shAddEmployee.getIdentityNo())) {
+    public static ShAddEmployee processingIdentityNo(ShAddEmployee shAddEmployee) throws Exception {
+        if (checkIdentityNo(shAddEmployee.getIdentityNoType(), shAddEmployee.getIdentityNo())) {
             ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(shAddEmployee.getIdentityNo());
             shAddEmployee.setGender(processIdentityNo.getGender());
             shAddEmployee.setBirthday(processIdentityNo.getBirthday());
@@ -179,13 +187,14 @@ public class CommonUtils {
 
     /**
      * 方法说明：增员全国处理身份证号码
+     *
      * @param nationwideDispatch
      * @return com.authine.cloudpivot.web.api.entity.AddEmployee
      * @author liulei
      * @Date 2020/4/17 8:57
      */
-    public static NationwideDispatch processingIdentityNo(NationwideDispatch nationwideDispatch)  throws Exception{
-        if(checkIdentityNo(nationwideDispatch.getIdentityNoType(), nationwideDispatch.getIdentityNo())) {
+    public static NationwideDispatch processingIdentityNo(NationwideDispatch nationwideDispatch) throws Exception {
+        if (checkIdentityNo(nationwideDispatch.getIdentityNoType(), nationwideDispatch.getIdentityNo())) {
             ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(nationwideDispatch.getIdentityNo());
             nationwideDispatch.setGender(processIdentityNo.getGender());
             nationwideDispatch.setBirthday(processIdentityNo.getBirthday());
@@ -193,8 +202,8 @@ public class CommonUtils {
         return nationwideDispatch;
     }
 
-    public static ShDeleteEmployee processingIdentityNo(ShDeleteEmployee delEmployee)  throws Exception{
-        if(checkIdentityNo(delEmployee.getIdentityNoType(), delEmployee.getIdentityNo())) {
+    public static ShDeleteEmployee processingIdentityNo(ShDeleteEmployee delEmployee) throws Exception {
+        if (checkIdentityNo(delEmployee.getIdentityNoType(), delEmployee.getIdentityNo())) {
             ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(delEmployee.getIdentityNo());
             delEmployee.setGender(processIdentityNo.getGender());
             delEmployee.setBirthday(processIdentityNo.getBirthday());
@@ -216,16 +225,17 @@ public class CommonUtils {
 
     /**
      * 方法说明：根据表头第一行数据，获取每一行数据
+     *
      * @param rowArr 当前行
      * @param fields 表头信息
-     * @return java.util.Map<java.lang.String,java.lang.Object>
+     * @return java.util.Map<java.lang.String, java.lang.Object>
      * @author liulei
      * @Date 2020/4/23 14:29
      */
-    public static Map<String, Object> getExcelRowData(String[] rowArr, List<String> fields) throws Exception{
-        Map<String, Object> data = new HashMap <>();
-        List <String> list = Arrays.asList(rowArr);
-        for(int j = 0; j < fields.size(); j++) {
+    public static Map<String, Object> getExcelRowData(String[] rowArr, List<String> fields) throws Exception {
+        Map<String, Object> data = new HashMap<>();
+        List<String> list = Arrays.asList(rowArr);
+        for (int j = 0; j < fields.size(); j++) {
             data.put(fields.get(j), list.get(j));
         }
         return data;
@@ -233,41 +243,42 @@ public class CommonUtils {
 
     /**
      * 方法说明：随机生成编码，时间戳+随机数
+     *
      * @return java.lang.String
      * @author liulei
      * @Date 2020/4/26 10:47
      */
-    public static String randomGenerateCode() throws Exception{
+    public static String randomGenerateCode() throws Exception {
         SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");
         String temp = sf.format(new Date());
-        int random=(int) (Math.random()*10000);
+        int random = (int) (Math.random() * 10000);
         return temp + random;
     }
 
 
     public static Integer getLastMonth(Integer time) {
-        int year = time/100;
-        int month = time%100;
+        int year = time / 100;
+        int month = time % 100;
         // 此时endTime有值,即有上一条数据，此时开始时间在上一数据结束时间的基础上加一个月
-        if(month == 1) {
+        if (month == 1) {
             year--;
             month = 12;
         } else {
             month--;
         }
-        return year*100 + month;
+        return year * 100 + month;
     }
 
     public static Integer getNextMonth(Integer time) {
-        int year = time/100;
-        int month = time%100;
+        int year = time / 100;
+        int month = time % 100;
         // 此时endTime有值,即有上一条数据，此时开始时间在上一数据结束时间的基础上加一个月
-        if(month == 12) {
+        if (month == 12) {
             year++;
             month = 1;
         } else {
             month++;
         }
-        return year*100 + month;
+        return year * 100 + month;
     }
 }
