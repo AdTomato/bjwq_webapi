@@ -55,11 +55,12 @@
         <result property="domicileLocation" column="domicile_place"/>
     </resultMap>
     <!--//查询获取用户选选中的社保申报信息-->
-    <select id="findContractInfo" parameterType="com.authine.cloudpivot.web.api.params.ImportCondition" resultMap="contractImportInfo">
+    <select id="findContractInfo" parameterType="com.authine.cloudpivot.web.api.params.ImportCondition"
+            resultMap="contractImportInfo">
         select
-            ssd.*,household_register_nature,education,contract_start_time,contract_end_time,employment_forms,phone,current_address
+        ssd.*,household_register_nature,education,contract_start_time,contract_end_time,employment_forms,phone,current_address
         from
-          i4fvb_social_security_declare ssd,ibkct_labor_contract_info ibc,i4fvb_employee_files ef
+        i4fvb_social_security_declare ssd,ibkct_labor_contract_info ibc,i4fvb_employee_files ef
         where ssd.identityNo = ef.id_no and ssd.identityNo = ibc.idnumber
         <if test="welfare_handler!=null and welfare_handler!='' ">
             and welfare_handler=#{welfare_handler}
@@ -78,7 +79,8 @@
             and ssd.start_month between #{beginPaymentStartTime} and #{beginPaymentEndTime}
         </if>
     </select>
-    <select id="findContractTerminationInfo" parameterType="com.authine.cloudpivot.web.api.params.ImportCondition" resultMap="contractTerminationInfo">
+    <select id="findContractTerminationInfo" parameterType="com.authine.cloudpivot.web.api.params.ImportCondition"
+            resultMap="contractTerminationInfo">
         select
         ssc.*,contract_start_time,contract_end_time,employment_forms,phone,quit_reason,social_security_num,quit_date
         from
@@ -102,18 +104,26 @@
         </if>
     </select>
     <select id="findDeleteEmployeeDate" resultType="java.util.Date">
-        select createdTime from i4fvb_delete_employee where identityNo  = #{identityNo}
+        select createdTime
+        from i4fvb_delete_employee
+        where identityNo = #{identityNo}
     </select>
     <select id="findTimeNode" resultType="java.lang.Integer">
-      select time_node from id34a_city_time_node where city =#{welfare_handler}  order by createdTime desc limit 0,1;
+        select time_node
+        from id34a_city_time_node
+        where city = #{welfare_handler}
+        order by createdTime desc
+        limit 0,1;
     </select>
-    <select id="findRegisterDeclareInfo"  parameterType="com.authine.cloudpivot.web.api.params.ImportCondition" resultMap="registerDeclareSheetInfo">
+    <select id="findRegisterDeclareInfo" parameterType="com.authine.cloudpivot.web.api.params.ImportCondition"
+            resultMap="registerDeclareSheetInfo">
         select
-            ssd.base_pay, ssd.employee_name, ssd.gender,ssd.identityNo,contract_start_time,contract_end_time,employment_forms,domicile_place
+        ssd.base_pay, ssd.employee_name,
+        ssd.gender,ssd.identityNo,contract_start_time,contract_end_time,employment_forms,domicile_place
         from
-            i4fvb_social_security_declare ssd,ibkct_labor_contract_info ibc
+        i4fvb_social_security_declare ssd,ibkct_labor_contract_info ibc
         where
-            ssd.identityNo = ibc.idnumber
+        ssd.identityNo = ibc.idnumber
         <if test="welfare_handler!=null and welfare_handler!='' ">
             and welfare_handler=#{welfare_handler}
         </if>
@@ -132,10 +142,13 @@
         </if>
     </select>
     <select id="findEmployeeContractInfo" resultType="java.util.Map">
-        select social_security_charge_start, social_security_charge_end from i4fvb_employee_files where id_no = #{identityNo}
+        select social_security_charge_start, social_security_charge_end
+        from i4fvb_employee_files
+        where id_no = #{identityNo}
     </select>
 
-    <resultMap id="registerDeclareSheetInfoFromStopPayment" type="com.authine.cloudpivot.web.api.entity.RegisterDeclareSheetInfo">
+    <resultMap id="registerDeclareSheetInfoFromStopPayment"
+               type="com.authine.cloudpivot.web.api.entity.RegisterDeclareSheetInfo">
         <result property="contract_salary" column="social_security_base"/>
         <result property="employee_name" column="employee_name"/>
         <result property="gender" column="gender"/>
@@ -147,11 +160,12 @@
     </resultMap>
     <select id="findRegisterDeclareInfoFromStopPayment" resultMap="registerDeclareSheetInfoFromStopPayment">
         select
-            ssc.social_security_base, ssc.employee_name, ssc.gender,ssc.identityNo,contract_start_time,contract_end_time,employment_forms,domicile_place
+        ssc.social_security_base, ssc.employee_name,
+        ssc.gender,ssc.identityNo,contract_start_time,contract_end_time,employment_forms,domicile_place
         from
-            i4fvb_social_security_close ssc,ibkct_labor_contract_info ibc
+        i4fvb_social_security_close ssc,ibkct_labor_contract_info ibc
         where
-            ssc.identityNo = ibc.idnumber
+        ssc.identityNo = ibc.idnumber
         <if test="welfare_handler!=null and welfare_handler!='' ">
             and welfare_handler=#{welfare_handler}
         </if>
@@ -168,6 +182,56 @@
         <if test="stopPaymentStartTime !=null and stopPaymentEndTime !=null">
             and ssc.charge_end_month between #{stopPaymentStartTime} and #{stopPaymentEndTime}
         </if>
+    </select>
+
+    <resultMap id="socialSecurityDeclareDto" type="com.authine.cloudpivot.web.api.dto.SocialSecurityDeclareDto">
+        <id property="id" column="id"/>
+        <collection property="orderDetailsRemittanceSbList" column="id"
+                    select="com.authine.cloudpivot.web.api.mapper.SocialSecurityDeclareMapper.getOrderDetailsRemittanceSbByParentId"/>
+        <collection property="orderDetailsPayBackSbList" column="id"
+                    select="com.authine.cloudpivot.web.api.mapper.SocialSecurityDeclareMapper.getOrderDetailsPayBackSbByParentId"/>
+    </resultMap>
+    <select id="getSocialSecurityDeclareDtoList" parameterType="java.util.Map" resultMap="socialSecurityDeclareDto">
+        SELECT id,
+        employee_name,
+        identityNo,
+        first_level_client_name,
+        second_level_client_name
+        FROM i4fvb_social_security_declare
+        <where>
+            <if test="status != unll">
+                AND status = #{status}
+            </if>
+            <if test="city != null">
+                AND city = #{city}
+            </if>
+            <if test="welfareHandler != null">
+                AND welfare_handler = #{welfareHandler}
+            </if>
+            <if test="createdStartTime != null">
+                AND createdTime BETWEEN(#{createdStartTime}, #{createdEndTime})
+            </if>
+            <if test="startMonth != null">
+                AND start_month BETWEEN(#{startMonth}, #{endMonth})
+            </if>
+            <if test="billYear != null">
+                AND bill_year = #{billYear}
+            </if>
+        </where>
+    </select>
+
+    <select id="getOrderDetailsRemittanceSbByParentId" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.OrderDetails">
+        SELECT *
+        FROM i4fvb_order_details_remittance_sb
+        WHERE parentId = #{parentId}
+    </select>
+
+    <select id="getOrderDetailsPayBackSbByParentId" parameterType="java.lang.String"
+            resultType="com.authine.cloudpivot.web.api.entity.OrderDetails">
+        SELECT *
+        FROM i4fvb_order_details_pay_back_sb
+        WHERE parentId = #{parentId}
     </select>
 
 </mapper>

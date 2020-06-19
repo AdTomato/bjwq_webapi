@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.authine.cloudpivot.web.api.mapper.EmployeeOrderFormMapper">
+
+    <delete id="deleteOrderDetailsRemittanceSbsByParentId" parameterType="java.lang.String">
+        DELETE
+        FROM i4fvb_order_details_remittance_sb
+        WHERE parentId IN (
+        <foreach collection="list" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+    </delete>
+
+    <delete id="deleteOrderDetailsPayBackSbsByParentId">
+        DELETE
+        FROM i4fvb_order_details_pay_back_sb
+        WHERE parentId IN (
+        <foreach collection="list" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+    </delete>
+
+    <delete id="deleteOrderDetailsRemittancesById">
+        DELETE
+        FROM i4fvb_order_details_remittance
+        WHERE product_name IN ('养老保险', '医疗保险', '失业保险', '工伤保险', '生育保险', '大病保险', '综合保险', '补充工伤')
+        AND parentId IN(
+        <foreach collection="list" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+    </delete>
+
+    <delete id="deleteOrderDetailsRemittanceSbByParentId" parameterType="java.lang.String">
+        DELETE
+        FROM i4fvb_order_details_remittance_sb
+        WHERE parentId = #{parentId}
+    </delete>
+
+    <delete id="deleteOrderDetailsPayBackSbByParentId" parameterType="java.lang.String">
+        DELETE
+        FROM i4fvb_order_details_pay_back_sb
+        WHERE parentId = #{parentId}
+    </delete>
+
+    <delete id="deleteOrderDetailsRemittanceById" parameterType="java.lang.String">
+        DELETE
+        FROM i4fvb_order_details_remittance
+        WHERE product_name IN ('养老保险', '医疗保险', '失业保险', '工伤保险', '生育保险', '大病保险', '综合保险', '补充工伤')
+          AND parentId = #{id}
+    </delete>
+
+    <delete id="deleteOrderDetailsPayBacksById">
+        DELETE FROM i4fvb_order_details_pay_back WHERE parentId IN (
+        <foreach collection="list" item="item" index="index">
+            #{item}
+        </foreach>
+        )
+    </delete>
+
+    <delete id="deleteOrderDetailsPayBackById">
+        DELETE
+        FROM i4fvb_order_details_pay_back
+        WHERE parentId = #{id}
+    </delete>
+
+    <select id="isHaveSocialSecurityInOrderForm" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM i4fvb_order_details_remittance
+        WHERE product_name IN ('养老保险', '医疗保险', '失业保险', '工伤保险', '生育保险', '大病保险', '综合保险', '补充工伤')
+          AND parentId = #{id}
+    </select>
+
+    <select id="isHaveProvidentFundInOrderForm" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM i4fvb_order_details_remittance
+        WHERE product_name IN ('省直公积金', '市直公积金', '补充公积金')
+          AND parentId = #{id}
+    </select>
+
+    <resultMap id="orderFormAndSocialSecurityDeclareId" type="java.util.Map">
+        <result column="id" property="securityDeclareId"/>
+        <result column="employee_order_form_id" property="orderFormId"/>
+    </resultMap>
+    <select id="getOrderFormIdBySocialSecurityDeclareId" resultMap="orderFormAndSocialSecurityDeclareId">
+        SELECT id, employee_order_form_id FROM i4fvb_social_security_declare
+        WHERE id IN (
+        <foreach collection="list" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+    </select>
+
+    <select id="isHaveSocialSecurityInOrderFormByIdCard" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM i4fvb_order_details_remittance
+        WHERE product_name IN ('养老保险', '医疗保险', '失业保险', '工伤保险', '生育保险', '大病保险', '综合保险', '补充工伤')
+          AND parentId = (
+            SELECT id
+            FROM i4fvb_employee_order_form
+            WHERE first_level_client_name = #{firstLevelName}
+              AND second_level_client_name = #{secondLevelName}
+              AND identityNo = #{idCard}
+            ORDER BY createdTime DESC
+            LIMIT 0, 1
+        )
+    </select>
+
+    <select id="isHaveProvidentFundInOrderFormByIdCard" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM i4fvb_order_details_remittance
+        WHERE product_name IN ('省直公积金', '市直公积金', '补充公积金')
+          AND parentId = (
+            SELECT id
+            FROM i4fvb_employee_order_form
+            WHERE first_level_client_name = #{firstLevelName}
+              AND second_level_client_name = #{secondLevelName}
+              AND identityNo = #{idCard}
+            ORDER BY createdTime DESC
+            LIMIT 0, 1
+        )
+    </select>
+
+</mapper>

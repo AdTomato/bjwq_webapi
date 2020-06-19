@@ -1,15 +1,19 @@
 package com.authine.cloudpivot.web.api.mapper;
 
+import com.authine.cloudpivot.web.api.dto.SocialSecurityDeclareDto;
 import com.authine.cloudpivot.web.api.entity.ContractImportInfo;
 import com.authine.cloudpivot.web.api.entity.ContractTerminationInfo;
 import com.authine.cloudpivot.web.api.entity.RegisterDeclareSheetInfo;
 import com.authine.cloudpivot.web.api.params.ImportCondition;
+import org.w3c.dom.ls.LSInput;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 /**
+ * 社保申报mapper
+ *
  * @ClassName SocialSecurityDeclareMapper
  * @Author:lfh
  * @Date:2020/3/24 9:56
@@ -26,10 +30,11 @@ public interface SocialSecurityDeclareMapper {
 
     List<RegisterDeclareSheetInfo> findRegisterDeclareInfo(ImportCondition importCondition);
 
-    Map<String,Object> findEmployeeContractInfo(String identityNo);
+    Map<String, Object> findEmployeeContractInfo(String identityNo);
 
     List<RegisterDeclareSheetInfo> findRegisterDeclareInfoFromStopPayment(ImportCondition importCondition);
 
+    List<SocialSecurityDeclareDto> getSocialSecurityDeclareDtoList(Map conditions);
 
 }
 

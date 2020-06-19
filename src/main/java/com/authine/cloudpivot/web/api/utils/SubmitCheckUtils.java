@@ -59,6 +59,11 @@ public class SubmitCheckUtils {
 
     static AddEmployeeService addEmployeeService;
 
+    @Autowired
+    EmployeeOrderFormService employeeOrderFormServiceOne;
+
+    static EmployeeOrderFormService employeeOrderFormService;
+
     @PostConstruct
     public void init() {
         clientManagementService = clientManagementServiceOne;
@@ -68,6 +73,7 @@ public class SubmitCheckUtils {
         unitService = unitServiceOne;
         addEmployeeService = addEmployeeServiceOne;
         salesContractService = salesContractServiceOne;
+        employeeOrderFormService = employeeOrderFormServiceOne;
     }
 
     /**
@@ -82,8 +88,10 @@ public class SubmitCheckUtils {
         AddEmployeeCheckReturn result = new AddEmployeeCheckReturn();
         result.setIsCanSubmit(true);
 
+        String idCard = params.getIdentityNo();  // 身份证
+
         if ("身份证".equals(params.getIdentityNoType())) {
-            ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(params.getIdentityNo());
+            ProcessIdentityNo processIdentityNo = new ProcessIdentityNo(idCard);
             result.setBirthday(processIdentityNo.getBirthday());
             result.setGender(processIdentityNo.getGender());
         }
@@ -111,37 +119,26 @@ public class SubmitCheckUtils {
             // 福利办理方
             String welfareHandler = params.getWelfareHandler();
 
-            // 判断是否能重复申报
-            List<AddEmployee> addEmployeeList = addEmployeeService.getAddEmployeeByClientNameAndIdCard(id, firstLevelClientName, secondLevelClientName, params.getIdentityNo());
-            if (addEmployeeList != null && !addEmployeeList.isEmpty()) {
+            // 社保基数
+            Double socialSecurityBase = params.getSocialSecurityBase();
+            boolean isHaveSocialSecurityBase = socialSecurityBase == null || socialSecurityBase == 0D ? false : true;
 
-                if ((addEmployeeList.size() == 2)
-                        || (addEmployeeList.size() == 1
-                        && params.getProvidentFundBase() != null
-                        && params.getProvidentFundBase() != 0
-                        && params.getSocialSecurityBase() != null
-                        && params.getSocialSecurityBase() != 0)
-                        || (params.getProvidentFundBase() != null
-                        && params.getProvidentFundBase() != 0
-                        && addEmployeeList.get(0).getProvidentFundBase() != null
-                        && addEmployeeList.get(0).getProvidentFundBase() != 0)
-                        || (params.getSocialSecurityBase() != null
-                        && params.getSocialSecurityBase() != 0
-                        && addEmployeeList.get(0).getSocialSecurityBase() != null
-                        && addEmployeeList.get(0).getSocialSecurityBase() != 0)) {
-                    result.setIsCanSubmit(false);
-                    if (addEmployeeList.size() == 2) {
-                        result.setMessage("社保、公积金已经申报过，无法重复申报");
-                    } else if (addEmployeeList.size() == 1) {
-                        AddEmployee addEmployee = addEmployeeList.get(0);
-                        if (addEmployee.getProvidentFundBase() != null) {
-                            result.setMessage("公积金已经申报过，无法重复申报");
-                        } else {
-                            result.setMessage("社保已经申报过，无法重复申报");
-                        }
-                    }
-                    return result;
-                }
+            // 公积金基数
+            Double providentFundBase = params.getProvidentFundBase();
+            boolean isHaveProvidentFundBase = providentFundBase == null || providentFundBase == 0D ? false : true;
+
+            // 判断社保是否重复申报
+            if (isHaveSocialSecurityBase && employeeOrderFormService.isHaveSocialSecurityInOrderFormByIdCard(idCard, firstLevelClientName, secondLevelClientName)) {
+                result.setMessage("社保已经申报过，无法重复申报");
+                result.setIsCanSubmit(false);
+                return result;
+            }
+
+            // 判断公积金是否重复申报
+            if (isHaveProvidentFundBase && employeeOrderFormService.isHaveProvidentFundInOrderFormByIdCard(idCard, firstLevelClientName, secondLevelClientName)) {
+                result.setMessage("公积金已经申报过，无法重复申报");
+                result.setIsCanSubmit(false);
+                return result;
             }
 
             // 判断销售合同是否存在

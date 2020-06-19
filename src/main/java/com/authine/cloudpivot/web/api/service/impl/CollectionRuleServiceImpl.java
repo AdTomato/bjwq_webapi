@@ -2,6 +2,7 @@ package com.authine.cloudpivot.web.api.service.impl;
 
 import com.authine.cloudpivot.web.api.entity.CollectionRule;
 import com.authine.cloudpivot.web.api.entity.CollectionRuleDetails;
+import com.authine.cloudpivot.web.api.entity.CrmCollectionRule;
 import com.authine.cloudpivot.web.api.mapper.CollectionRuleMapper;
 import com.authine.cloudpivot.web.api.service.CollectionRuleService;
 import org.apache.commons.lang3.StringUtils;
@@ -32,8 +33,8 @@ public class CollectionRuleServiceImpl implements CollectionRuleService {
     /**
      * 根据城市、公司公积金比例查询最新的有效起始月中是否有满足条件的数据
      *
-     * @param city         城市
-     * @param companyRadio 公司比例
+     * @param city           城市
+     * @param companyRadio   公司比例
      * @param welfareHandler 福利办理方（大库、单立户）
      * @return true 存在， false，不存在
      * @author wangyong
@@ -41,5 +42,10 @@ public class CollectionRuleServiceImpl implements CollectionRuleService {
     @Override
     public boolean isHaveCompanyRatioInMaxStartMonth(String city, Double companyRadio, String welfareHandler) {
         return collectionRuleMapper.isHaveCompanyRatioInMaxStartMonth(city, companyRadio, welfareHandler).isEmpty() ? false : true;
+    }
+
+    @Override
+    public List<CrmCollectionRule> getCrmCollectionRulesByCity(String city, String welfareHandler) {
+        return collectionRuleMapper.getCrimCollectionRulesByCity(city, welfareHandler);
     }
 }

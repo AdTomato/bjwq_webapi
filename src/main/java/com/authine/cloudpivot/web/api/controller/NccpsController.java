@@ -3,9 +3,11 @@ package com.authine.cloudpivot.web.api.controller;
 import com.authine.cloudpivot.engine.enums.ErrCode;
 import com.authine.cloudpivot.web.api.controller.base.BaseController;
 import com.authine.cloudpivot.web.api.entity.ClientManagement;
+import com.authine.cloudpivot.web.api.entity.CrmCollectionRule;
 import com.authine.cloudpivot.web.api.entity.NccpsProvidentFundRatio;
 import com.authine.cloudpivot.web.api.params.NccpsGetProvidentFundRatioReturn;
 import com.authine.cloudpivot.web.api.service.ClientManagementService;
+import com.authine.cloudpivot.web.api.service.CollectionRuleService;
 import com.authine.cloudpivot.web.api.service.NccpsService;
 import com.authine.cloudpivot.web.api.view.ResponseResult;
 import com.sun.jersey.core.util.StringIgnoreCaseKeyComparator;
@@ -15,6 +17,7 @@ import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,6 +40,9 @@ public class NccpsController extends BaseController {
     NccpsService nccpsService;
 
     @Autowired
+    CollectionRuleService collectionRuleService;
+
+    @Autowired
     ClientManagementService clientManagementService;
 
     @GetMapping("/getProvidentFundRatio")
@@ -57,28 +63,48 @@ public class NccpsController extends BaseController {
         String firstClientName = clientManagement.getFirstLevelClientName();
         String secondClientName = clientManagement.getSecondLevelClientName();
 
-        List<NccpsProvidentFundRatio> nccpsProvidentFundRatioList = nccpsService.getNccpsProvidentFoundRatioByFirstOrSecondClientName(firstClientName, secondClientName, city, welfareHandler);
-        if (nccpsProvidentFundRatioList == null || nccpsProvidentFundRatioList.isEmpty()) {
-            return this.getErrResponseResult(null, 408L, "获取的结果为空");
-        }
-
         NccpsGetProvidentFundRatioReturn result = new NccpsGetProvidentFundRatioReturn();
         result.setProvidentFundUnitRatio(new ArrayList<>());
         result.setProvidentFundIndividualRatio(new ArrayList<>());
-        for (NccpsProvidentFundRatio nccpsProvidentFundRatio : nccpsProvidentFundRatioList) {
-            Double providentFundUnitRatio = nccpsProvidentFundRatio.getProvidentFundUnitRatio();
-            Double providentFundIndividualRatio = nccpsProvidentFundRatio.getProvidentFundIndividualRatio();
-            if (providentFundUnitRatio != null && providentFundUnitRatio != 0) {
-                if (!result.getProvidentFundUnitRatio().contains(providentFundUnitRatio)) {
-                    result.getProvidentFundUnitRatio().add(providentFundUnitRatio);
+
+        List<NccpsProvidentFundRatio> nccpsProvidentFundRatioList = nccpsService.getNccpsProvidentFoundRatioByFirstOrSecondClientName(firstClientName, secondClientName, city, welfareHandler);
+        if (CollectionUtils.isEmpty(nccpsProvidentFundRatioList)) {
+            List<CrmCollectionRule> crmCollectionRuleList = collectionRuleService.getCrmCollectionRulesByCity(city, welfareHandler);
+            if (CollectionUtils.isEmpty(crmCollectionRuleList)) {
+                return this.getErrResponseResult(null, 408L, "获取的结果为空");
+            } else {
+                for (CrmCollectionRule crmCollectionRule : crmCollectionRuleList) {
+                    Double companyRatio = crmCollectionRule.getCompanyRatio();
+                    Double employeeRatio = crmCollectionRule.getEmployeeRatio();
+                    if (companyRatio != null && companyRatio != 0D) {
+                        if (!result.getProvidentFundUnitRatio().contains(companyRatio)) {
+                            result.getProvidentFundUnitRatio().add(companyRatio);
+                        }
+                    }
+                    if (employeeRatio != null && employeeRatio != 0D) {
+                        if (!result.getProvidentFundIndividualRatio().contains(employeeRatio)) {
+                            result.getProvidentFundIndividualRatio().add(employeeRatio);
+                        }
+                    }
                 }
             }
-            if (providentFundIndividualRatio != null && providentFundIndividualRatio != 0) {
-                if (!result.getProvidentFundIndividualRatio().contains(providentFundIndividualRatio)) {
-                    result.getProvidentFundIndividualRatio().add(providentFundIndividualRatio);
+        } else {
+            for (NccpsProvidentFundRatio nccpsProvidentFundRatio : nccpsProvidentFundRatioList) {
+                Double providentFundUnitRatio = nccpsProvidentFundRatio.getProvidentFundUnitRatio();
+                Double providentFundIndividualRatio = nccpsProvidentFundRatio.getProvidentFundIndividualRatio();
+                if (providentFundUnitRatio != null && providentFundUnitRatio != 0) {
+                    if (!result.getProvidentFundUnitRatio().contains(providentFundUnitRatio)) {
+                        result.getProvidentFundUnitRatio().add(providentFundUnitRatio);
+                    }
+                }
+                if (providentFundIndividualRatio != null && providentFundIndividualRatio != 0) {
+                    if (!result.getProvidentFundIndividualRatio().contains(providentFundIndividualRatio)) {
+                        result.getProvidentFundIndividualRatio().add(providentFundIndividualRatio);
+                    }
                 }
             }
         }
+
 
         Collections.sort(result.getProvidentFundUnitRatio());
         Collections.sort(result.getProvidentFundIndividualRatio());

@@ -9,7 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
  * @time 2020/6/16 15:58
  */
 @Data
-public class EmployeeOrderForm {
+public class SocialSecurityDeclareUpload {
 
     @ExcelProperty(index = 0)
     private String id;

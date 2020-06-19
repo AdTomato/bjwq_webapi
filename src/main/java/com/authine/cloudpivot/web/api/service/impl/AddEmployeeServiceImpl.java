@@ -1293,7 +1293,7 @@ public class AddEmployeeServiceImpl implements AddEmployeeService {
      * 方法说明：省内增员数据开始处理
      *
      * @param addEmployee     增员
-     * @param employeeFilesId 员工订单id
+     * @param employeeFilesId 员工档案id
      * @param sbInAnhui       社保在省内
      * @param gjjInAnhui      公积金在省内
      * @return void

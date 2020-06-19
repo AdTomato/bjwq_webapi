@@ -1,5 +1,6 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
+import com.authine.cloudpivot.web.api.dto.SocialSecurityDeclareDto;
 import com.authine.cloudpivot.web.api.entity.ContractImportInfo;
 import com.authine.cloudpivot.web.api.entity.ContractTerminationInfo;
 import com.authine.cloudpivot.web.api.entity.RegisterDeclareSheetInfo;
@@ -77,5 +78,10 @@ public class SocialSecurityDeclareServiceImpl implements SocialSecurityDeclareSe
     @Override
     public List<RegisterDeclareSheetInfo> findRegisterDeclareInfoFromStopPayment(ImportCondition importCondition) {
         return socialSecurityDeclareMapper.findRegisterDeclareInfoFromStopPayment(importCondition);
+    }
+
+    @Override
+    public List<SocialSecurityDeclareDto> getSocialSecurityDeclareDtoList(Map conditions) {
+        return socialSecurityDeclareMapper.getSocialSecurityDeclareDtoList(conditions);
     }
 }

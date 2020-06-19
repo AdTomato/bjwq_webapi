@@ -80,4 +80,7 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true  # 开启驼峰命名法
 
+file:
+  path: E:/file/wq
+
 debug: true

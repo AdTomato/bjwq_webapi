@@ -13,6 +13,7 @@ import java.util.List;
 public interface CollectionRuleMapper {
     /**
      * 方法说明：将有效终止月<当前时间的汇缴规则数据转移到历史数据中
+     *
      * @return void
      * @author liulei
      * @Date 2020/5/12 14:55
@@ -21,6 +22,7 @@ public interface CollectionRuleMapper {
 
     /**
      * 方法说明：将有效终止月<当前时间的汇缴规则数据删除
+     *
      * @return void
      * @author liulei
      * @Date 2020/5/12 14:55
@@ -29,7 +31,8 @@ public interface CollectionRuleMapper {
 
     /**
      * 方法说明：根据城市和福利办理方查询征缴规则
-     * @param city 城市
+     *
+     * @param city           城市
      * @param welfareHandler 福利办理方
      * @return com.authine.cloudpivot.web.api.entity.CollectionRuleMaintain
      * @author liulei
@@ -54,4 +57,14 @@ public interface CollectionRuleMapper {
      * @author wangyong
      */
     List<CrmCollectionRule> isHaveCompanyRatioInMaxStartMonth(String city, Double companyRadio, String welfareHandler);
+
+    /**
+     * 获取征缴规则中补缴规则中的公积金比例
+     *
+     * @param city           城市
+     * @param welfareHandler 福利办理方
+     * @return 公积金比例
+     * @author wangyong
+     */
+    List<CrmCollectionRule> getCrmCollectionRulesByCity(String city, String welfareHandler);
 }

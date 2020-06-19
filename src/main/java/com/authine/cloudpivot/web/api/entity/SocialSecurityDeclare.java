@@ -129,11 +129,11 @@ public class SocialSecurityDeclare extends BaseEntity {
     /**
      * 汇缴订单明细
      */
-    List <EmployeeOrderFormDetails> remittanceList;
+    List<EmployeeOrderFormDetails> remittanceList;
     /**
      * 补缴订单明细
      */
-    List <EmployeeOrderFormDetails> payBackList;
+    List<EmployeeOrderFormDetails> payBackList;
 
     public SocialSecurityDeclare(AddEmployee addEmployee, String employeeFilesId, String orderFormId) {
         this.id = UUID.randomUUID().toString().replaceAll("-", "");
