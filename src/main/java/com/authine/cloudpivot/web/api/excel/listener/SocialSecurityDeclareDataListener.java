@@ -2,9 +2,10 @@ package com.authine.cloudpivot.web.api.excel.listener;
 
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
+import com.authine.cloudpivot.web.api.dto.DeclareDto;
 import com.authine.cloudpivot.web.api.dto.SocialSecurityDeclareDto;
 import com.authine.cloudpivot.web.api.entity.OrderDetails;
-import com.authine.cloudpivot.web.api.excel.data.SocialSecurityDeclareData;
+import com.authine.cloudpivot.web.api.excel.data.DeclareData;
 import com.authine.cloudpivot.web.api.service.EmployeeOrderFormService;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
@@ -17,12 +18,12 @@ import java.util.*;
  * @author wangyong
  * @time 2020/6/18 15:39
  */
-public class SocialSecurityDeclareDataListener extends AnalysisEventListener<SocialSecurityDeclareData> {
+public class SocialSecurityDeclareDataListener extends AnalysisEventListener<DeclareData> {
 
     @Autowired
     EmployeeOrderFormService employeeOrderFormService;
 
-    List<SocialSecurityDeclareData> list = new ArrayList<>();
+    List<DeclareData> list = new ArrayList<>();
     List<SocialSecurityDeclareDto> updateList = new ArrayList<>();
     List<SocialSecurityDeclareDto> deleteList = new ArrayList<>();
 
@@ -30,15 +31,15 @@ public class SocialSecurityDeclareDataListener extends AnalysisEventListener<Soc
 
     @SneakyThrows
     @Override
-    public void invoke(SocialSecurityDeclareData data, AnalysisContext context) {
+    public void invoke(DeclareData data, AnalysisContext context) {
         if (!list.isEmpty() && !StringUtils.isEmpty(data.getId())) {
             SocialSecurityDeclareDto socialSecurityDeclareDto = new SocialSecurityDeclareDto();
             socialSecurityDeclareDto.setOrderDetailsRemittanceSbList(new ArrayList<>());
             socialSecurityDeclareDto.setOrderDetailsPayBackSbList(new ArrayList<>());
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            SimpleDateFormat format = new SimpleDateFormat("yyyyMM");
             Double i1 = 0D;
             Double i2 = 0D;
-            for (SocialSecurityDeclareData excelData : list) {
+            for (DeclareData excelData : list) {
                 if (!StringUtils.isEmpty(excelData.getId())) {
                     socialSecurityDeclareDto.setId(excelData.getId());
                     socialSecurityDeclareDto.setReason(excelData.getReason());

@@ -1,18 +1,15 @@
 package com.authine.cloudpivot.web.api.excel.data;
 
 import com.alibaba.excel.annotation.ExcelProperty;
-import com.authine.cloudpivot.web.api.utils.DoubleUtils;
-import javafx.beans.binding.DoubleExpression;
 import lombok.Data;
-
-import java.util.Date;
 
 /**
  * @author wangyong
- * @time 2020/6/16 15:58
+ * @time 2020/6/23 16:45
  */
 @Data
-public class SocialSecurityDeclareData {
+public class DeclareData {
+
 
     @ExcelProperty(value = {"id值"}, index = 0)
     private String id;
@@ -57,20 +54,20 @@ public class SocialSecurityDeclareData {
     @ExcelProperty(value = {"汇缴订单明细", "个人比例"}, index = 13)
     private Double employeeRatioH;
 
-    @ExcelProperty(value = {"汇缴订单明细", "总金额"}, index = 14)
-    private Double sumH;
-
-    @ExcelProperty(value = {"汇缴订单明细", "企业金额"}, index = 15)
-    private Double companyMoneyH;
-
-    @ExcelProperty(value = {"汇缴订单明细", "个人金额"}, index = 16)
-    private Double employeeMoneyH;
-
-    @ExcelProperty(value = {"汇缴订单明细", "企业附加金额"}, index = 17)
+    @ExcelProperty(value = {"汇缴订单明细", "企业附加金额"}, index = 14)
     private Double companySurchargeValueH;
 
-    @ExcelProperty(value = {"汇缴订单明细", "个人附加金额"}, index = 18)
+    @ExcelProperty(value = {"汇缴订单明细", "个人附加金额"}, index = 15)
     private Double employeeSurchargeValueH;
+
+    @ExcelProperty(value = {"汇缴订单明细", "总金额"}, index = 16)
+    private Double sumH;
+
+    @ExcelProperty(value = {"汇缴订单明细", "企业金额"}, index = 17)
+    private Double companyMoneyH;
+
+    @ExcelProperty(value = {"汇缴订单明细", "个人金额"}, index = 18)
+    private Double employeeMoneyH;
 
 
     @ExcelProperty(value = {"补缴订单明细", "产品名称"}, index = 19)
@@ -94,20 +91,19 @@ public class SocialSecurityDeclareData {
     @ExcelProperty(value = {"补缴订单明细", "个人比例"}, index = 25)
     private Double employeeRatioB;
 
-    @ExcelProperty(value = {"补缴订单明细", "总金额"}, index = 26)
-    private Double sumB;
-
-    @ExcelProperty(value = {"补缴订单明细", "企业金额"}, index = 27)
-    private Double companyMoneyB;
-
-    @ExcelProperty(value = {"补缴订单明细", "个人金额"}, index = 28)
-    private Double employeeMoneyB;
-
-    @ExcelProperty(value = {"补缴订单明细", "企业附加金额"}, index = 29)
+    @ExcelProperty(value = {"补缴订单明细", "企业附加金额"}, index = 26)
     private Double companySurchargeValueB;
 
-    @ExcelProperty(value = {"补缴订单明细", "个人附加金额"}, index = 30)
+    @ExcelProperty(value = {"补缴订单明细", "个人附加金额"}, index = 27)
     private Double employeeSurchargeValueB;
 
+    @ExcelProperty(value = {"补缴订单明细", "总金额"}, index = 28)
+    private Double sumB;
+
+    @ExcelProperty(value = {"补缴订单明细", "企业金额"}, index = 29)
+    private Double companyMoneyB;
+
+    @ExcelProperty(value = {"补缴订单明细", "个人金额"}, index = 30)
+    private Double employeeMoneyB;
 
 }

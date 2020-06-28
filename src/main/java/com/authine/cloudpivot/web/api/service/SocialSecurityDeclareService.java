@@ -1,5 +1,6 @@
 package com.authine.cloudpivot.web.api.service;
 
+import com.authine.cloudpivot.web.api.dto.DeclareDto;
 import com.authine.cloudpivot.web.api.dto.SocialSecurityDeclareDto;
 import com.authine.cloudpivot.web.api.entity.ContractImportInfo;
 import com.authine.cloudpivot.web.api.entity.ContractTerminationInfo;
@@ -51,6 +52,6 @@ public interface SocialSecurityDeclareService {
 
     List<RegisterDeclareSheetInfo> findRegisterDeclareInfoFromStopPayment(ImportCondition importCondition);
 
-    List<SocialSecurityDeclareDto> getSocialSecurityDeclareDtoList(Map conditions);
+    List<DeclareDto> getSocialSecurityDeclareDtoList(Map conditions);
 
 }

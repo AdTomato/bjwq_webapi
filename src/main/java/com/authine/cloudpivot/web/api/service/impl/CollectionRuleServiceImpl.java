@@ -46,6 +46,6 @@ public class CollectionRuleServiceImpl implements CollectionRuleService {
 
     @Override
     public List<CrmCollectionRule> getCrmCollectionRulesByCity(String city, String welfareHandler) {
-        return collectionRuleMapper.getCrimCollectionRulesByCity(city, welfareHandler);
+        return collectionRuleMapper.getCrmCollectionRulesByCity(city, welfareHandler);
     }
 }

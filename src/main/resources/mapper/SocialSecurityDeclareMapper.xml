@@ -184,14 +184,18 @@
         </if>
     </select>
 
-    <resultMap id="socialSecurityDeclareDto" type="com.authine.cloudpivot.web.api.dto.SocialSecurityDeclareDto">
+    <resultMap id="declareDto" type="com.authine.cloudpivot.web.api.dto.DeclareDto">
         <id property="id" column="id"/>
-        <collection property="orderDetailsRemittanceSbList" column="id"
+        <result property="employeeName" column="employee_name"/>
+        <result property="identityNo" column="identityNo"/>
+        <result property="firstLevelClientName" column="first_level_client_name"/>
+        <result property="secondLevelClientName" column="second_level_client_name"/>
+        <collection property="orderDetailsRemittanceList" column="id"
                     select="com.authine.cloudpivot.web.api.mapper.SocialSecurityDeclareMapper.getOrderDetailsRemittanceSbByParentId"/>
-        <collection property="orderDetailsPayBackSbList" column="id"
+        <collection property="orderDetailsPayBackList" column="id"
                     select="com.authine.cloudpivot.web.api.mapper.SocialSecurityDeclareMapper.getOrderDetailsPayBackSbByParentId"/>
     </resultMap>
-    <select id="getSocialSecurityDeclareDtoList" parameterType="java.util.Map" resultMap="socialSecurityDeclareDto">
+    <select id="getSocialSecurityDeclareDtoList" parameterType="java.util.Map" resultMap="declareDto">
         SELECT id,
         employee_name,
         identityNo,
@@ -222,16 +226,39 @@
 
     <select id="getOrderDetailsRemittanceSbByParentId" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.OrderDetails">
-        SELECT *
+        SELECT product_name,
+               start_charge_time,
+               end_charge_time,
+               company_base,
+               employee_base,
+               company_ratio,
+               employee_ratio,
+               sum,
+               company_money,
+               employee_money,
+               company_surcharge_value,
+               employee_surcharge_value
         FROM i4fvb_order_details_remittance_sb
         WHERE parentId = #{parentId}
     </select>
 
     <select id="getOrderDetailsPayBackSbByParentId" parameterType="java.lang.String"
             resultType="com.authine.cloudpivot.web.api.entity.OrderDetails">
-        SELECT *
+        SELECT product_name,
+               start_charge_time,
+               end_charge_time,
+               company_base,
+               employee_base,
+               company_ratio,
+               employee_ratio,
+               sum,
+               company_money,
+               employee_money,
+               company_surcharge_value,
+               employee_surcharge_value
         FROM i4fvb_order_details_pay_back_sb
         WHERE parentId = #{parentId}
     </select>
+
 
 </mapper>

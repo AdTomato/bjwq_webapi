@@ -1,8 +1,11 @@
 package com.authine.cloudpivot.web.api.mapper;
 
+import com.authine.cloudpivot.web.api.dto.DeclareDto;
+import com.authine.cloudpivot.web.api.dto.ProvidentFundDeclareDto;
 import com.authine.cloudpivot.web.api.dto.SocialSecurityDeclareDto;
 import com.authine.cloudpivot.web.api.entity.ContractImportInfo;
 import com.authine.cloudpivot.web.api.entity.ContractTerminationInfo;
+import com.authine.cloudpivot.web.api.entity.ProvidentFundDeclare;
 import com.authine.cloudpivot.web.api.entity.RegisterDeclareSheetInfo;
 import com.authine.cloudpivot.web.api.params.ImportCondition;
 import org.w3c.dom.ls.LSInput;
@@ -34,7 +37,8 @@ public interface SocialSecurityDeclareMapper {
 
     List<RegisterDeclareSheetInfo> findRegisterDeclareInfoFromStopPayment(ImportCondition importCondition);
 
-    List<SocialSecurityDeclareDto> getSocialSecurityDeclareDtoList(Map conditions);
+    List<DeclareDto> getSocialSecurityDeclareDtoList(Map conditions);
+
 
 }
 

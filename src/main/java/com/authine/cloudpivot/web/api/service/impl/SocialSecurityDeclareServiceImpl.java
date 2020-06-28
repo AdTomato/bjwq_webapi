@@ -1,5 +1,6 @@
 package com.authine.cloudpivot.web.api.service.impl;
 
+import com.authine.cloudpivot.web.api.dto.DeclareDto;
 import com.authine.cloudpivot.web.api.dto.SocialSecurityDeclareDto;
 import com.authine.cloudpivot.web.api.entity.ContractImportInfo;
 import com.authine.cloudpivot.web.api.entity.ContractTerminationInfo;
@@ -81,7 +82,7 @@ public class SocialSecurityDeclareServiceImpl implements SocialSecurityDeclareSe
     }
 
     @Override
-    public List<SocialSecurityDeclareDto> getSocialSecurityDeclareDtoList(Map conditions) {
+    public List<DeclareDto> getSocialSecurityDeclareDtoList(Map conditions) {
         return socialSecurityDeclareMapper.getSocialSecurityDeclareDtoList(conditions);
     }
 }
