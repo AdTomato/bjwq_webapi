@@ -18,14 +18,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -50,23 +50,10 @@ public class FileController extends BaseController {
     @Autowired
     ProvidentFundDeclareService providentFundDeclareService;
 
-    @ApiOperation(value = "社保申报数据导出")
-    @RequestMapping("/socialSecurityDeclareDownload")
-    public void socialSecurityDeclareDownload(Map conditions, HttpServletResponse response) throws IOException {
-        List data = getDeclareData(conditions, "社保");
-        download(response, data);
-    }
 
-    @ApiOperation(value = "公积金申报数据导出")
-    @RequestMapping("/providentFundDeclareDownload")
-    public void providentFundDeclareDownload(Map conditions, HttpServletResponse response) throws IOException {
-        List data = getDeclareData(conditions, "公积金");
-        download(response, data);
-    }
-
-    @ApiOperation(value = "社保申报数据导入")
-    @RequestMapping("/socialSecurityDeclareUpload")
-    public ResponseResult socialSecurityDeclareUpload(@RequestParam MultipartFile file) throws IOException {
+    @ApiOperation(value = "文件上传")
+    @RequestMapping("/fileUpload")
+    public ResponseResult<Object> fileUpload(@RequestParam MultipartFile file) throws IOException {
         LOG.info("文件上传开始");
         LOG.info("文件名称:{}", file.getOriginalFilename());
         LOG.info("文件大小:{}", file.getSize());
@@ -87,9 +74,52 @@ public class FileController extends BaseController {
         return this.getErrResponseResult(fullFileName, ErrCode.OK.getErrCode(), ErrCode.OK.getErrMsg());
     }
 
+    @ApiOperation(value = "模板文件下载")
+    @GetMapping("/templateFileDownload")
+    public void templateFileDownload(@RequestParam String fileName, HttpServletResponse response) throws IOException {
+        File file = new File(FILE_PATH + File.separator + "template" + File.separator + fileName);
+        if (!file.exists()) {
+            throw new RuntimeException("下载文件不存在");
+        }
+        FileInputStream inputStream = new FileInputStream(file);
+        String templateName = fileName.substring(0, fileName.lastIndexOf("."));
+        String suffix = fileName.substring(fileName.lastIndexOf("."));
+        response.addHeader("Content-Disposition", "attachment;filename=" + new String((templateName + "_" + System.currentTimeMillis() + "." + suffix).getBytes("gbk"), "iso8859-1"));
+        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(response.getOutputStream());
+        response.setContentType("application/vnd.ms-excel;charset=gb2312");
+        byte[] data = new byte[1 * 1024 * 1024];
+        int len = 0;
+        while ((len = inputStream.read(data)) != -1) {
+            bufferedOutputStream.write(data, 0, len);
+        }
+        bufferedOutputStream.flush();
+        bufferedOutputStream.close();
+        inputStream.close();
+    }
+
+    @ApiOperation(value = "社保申报数据导出")
+    @RequestMapping("/socialSecurityDeclareDownload")
+    public void socialSecurityDeclareDownload(Map conditions, HttpServletResponse response) throws IOException {
+        List data = getDeclareData(conditions, "社保");
+        download(response, data);
+    }
+
+    @ApiOperation(value = "公积金申报数据导出")
+    @RequestMapping("/providentFundDeclareDownload")
+    public void providentFundDeclareDownload(Map conditions, HttpServletResponse response) throws IOException {
+        List data = getDeclareData(conditions, "公积金");
+        download(response, data);
+    }
+
     @ApiOperation(value = "社保申报反馈")
     @RequestMapping("/socialSecurityDeclareFeedback")
-    public ResponseResult socialSecurityDeclareFeedback(@RequestParam String fileName) {
+    public ResponseResult<Object> socialSecurityDeclareFeedback(@RequestParam String fileName) {
+        return null;
+    }
+
+    @ApiOperation(value = "公积金申报反馈")
+    @RequestMapping("/providentFundDeclareFeedback")
+    public ResponseResult<Object> providentFundDeclareFeedback(@RequestParam String fileName) {
         return null;
     }
 

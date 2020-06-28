@@ -32,7 +32,7 @@ public class SocialSecurityDeclareDataListener extends AnalysisEventListener<Dec
     @SneakyThrows
     @Override
     public void invoke(DeclareData data, AnalysisContext context) {
-        if (!list.isEmpty() && !StringUtils.isEmpty(data.getId())) {
+        if (!list.isEmpty() && !list.get(0).getId().equals(data.getId())) {
             SocialSecurityDeclareDto socialSecurityDeclareDto = new SocialSecurityDeclareDto();
             socialSecurityDeclareDto.setOrderDetailsRemittanceSbList(new ArrayList<>());
             socialSecurityDeclareDto.setOrderDetailsPayBackSbList(new ArrayList<>());
@@ -52,8 +52,8 @@ public class SocialSecurityDeclareDataListener extends AnalysisEventListener<Dec
                     orderDetails.setId(UUID.randomUUID().toString().replace("-", ""));
                     orderDetails.setSortKey(i1);
                     orderDetails.setProductName(excelData.getProductNameH());
-                    orderDetails.setStartChargeTime(format.parse(excelData.getStartChargeTimeH() + " 00:00:00"));
-                    orderDetails.setEndChargeTime(format.parse(excelData.getEndChargeTimeH() + " 00:00:00"));
+                    orderDetails.setStartChargeTime(format.parse(excelData.getStartChargeTimeH()));
+                    orderDetails.setEndChargeTime(format.parse(excelData.getEndChargeTimeH()));
                     orderDetails.setCompanyBase(excelData.getCompanyBaseH());
                     orderDetails.setEmployeeBase(excelData.getEmployeeBaseH());
                     orderDetails.setCompanyRatio(excelData.getCompanyRatioH());
@@ -72,8 +72,8 @@ public class SocialSecurityDeclareDataListener extends AnalysisEventListener<Dec
                     orderDetails.setProductName(excelData.getProductNameB());
                     orderDetails.setId(UUID.randomUUID().toString().replace("-", ""));
                     orderDetails.setSortKey(i2);
-                    orderDetails.setStartChargeTime(format.parse(excelData.getStartChargeTimeB() + " 00:00:00"));
-                    orderDetails.setEndChargeTime(format.parse(excelData.getEndChargeTimeB() + " 00:00:00"));
+                    orderDetails.setStartChargeTime(format.parse(excelData.getStartChargeTimeB()));
+                    orderDetails.setEndChargeTime(format.parse(excelData.getEndChargeTimeB()));
                     orderDetails.setCompanyBase(excelData.getCompanyBaseB());
                     orderDetails.setEmployeeBase(excelData.getEmployeeBaseB());
                     orderDetails.setCompanyRatio(excelData.getCompanyRatioB());
